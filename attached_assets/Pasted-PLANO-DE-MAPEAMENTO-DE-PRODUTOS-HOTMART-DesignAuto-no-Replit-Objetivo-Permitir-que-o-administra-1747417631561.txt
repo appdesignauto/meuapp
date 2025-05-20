@@ -1,0 +1,113 @@
+PLANO DE MAPEAMENTO DE PRODUTOS HOTMART (DesignAuto no Replit)
+🎯 Objetivo
+Permitir que o administrador defina e gerencie no painel:
+
+Qual offer.id está relacionado a qual plano interno (ex: mensal, anual, semestral)
+
+Por quantos dias cada plano dá acesso
+
+Quais são os produtos válidos para processar (caso tenha mais de um produto cadastrado na Hotmart)
+
+🔧 1. ESTRUTURA DO BANCO DE DADOS (PostgreSQL)
+sql
+Copiar
+Editar
+CREATE TABLE hotmart_mapeamentos (
+  id SERIAL PRIMARY KEY,
+  product_id TEXT NOT NULL,
+  offer_id TEXT NOT NULL UNIQUE,
+  nome_oferta TEXT,
+  plano_designauto TEXT NOT NULL, -- ex: 'premium'
+  duracao_dias INTEGER NOT NULL, -- ex: 30, 180, 365
+  ativo BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+🧠 2. BACKEND – ROTAS NO REPLIT
+🔹 GET /admin/mapeamentos
+Lista todos os mapeamentos existentes para exibir no painel
+
+js
+Copiar
+Editar
+app.get("/admin/mapeamentos", async (req, res) => {
+  const result = await db.query("SELECT * FROM hotmart_mapeamentos ORDER BY id DESC");
+  res.json(result.rows);
+});
+🔹 POST /admin/mapeamentos
+Cria um novo mapeamento
+
+js
+Copiar
+Editar
+app.use(express.json());
+
+app.post("/admin/mapeamentos", async (req, res) => {
+  const { product_id, offer_id, nome_oferta, plano_designauto, duracao_dias } = req.body;
+
+  if (!product_id || !offer_id || !plano_designauto || !duracao_dias) {
+    return res.status(400).send("Campos obrigatórios faltando.");
+  }
+
+  await db.query(
+    `INSERT INTO hotmart_mapeamentos 
+     (product_id, offer_id, nome_oferta, plano_designauto, duracao_dias) 
+     VALUES ($1, $2, $3, $4, $5)`,
+    [product_id, offer_id, nome_oferta, plano_designauto, duracao_dias]
+  );
+
+  res.send("Mapeamento criado com sucesso.");
+});
+🔹 PUT /admin/mapeamentos/:id
+Atualiza um mapeamento (ex: corrigir dias ou desativar)
+
+🔁 3. USO NO WEBHOOK HOTMART
+Altere o webhook para buscar do banco em vez de usar objeto fixo:
+
+js
+Copiar
+Editar
+const result = await db.query(
+  "SELECT * FROM hotmart_mapeamentos WHERE offer_id = $1 AND ativo = true",
+  [offerId]
+);
+
+if (result.rowCount === 0) {
+  return res.status(200).send("Oferta não mapeada. Ignorado.");
+}
+
+const mapeamento = result.rows[0];
+await ativarPlano(email, mapeamento.plano_designauto, mapeamento.duracao_dias);
+🖥️ 4. NO PAINEL ADMIN (FRONTEND)
+Adicione na sua aba "Mapeamento de Produtos":
+
+Um formulário com os campos:
+
+ID do Produto Hotmart
+
+ID da Oferta (offer.id)
+
+Nome da oferta (informativo)
+
+Plano interno (ex: premium)
+
+Duração (em dias)
+
+Um botão “Salvar” que chama o POST /admin/mapeamentos
+
+Uma listagem com os mapeamentos atuais (via GET /admin/mapeamentos)
+
+🔐 5. RECOMENDAÇÕES DE SEGURANÇA
+Proteja as rotas POST, PUT, DELETE com token de autenticação do admin
+
+Valide tipos e dados enviados
+
+✅ FLUXO FINAL EM PRODUÇÃO
+Admin acessa a aba “Mapeamento de Produtos”
+
+Cadastra as ofertas da Hotmart (ex: mensal, anual)
+
+Quando o webhook chega, o sistema:
+
+Busca a oferta no banco
+
+Aplica a lógica de plano/duração correspondente

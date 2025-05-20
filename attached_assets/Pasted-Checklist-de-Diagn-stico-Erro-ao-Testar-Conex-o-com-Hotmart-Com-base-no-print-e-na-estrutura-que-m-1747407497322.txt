@@ -1,0 +1,69 @@
+Checklist de Diagnóstico – Erro ao Testar Conexão com Hotmart
+Com base no print e na estrutura que montamos, siga estes pontos para identificar e resolver:
+
+🔍 1. Confirme o endpoint correto
+Você está usando a API HotConnect, logo o endpoint para gerar token deve ser:
+
+ruby
+Copiar
+Editar
+https://api-hot-connect.hotmart.com/security/oauth/token
+⚠️ NÃO use: https://api.hotmart.com/security/oauth/token
+Esse é da API REST pública, e causará erro nesse contexto.
+
+🔍 2. Verifique o payload da requisição
+A chamada deve ser um POST com:
+
+Body:
+x-www-form-urlencoded com:
+
+ini
+Copiar
+Editar
+grant_type=client_credentials
+Headers:
+
+http
+Copiar
+Editar
+Authorization: Basic {base64(client_id:client_secret)}
+Content-Type: application/x-www-form-urlencoded
+✅ Exemplo de código funcionando:
+js
+Copiar
+Editar
+const axios = require("axios");
+
+async function testarConexao() {
+  const clientId = process.env.HOTMART_CLIENT_ID;
+  const clientSecret = process.env.HOTMART_CLIENT_SECRET;
+
+  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+  try {
+    const response = await axios.post(
+      "https://api-hot-connect.hotmart.com/security/oauth/token",
+      "grant_type=client_credentials",
+      {
+        headers: {
+          Authorization: `Basic ${basicAuth}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }
+    );
+
+    console.log("Token OK:", response.data.access_token);
+  } catch (err) {
+    console.error("Erro na conexão com a Hotmart:");
+    console.error("Status:", err.response?.status);
+    console.error("Data:", err.response?.data);
+  }
+}
+🧪 Rode isso no Replit. Se funcionar, o problema está na sua função de teste no painel. Se falhar, a chave está incorreta ou o Replit não tem acesso à internet externa.
+
+🔍 3. Erros comuns e como interpretar
+Código	Erro provável	Solução
+401	Client ID ou Secret incorretos	Verifique no painel da Hotmart Developers
+403	Permissão negada	Sandbox ativado indevidamente, use produção
+400	Payload incorreto	Verifique se grant_type=client_credentials está no body
+timeout / rede	Replit com erro de rede ou CORS	Tente com axios direto no terminal para isolar o front

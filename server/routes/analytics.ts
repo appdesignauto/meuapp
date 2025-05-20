@@ -247,34 +247,6 @@ router.put('/admin/tiktok', isAdmin, async (req, res) => {
 });
 
 // Rota para atualizar configurações de custom scripts
-
-
-// Rota para testar credenciais da Hotmart
-router.post('/admin/hotmart-credentials', isAdmin, async (req, res) => {
-  try {
-    const { clientId, clientSecret, useSandbox = true } = req.body;
-
-    // Inicializa o serviço com as credenciais fornecidas
-    HotmartService.initialize(clientId, clientSecret, useSandbox);
-
-    // Tenta obter um token de acesso para validar as credenciais
-    const token = await HotmartService.getAccessToken();
-
-    res.json({ 
-      success: true,
-      message: 'Credenciais válidas',
-      token 
-    });
-  } catch (error) {
-    console.error('Erro ao testar credenciais Hotmart:', error);
-    res.status(400).json({ 
-      success: false, 
-      message: 'Credenciais inválidas ou erro de conexão',
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
 router.put('/admin/custom-scripts', isAdmin, async (req, res) => {
   try {
     const { 

@@ -97,6 +97,7 @@ export default function SimpleFormMultiDialog({
   const [uploadError, setUploadError] = useState<Record<string, string>>({});
   const [formatsComplete, setFormatsComplete] = useState<Record<string, boolean>>({});
   const [uploadAllComplete, setUploadAllComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Consultas para obter dados
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
@@ -129,33 +130,7 @@ export default function SimpleFormMultiDialog({
 
   // Efeito para carregar dados da arte quando em modo de edição
   useEffect(() => {
-    // Reset completo quando o modal for aberto em modo de adição
-    if (isOpen && !isEditing) {
-      console.log("=== MODO DE ADIÇÃO INICIADO ===");
-      // Limpar completamente todos os dados do formulário
-      step1Form.reset({
-        categoryId: '',
-        globalFileType: 'canva',
-        isPremium: true,
-        globalTitle: '',
-        globalDescription: '',
-        selectedFormats: []
-      });
-      
-      // Limpar todos os estados
-      setFormatDetails({});
-      setImages({});
-      setUploading({});
-      setUploadError({});
-      setFormatsComplete({});
-      setUploadAllComplete(false);
-      setStep(1);
-      setCurrentTab("");
-      return;
-    }
-    
-    // Modo de edição
-    if (isOpen && isEditing && editingArt && !isLoading) {
+    if (isEditing && editingArt && !isLoading) {
       console.log("=== MODO DE EDIÇÃO INICIADO ===");
       console.log("Dados completos da arte:", editingArt);
       console.log(`ID da arte: ${editingArt.id}`);
@@ -163,8 +138,77 @@ export default function SimpleFormMultiDialog({
       console.log(`Grupo da arte: ${editingArt.groupId}`);
       console.log(`Tipo de dados do groupId: ${typeof editingArt.groupId}`);
       
-      // Log para ajudar na depuração da API recém-implementada
-      console.log("DEPURAÇÃO: Nova API de grupo implementada - testando carregamento de artes do grupo");
+      // Verificar se temos groupArts (artes agrupadas) no objeto editingArt
+      if (editingArt.groupArts && Array.isArray(editingArt.groupArts) && editingArt.groupArts.length > 0) {
+        console.log(`Arte pertence a um grupo com ${editingArt.groupArts.length} formatos`);
+        console.log("Artes do grupo:", editingArt.groupArts);
+        
+        // Verificar se temos um formato inicial definido
+        if (editingArt.initialFormat) {
+          console.log(`Formato inicial a ser exibido: ${editingArt.initialFormat}`);
+          
+          // Definir a aba inicial com base no formato que foi clicado
+          setCurrentTab(editingArt.initialFormat);
+        }
+        
+        // Como já recebemos as artes agrupadas do ArtsList, vamos processá-las diretamente
+        const groupArts = editingArt.groupArts;
+        
+        // Extrair os formatos das artes do grupo
+        const formatSlugs = groupArts.map(art => art.format);
+        console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
+        
+        step1Form.setValue('selectedFormats', formatSlugs);
+        
+        // Usar o primeiro item do grupo para as informações globais
+        const primeiraArte = groupArts[0];
+        step1Form.setValue('categoryId', primeiraArte.categoryId?.toString() || '');
+        step1Form.setValue('globalFileType', primeiraArte.fileType || 'canva');
+        step1Form.setValue('isPremium', primeiraArte.isPremium || false);
+        step1Form.setValue('globalTitle', primeiraArte.title || '');
+        step1Form.setValue('globalDescription', primeiraArte.description || '');
+        
+        // Preencher os detalhes de cada formato
+        const initialDetails: Record<string, FormatValues> = {};
+        groupArts.forEach(art => {
+          initialDetails[art.format] = {
+            format: art.format,
+            fileType: art.fileType || 'canva',
+            title: art.title || '',
+            description: art.description || '',
+            imageUrl: art.imageUrl || '',
+            previewUrl: art.previewUrl || '',
+            editUrl: art.editUrl || '',
+          };
+          console.log(`Formato ${art.format} carregado: ${art.title}`);
+        });
+        
+        setFormatDetails(initialDetails);
+        
+        // Verificar quais formatos estão completos
+        const updatedFormatsComplete: Record<string, boolean> = {};
+        Object.entries(initialDetails).forEach(([formatSlug, details]) => {
+          const isComplete = !!(details.title && details.editUrl && details.imageUrl);
+          updatedFormatsComplete[formatSlug] = isComplete;
+        });
+        setFormatsComplete(updatedFormatsComplete);
+        
+        // Guardar as imagens
+        const imageMap: Record<string, string> = {};
+        groupArts.forEach(art => {
+          imageMap[art.format] = art.imageUrl || '';
+        });
+        setImages(imageMap);
+        
+        // Avançar direto para a etapa 2 (upload) depois de carregar os dados
+        console.log(`Avançando para etapa 2 após carregar dados do grupo`);
+        setTimeout(() => {
+          setStep(2);
+        }, 100);
+        
+        // Não prosseguir com a verificação HTTP já que temos todos os dados
+        return;
+      }
       
       // Atualizar o formulário da etapa 1 com os dados da arte
       step1Form.setValue('categoryId', editingArt.categoryId?.toString() || '');
@@ -187,14 +231,11 @@ export default function SimpleFormMultiDialog({
       console.log(`Verificando grupo para arte ${artId} usando endpoint check-group`);
       
       // Tentar buscar informações do grupo para esta arte, mesmo se o groupId não estiver no objeto
-      apiRequest('GET', `/api/admin/artes/${artId}/check-group`)
+      // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
+      apiRequest('GET', `/api/admin/arts/${artId}/check-group`)
         .then(res => {
           console.log(`Resposta da verificação de grupo recebida, status: ${res.status}`);
           return res.json();
-        })
-        .then(data => {
-          console.log('Dados completos da verificação de grupo:', JSON.stringify(data));
-          return data;
         })
         .then(data => {
           const groupId = data.groupId;
@@ -204,28 +245,11 @@ export default function SimpleFormMultiDialog({
             // Agora temos o groupId confirmado, buscar todas as artes do grupo
             console.log(`Buscando artes do grupo: ${groupId}`);
             
-            // Forçar a definição do groupId na arte que está sendo editada
-            // Isso garante consistência mesmo que o objeto original não o tenha
-            if (editingArt) {
-              editingArt.groupId = groupId;
-            }
-            
-            return apiRequest('GET', `/api/admin/artes/group/${groupId}`)
+            // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
+            return apiRequest('GET', `/api/admin/arts/group/${groupId}`)
               .then(res => {
-                console.log(`Resposta recebida da API /api/admin/artes/group/${groupId}, status: ${res.status}`);
+                console.log(`Resposta recebida, status: ${res.status}`);
                 return res.json();
-              })
-              .then(data => {
-                console.log(`Dados completos da resposta do grupo: ${JSON.stringify(data)}`);
-                // Verificar se temos dados de artes no formato esperado
-                if (!data.arts || !Array.isArray(data.arts) || data.arts.length === 0) {
-                  console.warn(`Nenhuma arte encontrada no grupo ou formato inválido:`, data);
-                }
-                return data;
-              })
-              .catch(err => {
-                console.error(`Erro ao buscar grupo de artes: ${err}`, err);
-                return { arts: [] };
               });
           } else {
             console.log(`Arte ${artId} não pertence a nenhum grupo`);
@@ -235,123 +259,33 @@ export default function SimpleFormMultiDialog({
         })
         .then(data => {
           // Só processar esta parte se tivermos um groupId
-          if (!data || !data.arts) {
-            console.log('Nenhuma arte encontrada nos dados recebidos:', data);
-            return;
-          }
+          if (!data || !data.arts) return;
           
           console.log(`Dados recebidos do grupo:`, data);
           const groupArts = data.arts || [];
           
           console.log(`Artes encontradas no grupo: ${groupArts.length}`);
           
-          // Importante: Verificar se temos pelo menos uma arte no grupo
-          // mesmo com uma arte, podemos editá-la como grupo (mais flexível)
           if (Array.isArray(groupArts) && groupArts.length > 0) {
-            console.log(`Total de ${groupArts.length} artes encontradas no grupo ID ${data.groupId}`);
+            // Extrair os formatos das artes do grupo
+            const formatSlugs = groupArts.map(art => art.format);
+            console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
             
-            // Primeiro, extrair diretamente todos os formatos válidos das artes do grupo
-            // para garantir que todos os formatos sejam capturados corretamente
-            const todosFormatos: string[] = [];
-            
-            groupArts.forEach(art => {
-              if (art && art.format && typeof art.format === 'string') {
-                todosFormatos.push(art.format);
-                console.log(`Formato detectado diretamente da arte ID ${art.id}: ${art.format}`);
-              }
-            });
-            
-            // Remover duplicatas e validar
-            const formatosValidos = [...new Set(todosFormatos)].filter(f => f && typeof f === 'string');
-            
-            console.log(`FORMATOS DETECTADOS (deduplicated): ${formatosValidos.join(', ')} (total: ${formatosValidos.length})`);
-            
-            // Verificação crítica - exibir alerta se não encontrou formatos válidos
-            if (formatosValidos.length === 0) {
-              console.error('ERRO CRÍTICO: Nenhum formato válido encontrado nas artes do grupo');
-              toast({
-                title: "Erro ao processar grupo",
-                description: "Não foram encontrados formatos válidos neste grupo de artes.",
-                variant: "destructive"
-              });
-              return; // Interromper processamento se não há formatos
-            }
-            
-            // Garantir que o formato da arte que está sendo editada esteja na lista
-            if (editingArt && editingArt.format && !formatosValidos.includes(editingArt.format)) {
-              formatosValidos.push(editingArt.format);
-              console.log(`Adicionado formato da arte em edição: ${editingArt.format}`);
-            }
-            
-            // PASSO CRUCIAL: Definir explicitamente todos os formatos no formulário para as abas
-            console.log(`Definindo formatos no formulário: ${formatosValidos.join(', ')}`);
-            step1Form.setValue('selectedFormats', formatosValidos);
-            
-            // Adicionamos um log para facilitar diagnóstico futuro
-            console.log(`Definidos ${formatosValidos.length} formatos válidos no formulário: ${JSON.stringify(formatosValidos)}`);
-            
-            // Configurar formulário para modo de edição múltipla
-            console.log("Configurando formulário para edição de múltiplas artes");
+            step1Form.setValue('selectedFormats', formatSlugs);
             
             // Preencher os detalhes de cada formato
             const initialDetails: Record<string, FormatValues> = {};
-            console.log(`Processando ${groupArts.length} artes do grupo com formatos validados: ${formatosValidos.join(', ')}`);
-            
-            // Mapeamento de todas as artes do grupo por formato para fácil referência
-            const artesPorFormato: Record<string, any> = {};
-            
-            // Primeiro, mapear todas as artes por seu formato para fácil acesso
             groupArts.forEach(art => {
-              if (art && art.format && typeof art.format === 'string') {
-                artesPorFormato[art.format] = art;
-                console.log(`Mapeada arte ID ${art.id} para formato ${art.format}`);
-              }
-            });
-            
-            // Processar cada formato com mais detalhes de log
-            formatosValidos.forEach(formato => {
-              // Verificar se temos uma arte para este formato
-              const arte = artesPorFormato[formato];
-              
-              if (arte) {
-                console.log(`>> Processando formato ${formato} com arte ID ${arte.id}`);
-                
-                // Preencher detalhes do formato com os dados da arte
-                initialDetails[formato] = {
-                  format: formato,
-                  fileType: arte.fileType || 'canva',
-                  title: arte.title || '',
-                  description: arte.description || '',
-                  imageUrl: arte.imageUrl || '',
-                  previewUrl: arte.previewUrl || '',
-                  editUrl: arte.editUrl || '',
-                };
-                
-                // IMPORTANTE: Marcar este formato como completo para mostrar o check na aba
-                // Usar um método de atualização de estado que garante a persistência
-                setFormatsComplete(prevState => ({
-                  ...prevState,
-                  [formato]: true
-                }));
-                
-                console.log(`✓ Formato ${formato} configurado com dados completos da arte ID ${arte.id}`);
-              } else {
-                // Formato existe na lista mas não tem arte associada
-                console.warn(`⚠️ Formato ${formato} selecionado mas não encontrado no grupo de artes!`);
-                
-                // Criar um formato vazio mas válido para não quebrar a interface
-                initialDetails[formato] = {
-                  format: formato,
-                  fileType: step1Form.getValues('globalFileType') || 'canva',
-                  title: '',
-                  description: '',
-                  imageUrl: '',
-                  previewUrl: '',
-                  editUrl: '',
-                };
-                
-                console.log(`○ Formato ${formato} configurado com dados vazios para nova entrada`);
-              }
+              initialDetails[art.format] = {
+                format: art.format,
+                fileType: art.fileType || 'canva',
+                title: art.title || '',
+                description: art.description || '',
+                imageUrl: art.imageUrl || '',
+                previewUrl: art.previewUrl || '',
+                editUrl: art.editUrl || '',
+              };
+              console.log(`Formato ${art.format} carregado: ${art.title}`);
             });
             
             setFormatDetails(initialDetails);
@@ -365,55 +299,14 @@ export default function SimpleFormMultiDialog({
             setFormatsComplete(updatedFormatsComplete);
             
             // Definir a aba da arte que está sendo editada como atual
-            // Se houver formatos válidos, definir o formato da arte clicada como aba ativa
-            if (formatosValidos.length > 0) {
-              console.log(`Grupo tem ${formatosValidos.length} formatos válidos`);
-              
-              // Definir a aba atual usando o formato da arte que o usuário clicou para editar
-              // Se o formato da arte clicada estiver entre os formatos válidos, usá-lo como aba ativa
-              if (editingArt && editingArt.format && formatosValidos.includes(editingArt.format)) {
-                console.log(`Definindo formato da arte clicada como aba ativa: ${editingArt.format}`);
-                setCurrentTab(editingArt.format);
-              } else {
-                // Caso contrário, usar o primeiro formato como padrão
-                console.log(`Formato da arte clicada não encontrado ou inválido, usando o primeiro formato: ${formatosValidos[0]}`);
-                setCurrentTab(formatosValidos[0]);
-              }
-              
-              // Log para confirmar a aba ativa
-              console.log(`Aba ativa definida como: ${currentTab}`);
-              
-              // Importante: garantir que step1Form tenha os formatos corretos
-              // Várias partes do componente dependem desta informação
-              if (Array.isArray(step1Form.getValues('selectedFormats'))) {
-                console.log(`selectedFormats atual: ${step1Form.getValues('selectedFormats').join(', ')}`);
-              } else {
-                console.log(`ERRO: selectedFormats não é um array!`);
-              }
-              
-              // Forçar atualização após a mudança para garantir renderização
-              setTimeout(() => {
-                console.log(`Verificando formatos selecionados após timeout: ${step1Form.getValues('selectedFormats')?.join(', ')}`);
-              }, 100);
-            } else if (editingArt && editingArt.format) {
-              setCurrentTab(editingArt.format);
-              console.log(`Nenhum formato válido no grupo, usando formato da arte: ${editingArt.format}`);
-            } else {
-              console.error('ERRO CRÍTICO: Não foi possível determinar um formato para a aba ativa');
-            }
+            setCurrentTab(editingArt.format);
+            console.log(`Definindo aba ativa: ${editingArt.format}`);
             
-            // Guardar as imagens apenas dos formatos válidos selecionados
+            // Guardar as imagens
             const imageMap: Record<string, string> = {};
-            
-            // Usar o mesmo mapeamento de artes por formato
-            formatosValidos.forEach(formato => {
-              const arte = artesPorFormato[formato];
-              if (arte && arte.imageUrl) {
-                imageMap[formato] = arte.imageUrl;
-                console.log(`Imagem registrada para o formato ${formato}: ${arte.imageUrl.substring(0, 50)}...`);
-              }
+            groupArts.forEach(art => {
+              imageMap[art.format] = art.imageUrl || '';
             });
-            
             setImages(imageMap);
             
             // Avançar direto para a etapa 2 (upload) depois de carregar os dados
@@ -451,10 +344,6 @@ export default function SimpleFormMultiDialog({
     if (formatSlug) {
       step1Form.setValue('selectedFormats', [formatSlug]);
       
-      // Definir a aba ativa como o formato da arte que está sendo editada
-      setCurrentTab(formatSlug);
-      console.log(`Definindo aba ativa para formato da arte única: ${formatSlug}`);
-      
       // Configurar detalhes do formato
       const initialDetails: Record<string, FormatValues> = {
         [formatSlug]: {
@@ -469,6 +358,7 @@ export default function SimpleFormMultiDialog({
       };
       
       setFormatDetails(initialDetails);
+      setCurrentTab(formatSlug);
       
       // Marcar formato como completo
       setFormatsComplete({
@@ -701,6 +591,8 @@ export default function SimpleFormMultiDialog({
       });
       return;
     }
+    
+    setIsSubmitting(true);
 
     try {
       // Converter dados para o formato esperado pela API
@@ -719,53 +611,136 @@ export default function SimpleFormMultiDialog({
       // Verificar se estamos editando ou criando
       if (isEditing && editingArt) {
         // Adicionar ID da arte existente para edição
+        // Verificar primeiro se temos groupArts (modo de edição de grupo)
+        if (editingArt.groupArts && Array.isArray(editingArt.groupArts) && editingArt.groupArts.length > 0) {
+          // Se temos groupArts do ArtsList, usamos as informações do grupo diretamente
+          
+          // Obter o groupId a partir de qualquer uma das artes do grupo
+          const groupId = editingArt.groupArts[0].groupId;
+          
+          if (groupId) {
+            // Atualizar os dados formatados com o groupId
+            formattedData.groupId = groupId;
+            console.log(`Atualizando grupo de artes a partir de groupArts: ${groupId}`);
+            try {
+              response = await apiRequest('PUT', `/api/admin/arts/group/${groupId}`, formattedData);
+              const responseText = await response.clone().text();
+              console.log('Resposta da API (grupo existente):', responseText);
+            } catch (error) {
+              console.error('Erro ao atualizar grupo existente:', error);
+              toast({
+                title: "Erro na atualização",
+                description: `Falha ao atualizar o grupo de artes: ${error.message}`,
+                variant: "destructive",
+              });
+              setIsSubmitting(false);
+              return;
+            }
+            return; // Não continuar com o fluxo original
+          }
+        }
+        
+        // Verificação original para compatibilidade com código legado
         if (editingArt.groupId) {
           // Se tem groupId, atualizar o grupo inteiro
           formattedData.groupId = editingArt.groupId;
-          response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+          console.log(`Atualizando grupo de artes: ${editingArt.groupId}`);
+          try {
+            response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+            const responseText = await response.clone().text();
+            console.log('Resposta da API (grupo existente):', responseText);
+          } catch (error) {
+            console.error('Erro ao atualizar grupo existente:', error);
+            toast({
+              title: "Erro na atualização",
+              description: `Falha ao atualizar o grupo de artes: ${error.message}`,
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         } else {
-          // Se não tem groupId, mas estamos adicionando múltiplos formatos a uma arte existente
+          // Se não tem groupId e estamos editando uma arte única, criar um novo grupo
+          console.log(`Criando novo grupo para arte individual: ${editingArt.id}`);
           formattedData.artId = editingArt.id;
-          response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
+          
+          // Adicionar logs detalhados dos dados enviados
+          console.log('Dados formatados enviados para a API:', JSON.stringify(formattedData, null, 2));
+          
+          try {
+            // CORRIGIDO: Usamos POST para criar um novo grupo 
+            response = await apiRequest('POST', `/api/admin/arts/multi`, formattedData);
+            const responseText = await response.clone().text();
+            console.log('Resposta da API (novo grupo):', responseText);
+          } catch (error) {
+            console.error('Erro ao criar novo grupo:', error);
+            toast({
+              title: "Erro na criação",
+              description: `Falha ao criar o grupo de artes: ${error.message}`,
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         }
-        
-        // Invalidar o cache para atualizar a UI imediatamente após a edição
-        queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
-        response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+        console.log("Criando nova arte multi-formato");
+        try {
+          response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+          const responseText = await response.clone().text();
+          console.log('Resposta da API (criação):', responseText);
+        } catch (error) {
+          console.error('Erro ao criar nova arte multi-formato:', error);
+          toast({
+            title: "Erro na criação",
+            description: `Falha ao criar a arte: ${error.message}`,
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
         successMessage = "Arte criada com sucesso";
       }
 
-      const result = await response.json();
+      try {
+        const result = await response.json();
+        
+        toast({
+          title: successMessage,
+          description: isEditing 
+            ? "As alterações foram salvas."
+            : "A arte com múltiplos formatos foi criada.",
+        });
 
-      toast({
-        title: successMessage,
-        description: isEditing 
-          ? "As alterações foram salvas."
-          : "A arte com múltiplos formatos foi criada.",
-      });
-
-      // Resetar o formulário
-      step1Form.reset({
-        categoryId: '',
-        globalFileType: 'canva',
-        isPremium: true,
-        globalTitle: '',
-        globalDescription: '',
-        selectedFormats: []
-      });
-      
-      setFormatDetails({});
-      setImages({});
-      setStep(1);
-      onClose();
-      
-      // Invalidar a consulta para atualizar a lista de artes
-      // Garantir que tanto a versão em português quanto a versão em inglês da rota sejam invalidadas
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+        // Resetar o formulário
+        step1Form.reset({
+          categoryId: '',
+          globalFileType: 'canva',
+          isPremium: true,
+          globalTitle: '',
+          globalDescription: '',
+          selectedFormats: []
+        });
+        
+        setFormatDetails({});
+        setImages({});
+        setStep(1);
+        onClose();
+        
+        // Invalidar a consulta para atualizar a lista de artes
+        queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      } catch (error) {
+        console.error('Erro ao processar resposta JSON:', error);
+        toast({
+          title: "Erro no processamento",
+          description: "A operação foi concluída mas ocorreu um erro ao processar a resposta.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao salvar",
@@ -934,7 +909,18 @@ export default function SimpleFormMultiDialog({
                     )}
                   </div>
                   
-                  {/* Campo de descrição global removido para evitar inconsistências no multi-formato */}
+                  <div className="mt-6">
+                    <Label htmlFor="globalDescription" className="flex items-center mb-1.5">
+                      <AlignLeft className="h-4 w-4 mr-1.5 text-gray-500" />
+                      Descrição da Arte
+                    </Label>
+                    <Textarea
+                      {...step1Form.register("globalDescription")}
+                      placeholder="Descrição opcional da arte"
+                      rows={3}
+                      className="bg-white"
+                    />
+                  </div>
                   
                   <div className="mt-6 p-3 bg-blue-50 rounded-md border border-blue-100 flex items-center">
                     <div className="flex items-center mr-3">
@@ -1047,47 +1033,36 @@ export default function SimpleFormMultiDialog({
                   
                   <Tabs value={currentTab} onValueChange={setCurrentTab} className="mt-3">
                     <TabsList className="w-full flex overflow-x-auto flex-wrap bg-transparent border-b border-gray-200 p-0 mb-1 h-auto">
-                      {/* Renderização de abas de formatos */}
-                      {console.log('Formatos para renderizar abas:', JSON.stringify(step1Form.getValues().selectedFormats))}
-                      {Array.isArray(step1Form.getValues().selectedFormats) && step1Form.getValues().selectedFormats.map((formatSlug) => {
-                        // Verificar se o formato é válido
-                        if (!formatSlug) {
-                          console.warn('Formato inválido detectado na renderização das abas');
-                          return null; 
-                        }
-                        
-                        console.log(`Renderizando aba para formato: ${formatSlug}`);
-                        return (
-                          <TabsTrigger
-                            key={formatSlug}
-                            value={formatSlug}
-                            className={`
-                              flex items-center space-x-2 min-w-[140px] rounded-none px-4 py-3 
-                              font-medium relative bg-transparent text-gray-700 border-0
-                              hover:bg-gray-50 hover:text-blue-600 transition-colors
-                              data-[state=active]:text-blue-600 data-[state=active]:bg-transparent
-                              data-[state=active]:border-b-2 data-[state=active]:border-blue-600
-                              data-[state=active]:shadow-none data-[state=active]:after:absolute
-                              data-[state=active]:after:bottom-0 data-[state=active]:after:left-0
-                              data-[state=active]:after:right-0 data-[state=active]:after:h-0.5
-                            `}
-                          >
-                            {formatSlug === 'feed' && <Smartphone className="h-5 w-5 mr-2" />}
-                            {formatSlug === 'stories' && <MonitorSmartphone className="h-5 w-5 mr-2" />}
-                            {formatSlug === 'web-banner' && <ScreenShare className="h-5 w-5 mr-2" />}
-                            {formatSlug === 'capa-fan-page' && <Image className="h-5 w-5 mr-2" />}
-                            {formatSlug === 'cartaz' && <BookImage className="h-5 w-5 mr-2" />}
-                            {formatSlug === 'carrocel' && <LayoutTemplate className="h-5 w-5 mr-2" />}
-                            <span>{getFormatName(formatSlug) || formatSlug}</span>
-                            {formatsComplete[formatSlug] && (
-                              <Check className="h-3.5 w-3.5 text-green-500 ml-2" />
-                            )}
-                          </TabsTrigger>
-                        );
-                      })}
+                      {step1Form.getValues().selectedFormats.map((formatSlug) => (
+                        <TabsTrigger
+                          key={formatSlug}
+                          value={formatSlug}
+                          className={`
+                            flex items-center space-x-2 min-w-[140px] rounded-none px-4 py-3 
+                            font-medium relative bg-transparent text-gray-700 border-0
+                            hover:bg-gray-50 hover:text-blue-600 transition-colors
+                            data-[state=active]:text-blue-600 data-[state=active]:bg-transparent
+                            data-[state=active]:border-b-2 data-[state=active]:border-blue-600
+                            data-[state=active]:shadow-none data-[state=active]:after:absolute
+                            data-[state=active]:after:bottom-0 data-[state=active]:after:left-0
+                            data-[state=active]:after:right-0 data-[state=active]:after:h-0.5
+                          `}
+                        >
+                          {formatSlug === 'feed' && <Smartphone className="h-5 w-5" />}
+                          {formatSlug === 'stories' && <MonitorSmartphone className="h-5 w-5" />}
+                          {formatSlug === 'web-banner' && <ScreenShare className="h-5 w-5" />}
+                          {formatSlug === 'capa-fan-page' && <Image className="h-5 w-5" />}
+                          {formatSlug === 'cartaz' && <BookImage className="h-5 w-5" />}
+                          {formatSlug === 'carrocel' && <LayoutTemplate className="h-5 w-5" />}
+                          <span>{getFormatName(formatSlug)}</span>
+                          {formatsComplete[formatSlug] && (
+                            <Check className="h-3.5 w-3.5 text-green-500" />
+                          )}
+                        </TabsTrigger>
+                      ))}
                     </TabsList>
                     
-                    {(step1Form.getValues().selectedFormats || []).map((formatSlug) => (
+                    {step1Form.getValues().selectedFormats.map((formatSlug) => (
                       <TabsContent key={formatSlug} value={formatSlug} className="mt-6 space-y-6">
                         {/* Detalhes do formato específico */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

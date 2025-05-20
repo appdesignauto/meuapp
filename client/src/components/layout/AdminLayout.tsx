@@ -1,5 +1,4 @@
-
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   ChevronLeft,
@@ -16,10 +15,9 @@ import {
   Menu,
   X,
   BarChart,
-  LineChart,
-  Home,
-  PanelLeftClose,
-  PanelLeftOpen
+  CreditCard,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,6 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -38,174 +37,263 @@ type AdminLayoutProps = {
   backLink?: string;
 };
 
-const AdminLayout = ({ children, title, backLink }: AdminLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
-  const [location] = useLocation();
-  const { user } = useAuth();
+type NavItem = {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  badge?: string;
+};
 
-  const menuItems = [
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
+  children, 
+  title,
+  backLink
+}) => {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+
+  const navItems: NavItem[] = [
     {
-      icon: <Home className="w-5 h-5" />,
-      label: 'Dashboard',
+      title: 'Dashboard',
       href: '/admin',
+      icon: <Gauge className="h-5 w-5" />,
     },
     {
-      icon: <Image className="w-5 h-5" />, 
-      label: 'Artes',
-      href: '/admin/add-art-multi',
+      title: 'Assinaturas',
+      href: '/admin/dashboard?tab=subscriptions',
+      icon: <CreditCard className="h-5 w-5" />,
     },
     {
-      icon: <BookOpen className="w-5 h-5" />,
-      label: 'Cursos',
-      href: '/admin/gerenciar-cursos',
-    },
-    {
-      icon: <Wrench className="w-5 h-5" />,
-      label: 'Ferramentas',
-      href: '/admin/ferramentas',
-    },
-    {
-      icon: <MessageSquare className="w-5 h-5" />,
-      label: 'Comunidade',
-      href: '/admin/community',
-    },
-    {
-      icon: <Users className="w-5 h-5" />,
-      label: 'Usuários',
+      title: 'Usuários',
       href: '/admin/users',
+      icon: <Users className="h-5 w-5" />,
     },
     {
-      icon: <BarChart className="w-5 h-5" />,
-      label: 'Analytics',
+      title: 'Artes',
+      href: '/admin/arts',
+      icon: <Image className="h-5 w-5" />,
+    },
+    {
+      title: 'Cursos',
+      href: '/admin/courses',
+      icon: <BookOpen className="h-5 w-5" />,
+    },
+    {
+      title: 'Comunidade',
+      href: '/admin/community',
+      icon: <MessageSquare className="h-5 w-5" />,
+    },
+    {
+      title: 'Ranking',
+      href: '/admin/ranking',
+      icon: <Award className="h-5 w-5" />,
+    },
+    {
+      title: 'Ferramentas',
+      href: '/admin/ferramentas',
+      icon: <Wrench className="h-5 w-5" />,
+    },
+    {
+      title: 'Uploads',
+      href: '/admin/uploads',
+      icon: <Upload className="h-5 w-5" />,
+    },
+    {
+      title: 'Páginas',
+      href: '/admin/pages',
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: 'Analytics',
       href: '/admin/analytics',
+      icon: <BarChart className="h-5 w-5" />,
     },
     {
-      icon: <Settings className="w-5 h-5" />,
-      label: 'Config Sistema',
-      href: '/admin/config-sistema',
+      title: 'Configurações',
+      href: '/admin/settings',
+      icon: <Settings className="h-5 w-5" />,
     },
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-sm transition-transform duration-300 ease-in-out lg:relative lg:transform-none",
-          !sidebarOpen && "transform -translate-x-full"
-        )}
-      >
-        <div className="flex flex-col h-full">
-          {/* Header do Sidebar */}
-          <div className="h-16 flex items-center justify-between px-4 border-b">
-            <Link href="/admin" className="flex items-center space-x-2">
-              <span className="font-bold text-xl">Design Auto</span>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:flex hidden"
-            >
-              {sidebarOpen ? (
-                <PanelLeftClose className="h-5 w-5" />
-              ) : (
-                <PanelLeftOpen className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-
-          {/* Menu Items */}
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1 px-3">
-              {menuItems.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href}>
-                    <a
-                      className={cn(
-                        "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-                        "hover:bg-gray-100",
-                        location === item.href
-                          ? "bg-gray-100 text-blue-600"
-                          : "text-gray-700"
-                      )}
-                    >
-                      {item.icon}
-                      <span className="font-medium">{item.label}</span>
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Footer do Sidebar */}
-          <div className="border-t p-4">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.profileimageurl} />
-                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header */}
-        <header className="h-16 lg:hidden flex items-center justify-between px-4 border-b bg-white">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
-          <span className="font-semibold">{title}</span>
-          <div className="w-10" /> {/* Espaçador para centralizar o título */}
-        </header>
-
-        {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 items-center justify-between px-6 border-b bg-white">
-          <div className="flex items-center space-x-3">
-            {backLink && (
-              <Button variant="ghost" size="icon" asChild>
-                <Link href={backLink}>
-                  <ChevronLeft className="h-5 w-5" />
+  const NavLinks = () => (
+    <TooltipProvider>
+      <nav className="space-y-0.5 mt-3">
+        {navItems.map((item) => (
+          collapsed ? (
+            <Tooltip key={item.href} delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'flex items-center justify-center p-2.5 my-1 rounded-md w-10 h-10 mx-auto',
+                    location === item.href || location.startsWith(`${item.href}/`)
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+                  )}
+                >
+                  {item.icon}
+                  {item.badge && (
+                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"></span>
+                  )}
                 </Link>
-              </Button>
-            )}
-            <h1 className="text-xl font-semibold">{title}</h1>
-          </div>
-        </header>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {item.title}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link 
+              key={item.href} 
+              href={item.href}
+              className={cn(
+                'flex items-center px-3 py-2 text-sm font-medium rounded-md',
+                location === item.href || location.startsWith(`${item.href}/`)
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+              )}
+            >
+              <div className={cn(
+                'flex items-center justify-center w-10 h-6',
+                location === item.href || location.startsWith(`${item.href}/`)
+                  ? 'text-blue-800'
+                  : 'text-gray-500'
+              )}>
+                {item.icon}
+              </div>
+              <span className="ml-2 truncate">{item.title}</span>
+              {item.badge && (
+                <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          )
+        ))}
+      </nav>
+    </TooltipProvider>
+  );
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile top navigation */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b bg-white dark:bg-gray-800">
+        <div className="flex items-center">
+          {backLink && (
+            <Button variant="ghost" size="icon" asChild className="mr-2">
+              <Link href={backLink}>
+                <ChevronLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
+        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Abrir menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Painel Admin</h2>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Fechar menu</span>
+                </Button>
+              </SheetTrigger>
+            </div>
+            <div className="p-4">
+              <NavLinks />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <div className="flex">
+        {/* Desktop sidebar */}
+        <aside 
+          className={cn(
+            "hidden lg:flex flex-col border-r border-gray-100 bg-white h-screen sticky top-0 transition-all duration-300",
+            collapsed ? "w-16" : "w-64"
+          )}
+        >
+          <div className="py-5 px-4 border-b border-gray-100 flex items-center justify-between">
+            {!collapsed && <h2 className="text-lg font-bold text-gray-900">Painel Admin</h2>}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setCollapsed(!collapsed)}
+              className={cn("ml-auto hover:bg-gray-100", collapsed && "mx-auto")}
+            >
+              <ChevronRight className={cn("h-5 w-5 text-gray-500 transition-transform", collapsed ? "rotate-180" : "")} />
+            </Button>
+          </div>
+          <div className={cn("p-3", collapsed && "px-2")}>
+            <NavLinks />
+          </div>
+          <div className={cn("p-4 mt-auto border-t border-gray-100", collapsed && "p-2")}>
+            {collapsed ? (
+              <div className="flex justify-center">
+                <Avatar className="h-9 w-9">
+                  {user?.profileimageurl ? (
+                    <AvatarImage src={user.profileimageurl} alt={user?.name || ''} />
+                  ) : (
+                    <AvatarFallback>{user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}</AvatarFallback>
+                  )}
+                </Avatar>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <Avatar className="h-9 w-9">
+                  {user?.profileimageurl ? (
+                    <AvatarImage src={user.profileimageurl} alt={user?.name || ''} />
+                  ) : (
+                    <AvatarFallback>{user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}</AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="ml-3 truncate">
+                  <p className="text-sm font-medium text-gray-900 truncate">{user?.name || user?.username}</p>
+                  <p className="text-xs text-gray-500">Administrador</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1">
+          {/* Desktop top header */}
+          <div className="hidden lg:flex items-center justify-between py-3 px-6 border-b border-gray-100 bg-white">
+            <div className="flex items-center">
+              {backLink && (
+                <Button variant="ghost" size="icon" asChild className="mr-2 hover:bg-gray-100">
+                  <Link href={backLink}>
+                    <ChevronLeft className="h-5 w-5 text-gray-500" />
+                  </Link>
+                </Button>
+              )}
+              <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+            </div>
+            <div className="flex items-center">
+              <Button variant="outline" size="sm" asChild className="flex items-center gap-1 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-800">
+                <Link href="/">
+                  Ver site <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Page content */}
+          <div className="p-6 bg-gray-50">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
 
-export { AdminLayout };
 export default AdminLayout;

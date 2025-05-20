@@ -13,14 +13,86 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
     
     <!-- Meta tags para maior compatibilidade - conteúdo será ajustado dinamicamente -->
-    <meta name="theme-color" content="#4a6cf7" />
-    <meta name="msapplication-TileColor" content="#4a6cf7" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="msapplication-TileColor" content="#000000" />
     <meta name="msapplication-TileImage" content="/favicon.png" />
+    
+    <!-- Configuração de segurança que permite carregar recursos de várias origens -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:;" />
+    
+    <!-- PWA Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="application-name" content="DesignAuto">
+    <meta name="description" content="Plataforma de artes automobilísticas editáveis para profissionais de vendas.">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DesignAuto">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+    
+    <!-- PWA Installation Button & Script -->
+    <button id="pwa-install-btn" style="display: none;" class="btn btn-primary ml-4">
+      📲 Instalar App
+    </button>
+    <script>
+      let deferredPrompt;
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('[PWA] beforeinstallprompt disparado');
+        e.preventDefault();
+        deferredPrompt = e;
+
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+          installBtn.style.display = 'inline-block';
+
+          installBtn.addEventListener('click', () => {
+            installBtn.disabled = true;
+            deferredPrompt.prompt();
+
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('[PWA] Usuário aceitou instalar o app');
+              } else {
+                console.log('[PWA] Usuário recusou instalar');
+              }
+              deferredPrompt = null;
+            });
+          });
+        }
+      });
+
+      // Registrar o service worker apenas se API estiver disponível no navegador
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('[PWA] Service Worker ativo'))
+            .catch(err => console.error('[PWA] Erro ao registrar SW', err));
+        });
+      }
+      
+      // Quando PWA já estiver instalado, esconder o botão
+      window.addEventListener('appinstalled', () => {
+        console.log('[PWA] App foi instalado com sucesso!');
+        deferredPrompt = null;
+        const pwaInstallBtn = document.getElementById('pwa-install-btn');
+        if (pwaInstallBtn) {
+          pwaInstallBtn.style.display = 'none';
+        }
+      });
+    </script>
   </body>
 </html>

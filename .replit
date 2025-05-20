@@ -7,19 +7,27 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+build = ["sh", "-c", "npm run build"]
+run = ["sh", "-c", "npm run start"]
 
 [[ports]]
 localPort = 3001
 externalPort = 3001
 
 [[ports]]
+localPort = 3333
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 5001
+externalPort = 3002
+
 [workflows]
-runButton = "Project"
+runButton = "Start Dev Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -44,3 +52,12 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Start Dev Server"
+author = 41516510
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"

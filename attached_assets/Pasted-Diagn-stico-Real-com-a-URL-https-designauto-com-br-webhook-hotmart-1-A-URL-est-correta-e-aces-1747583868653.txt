@@ -1,0 +1,134 @@
+Diagnóstico Real com a URL https://designauto.com.br/webhook/hotmart
+📍 1. A URL está correta e acessível?
+Vamos garantir que o endpoint está escutando no caminho certo:
+
+Você precisa ter um arquivo de rota no backend que atenda a esse caminho:
+
+ts
+Copiar
+Editar
+// server/routes/webhook-routes.ts (exemplo)
+import express from 'express';
+const router = express.Router();
+
+router.post('/webhook/hotmart', async (req, res) => {
+  console.log("📩 Webhook recebido:", JSON.stringify(req.body, null, 2));
+
+  // Teste básico para ver se chega
+  return res.status(200).json({ success: true, note: "Webhook chegou" });
+});
+
+export default router;
+Esse arquivo precisa estar importado na sua aplicação principal (geralmente em server/index.ts):
+
+ts
+Copiar
+Editar
+import webhookRoutes from './routes/webhook-routes';
+app.use('/', webhookRoutes);
+📍 2. A Hotmart está enviando o body como application/json?
+Verifique no log da Hotmart se os headers do envio incluem:
+
+http
+Copiar
+Editar
+Content-Type: application/json
+E no seu backend, o Express precisa usar:
+
+ts
+Copiar
+Editar
+app.use(express.json()); // para processar JSON corretamente
+Se isso não estiver presente, o req.body chega como undefined, e o processamento falha silenciosamente.
+
+📍 3. Seu handler /webhook/hotmart está validando campos como offerId, productId, subscription?
+O erro "Assinatura inválida" ou "Erro ao processar webhook" pode vir de algo assim no código:
+
+ts
+Copiar
+Editar
+const { product, offer, buyer, subscription } = req.body.data;
+
+if (!subscription || !subscription.plan) {
+  return res.status(200).json({ success: false, message: "Assinatura inválida" });
+}
+✅ Solução: adicione um log no início:
+
+ts
+Copiar
+Editar
+console.log("📦 Corpo do webhook:", JSON.stringify(req.body, null, 2));
+📍 4. Garantir que product.id e offer.code existem no banco
+Você já criou os mapeamentos com:
+
+productId: 5381714
+
+offerId: aukjngrt
+
+Se o seu código estiver buscando errado, exemplo:
+
+ts
+Copiar
+Editar
+const mapping = await db.hotmartProductMapping.findFirst({
+  where: {
+    offerCode: offer.code  // ❌ mas o campo no banco se chama offerId
+  }
+});
+🛠 Corrigir:
+
+ts
+Copiar
+Editar
+where: {
+  offerId: offer.code   // ✅ coerente com o nome usado na tabela
+}
+📍 5. Simular localmente (fortemente recomendado)
+Crie um arquivo chamado simulate-webhook.ts com o conteúdo da Hotmart:
+
+ts
+Copiar
+Editar
+import axios from 'axios';
+
+axios.post("https://designauto.com.br/webhook/hotmart", {
+  id: "123456",
+  creation_date: Date.now(),
+  event: "PURCHASE_APPROVED",
+  version: "2.0.0",
+  data: {
+    product: {
+      id: 5381714,
+      name: "App DesignAuto"
+    },
+    offer: {
+      code: "aukjngrt"
+    },
+    buyer: {
+      email: "cliente1@example.com"
+    },
+    subscription: {
+      status: "ACTIVE",
+      plan: {
+        id: 1234,
+        name: "Plano Anual"
+      },
+      subscriber: {
+        code: "9OL3KY4O"
+      }
+    }
+  },
+  hottok: "fake"
+}).then(res => {
+  console.log("✅ Resposta:", res.data);
+}).catch(err => {
+  console.error("❌ Erro:", err.response?.data || err.message);
+});
+✅ Ação imediata recomendada
+Confirme que seu servidor Express tem app.use(express.json())
+
+Adicione console.log(JSON.stringify(req.body, null, 2)) na rota
+
+Verifique se o offerId e productId batem com os campos do banco
+
+Cole aqui seu código atual da rota POST /webhook/hotmart para eu revisar com precisão

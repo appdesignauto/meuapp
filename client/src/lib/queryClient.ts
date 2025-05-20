@@ -36,27 +36,52 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: { isFormData?: boolean }
+  options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  // Configuração padrão para requisições
+  // Adicionar timestamp para prevenir cache
+  const timestamp = Date.now();
+  const finalUrl = url.includes('?') 
+    ? `${url}&_t=${timestamp}` 
+    : `${url}?_t=${timestamp}`;
+  
+  // Configuração padrão para requisições com cabeçalhos anti-cache
   const fetchOptions: RequestInit = {
     method,
     credentials: "include",
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Timestamp': timestamp.toString()
+    }
   };
 
   // Se temos dados para enviar
   if (data) {
-    // Se é FormData, não definimos Content-Type (o navegador define automaticamente com o boundary)
-    if (options?.isFormData) {
-      fetchOptions.body = data as FormData;
+    // Se é FormData ou skipContentType é true, não definimos Content-Type
+    if (data instanceof FormData || options?.isFormData) {
+      fetchOptions.body = data instanceof FormData ? data : data as FormData;
     } else {
       // Para dados JSON normais
-      fetchOptions.headers = { "Content-Type": "application/json" };
-      fetchOptions.body = JSON.stringify(data);
+      if (!options?.skipContentType) {
+        fetchOptions.headers = { 
+          ...fetchOptions.headers,
+          "Content-Type": "application/json" 
+        };
+      }
+      // Adicionar timestamp aos dados para evitar cache
+      const dataWithTimestamp = typeof data === 'object' && data !== null 
+        ? { ...data as object, _timestamp: timestamp } 
+        : data;
+      
+      fetchOptions.body = JSON.stringify(dataWithTimestamp);
     }
   }
 
-  const res = await fetch(url, fetchOptions);
+  console.log(`[API] Fazendo requisição para ${finalUrl} com anti-cache`);
+  
+  // Usar a URL com parâmetros anti-cache
+  const res = await fetch(finalUrl, fetchOptions);
   await throwIfResNotOk(res);
   return res;
 }
@@ -81,10 +106,19 @@ export const getQueryFn: <T>(options: {
       }
     });
     
+    // Adicionar timestamp para evitar cache do navegador
+    url.searchParams.append('_cache_buster', Date.now().toString());
+    
     console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
     
     const res = await fetch(url.toString(), {
       credentials: "include",
+      cache: "no-cache", // Solicitar ao fetch para não usar o cache
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -99,10 +133,13 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchInterval: 10000, // Refetch a cada 10 segundos
+      refetchOnWindowFocus: true, 
+      refetchOnMount: true, // Refetch sempre que um componente é montado
+      refetchOnReconnect: true, // Refetch quando a conexão é reestabelecida
+      staleTime: 0, // Dados sempre considerados obsoletos
       retry: false,
+      gcTime: 1000, // Tempo de garbage collection de apenas 1 segundo
     },
     mutations: {
       retry: false,

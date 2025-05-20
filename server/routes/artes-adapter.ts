@@ -1,10 +1,24 @@
 import express from 'express';
 import { storage } from '../storage';
 import { Request, Response, NextFunction } from 'express';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { db } from '../db';
+import { arts } from '@shared/schema';
 import { supabaseStorageService } from '../services/supabase-storage';
-import { isAuthenticated } from '../middlewares/auth';
+
+// Middleware para verificar se o usuário é admin
+const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  const user = req.user as any;
+  if (!user || (user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && user.nivelacesso !== 'designer')) {
+    return res.status(403).json({ message: "Acesso não autorizado" });
+  }
+  
+  next();
+};
 
 /**
  * Arquivo que implementa rotas em português como adaptadores para as rotas em inglês
@@ -482,283 +496,149 @@ router.post('/api/favoritos/toggle/:id', async (req: Request, res: Response) => 
   }
 });
 
-// ==== Adaptadores para rotas de admin em português ====
+// Rotas de administração de artes
 
-// Verificar se arte pertence a um grupo - "/api/admin/artes/:id/check-group"
-router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
-  // Redirecionar para versão em inglês da rota
-  const artId = req.params.id;
-  req.url = `/api/admin/arts/${artId}/check-group`;
-  
-  // Passar para o próximo handler que processa a versão em inglês da rota
-  next();
-});
-
-// Obter todas as artes de um grupo - "/api/admin/artes/group/:groupId"
-router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+// Rota para excluir uma arte por ID - "/api/admin/artes/:id"
+router.delete('/api/admin/artes/:id', isAdmin, async (req: Request, res: Response) => {
   try {
-    const groupId = req.params.groupId;
+    const id = parseInt(req.params.id);
     
-    if (!groupId) {
-      return res.status(400).json({
-        message: 'ID do grupo não fornecido'
+    console.log(`[DELETE] Iniciando exclusão da arte ID: ${id}`);
+    
+    // Verificar se a arte existe
+    const art = await storage.getArtById(id);
+    
+    if (!art) {
+      console.log(`[DELETE] Arte ID ${id} não encontrada`);
+      return res.status(404).json({ message: "Arte não encontrada" });
+    }
+    
+    // Primeiro excluir todas as referências à arte
+    console.log(`[DELETE] Removendo registros relacionados à arte ID: ${id}`);
+    
+    try {
+      // Usar transação para garantir que todas as exclusões ocorram ou nenhuma
+      await db.transaction(async (tx) => {
+        // 1. Remover visualizações
+        await tx.execute(sql`DELETE FROM views WHERE "artId" = ${id}`);
+        console.log(`[DELETE] Visualizações removidas para arte ID: ${id}`);
+        
+        // 2. Remover downloads
+        await tx.execute(sql`DELETE FROM downloads WHERE "artId" = ${id}`);
+        console.log(`[DELETE] Downloads removidos para arte ID: ${id}`);
+        
+        // 3. Remover favoritos
+        await tx.execute(sql`DELETE FROM favorites WHERE "artId" = ${id}`);
+        console.log(`[DELETE] Favoritos removidos para arte ID: ${id}`);
+        
+        // 4. Remover a própria arte
+        await tx.execute(sql`DELETE FROM arts WHERE id = ${id}`);
+        console.log(`[DELETE] Arte ID ${id} removida com sucesso`);
+      });
+      
+      // Desativar cache para esta resposta
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Retornar sucesso
+      return res.status(200).json({ 
+        message: "Arte excluída com sucesso",
+        timestamp: Date.now() // Adicionar timestamp para evitar cache
+      });
+    } catch (error) {
+      console.error(`[DELETE] Erro na transação: ${error}`);
+      return res.status(500).json({ 
+        message: "Erro ao excluir arte: falha na transação de banco de dados",
+        error: error.message
       });
     }
-    
-    console.log(`[DEBUG] (artes-adapter) Buscando artes do grupo ID: ${groupId}`);
-    
-    // Verificar primeiro quantas artes existem com esse groupId
-    const countResult = await db.execute(sql`
-      SELECT COUNT(*) as count FROM arts WHERE "groupId" = ${groupId}
-    `);
-    const count = countResult.rows[0]?.count || 0;
-    console.log(`[DEBUG] (artes-adapter) Encontradas ${count} artes com groupId = ${groupId} no banco`);
-    
-    // Buscar todas as artes do grupo ordenadas por formato
-    const result = await db.execute(sql`
-      SELECT id, title, description, format, "imageUrl", "editUrl", "fileType", "categoryId", "isPremium", "isVisible", "previewUrl"
-      FROM arts 
-      WHERE "groupId" = ${groupId}
-      ORDER BY format
-    `);
-    
-    // Se não encontrou nenhuma arte, retornar array vazio
-    if (!result.rows || result.rows.length === 0) {
-      console.log(`[DEBUG] (artes-adapter) Nenhuma arte encontrada para o grupo ${groupId}`);
-      return res.json({ arts: [] });
-    }
-    
-    console.log(`[DEBUG] (artes-adapter) Encontradas ${result.rows.length} artes no grupo ${groupId}`);
-    console.log(`[DEBUG] (artes-adapter) IDs das artes encontradas: ${result.rows.map(art => art.id).join(', ')}`);
-    
-    // Log detalhado das artes antes de retornar
-    console.log(`[DEBUG] (artes-adapter) Detalhes completos das artes do grupo ${groupId}:`);
-    let formatosEncontrados = [];
-    
-    result.rows.forEach((art, index) => {
-      console.log(`[DEBUG] Arte ${index + 1}: ID=${art.id}, Formato=${art.format}, Título=${art.title}`);
-      formatosEncontrados.push(art.format);
-    });
-    
-    console.log(`[DEBUG] Formatos encontrados no grupo: ${formatosEncontrados.join(', ')}`);
-    console.log(`[DEBUG] Total de formatos encontrados: ${formatosEncontrados.length}`);
-    
-    // Retornar as artes encontradas
-    return res.json({
-      groupId: groupId,
-      totalArts: result.rows.length,
-      arts: result.rows
-    });
   } catch (error) {
-    console.error(`[ERROR] (artes-adapter) Erro ao buscar artes do grupo: ${error}`);
-    return res.status(500).json({
-      message: 'Erro ao buscar artes do grupo'
-    });
+    console.error(`[DELETE] Erro ao excluir arte: ${error}`);
+    res.status(500).json({ message: "Erro ao excluir arte" });
   }
 });
 
-// Criar arte multi-formato - "/api/admin/artes/multi"
-router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
-  // Redirecionar para versão em inglês da rota
-  req.url = '/api/admin/arts/multi';
-  
-  // Passar para o próximo handler que processa a versão em inglês da rota
-  next();
-});
-
-// Atualizar arte multi-formato - "/api/admin/artes/multi/:id"
-router.put('/api/admin/artes/multi/:id', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
-  // Redirecionar para versão em inglês da rota
-  const artId = req.params.id;
-  req.url = `/api/admin/arts/multi/${artId}`;
-  
-  // Passar para o próximo handler que processa a versão em inglês da rota
-  next();
-});
-
-// Atualizar grupo de artes - "/api/admin/artes/group/:groupId"
-router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+// Rota para atualizar uma arte por ID - "/api/admin/artes/:id"
+router.put('/api/admin/artes/:id', isAdmin, async (req: Request, res: Response) => {
   try {
-    const groupId = req.params.groupId;
+    const id = parseInt(req.params.id);
     
-    if (!groupId) {
-      return res.status(400).json({
-        message: 'ID do grupo não fornecido'
-      });
+    // Verificar se a arte existe
+    const art = await storage.getArtById(id);
+    
+    if (!art) {
+      return res.status(404).json({ message: "Arte não encontrada" });
     }
     
-    console.log(`[DEBUG] (artes-adapter) Atualizando artes do grupo ID: ${groupId}`);
-    console.log(`[DEBUG] (artes-adapter) Dados recebidos: ${JSON.stringify(req.body)}`);
+    // Atualizar os campos da arte conforme o corpo da requisição
+    const updates = req.body;
     
-    const { arts } = req.body;
+    // Remover campos que não devem ser atualizados
+    delete updates.id;
+    delete updates.createdAt;
+    delete updates._timestamp; // Remover timestamp que é usado apenas para evitar cache
     
-    if (!arts || !Array.isArray(arts) || arts.length === 0) {
-      return res.status(400).json({
-        message: 'Nenhuma arte informada para atualização'
-      });
-    }
+    // Adicionar data de atualização
+    updates.updatedAt = new Date();
     
-    // Para cada arte no grupo, atualizar os dados
-    const updatedArts = [];
+    console.log(`Atualizando arte ${id} com os campos:`, updates);
     
-    for (const art of arts) {
-      if (!art.id) {
-        console.log(`[WARN] (artes-adapter) Arte sem ID encontrada no payload, ignorando...`);
-        continue;
+    try {
+      // Uso de método atualizado e mais seguro para evitar problemas com tipos
+      if (updates.isVisible !== undefined) {
+        // Converter para booleano explicitamente
+        const isVisibleValue = updates.isVisible === true || updates.isVisible === 'true';
+        console.log(`Atualizando visibilidade da arte ${id} para: ${isVisibleValue} (tipo: ${typeof isVisibleValue})`);
+        
+        // Usar variáveis SQL para evitar injeção ou problemas de tipo
+        await db.update(arts)
+          .set({ 
+            isVisible: isVisibleValue, 
+            updatedAt: updates.updatedAt 
+          })
+          .where(eq(arts.id, id))
+          .execute();
+        
+        console.log(`Atualização de visibilidade concluída para arte ${id}`);
+      } else if (updates.isPremium !== undefined) {
+        // Converter para booleano explicitamente
+        const isPremiumValue = updates.isPremium === true || updates.isPremium === 'true';
+        console.log(`Atualizando status premium da arte ${id} para: ${isPremiumValue} (tipo: ${typeof isPremiumValue})`);
+        
+        await db.update(arts)
+          .set({ 
+            isPremium: isPremiumValue, 
+            updatedAt: updates.updatedAt 
+          })
+          .where(eq(arts.id, id))
+          .execute();
+        
+        console.log(`Atualização de premium concluída para arte ${id}`);
+      } else {
+        // Para outros campos, usar método builder também
+        await db.update(arts)
+          .set(updates)
+          .where(eq(arts.id, id))
+          .execute();
       }
-      
-      console.log(`[DEBUG] (artes-adapter) Atualizando arte ID: ${art.id} no grupo ${groupId}`);
-      
-      // Atualizar a arte no banco
-      const updateResult = await db.execute(sql`
-        UPDATE arts
-        SET
-          title = ${art.title || ''},
-          description = ${art.description || null},
-          "imageUrl" = ${art.imageUrl || ''},
-          "editUrl" = ${art.editUrl || ''},
-          "previewUrl" = ${art.previewUrl || null},
-          "isPremium" = ${art.isPremium || false},
-          "isVisible" = ${art.isVisible || true},
-          "updatedAt" = NOW()
-        WHERE id = ${art.id} AND "groupId" = ${groupId}
-        RETURNING id, title, format
-      `);
-      
-      if (updateResult.rows && updateResult.rows.length > 0) {
-        updatedArts.push(updateResult.rows[0]);
-      }
+    } catch (updateError) {
+      console.error("Erro específico na atualização SQL:", updateError);
+      throw updateError;
     }
     
-    // Retornar as artes atualizadas
-    return res.json({
-      success: true,
-      message: `${updatedArts.length} artes atualizadas com sucesso no grupo ${groupId}`,
-      updatedArts
+    // Desativar cache para esta resposta
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    res.status(200).json({ 
+      message: "Arte atualizada com sucesso",
+      timestamp: Date.now() // Adicionar timestamp para evitar cache
     });
   } catch (error) {
-    console.error(`[ERROR] (artes-adapter) Erro ao atualizar artes do grupo: ${error}`);
-    return res.status(500).json({
-      success: false,
-      message: 'Erro ao atualizar artes do grupo'
-    });
-  }
-});
-
-// Excluir arte - "/api/admin/artes/:id"
-router.delete('/api/admin/artes/:id', isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    // Verificar se o usuário é admin ou designer autorizado
-    const userRole = req.user?.nivelacesso;
-    if (userRole !== 'admin' && userRole !== 'designer_adm') {
-      return res.status(403).json({
-        success: false,
-        message: 'Acesso negado. Você não tem permissão para excluir artes.'
-      });
-    }
-    
-    const artId = parseInt(req.params.id);
-    console.log(`[DELETE] Iniciando exclusão da arte ID: ${artId} via rota em português`);
-    
-    // Verificar se a arte existe usando SQL direto
-    const checkResult = await db.execute(sql`
-      SELECT id, "groupId" FROM arts WHERE id = ${artId}
-    `);
-    
-    if (!checkResult.rows || checkResult.rows.length === 0) {
-      console.log(`[DELETE] Arte ID ${artId} não encontrada no banco de dados`);
-      return res.status(404).json({
-        success: false,
-        message: 'Arte não encontrada'
-      });
-    }
-    
-    // Obter o groupId da arte (se existir)
-    const groupId = checkResult.rows[0]?.groupId;
-    console.log(`[DELETE] Arte ${artId} groupId: ${groupId || 'sem grupo'}`);
-    
-    // IMPORTANTE: Resolver a restrição de chave estrangeira
-    // Primeiro excluir registros de views que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de visualizações para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM views WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de favoritos que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de favoritos para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM favorites WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de downloads que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de downloads para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM downloads WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de designerStats que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de estatísticas de designer para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM "designerStats" WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de shares que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de compartilhamentos para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM shares WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de artVariations que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de variações para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM "artVariations" WHERE artid = ${artId}
-    `);
-    
-    // Excluir registros de reports que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de denúncias para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM reports WHERE "artId" = ${artId}
-    `);
-    
-    // Agora podemos excluir a arte com segurança
-    console.log(`[DELETE] Excluindo a arte ID: ${artId}`);
-    const deleteResult = await db.execute(sql`
-      DELETE FROM arts WHERE id = ${artId} RETURNING id
-    `);
-    
-    // Verificar se a exclusão foi bem-sucedida
-    if (!deleteResult.rows || deleteResult.rows.length === 0) {
-      console.log(`[DELETE] Falha ao excluir arte ID ${artId}. Nenhuma linha afetada.`);
-      return res.status(500).json({
-        success: false,
-        message: 'Falha ao excluir arte. Operação não afetou nenhuma linha no banco de dados.'
-      });
-    }
-    
-    console.log(`[DELETE] Arte ID ${artId} excluída com sucesso. ID retornado: ${deleteResult.rows[0]?.id}`);
-    
-    // Verificar se há outras artes no mesmo grupo
-    if (groupId) {
-      const groupArtsResult = await db.execute(sql`
-        SELECT id FROM arts WHERE "groupId" = ${groupId}
-      `);
-      
-      const remainingCount = groupArtsResult.rowCount || 0;
-      console.log(`[DELETE] Restam ${remainingCount} artes no grupo ${groupId}`);
-    }
-    
-    return res.json({
-      success: true,
-      message: 'Arte excluída com sucesso',
-      id: artId
-    });
-  } catch (error) {
-    console.error(`[DELETE] Erro ao excluir arte ${req.params.id}:`, error);
-    return res.status(500).json({
-      success: false,
-      message: 'Erro ao excluir arte',
-      error: String(error)
-    });
+    console.error("Erro ao atualizar arte:", error);
+    res.status(500).json({ message: "Erro ao atualizar arte" });
   }
 });
 

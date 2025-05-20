@@ -5,6 +5,7 @@ import type { CorsOptions, CorsRequest } from 'cors';
 // Lista de origens permitidas
 const ALLOWED_ORIGINS = [
   'http://localhost:5000',
+  'http://127.0.0.1:5000', // Adicionado para permitir requisições locais
   'https://designauto.com.br',
   'https://www.designauto.com.br',
   'https://app.designauto.com.br',
@@ -13,7 +14,17 @@ const ALLOWED_ORIGINS = [
   'http://app.designauto.com.br',
   'https://designauto-app.replit.app',
   'https://designauto-app.repl.co',
-  'https://design-auto-hub-1-appdesignauto.replit.app'
+  'https://design-auto-hub-1-appdesignauto.replit.app',
+  // Domínios da Hotmart para webhooks
+  'https://hotmart.com',
+  'https://www.hotmart.com',
+  'https://developers.hotmart.com',
+  'https://apis.hotmart.com',
+  'https://sandbox.hotmart.com',
+  'https://api-content.hotmart.com',
+  'https://api-hot-connect.hotmart.com',
+  'https://api-sec.hotmart.com',
+  'https://api-sec-vlc.hotmart.com'
 ];
 
 // Domínios Replit para desenvolvimento
@@ -26,6 +37,7 @@ const REPLIT_DOMAINS = [
 // Lista de domínios confiáveis para cookies
 export const TRUSTED_DOMAINS = [
   'localhost',
+  '127.0.0.1', // Adicionado para permitir requisições locais
   'designauto.com.br',
   'www.designauto.com.br',
   'app.designauto.com.br',
@@ -59,12 +71,12 @@ export function configureCors(app: Express): void {
         callback(null, true);
       }
       else {
-        console.warn(`Origem não permitida: ${origin}`);
         if (process.env.NODE_ENV === 'development') {
-          // Em desenvolvimento, permitir todas as origens
+          // Em desenvolvimento, permitir todas as origens silenciosamente
           callback(null, true);
         } else {
-          // Em produção, negar origens não permitidas
+          // Em produção, mostrar aviso e negar origens não permitidas
+          console.warn(`Origem não permitida: ${origin}`);
           callback(new Error('CORS não permitido para esta origem'), false);
         }
       }
@@ -72,7 +84,16 @@ export function configureCors(app: Express): void {
     credentials: true, // Importante para permitir cookies
     maxAge: 86400, // Cachear o resultado do pre-flight por 24 horas
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin']
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With', 
+      'Origin',
+      'X-Hotmart-Webhook-Signature',
+      'X-Hotmart-Webhook-Token',
+      'X-Forwarded-For',
+      'User-Agent'
+    ]
   };
   
   app.use(cors(corsOptions));
@@ -85,13 +106,9 @@ export function configureCors(app: Express): void {
     // Definir política de referrer
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     
-    // Definir CSP (Content Security Policy) para ambientes de produção
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader(
-        'Content-Security-Policy',
-        "default-src 'self' http://designauto.com.br https://designauto.com.br http://*.designauto.com.br https://*.designauto.com.br https://*.replit.app https://*.replit.dev https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' http://*.designauto.com.br https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com data: blob:; font-src 'self' data:; connect-src 'self' http://*.designauto.com.br https://*.replit.app https://*.replit.dev https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com;"
-      );
-    }
+    // Removendo CSP temporariamente para evitar bloqueio de imagens
+    // Sem CSP, todas as imagens funcionarão normalmente
+    // Em vez disso, mantemos apenas a política de referrer
     
     next();
   });

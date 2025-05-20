@@ -28,6 +28,124 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
     // Gerar um ID de grupo único para vincular as artes
     const artGroupId = uuidv4();
     
+    // Verificar se estamos editando uma arte existente
+    // Adicionar log detalhado para debug
+    console.log('Body completo recebido:', JSON.stringify(req.body, null, 2));
+    console.log('artId na requisição:', req.body.artId);
+    const existingArtId = req.body.artId ? parseInt(req.body.artId) : null;
+    console.log('existingArtId convertido:', existingArtId);
+    
+    if (existingArtId) {
+      console.log(`Atualizando arte existente ID: ${existingArtId} e convertendo para grupo ${artGroupId}`);
+      
+      // Verificar se a arte existe (usando getArtById que é a função existente)
+      const existingArt = await storage.getArtById(existingArtId);
+      if (!existingArt) {
+        return res.status(404).json({
+          message: `Arte com ID ${existingArtId} não encontrada`
+        });
+      }
+      
+      console.log(`Arte existente encontrada: ${existingArt.id}, título: ${existingArt.title}, formato: ${existingArt.format}`);
+      
+      
+      // Pegar o formato da arte atual para atualização
+      const existingFormat = existingArt.format;
+      
+      // Atualizar apenas a arte existente
+      // Encontrar o formato correspondente nos dados enviados
+      console.log(`Formatos disponíveis:`, JSON.stringify(artGroupData.formats.map(f => f.format)));
+      console.log(`Procurando formato: ${existingFormat}`);
+      
+      // Se não encontrar o formato específico, usar o primeiro formato disponível
+      const formatToUpdate = artGroupData.formats.find(f => f.format === existingFormat) || artGroupData.formats[0];
+      
+      if (formatToUpdate) {
+        console.log(`Formato selecionado para atualização: ${formatToUpdate.format}`);
+        console.log(`Detalhes do formato:`, JSON.stringify(formatToUpdate, null, 2));
+        
+        // Preparar dados para atualização com verificações de segurança
+        const updateData = {
+          title: formatToUpdate.title || artGroupData.formats[0].title,
+          description: formatToUpdate.description || '',
+          imageUrl: formatToUpdate.imageUrl,
+          editUrl: formatToUpdate.editUrl || '',
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          fileType: formatToUpdate.fileType || artGroupData.formats[0].fileType,
+          groupId: artGroupId,
+          updatedAt: new Date()
+        };
+        
+        // Atualizar a arte no banco
+        await db.update(arts)
+          .set(updateData)
+          .where(eq(arts.id, existingArtId));
+        
+        console.log(`Arte ID ${existingArtId} atualizada com sucesso.`);
+        
+        // Criar outros formatos como novas artes se houver mais de um formato
+        const otherFormats = artGroupData.formats.filter(f => f.format !== existingFormat);
+        const createdArts = [{
+          id: existingArtId,
+          format: existingFormat,
+          title: formatToUpdate.title,
+          groupId: artGroupId,
+          action: 'updated'
+        }];
+        
+        // ID da coleção padrão
+        const defaultCollectionId = 1;
+        
+        // Criar os outros formatos
+        for (const format of otherFormats) {
+          // Preparar dados para criação da arte
+          const artData = {
+            title: format.title,
+            description: format.description || '',
+            imageUrl: format.imageUrl,
+            previewUrl: format.previewUrl || null,
+            editUrl: format.editUrl || null,
+            categoryId: artGroupData.categoryId,
+            isPremium: artGroupData.isPremium,
+            format: format.format,
+            fileType: format.fileType,
+            isVisible: true,
+            designerid: req.user?.id || 1,
+            collectionId: defaultCollectionId,
+            groupId: artGroupId
+          };
+          
+          console.log(`Criando arte adicional formato: ${format.format}, groupId: ${artGroupId}`);
+          
+          // Criar nova arte
+          const newArt = await storage.createArt(artData);
+          
+          // Adicionar ao array
+          createdArts.push({
+            id: newArt.id,
+            format: format.format,
+            title: format.title,
+            groupId: newArt.groupId || artGroupId,
+            action: 'created'
+          });
+        }
+        
+        // Retornar sucesso
+        return res.status(200).json({
+          message: `Arte ${existingArtId} convertida para grupo com sucesso`,
+          groupId: artGroupId,
+          totalArts: createdArts.length,
+          arts: createdArts
+        });
+      } else {
+        return res.status(400).json({
+          message: `Formato da arte existente não encontrado nos dados enviados`
+        });
+      }
+    }
+    
+    // Se não for edição de arte existente, continuar com criação normal
     // Registrar o início do processo com log detalhado
     console.log(`Criando grupo de arte ${artGroupId} com ${artGroupData.formats.length} formatos`);
     console.log(`Categoria: ${artGroupData.categoryId}, Usuário: ${req.user?.id}`);
@@ -67,7 +185,6 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
         console.warn(`ALERTA: Arte ID ${newArt.id} foi criada sem groupId. Tentando atualizar...`);
         try {
           // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
-          // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
           const result = await db.execute(sql`
             UPDATE arts 
             SET "groupId" = ${artGroupId}
@@ -121,25 +238,66 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
   }
 });
 
+// Rota para buscar artes por ID de grupo (para todos os usuários)
+router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
+  try {
+    const { groupId } = req.params;
+    
+    // Verificar se o usuário é admin para determinar o filtro de visibilidade
+    const isUserAdmin = req.user?.nivelacesso === 'admin' || 
+                        req.user?.nivelacesso === 'designer_adm' || 
+                        req.user?.nivelacesso === 'designer';
+    
+    // Buscar todas as artes do grupo usando SQL direto para evitar problemas com o nome da coluna
+    let querySQL;
+    
+    if (isUserAdmin) {
+      querySQL = sql`
+        SELECT * FROM arts 
+        WHERE "groupId" = ${groupId}
+      `;
+    } else {
+      querySQL = sql`
+        SELECT * FROM arts 
+        WHERE "groupId" = ${groupId} AND "isVisible" = true
+      `;
+    }
+    
+    const result = await db.execute(querySQL);
+    
+    const groupArts = result.rows || [];
+    
+    if (!groupArts || groupArts.length === 0) {
+      return res.status(404).json({
+        message: 'Grupo de artes não encontrado'
+      });
+    }
+    
+    return res.json({
+      groupId,
+      totalArts: groupArts.length,
+      arts: groupArts
+    });
+  } catch (error) {
+    console.error('Erro ao buscar grupo de artes:', error);
+    return res.status(500).json({
+      message: 'Erro ao buscar grupo de artes'
+    });
+  }
+});
+
 // Rota para verificar o groupId de uma arte específica
 router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    console.log(`[DEBUG] Verificando groupId para arte ${id}`);
-    
-    // Verificar se o usuário está autenticado
-    console.log(`[DEBUG] Usuário autenticado: ${req.isAuthenticated ? 'Sim' : 'Não'}`);
-    console.log(`[DEBUG] Usuário: ${JSON.stringify(req.user || {})}`);
+    console.log(`Verificando groupId para arte ${id}`);
     
     // Usar SQL direto para evitar problemas com o método entries()
     const result = await db.execute(sql`
-      SELECT id, "groupId" FROM arts WHERE id = ${id}
+      SELECT "groupId" FROM arts WHERE id = ${id}
     `);
     
-    console.log(`[DEBUG] Resultado da consulta: ${JSON.stringify(result.rows || [])}`);
-    
     if (!result || !result.rows || result.rows.length === 0) {
-      console.log(`[DEBUG] Arte ${id} não encontrada no banco de dados`);
       return res.status(404).json({
         message: 'Arte não encontrada'
       });
@@ -148,86 +306,64 @@ router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Reque
     // Extrair o groupId do resultado
     const groupId = result.rows[0]?.groupId;
     
-    console.log(`[DEBUG] Arte ${id} groupId: ${groupId || 'null/undefined'}`);
-    
-    // Se tiver groupId, verificar quantas artes existem nesse grupo
-    if (groupId) {
-      const countResult = await db.execute(sql`
-        SELECT COUNT(*) as count FROM arts WHERE "groupId" = ${groupId}
-      `);
-      const count = countResult.rows[0]?.count || 0;
-      console.log(`[DEBUG] Grupo ${groupId} contém ${count} artes`);
-    }
-    
+    console.log(`Arte ${id} groupId: ${groupId}`);
     return res.json({ 
       id: id,
       groupId: groupId
     });
   } catch (error) {
-    console.error(`[ERROR] Erro ao verificar grupo da arte ${req.params.id}:`, error);
+    console.error(`Erro ao verificar grupo da arte ${req.params.id}:`, error);
     return res.status(500).json({
       message: 'Erro ao verificar grupo da arte'
     });
   }
 });
 
-// Rota para buscar todas as artes de um grupo específico
+// Rota administrativa para buscar artes por ID de grupo (somente admin)
 router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const groupId = req.params.groupId;
-    
-    if (!groupId) {
-      return res.status(400).json({
-        message: 'ID do grupo não fornecido'
+    // Verificar se o usuário é admin ou designer autorizado
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm' && userRole !== 'designer') {
+      return res.status(403).json({
+        message: 'Acesso negado. Você não tem permissão para acessar este recurso.'
       });
     }
     
-    console.log(`[DEBUG] Buscando artes do grupo ID: ${groupId}`);
+    const { groupId } = req.params;
     
-    // Adicionar logs para debug
-    console.log(`[DEBUG] Usuário autenticado: ${req.isAuthenticated ? 'Sim' : 'Não'}`);
-    console.log(`[DEBUG] Usuário: ${JSON.stringify(req.user || {})}`);
-    
-    // Verificar primeiro quantas artes existem com esse groupId
-    const countResult = await db.execute(sql`
-      SELECT COUNT(*) as count FROM arts WHERE "groupId" = ${groupId}
-    `);
-    const count = countResult.rows[0]?.count || 0;
-    console.log(`[DEBUG] Encontradas ${count} artes com groupId = ${groupId} no banco`);
-    
-    // Buscar todas as artes do grupo ordenadas por formato
+    // Buscar todas as artes do grupo usando SQL direto para evitar problemas
     const result = await db.execute(sql`
-      SELECT id, title, description, format, "imageUrl", "editUrl", "fileType", "categoryId", "isPremium", "isVisible", "previewUrl"
-      FROM arts 
+      SELECT * FROM arts 
       WHERE "groupId" = ${groupId}
-      ORDER BY format
     `);
     
-    // Se não encontrou nenhuma arte, retornar array vazio
-    if (!result.rows || result.rows.length === 0) {
-      console.log(`[DEBUG] Nenhuma arte encontrada para o grupo ${groupId}`);
-      return res.json({ arts: [] });
+    // Converter resultados para o formato esperado
+    const groupArts = result.rows || [];
+    
+    if (!groupArts || groupArts.length === 0) {
+      return res.status(404).json({
+        message: 'Grupo de artes não encontrado'
+      });
     }
     
-    console.log(`[DEBUG] Encontradas ${result.rows.length} artes no grupo ${groupId}`);
-    console.log(`[DEBUG] IDs das artes encontradas: ${result.rows.map(art => art.id).join(', ')}`);
+    console.log(`Buscando grupo ${groupId} para edição (${groupArts.length} artes encontradas)`);
     
-    // Retornar as artes encontradas
     return res.json({
-      groupId: groupId,
-      totalArts: result.rows.length,
-      arts: result.rows
+      groupId,
+      totalArts: groupArts.length,
+      arts: groupArts
     });
   } catch (error) {
-    console.error(`[ERROR] Erro ao buscar artes do grupo ${req.params.groupId}:`, error);
+    console.error('Erro ao buscar grupo de artes para edição:', error);
     return res.status(500).json({
-      message: 'Erro ao buscar artes do grupo'
+      message: 'Erro ao buscar grupo de artes para edição'
     });
   }
 });
 
-// Rota simplificada para editar uma arte multi-formato
-router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, res: Response) => {
+// Nova rota para atualizar um grupo de artes (PUT)
+router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer autorizado
     const userRole = req.user?.nivelacesso;
@@ -237,155 +373,147 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
       });
     }
     
-    const id = parseInt(req.params.id);
-    
-    // Debug: Log dos dados recebidos para identificar o problema
-    console.log('Dados recebidos para atualização de arte multi-formato:');
-    console.log(JSON.stringify(req.body, null, 2));
+    const { groupId } = req.params;
     
     // Validar os dados recebidos
     const artGroupData = ArtGroupSchema.parse(req.body);
     
-    // Buscar a arte existente para verificar se existe
-    const art = await storage.getArtById(id);
+    // Buscar todas as artes existentes do grupo usando SQL direto para evitar problemas com o nome da coluna
+    const result = await db.execute(sql`
+      SELECT * FROM arts 
+      WHERE "groupId" = ${groupId}
+    `);
     
-    if (!art) {
+    const existingArts = result.rows || [];
+    
+    if (!existingArts || existingArts.length === 0) {
       return res.status(404).json({
-        message: 'Arte não encontrada'
+        message: 'Grupo de artes não encontrado'
       });
     }
     
-    console.log(`Atualizando arte ID ${id} com formato(s)`);
+    console.log(`Atualizando grupo ${groupId}. Artes existentes: ${existingArts.length}, Formatos novos: ${artGroupData.formats.length}`);
     
-    if (artGroupData.formats.length === 0) {
-      return res.status(400).json({
-        message: 'Nenhum formato fornecido para atualização'
-      });
-    }
+    // Criar um mapa de formatos existentes para facilitar atualizações
+    const existingFormats = new Map();
+    existingArts.forEach(art => {
+      existingFormats.set(art.format, art);
+    });
     
-    const primaryFormat = artGroupData.formats[0];
+    // Arrays para rastrear mudanças
+    const updatedArts = [];
+    const newArts = [];
     
-    // Atualizar a arte principal diretamente com SQL - incluindo a coluna description
-    await db.execute(sql`
-      UPDATE arts 
-      SET 
-        title = ${primaryFormat.title},
-        description = ${primaryFormat.description || ''},
-        "imageUrl" = ${primaryFormat.imageUrl},
-        "editUrl" = ${primaryFormat.editUrl || ''},
-        "categoryId" = ${artGroupData.categoryId},
-        "isPremium" = ${artGroupData.isPremium},
-        "fileType" = ${primaryFormat.fileType}
-      WHERE id = ${id}
-    `);
+    // ID da coleção padrão (se necessário)
+    const defaultCollectionId = 1; // Altere conforme necessário
     
-    // Se for uma edição de grupo existente, buscar o groupId da arte
-    const artResult = await db.execute(sql`
-      SELECT "groupId" FROM arts WHERE id = ${id}
-    `);
-    
-    const groupId = artResult.rows[0]?.groupId || uuidv4();
-    
-    // Array para armazenar os IDs das artes atualizadas
-    const updatedArts = [{
-      id: id,
-      format: primaryFormat.format,
-      title: primaryFormat.title
-    }];
-    
-    // Processar os formatos adicionais (se houver mais de um)
-    if (artGroupData.formats.length > 1) {
-      // Aplicar as atualizações para cada formato adicional
-      for (let i = 1; i < artGroupData.formats.length; i++) {
-        const format = artGroupData.formats[i];
+    // Atualizar artes existentes e criar novas quando necessário
+    for (const format of artGroupData.formats) {
+      // Verificar se esse formato já existe no grupo
+      const existingArt = existingFormats.get(format.format);
+      
+      if (existingArt) {
+        // Atualizar arte existente
+        const updateData = {
+          title: format.title,
+          description: format.description || '',
+          imageUrl: format.imageUrl,
+          previewUrl: format.previewUrl || null,
+          editUrl: format.editUrl,
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          fileType: format.fileType,
+          updatedAt: new Date().toISOString()
+        };
         
-        // Verificar se já existe uma arte neste formato para este grupo
-        const existingFormatArt = await db.execute(sql`
-          SELECT id FROM arts 
-          WHERE "groupId" = ${groupId} AND format = ${format.format} AND id != ${id}
-        `);
+        // Realizar a atualização no banco de dados
+        const [updatedArt] = await db
+          .update(arts)
+          .set(updateData)
+          .where(eq(arts.id, existingArt.id))
+          .returning();
         
-        if (existingFormatArt.rows.length > 0) {
-          // Se existir, atualizar
-          const formatArtId = existingFormatArt.rows[0].id;
-          
-          await db.execute(sql`
-            UPDATE arts 
-            SET 
-              title = ${format.title},
-              description = ${format.description || ''},
-              "imageUrl" = ${format.imageUrl},
-              "editUrl" = ${format.editUrl || ''},
-              "categoryId" = ${artGroupData.categoryId},
-              "isPremium" = ${artGroupData.isPremium},
-              "fileType" = ${format.fileType}
-            WHERE id = ${formatArtId}
-          `);
-          
-          updatedArts.push({
-            id: formatArtId,
-            format: format.format,
-            title: format.title
-          });
-        } else {
-          // Se não existir, criar novo
-          const result = await db.execute(sql`
-            INSERT INTO arts (
-              title, 
-              description,
-              "imageUrl", 
-              format, 
-              "fileType", 
-              "editUrl", 
-              "categoryId",
-              "isPremium",
-              "isVisible",
-              "groupId",
-              designerid
-            ) 
-            VALUES (
-              ${format.title},
-              ${format.description || ''},
-              ${format.imageUrl},
-              ${format.format},
-              ${format.fileType},
-              ${format.editUrl || ''},
-              ${artGroupData.categoryId},
-              ${artGroupData.isPremium},
-              TRUE,
-              ${groupId},
-              ${art.designerid || 1}
-            )
-            RETURNING id
-          `);
-          
-          if (result.rows.length > 0) {
-            const newArtId = result.rows[0].id;
-            updatedArts.push({
-              id: newArtId,
-              format: format.format,
-              title: format.title
-            });
+        updatedArts.push({
+          id: updatedArt.id,
+          format: format.format,
+          title: format.title,
+          action: 'updated'
+        });
+        
+        // Remover do mapa para rastrear o que foi atualizado
+        existingFormats.delete(format.format);
+      } else {
+        // Criar nova arte para o formato que não existia
+        const artData = {
+          title: format.title,
+          description: format.description || '',
+          imageUrl: format.imageUrl,
+          previewUrl: format.previewUrl || null,
+          editUrl: format.editUrl || null,
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          format: format.format,
+          fileType: format.fileType,
+          isVisible: true,
+          designerid: req.user?.id || 1,
+          collectionId: defaultCollectionId,
+          groupId: groupId
+        };
+        
+        // Criar a arte no banco de dados
+        const newArt = await storage.createArt(artData);
+        
+        // Verificar se o groupId foi salvo corretamente
+        if (!newArt.groupId) {
+          console.warn(`ALERTA: Nova arte ID ${newArt.id} no grupo ${groupId} foi criada sem groupId. Tentando atualizar...`);
+          try {
+            // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+            // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
+            const result = await db.execute(sql`
+              UPDATE arts 
+              SET "groupId" = ${groupId}
+              WHERE id = ${newArt.id}
+            `);
+            
+            // Log de confirmação
+            console.log(`SQL executado para atualizar groupId da nova arte ${newArt.id} no grupo ${groupId}`);
+            
+            if (result.rowCount > 0) {
+              console.log(`Nova arte ID ${newArt.id} atualizada com groupId ${groupId}`);
+            } else {
+              console.error(`Nenhuma linha atualizada para nova arte ${newArt.id}`);
+            }
+          } catch (updateError) {
+            console.error(`Erro ao atualizar groupId para nova arte ${newArt.id}:`, updateError);
           }
         }
+        
+        newArts.push({
+          id: newArt.id,
+          format: format.format,
+          title: format.title,
+          action: 'created',
+          groupId: newArt.groupId || groupId
+        });
       }
     }
     
-    // Atualizar o groupId da arte principal, se necessário
-    if (!art.groupId) {
-      await db.execute(sql`
-        UPDATE arts SET "groupId" = ${groupId} WHERE id = ${id}
-      `);
+    // Opcional: lidar com formatos que existiam mas não foram atualizados
+    // Se desejar remover formatos que não estão mais na lista:
+    /*
+    for (const [format, art] of existingFormats.entries()) {
+      await db.delete(arts).where(eq(arts.id, art.id));
     }
+    */
     
-    // Responder com sucesso
     return res.json({
-      message: 'Arte atualizada com sucesso',
-      id: id,
-      updated: updatedArts
+      message: 'Grupo de artes atualizado com sucesso',
+      groupId,
+      updated: updatedArts,
+      created: newArts
     });
   } catch (error) {
-    console.error('Erro ao atualizar arte multi-formato:', error);
+    console.error('Erro ao atualizar grupo de artes:', error);
     
     // Tratar erros de validação do Zod
     if (error instanceof ZodError) {
@@ -397,121 +525,7 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
     
     // Erro genérico
     return res.status(500).json({
-      message: 'Erro ao atualizar arte multi-formato'
-    });
-  }
-});
-
-// Rota para excluir arte
-router.delete('/api/admin/arts/:id', isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    // Verificar se o usuário é admin ou designer autorizado
-    const userRole = req.user?.nivelacesso;
-    if (userRole !== 'admin' && userRole !== 'designer_adm') {
-      return res.status(403).json({
-        message: 'Acesso negado. Você não tem permissão para excluir artes.'
-      });
-    }
-    
-    const artId = parseInt(req.params.id);
-    console.log(`[DELETE] Iniciando exclusão da arte ID: ${artId}`);
-    
-    // Verificar se a arte existe usando SQL direto
-    const checkResult = await db.execute(sql`
-      SELECT id, "groupId" FROM arts WHERE id = ${artId}
-    `);
-    
-    if (!checkResult.rows || checkResult.rows.length === 0) {
-      console.log(`[DELETE] Arte ID ${artId} não encontrada no banco de dados`);
-      return res.status(404).json({
-        message: 'Arte não encontrada'
-      });
-    }
-    
-    // Obter o groupId da arte (se existir)
-    const groupId = checkResult.rows[0]?.groupId;
-    console.log(`[DELETE] Arte ${artId} groupId: ${groupId || 'sem grupo'}`);
-    
-    // IMPORTANTE: Resolver a restrição de chave estrangeira
-    // Primeiro excluir registros de views que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de visualizações para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM views WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de favoritos que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de favoritos para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM favorites WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de downloads que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de downloads para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM downloads WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de designerStats que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de estatísticas de designer para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM "designerStats" WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de shares que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de compartilhamentos para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM shares WHERE "artId" = ${artId}
-    `);
-    
-    // Excluir registros de artVariations que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de variações para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM "artVariations" WHERE artid = ${artId}
-    `);
-    
-    // Excluir registros de reports que referenciam essa arte
-    console.log(`[DELETE] Removendo registros de denúncias para a arte ID: ${artId}`);
-    await db.execute(sql`
-      DELETE FROM reports WHERE "artId" = ${artId}
-    `);
-    
-    // Agora podemos excluir a arte com segurança
-    console.log(`[DELETE] Excluindo a arte ID: ${artId}`);
-    const deleteResult = await db.execute(sql`
-      DELETE FROM arts WHERE id = ${artId} RETURNING id
-    `);
-    
-    // Verificar se a exclusão foi bem-sucedida
-    if (!deleteResult.rows || deleteResult.rows.length === 0) {
-      console.log(`[DELETE] Falha ao excluir arte ID ${artId}. Nenhuma linha afetada.`);
-      return res.status(500).json({
-        message: 'Falha ao excluir arte. Operação não afetou nenhuma linha no banco de dados.'
-      });
-    }
-    
-    console.log(`[DELETE] Arte ID ${artId} excluída com sucesso. ID retornado: ${deleteResult.rows[0]?.id}`);
-    
-    // Verificar se há outras artes no mesmo grupo
-    if (groupId) {
-      const groupArtsResult = await db.execute(sql`
-        SELECT id FROM arts WHERE "groupId" = ${groupId}
-      `);
-      
-      const remainingCount = groupArtsResult.rowCount || 0;
-      console.log(`[DELETE] Restam ${remainingCount} artes no grupo ${groupId}`);
-    }
-    
-    return res.json({
-      success: true,
-      message: 'Arte excluída com sucesso',
-      id: artId
-    });
-  } catch (error) {
-    console.error(`[DELETE] Erro ao excluir arte ${req.params.id}:`, error);
-    return res.status(500).json({
-      success: false,
-      message: 'Erro ao excluir arte',
-      error: String(error)
+      message: 'Erro ao atualizar o grupo de artes'
     });
   }
 });
