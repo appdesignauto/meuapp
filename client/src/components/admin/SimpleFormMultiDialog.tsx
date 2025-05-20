@@ -329,15 +329,23 @@ export default function SimpleFormMultiDialog({
             setFormatsComplete(updatedFormatsComplete);
             
             // Definir a aba da arte que está sendo editada como atual
-            // E se houver formatos válidos, definir o primeiro como aba ativa
+            // Se houver formatos válidos, definir o formato da arte clicada como aba ativa
             if (formatosValidos.length > 0) {
               console.log(`Grupo tem ${formatosValidos.length} formatos válidos`);
               
-              // Definimos o primeiro formato como aba ativa
-              setCurrentTab(formatosValidos[0]);
+              // Definir a aba atual usando o formato da arte que o usuário clicou para editar
+              // Se o formato da arte clicada estiver entre os formatos válidos, usá-lo como aba ativa
+              if (editingArt && editingArt.format && formatosValidos.includes(editingArt.format)) {
+                console.log(`Definindo formato da arte clicada como aba ativa: ${editingArt.format}`);
+                setCurrentTab(editingArt.format);
+              } else {
+                // Caso contrário, usar o primeiro formato como padrão
+                console.log(`Formato da arte clicada não encontrado ou inválido, usando o primeiro formato: ${formatosValidos[0]}`);
+                setCurrentTab(formatosValidos[0]);
+              }
               
               // Log para confirmar a aba ativa
-              console.log(`Primeira aba ativa definida como: ${formatosValidos[0]}`);
+              console.log(`Aba ativa definida como: ${currentTab}`);
               
               // Importante: garantir que step1Form tenha os formatos corretos
               // Várias partes do componente dependem desta informação
@@ -407,6 +415,10 @@ export default function SimpleFormMultiDialog({
     if (formatSlug) {
       step1Form.setValue('selectedFormats', [formatSlug]);
       
+      // Definir a aba ativa como o formato da arte que está sendo editada
+      setCurrentTab(formatSlug);
+      console.log(`Definindo aba ativa para formato da arte única: ${formatSlug}`);
+      
       // Configurar detalhes do formato
       const initialDetails: Record<string, FormatValues> = {
         [formatSlug]: {
@@ -421,7 +433,6 @@ export default function SimpleFormMultiDialog({
       };
       
       setFormatDetails(initialDetails);
-      setCurrentTab(formatSlug);
       
       // Marcar formato como completo
       setFormatsComplete({
