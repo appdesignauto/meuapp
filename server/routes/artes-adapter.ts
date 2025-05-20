@@ -532,10 +532,16 @@ router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
     console.log(`[DEBUG] (artes-adapter) IDs das artes encontradas: ${result.rows.map(art => art.id).join(', ')}`);
     
     // Log detalhado das artes antes de retornar
-    console.log(`[DEBUG] (artes-adapter) Detalhes completos das artes do grupo:`);
+    console.log(`[DEBUG] (artes-adapter) Detalhes completos das artes do grupo ${groupId}:`);
+    let formatosEncontrados = [];
+    
     result.rows.forEach((art, index) => {
       console.log(`[DEBUG] Arte ${index + 1}: ID=${art.id}, Formato=${art.format}, Título=${art.title}`);
+      formatosEncontrados.push(art.format);
     });
+    
+    console.log(`[DEBUG] Formatos encontrados no grupo: ${formatosEncontrados.join(', ')}`);
+    console.log(`[DEBUG] Total de formatos encontrados: ${formatosEncontrados.length}`);
     
     // Retornar as artes encontradas
     return res.json({

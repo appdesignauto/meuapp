@@ -222,9 +222,25 @@ export default function SimpleFormMultiDialog({
           // Importante: Verificar se temos pelo menos uma arte no grupo
           // mesmo com uma arte, podemos editá-la como grupo (mais flexível)
           if (Array.isArray(groupArts) && groupArts.length > 0) {
-            // Extrair os formatos das artes do grupo
-            const formatSlugs = groupArts.map(art => art.format);
-            console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
+            console.log(`Total de ${groupArts.length} artes encontradas no grupo ID ${data.groupId}`);
+            
+            // Extrair os formatos das artes do grupo com melhor validação
+            const formatSlugs = groupArts
+              .filter(art => art && typeof art === 'object')
+              .map(art => art.format)
+              .filter(format => format && typeof format === 'string');
+              
+            console.log(`Formatos encontrados após validação: ${formatSlugs.join(', ')} (${formatSlugs.length} formatos)`);
+            
+            // Verificação crítica - exibir alerta se não encontrou formatos válidos
+            if (formatSlugs.length === 0) {
+              console.error('ERRO CRÍTICO: Nenhum formato válido encontrado nas artes do grupo');
+              toast({
+                title: "Erro ao processar grupo",
+                description: "Não foram encontrados formatos válidos neste grupo de artes.",
+                variant: "destructive"
+              });
+            }
             
             // Vamos garantir que todos os formatos estejam disponíveis na lista
             const formatosValidos = formatSlugs.filter(slug => {
@@ -315,11 +331,31 @@ export default function SimpleFormMultiDialog({
             // Definir a aba da arte que está sendo editada como atual
             // E se houver formatos válidos, definir o primeiro como aba ativa
             if (formatosValidos.length > 0) {
+              console.log(`Grupo tem ${formatosValidos.length} formatos válidos`);
+              
+              // Definimos o primeiro formato como aba ativa
               setCurrentTab(formatosValidos[0]);
-              console.log(`Definindo primeira aba ativa do grupo: ${formatosValidos[0]}`);
-            } else {
+              
+              // Log para confirmar a aba ativa
+              console.log(`Primeira aba ativa definida como: ${formatosValidos[0]}`);
+              
+              // Importante: garantir que step1Form tenha os formatos corretos
+              // Várias partes do componente dependem desta informação
+              if (Array.isArray(step1Form.getValues('selectedFormats'))) {
+                console.log(`selectedFormats atual: ${step1Form.getValues('selectedFormats').join(', ')}`);
+              } else {
+                console.log(`ERRO: selectedFormats não é um array!`);
+              }
+              
+              // Forçar atualização após a mudança para garantir renderização
+              setTimeout(() => {
+                console.log(`Verificando formatos selecionados após timeout: ${step1Form.getValues('selectedFormats')?.join(', ')}`);
+              }, 100);
+            } else if (editingArt && editingArt.format) {
               setCurrentTab(editingArt.format);
-              console.log(`Definindo aba ativa: ${editingArt.format}`);
+              console.log(`Nenhum formato válido no grupo, usando formato da arte: ${editingArt.format}`);
+            } else {
+              console.error('ERRO CRÍTICO: Não foi possível determinar um formato para a aba ativa');
             }
             
             // Guardar as imagens apenas dos formatos válidos selecionados
