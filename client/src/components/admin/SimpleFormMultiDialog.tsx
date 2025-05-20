@@ -313,8 +313,14 @@ export default function SimpleFormMultiDialog({
             setFormatsComplete(updatedFormatsComplete);
             
             // Definir a aba da arte que está sendo editada como atual
-            setCurrentTab(editingArt.format);
-            console.log(`Definindo aba ativa: ${editingArt.format}`);
+            // E se houver formatos válidos, definir o primeiro como aba ativa
+            if (formatosValidos.length > 0) {
+              setCurrentTab(formatosValidos[0]);
+              console.log(`Definindo primeira aba ativa do grupo: ${formatosValidos[0]}`);
+            } else {
+              setCurrentTab(editingArt.format);
+              console.log(`Definindo aba ativa: ${editingArt.format}`);
+            }
             
             // Guardar as imagens apenas dos formatos válidos selecionados
             const imageMap: Record<string, string> = {};
