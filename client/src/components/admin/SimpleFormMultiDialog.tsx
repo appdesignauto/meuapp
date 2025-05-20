@@ -242,29 +242,20 @@ export default function SimpleFormMultiDialog({
               });
             }
             
-            // Vamos garantir que todos os formatos estejam disponíveis na lista
-            const formatosValidos = formatSlugs.filter(slug => {
-              // Verificar se o slug é válido 
-              if (!slug) {
-                console.warn(`Formato inválido encontrado (null/undefined)`);
-                return false;
-              }
-              
-              // Verificar se o formato existe na lista de formatos
-              const formatoExiste = Array.isArray(formats) && formats.some((f: any) => {
-                return f && f.slug === slug;
-              });
-              
-              if (!formatoExiste) {
-                console.warn(`Formato ${slug} não encontrado na lista de formatos!`);
-              } else {
-                console.log(`Formato válido encontrado: ${slug}`);
-              }
-              
-              return formatoExiste;
-            });
+            // Todos os slugs de formato são considerados válidos, 
+            // já que vêm diretamente do banco de dados e já existem artes com esses formatos
+            // Não precisamos mais fazer a validação com a lista de formatos disponíveis
             
-            // Agora definimos apenas os formatos válidos
+            // Vamos apenas garantir que não temos duplicatas e valores inválidos
+            const formatosValidos = [...new Set(formatSlugs)].filter(slug => slug && typeof slug === 'string');
+            
+            console.log(`Formatos considerados válidos para edição: ${formatosValidos.join(', ')}`);
+            
+            if (formatosValidos.length === 0) {
+              console.warn('Nenhum formato válido encontrado entre as artes do grupo após limpeza');
+            }
+            
+            // Importante: Definir todos os formatos do grupo no formulário para exibição das abas
             step1Form.setValue('selectedFormats', formatosValidos);
             
             // Adicionamos um log para facilitar diagnóstico futuro
