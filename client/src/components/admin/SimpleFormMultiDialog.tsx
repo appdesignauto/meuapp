@@ -293,6 +293,11 @@ export default function SimpleFormMultiDialog({
                   previewUrl: arte.previewUrl || '',
                   editUrl: arte.editUrl || '',
                 };
+                
+                // Marcar este formato como completo para mostrar o check na aba
+                const newFormatsComplete = {...formatsComplete};
+                newFormatsComplete[formato] = true;
+                setFormatsComplete(newFormatsComplete);
               } else {
                 console.warn(`Formato ${formato} selecionado mas não encontrado no grupo de artes!`);
                 // Criar um formato vazio para não quebrar a interface
