@@ -225,8 +225,12 @@ const ArtsList = () => {
   };
   
   const handleAddNew = () => {
+    // Limpando dados anteriores ao adicionar uma nova arte
     setEditingArt(null);
+    setSelectedArtId(null);
+    setIsMultiArtDialogOpen(false); // Garantir que o outro diálogo esteja fechado
     setIsFormOpen(true);
+    console.log('Abrindo formulário para ADICIONAR nova arte');
   };
   
   const handleEdit = (art: Art) => {
