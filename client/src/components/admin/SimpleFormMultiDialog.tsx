@@ -964,36 +964,40 @@ export default function SimpleFormMultiDialog({
                   
                   <Tabs value={currentTab} onValueChange={setCurrentTab} className="mt-3">
                     <TabsList className="w-full flex overflow-x-auto flex-wrap bg-transparent border-b border-gray-200 p-0 mb-1 h-auto">
-                      {step1Form.getValues().selectedFormats.map((formatSlug) => (
-                        <TabsTrigger
-                          key={formatSlug}
-                          value={formatSlug}
-                          className={`
-                            flex items-center space-x-2 min-w-[140px] rounded-none px-4 py-3 
-                            font-medium relative bg-transparent text-gray-700 border-0
-                            hover:bg-gray-50 hover:text-blue-600 transition-colors
-                            data-[state=active]:text-blue-600 data-[state=active]:bg-transparent
-                            data-[state=active]:border-b-2 data-[state=active]:border-blue-600
-                            data-[state=active]:shadow-none data-[state=active]:after:absolute
-                            data-[state=active]:after:bottom-0 data-[state=active]:after:left-0
-                            data-[state=active]:after:right-0 data-[state=active]:after:h-0.5
-                          `}
-                        >
-                          {formatSlug === 'feed' && <Smartphone className="h-5 w-5" />}
-                          {formatSlug === 'stories' && <MonitorSmartphone className="h-5 w-5" />}
-                          {formatSlug === 'web-banner' && <ScreenShare className="h-5 w-5" />}
-                          {formatSlug === 'capa-fan-page' && <Image className="h-5 w-5" />}
-                          {formatSlug === 'cartaz' && <BookImage className="h-5 w-5" />}
-                          {formatSlug === 'carrocel' && <LayoutTemplate className="h-5 w-5" />}
-                          <span>{getFormatName(formatSlug)}</span>
-                          {formatsComplete[formatSlug] && (
-                            <Check className="h-3.5 w-3.5 text-green-500" />
-                          )}
-                        </TabsTrigger>
-                      ))}
+                      {/* Renderização de abas de formatos */}
+                      {(step1Form.getValues().selectedFormats || []).map((formatSlug) => {
+                        console.log(`Renderizando aba para formato: ${formatSlug}`);
+                        return (
+                          <TabsTrigger
+                            key={formatSlug}
+                            value={formatSlug}
+                            className={`
+                              flex items-center space-x-2 min-w-[140px] rounded-none px-4 py-3 
+                              font-medium relative bg-transparent text-gray-700 border-0
+                              hover:bg-gray-50 hover:text-blue-600 transition-colors
+                              data-[state=active]:text-blue-600 data-[state=active]:bg-transparent
+                              data-[state=active]:border-b-2 data-[state=active]:border-blue-600
+                              data-[state=active]:shadow-none data-[state=active]:after:absolute
+                              data-[state=active]:after:bottom-0 data-[state=active]:after:left-0
+                              data-[state=active]:after:right-0 data-[state=active]:after:h-0.5
+                            `}
+                          >
+                            {formatSlug === 'feed' && <Smartphone className="h-5 w-5 mr-2" />}
+                            {formatSlug === 'stories' && <MonitorSmartphone className="h-5 w-5 mr-2" />}
+                            {formatSlug === 'web-banner' && <ScreenShare className="h-5 w-5 mr-2" />}
+                            {formatSlug === 'capa-fan-page' && <Image className="h-5 w-5 mr-2" />}
+                            {formatSlug === 'cartaz' && <BookImage className="h-5 w-5 mr-2" />}
+                            {formatSlug === 'carrocel' && <LayoutTemplate className="h-5 w-5 mr-2" />}
+                            <span>{getFormatName(formatSlug) || formatSlug}</span>
+                            {formatsComplete[formatSlug] && (
+                              <Check className="h-3.5 w-3.5 text-green-500 ml-2" />
+                            )}
+                          </TabsTrigger>
+                        );
+                      })}
                     </TabsList>
                     
-                    {step1Form.getValues().selectedFormats.map((formatSlug) => (
+                    {(step1Form.getValues().selectedFormats || []).map((formatSlug) => (
                       <TabsContent key={formatSlug} value={formatSlug} className="mt-6 space-y-6">
                         {/* Detalhes do formato específico */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
