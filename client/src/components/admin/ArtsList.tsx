@@ -45,6 +45,8 @@ const ArtsList = () => {
   }>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingArt, setEditingArt] = useState<Art | null>(null);
+  const [isMultiArtDialogOpen, setIsMultiArtDialogOpen] = useState(false);
+  const [selectedArtId, setSelectedArtId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
