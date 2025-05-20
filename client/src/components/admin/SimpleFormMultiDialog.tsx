@@ -188,7 +188,16 @@ export default function SimpleFormMultiDialog({
               .then(res => {
                 console.log(`Resposta recebida da API /api/admin/artes/group/${groupId}, status: ${res.status}`);
                 return res.json();
-              }).catch(err => {
+              })
+              .then(data => {
+                console.log(`Dados completos da resposta do grupo: ${JSON.stringify(data)}`);
+                // Verificar se temos dados de artes no formato esperado
+                if (!data.arts || !Array.isArray(data.arts) || data.arts.length === 0) {
+                  console.warn(`Nenhuma arte encontrada no grupo ou formato inválido:`, data);
+                }
+                return data;
+              })
+              .catch(err => {
                 console.error(`Erro ao buscar grupo de artes: ${err}`, err);
                 return { arts: [] };
               });
