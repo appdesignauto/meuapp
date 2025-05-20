@@ -224,38 +224,41 @@ export default function SimpleFormMultiDialog({
           if (Array.isArray(groupArts) && groupArts.length > 0) {
             console.log(`Total de ${groupArts.length} artes encontradas no grupo ID ${data.groupId}`);
             
-            // Extrair os formatos das artes do grupo com melhor validação
-            const formatSlugs = groupArts
-              .filter(art => art && typeof art === 'object')
-              .map(art => art.format)
-              .filter(format => format && typeof format === 'string');
-              
-            console.log(`Formatos encontrados após validação: ${formatSlugs.join(', ')} (${formatSlugs.length} formatos)`);
+            // Primeiro, extrair diretamente todos os formatos válidos das artes do grupo
+            // para garantir que todos os formatos sejam capturados corretamente
+            const todosFormatos: string[] = [];
+            
+            groupArts.forEach(art => {
+              if (art && art.format && typeof art.format === 'string') {
+                todosFormatos.push(art.format);
+                console.log(`Formato detectado diretamente da arte ID ${art.id}: ${art.format}`);
+              }
+            });
+            
+            // Remover duplicatas e validar
+            const formatosValidos = [...new Set(todosFormatos)].filter(f => f && typeof f === 'string');
+            
+            console.log(`FORMATOS DETECTADOS (deduplicated): ${formatosValidos.join(', ')} (total: ${formatosValidos.length})`);
             
             // Verificação crítica - exibir alerta se não encontrou formatos válidos
-            if (formatSlugs.length === 0) {
+            if (formatosValidos.length === 0) {
               console.error('ERRO CRÍTICO: Nenhum formato válido encontrado nas artes do grupo');
               toast({
                 title: "Erro ao processar grupo",
                 description: "Não foram encontrados formatos válidos neste grupo de artes.",
                 variant: "destructive"
               });
+              return; // Interromper processamento se não há formatos
             }
             
-            // Todos os slugs de formato são considerados válidos, 
-            // já que vêm diretamente do banco de dados e já existem artes com esses formatos
-            // Não precisamos mais fazer a validação com a lista de formatos disponíveis
-            
-            // Vamos apenas garantir que não temos duplicatas e valores inválidos
-            const formatosValidos = [...new Set(formatSlugs)].filter(slug => slug && typeof slug === 'string');
-            
-            console.log(`Formatos considerados válidos para edição: ${formatosValidos.join(', ')}`);
-            
-            if (formatosValidos.length === 0) {
-              console.warn('Nenhum formato válido encontrado entre as artes do grupo após limpeza');
+            // Garantir que o formato da arte que está sendo editada esteja na lista
+            if (editingArt && editingArt.format && !formatosValidos.includes(editingArt.format)) {
+              formatosValidos.push(editingArt.format);
+              console.log(`Adicionado formato da arte em edição: ${editingArt.format}`);
             }
             
-            // Importante: Definir todos os formatos do grupo no formulário para exibição das abas
+            // PASSO CRUCIAL: Definir explicitamente todos os formatos no formulário para as abas
+            console.log(`Definindo formatos no formulário: ${formatosValidos.join(', ')}`);
             step1Form.setValue('selectedFormats', formatosValidos);
             
             // Adicionamos um log para facilitar diagnóstico futuro
@@ -266,24 +269,28 @@ export default function SimpleFormMultiDialog({
             
             // Preencher os detalhes de cada formato
             const initialDetails: Record<string, FormatValues> = {};
-            console.log(`Processando ${groupArts.length} artes do grupo com formatos válidos: ${formatosValidos.join(', ')}`);
+            console.log(`Processando ${groupArts.length} artes do grupo com formatos validados: ${formatosValidos.join(', ')}`);
             
             // Mapeamento de todas as artes do grupo por formato para fácil referência
             const artesPorFormato: Record<string, any> = {};
+            
+            // Primeiro, mapear todas as artes por seu formato para fácil acesso
             groupArts.forEach(art => {
-              if (art && art.format) {
+              if (art && art.format && typeof art.format === 'string') {
                 artesPorFormato[art.format] = art;
+                console.log(`Mapeada arte ID ${art.id} para formato ${art.format}`);
               }
             });
             
-            console.log('Formatos válidos para processar:', formatosValidos);
-            console.log('Artes disponíveis por formato:', artesPorFormato);
-            
-            // Agora processamos apenas os formatos válidos
+            // Processar cada formato com mais detalhes de log
             formatosValidos.forEach(formato => {
+              // Verificar se temos uma arte para este formato
               const arte = artesPorFormato[formato];
+              
               if (arte) {
-                console.log(`Processando formato ${formato} com arte ID ${arte.id}`);
+                console.log(`>> Processando formato ${formato} com arte ID ${arte.id}`);
+                
+                // Preencher detalhes do formato com os dados da arte
                 initialDetails[formato] = {
                   format: formato,
                   fileType: arte.fileType || 'canva',
@@ -294,13 +301,19 @@ export default function SimpleFormMultiDialog({
                   editUrl: arte.editUrl || '',
                 };
                 
-                // Marcar este formato como completo para mostrar o check na aba
-                const newFormatsComplete = {...formatsComplete};
-                newFormatsComplete[formato] = true;
-                setFormatsComplete(newFormatsComplete);
+                // IMPORTANTE: Marcar este formato como completo para mostrar o check na aba
+                // Usar um método de atualização de estado que garante a persistência
+                setFormatsComplete(prevState => ({
+                  ...prevState,
+                  [formato]: true
+                }));
+                
+                console.log(`✓ Formato ${formato} configurado com dados completos da arte ID ${arte.id}`);
               } else {
-                console.warn(`Formato ${formato} selecionado mas não encontrado no grupo de artes!`);
-                // Criar um formato vazio para não quebrar a interface
+                // Formato existe na lista mas não tem arte associada
+                console.warn(`⚠️ Formato ${formato} selecionado mas não encontrado no grupo de artes!`);
+                
+                // Criar um formato vazio mas válido para não quebrar a interface
                 initialDetails[formato] = {
                   format: formato,
                   fileType: step1Form.getValues('globalFileType') || 'canva',
@@ -310,8 +323,9 @@ export default function SimpleFormMultiDialog({
                   previewUrl: '',
                   editUrl: '',
                 };
+                
+                console.log(`○ Formato ${formato} configurado com dados vazios para nova entrada`);
               }
-              console.log(`Formato ${formato} configurado para edição de grupo`);
             });
             
             setFormatDetails(initialDetails);
@@ -1008,7 +1022,14 @@ export default function SimpleFormMultiDialog({
                   <Tabs value={currentTab} onValueChange={setCurrentTab} className="mt-3">
                     <TabsList className="w-full flex overflow-x-auto flex-wrap bg-transparent border-b border-gray-200 p-0 mb-1 h-auto">
                       {/* Renderização de abas de formatos */}
-                      {(step1Form.getValues().selectedFormats || []).map((formatSlug) => {
+                      {console.log('Formatos para renderizar abas:', JSON.stringify(step1Form.getValues().selectedFormats))}
+                      {Array.isArray(step1Form.getValues().selectedFormats) && step1Form.getValues().selectedFormats.map((formatSlug) => {
+                        // Verificar se o formato é válido
+                        if (!formatSlug) {
+                          console.warn('Formato inválido detectado na renderização das abas');
+                          return null; 
+                        }
+                        
                         console.log(`Renderizando aba para formato: ${formatSlug}`);
                         return (
                           <TabsTrigger
