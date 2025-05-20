@@ -495,13 +495,54 @@ router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Requ
 });
 
 // Obter todas as artes de um grupo - "/api/admin/artes/group/:groupId"
-router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
-  // Redirecionar para versão em inglês da rota
-  const groupId = req.params.groupId;
-  req.url = `/api/admin/arts/group/${groupId}`;
-  
-  // Passar para o próximo handler que processa a versão em inglês da rota
-  next();
+router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const groupId = req.params.groupId;
+    
+    if (!groupId) {
+      return res.status(400).json({
+        message: 'ID do grupo não fornecido'
+      });
+    }
+    
+    console.log(`[DEBUG] (artes-adapter) Buscando artes do grupo ID: ${groupId}`);
+    
+    // Verificar primeiro quantas artes existem com esse groupId
+    const countResult = await db.execute(sql`
+      SELECT COUNT(*) as count FROM arts WHERE "groupId" = ${groupId}
+    `);
+    const count = countResult.rows[0]?.count || 0;
+    console.log(`[DEBUG] (artes-adapter) Encontradas ${count} artes com groupId = ${groupId} no banco`);
+    
+    // Buscar todas as artes do grupo ordenadas por formato
+    const result = await db.execute(sql`
+      SELECT id, title, description, format, "imageUrl", "editUrl", "fileType", "categoryId", "isPremium", "isVisible", "previewUrl"
+      FROM arts 
+      WHERE "groupId" = ${groupId}
+      ORDER BY format
+    `);
+    
+    // Se não encontrou nenhuma arte, retornar array vazio
+    if (!result.rows || result.rows.length === 0) {
+      console.log(`[DEBUG] (artes-adapter) Nenhuma arte encontrada para o grupo ${groupId}`);
+      return res.json({ arts: [] });
+    }
+    
+    console.log(`[DEBUG] (artes-adapter) Encontradas ${result.rows.length} artes no grupo ${groupId}`);
+    console.log(`[DEBUG] (artes-adapter) IDs das artes encontradas: ${result.rows.map(art => art.id).join(', ')}`);
+    
+    // Retornar as artes encontradas
+    return res.json({
+      groupId: groupId,
+      totalArts: result.rows.length,
+      arts: result.rows
+    });
+  } catch (error) {
+    console.error(`[ERROR] (artes-adapter) Erro ao buscar artes do grupo: ${error}`);
+    return res.status(500).json({
+      message: 'Erro ao buscar artes do grupo'
+    });
+  }
 });
 
 // Criar arte multi-formato - "/api/admin/artes/multi"
@@ -524,13 +565,72 @@ router.put('/api/admin/artes/multi/:id', isAuthenticated, async (req: Request, r
 });
 
 // Atualizar grupo de artes - "/api/admin/artes/group/:groupId"
-router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
-  // Redirecionar para versão em inglês da rota
-  const groupId = req.params.groupId;
-  req.url = `/api/admin/arts/group/${groupId}`;
-  
-  // Passar para o próximo handler que processa a versão em inglês da rota
-  next();
+router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const groupId = req.params.groupId;
+    
+    if (!groupId) {
+      return res.status(400).json({
+        message: 'ID do grupo não fornecido'
+      });
+    }
+    
+    console.log(`[DEBUG] (artes-adapter) Atualizando artes do grupo ID: ${groupId}`);
+    console.log(`[DEBUG] (artes-adapter) Dados recebidos: ${JSON.stringify(req.body)}`);
+    
+    const { arts } = req.body;
+    
+    if (!arts || !Array.isArray(arts) || arts.length === 0) {
+      return res.status(400).json({
+        message: 'Nenhuma arte informada para atualização'
+      });
+    }
+    
+    // Para cada arte no grupo, atualizar os dados
+    const updatedArts = [];
+    
+    for (const art of arts) {
+      if (!art.id) {
+        console.log(`[WARN] (artes-adapter) Arte sem ID encontrada no payload, ignorando...`);
+        continue;
+      }
+      
+      console.log(`[DEBUG] (artes-adapter) Atualizando arte ID: ${art.id} no grupo ${groupId}`);
+      
+      // Atualizar a arte no banco
+      const updateResult = await db.execute(sql`
+        UPDATE arts
+        SET
+          title = ${art.title || ''},
+          description = ${art.description || null},
+          "imageUrl" = ${art.imageUrl || ''},
+          "editUrl" = ${art.editUrl || ''},
+          "previewUrl" = ${art.previewUrl || null},
+          "isPremium" = ${art.isPremium || false},
+          "isVisible" = ${art.isVisible || true},
+          "updatedAt" = NOW()
+        WHERE id = ${art.id} AND "groupId" = ${groupId}
+        RETURNING id, title, format
+      `);
+      
+      if (updateResult.rows && updateResult.rows.length > 0) {
+        updatedArts.push(updateResult.rows[0]);
+      }
+    }
+    
+    // Retornar as artes atualizadas
+    return res.json({
+      success: true,
+      message: `${updatedArts.length} artes atualizadas com sucesso no grupo ${groupId}`,
+      updatedArts
+    });
+  } catch (error) {
+    console.error(`[ERROR] (artes-adapter) Erro ao atualizar artes do grupo: ${error}`);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao atualizar artes do grupo'
+    });
+  }
 });
 
 // Excluir arte - "/api/admin/artes/:id"
