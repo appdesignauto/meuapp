@@ -229,7 +229,7 @@ async function processWebhook(transactionId = 'HP1725562240') {
       // Atualizar status do webhook
       await pool.query(`
         UPDATE webhook_logs 
-        SET status = 'processed', processed_at = NOW() 
+        SET status = 'processed'
         WHERE id = $1
       `, [webhook.id]);
       
