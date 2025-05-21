@@ -9,6 +9,8 @@
 
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Criar router para a rota fixa
 const router = Router();
@@ -341,66 +343,58 @@ router.post('/', async (req: Request, res: Response) => {
       message: 'Webhook recebido com sucesso pelo endpoint FIXO',
       timestamp: new Date().toISOString()
     });
-    
-    // Responder imediatamente
-    res.status(200).json({
-      success: true,
-      message: 'Webhook recebido com sucesso pelo endpoint FIXO',
-      timestamp: new Date().toISOString()
-    });
 
-    // Implementação robusta de processamento automático
-    // Executado diretamente e com garantia de não bloquear a resposta
+    // Implementação simplificada de processamento automático
+    // Usamos setTimeout com delay zero para garantir que será executado após a resposta
     try {
       console.log(`[AUTO-PROCESS] Verificando possibilidade de processamento para webhook #${webhookId}`);
       
       if (webhookId && event === 'PURCHASE_APPROVED') {
-        console.log(`⏳ [AUTO-PROCESS] Iniciando processamento automático do webhook ID: ${webhookId} - Event: ${event}`);
+        console.log(`⏳ [AUTO-PROCESS] Agendando processamento automático do webhook ID: ${webhookId} - Event: ${event}`);
         
-        // Função de processamento que pode ser executada de forma assíncrona
-        function processAsync() {
-          return processWebhook(webhookId as number)
-            .then(success => {
+        // Usando setTimeout com delay zero - mais compatível que setImmediate
+        setTimeout(() => {
+          console.log(`[AUTO-PROCESS] Iniciando processamento do webhook #${webhookId}`);
+          
+          // Processamento sem async/await para evitar problemas de compilação
+          processWebhook(webhookId as number)
+            .then((success) => {
               console.log(`🏁 [AUTO-PROCESS] Processamento automático concluído: ${success ? 'sucesso' : 'falha'}`);
+              
               // Atualizar o status no banco de dados
               const pool = new Pool({
                 connectionString: process.env.DATABASE_URL
               });
               
-              return pool.query(
+              pool.query(
                 'UPDATE webhook_logs SET status = $1, updated_at = NOW() WHERE id = $2',
                 [success ? 'processed' : 'error', webhookId]
-              ).then(() => pool.end())
-                .catch(err => {
+              )
+                .then(() => pool.end())
+                .catch((err) => {
                   console.error('[AUTO-PROCESS] Erro ao atualizar status do webhook:', err);
                   pool.end();
                 });
             })
-            .catch(processError => {
+            .catch((processError: any) => {
               console.error('❌ [AUTO-PROCESS] Erro no processamento automático:', processError);
-              // Ainda tentamos atualizar o status para 'error'
+              
+              // Atualizar status para 'error'
               const pool = new Pool({
                 connectionString: process.env.DATABASE_URL
               });
               
-              return pool.query(
+              pool.query(
                 'UPDATE webhook_logs SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3',
                 ['error', processError.message || 'Erro desconhecido', webhookId]
-              ).then(() => pool.end())
-                .catch(e => {
+              )
+                .then(() => pool.end())
+                .catch((e) => {
                   console.error('[AUTO-PROCESS] Erro ao registrar falha de processamento:', e);
                   pool.end();
                 });
             });
-        }
-        
-        // Executar logo após a resposta ser enviada
-        setImmediate(() => {
-          console.log('[AUTO-PROCESS] Processamento iniciado via setImmediate');
-          processAsync().catch(err => {
-            console.error('[AUTO-PROCESS] Erro crítico no processamento:', err);
-          });
-        });
+        }, 0);
       } else {
         console.log(`⚠️ [AUTO-PROCESS] Webhook ID ${webhookId} não será processado automaticamente. Event: ${event || 'unknown'}`);
       }
