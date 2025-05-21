@@ -8,8 +8,15 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 const { Pool } = pg;
+
+// Função para gerar senha padrão para novos usuários
+function generateRandomPassword() {
+  // Usando senha padrão como solicitado
+  return 'auto@123';
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -92,12 +99,15 @@ async function processWebhook(webhookId) {
       // Gerar username único baseado no email
       const username = `${email.split('@')[0]}_${Math.random().toString(16).slice(2, 10)}`;
       
+      // Gerar senha aleatória para o novo usuário
+      const randomPassword = generateRandomPassword();
+      
       const insertResult = await pool.query(
         `INSERT INTO users 
-         (username, email, name, nivelacesso, tipoplano, origemassinatura, dataassinatura, dataexpiracao, criadoem, atualizadoem, isactive, emailconfirmed)
-         VALUES ($1, $2, $3, 'premium', $4, 'hotmart', NOW(), NOW() + INTERVAL '1 year', NOW(), NOW(), true, true)
+         (username, email, name, password, nivelacesso, tipoplano, origemassinatura, dataassinatura, dataexpiracao, criadoem, atualizadoem, isactive, emailconfirmed)
+         VALUES ($1, $2, $3, $4, 'premium', $5, 'hotmart', NOW(), NOW() + INTERVAL '1 year', NOW(), NOW(), true, true)
          RETURNING id`,
-        [username, email, name, planType]
+        [username, email, name, randomPassword, planType]
       );
       
       userId = insertResult.rows[0].id;
