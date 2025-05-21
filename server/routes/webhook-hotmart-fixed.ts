@@ -221,12 +221,20 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       // Gerar username único baseado no email
       const username = `${email.split('@')[0]}_${Math.random().toString(16).slice(2, 10)}`;
       
+      // Gerar senha padrão e hash para o novo usuário
+      const password = 'auto@123';
+      const salt = crypto.randomBytes(16).toString("hex");
+      const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+      const hashedPassword = `${hash}.${salt}`;
+      
+      console.log(`Criando usuário com senha hash segura para ${email}`);
+
       const insertResult = await pool.query(
         `INSERT INTO users 
-         (username, email, name, nivelacesso, tipoplano, origemassinatura, dataassinatura, dataexpiracao, dataCriacao, atualizadoem)
-         VALUES ($1, $2, $3, 'premium', $4, 'hotmart', NOW(), NOW() + INTERVAL '1 year', NOW(), NOW())
+         (username, email, name, password, nivelacesso, tipoplano, origemassinatura, dataassinatura, dataexpiracao, criadoem, atualizadoem, isactive, emailconfirmed)
+         VALUES ($1, $2, $3, $4, 'premium', $5, 'hotmart', NOW(), NOW() + INTERVAL '1 year', NOW(), NOW(), true, true)
          RETURNING id`,
-        [username, email, name, planType]
+        [username, email, name, hashedPassword, planType]
       );
       
       userId = insertResult.rows[0].id;
