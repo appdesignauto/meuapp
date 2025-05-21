@@ -1,0 +1,88 @@
+app.post('/webhook/hotmart', async (req, res) => {
+  const payload = req.body;
+
+  const isValid =
+    payload?.event === 'PURCHASE_APPROVED' &&
+    payload?.data?.purchase?.status === 'APPROVED';
+
+  if (!isValid) {
+    return res.status(400).json({ message: 'Webhook ignorado' });
+  }
+
+  try {
+    const buyer = payload.data.buyer;
+    const purchase = payload.data.purchase;
+    const subscription = payload.data.subscription;
+
+    const full_name = buyer?.name;
+    const email = buyer?.email;
+    const phone = buyer?.document || null;
+
+    const planType = subscription?.plan?.name?.toLowerCase() || 'mensal';
+    const startDate = new Date(purchase.order_date);
+    const endDate = new Date(purchase.date_next_charge);
+    const transactionId = purchase.transaction;
+    const paymentMethod = purchase.payment?.type;
+    const price = purchase.price?.value;
+    const currency = purchase.price?.currency_value;
+    const subscriptionCode = subscription?.subscriber?.code;
+    const planId = subscription?.plan?.id;
+    const event = payload.event;
+    const webhookData = payload;
+
+    // Verifica ou cria usuário
+    const userQuery = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    let userId;
+
+    if (userQuery.rowCount === 0) {
+      const insertUser = await pool.query(`
+        INSERT INTO users (name, email, phone, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive)
+        VALUES ($1, $2, $3, 'premium', 'hotmart', $4, $5, false, true)
+        RETURNING id
+      `, [full_name, email, phone, planType, startDate, endDate]);
+
+      userId = insertUser.rows[0].id;
+    } else {
+      userId = userQuery.rows[0].id;
+
+      await pool.query(`
+        UPDATE users SET
+          nivelacesso = 'premium',
+          origemassinatura = 'hotmart',
+          tipoplano = $1,
+          dataassinatura = $2,
+          dataexpiracao = $3,
+          acessovitalicio = false
+        WHERE id = $4
+      `, [planType, startDate, endDate, userId]);
+    }
+
+    // Evita duplicidade
+    const exists = await pool.query('SELECT id FROM subscriptions WHERE transactionid = $1', [transactionId]);
+    if (exists.rowCount > 0) {
+      return res.status(200).json({ message: 'Assinatura já registrada' });
+    }
+
+    await pool.query(`
+      INSERT INTO subscriptions (
+        userId, planType, status, startDate, endDate, origin,
+        transactionid, lastevent, webhookData, subscriptionCode,
+        planId, paymentMethod, price, currency
+      ) VALUES (
+        $1, $2, 'active', $3, $4, 'hotmart',
+        $5, $6, $7, $8,
+        $9, $10, $11, $12
+      )
+    `, [
+      userId, planType, startDate, endDate,
+      transactionId, event, webhookData, subscriptionCode,
+      planId, paymentMethod, price, currency
+    ]);
+
+    res.status(201).json({ message: 'Usuário e assinatura processados com sucesso' });
+
+  } catch (err) {
+    console.error('Erro no webhook:', err);
+    res.status(500).json({ message: 'Erro interno no servidor' });
+  }
+});
