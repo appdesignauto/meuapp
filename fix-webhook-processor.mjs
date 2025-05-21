@@ -14,7 +14,7 @@ const { Pool } = pg;
 
 // Função para gerar senha padrão para novos usuários
 function generateRandomPassword() {
-  // Usando senha padrão como solicitado
+  // Usando senha padrão como solicitado pelo cliente
   return 'auto@123';
 }
 
