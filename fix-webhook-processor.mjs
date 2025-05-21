@@ -9,6 +9,7 @@ import { dirname } from 'path';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import util from 'util';
 
 const { Pool } = pg;
 
@@ -16,6 +17,14 @@ const { Pool } = pg;
 function generateRandomPassword() {
   // Usando senha padrão como solicitado pelo cliente
   return 'auto@123';
+}
+
+// Função para criar hash de senha de forma segura
+async function hashPassword(password) {
+  const scryptAsync = util.promisify(crypto.scrypt);
+  const salt = crypto.randomBytes(16).toString("hex");
+  const buf = await scryptAsync(password, salt, 64);
+  return `${buf.toString("hex")}.${salt}`;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -99,15 +108,18 @@ async function processWebhook(webhookId) {
       // Gerar username único baseado no email
       const username = `${email.split('@')[0]}_${Math.random().toString(16).slice(2, 10)}`;
       
-      // Gerar senha aleatória para o novo usuário
-      const randomPassword = generateRandomPassword();
+      // Gerar senha padrão para o novo usuário e criar hash
+      const password = generateRandomPassword();
+      const hashedPassword = await hashPassword(password);
+      
+      console.log(`Criando usuário com senha hash segura para ${email}`);
       
       const insertResult = await pool.query(
         `INSERT INTO users 
          (username, email, name, password, nivelacesso, tipoplano, origemassinatura, dataassinatura, dataexpiracao, criadoem, atualizadoem, isactive, emailconfirmed)
          VALUES ($1, $2, $3, $4, 'premium', $5, 'hotmart', NOW(), NOW() + INTERVAL '1 year', NOW(), NOW(), true, true)
          RETURNING id`,
-        [username, email, name, randomPassword, planType]
+        [username, email, name, hashedPassword, planType]
       );
       
       userId = insertResult.rows[0].id;
