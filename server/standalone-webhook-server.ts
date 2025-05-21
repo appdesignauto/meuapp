@@ -177,6 +177,16 @@ function findTransactionId(payload: any): string | null {
 webhookApp.post('/hotmart', async (req, res) => {
   console.log('📩 [STANDALONE] Webhook da Hotmart recebido em', new Date().toISOString());
   
+  // IMPORTANTE: Responder IMEDIATAMENTE para a Hotmart com sucesso
+  // para evitar o timeout - isso é crucial!
+  res.status(200).json({
+    success: true,
+    message: 'Webhook recebido com sucesso pelo servidor STANDALONE',
+    timestamp: new Date().toISOString()
+  });
+  
+  // Após enviar a resposta, processar os dados em background
+  // para não bloquear a resposta da API
   try {
     // Capturar dados básicos do webhook
     const payload = req.body;
@@ -240,22 +250,8 @@ webhookApp.post('/hotmart', async (req, res) => {
       console.error('❌ [STANDALONE] Erro ao registrar webhook:', dbError);
       // Continuar mesmo com erro de log
     }
-    
-    // Sempre retornar sucesso para a Hotmart não reenviar
-    return res.status(200).json({
-      success: true,
-      message: 'Webhook recebido com sucesso pelo servidor STANDALONE',
-      timestamp: new Date().toISOString()
-    });
   } catch (error) {
     console.error('❌ [STANDALONE] Erro ao processar webhook:', error);
-    
-    // Mesmo com erro, retornar 200 para evitar reenvios
-    return res.status(200).json({
-      success: false,
-      message: 'Erro ao processar webhook, mas confirmamos o recebimento',
-      timestamp: new Date().toISOString()
-    });
   }
 });
 
