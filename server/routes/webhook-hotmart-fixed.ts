@@ -345,15 +345,38 @@ router.post('/', async (req: Request, res: Response) => {
     // Processar o webhook assincronamente
     if (webhookId && event === 'PURCHASE_APPROVED') {
       // Processar em um timeout para garantir que a resposta já foi enviada
-      setTimeout(async () => {
-        try {
-          console.log(`⏳ Iniciando processamento assíncrono do webhook ID: ${webhookId}`);
-          const success = await processWebhook(webhookId as number);
-          console.log(`🏁 Processamento assíncrono concluído: ${success ? 'sucesso' : 'falha'}`);
-        } catch (processError) {
-          console.error('❌ Erro no processamento assíncrono:', processError);
-        }
-      }, 100);
+      // Em produção, é recomendável executar isso em um thread separado ou fila de processamento
+      console.log(`⏳ Iniciando processamento automático do webhook ID: ${webhookId}`);
+      
+      // Disparamos imediatamente o processamento (sem setTimeout) para garantir que seja executado
+      processWebhook(webhookId as number)
+        .then(success => {
+          console.log(`🏁 Processamento automático concluído: ${success ? 'sucesso' : 'falha'}`);
+          // Atualizar o status no banco de dados
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL
+          });
+          pool.query(
+            'UPDATE webhook_logs SET status = $1, updated_at = NOW() WHERE id = $2',
+            [success ? 'processed' : 'error', webhookId]
+          ).then(() => pool.end())
+            .catch(err => {
+              console.error('Erro ao atualizar status do webhook:', err);
+              pool.end();
+            });
+        })
+        .catch(processError => {
+          console.error('❌ Erro no processamento automático:', processError);
+          // Ainda tentamos atualizar o status para 'error'
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL
+          });
+          pool.query(
+            'UPDATE webhook_logs SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3',
+            ['error', processError.message || 'Erro desconhecido', webhookId]
+          ).then(() => pool.end())
+            .catch(() => pool.end());
+        });
     }
     
     return; // Importante: não enviar uma segunda resposta
