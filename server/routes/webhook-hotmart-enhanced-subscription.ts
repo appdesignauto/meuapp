@@ -193,7 +193,7 @@ async function processSubscription(payload: any): Promise<void> {
       [transactionId]
     );
 
-    if (existingTransaction.rowCount > 0) {
+    if (existingTransaction.rowCount && existingTransaction.rowCount > 0) {
       console.log(`[WEBHOOK] Transação ${transactionId} já registrada, ignorando`);
       return;
     }

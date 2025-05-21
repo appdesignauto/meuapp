@@ -94,7 +94,10 @@ export async function processHotmartSubscription(payload: any): Promise<void> {
       [transactionId]
     );
 
-    if (existingTransactionResult.rowCount > 0) {
+    // Verificação segura se existem resultados
+    const hasExistingTransaction = existingTransactionResult.rows && existingTransactionResult.rows.length > 0;
+    
+    if (hasExistingTransaction) {
       console.log(`[HotmartProcessor] Transação ${transactionId} já registrada, ignorando`);
       await client.query('COMMIT');
       return;

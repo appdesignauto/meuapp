@@ -334,25 +334,23 @@ app.use((req, res, next) => {
     
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
-    // SOLUÇÃO FINAL: Iniciar servidor standalone para webhooks em outra porta
-    // Este servidor é COMPLETAMENTE INDEPENDENTE e não sofre interferência
-    // de nenhum middleware do servidor principal
+    // NOVA SOLUÇÃO: Utilizar a rota fixa para webhooks diretamente no servidor principal
+    // Isto elimina a necessidade do servidor standalone e simplifica a arquitetura
     try {
-      // Importar o servidor standalone
-      import('./standalone-webhook-server');
-      console.log("🚀 Servidor standalone de webhooks iniciado em segundo plano");
-      console.log("⚠️ IMPORTANTE: Configure o webhook da Hotmart para apontar para a porta 5001");
+      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
+      app.use('/webhook/hotmart', hotmartFixedModule.default);
+      console.log("✅ Rota principal de webhook da Hotmart configurada com sucesso");
     } catch (error) {
-      console.error("❌ Erro ao iniciar servidor standalone de webhooks:", error);
+      console.error("❌ Erro ao configurar rota Hotmart principal:", error);
     }
     
-    // Adicionar a rota de webhook fixa para Hotmart
+    // Manter a rota fixa pelo caminho alternativo para compatibilidade
     try {
-      const hotmartModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart-fixed', hotmartModule.router);
-      console.log("✅ Rota Hotmart fixa configurada com sucesso");
+      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
+      app.use('/webhook/hotmart-fixed', hotmartFixedModule.default);
+      console.log("✅ Rota Hotmart fixa (alternativa) configurada com sucesso");
     } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
+      console.error("❌ Erro ao configurar rota Hotmart fixa alternativa:", error);
     }
     
     // Adicionar a rota corrigida para detalhes de webhook

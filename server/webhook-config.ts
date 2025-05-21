@@ -80,7 +80,8 @@ export function setupWebhookRoutes(app: Express): void {
   app.use(express.urlencoded({ extended: true }));
 
   // Registrar rota específica para Hotmart usando a implementação fixa
-  app.use(WEBHOOK_URLS.HOTMART, hotmartFixedRouter);
+  // Desativado, pois agora carregamos no server/index.ts
+  // app.use(WEBHOOK_URLS.HOTMART, hotmartFixedRouter);
 
   // Configurar rota de diagnóstico para verificar status
   app.get(WEBHOOK_URLS.DIAGNOSTICS, (req, res) => {
