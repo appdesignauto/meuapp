@@ -10,6 +10,7 @@ import express from 'express';
 import { Pool } from 'pg';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { processHotmartSubscription } from './services/hotmart-subscription-processor';
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -50,6 +51,29 @@ webhookApp.use(cors({
     'User-Agent'
   ]
 }));
+
+// Interface para erro com mensagem
+interface ErrorWithMessage {
+  message: string;
+}
+
+// Função auxiliar para verificar se o erro possui a propriedade message
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
+  );
+}
+
+// Função para extrair mensagem de erro de qualquer tipo de erro
+function getErrorMessage(error: unknown): string {
+  if (isErrorWithMessage(error)) {
+    return error.message;
+  }
+  return String(error);
+}
 
 // Middleware de logging para Debug
 webhookApp.use((req, res, next) => {
@@ -185,6 +209,32 @@ webhookApp.post('/hotmart', async (req, res) => {
       );
       
       console.log('✅ [STANDALONE] Webhook registrado no banco de dados');
+      
+      // Processar a assinatura da Hotmart
+      console.log('🔄 [STANDALONE] Iniciando processamento da assinatura...');
+      try {
+        await processHotmartSubscription(payload);
+        console.log('✅ [STANDALONE] Assinatura processada com sucesso');
+        
+        // Atualizar o status do webhook no banco
+        await pool.query(
+          `UPDATE webhook_logs SET status = $1, processed_at = $2
+           WHERE transaction_id = $3 AND source = $4
+           ORDER BY created_at DESC LIMIT 1`,
+          ['processed', new Date(), transactionId, 'hotmart']
+        );
+      } catch (processingError: unknown) {
+        console.error('❌ [STANDALONE] Erro ao processar assinatura:', processingError);
+        
+        // Atualizar o status do webhook no banco (erro)
+        await pool.query(
+          `UPDATE webhook_logs SET status = $1, processed_at = $2, error_message = $3
+           WHERE transaction_id = $4 AND source = $5
+           ORDER BY created_at DESC LIMIT 1`,
+          ['error', new Date(), getErrorMessage(processingError), transactionId, 'hotmart']
+        );
+      }
+      
       await pool.end();
     } catch (dbError) {
       console.error('❌ [STANDALONE] Erro ao registrar webhook:', dbError);

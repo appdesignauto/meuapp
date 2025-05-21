@@ -59,7 +59,7 @@ export async function processHotmartSubscription(payload: any): Promise<void> {
       [transactionId]
     );
 
-    if (existingTransaction.rowCount > 0) {
+    if (existingTransaction && existingTransaction.rowCount && existingTransaction.rowCount > 0) {
       console.log(`[HotmartProcessor] Transação ${transactionId} já registrada, ignorando`);
       return;
     }
