@@ -165,8 +165,8 @@ export async function processHotmartSubscription(payload: any): Promise<void> {
     await client.query(`
       INSERT INTO subscriptions (
         "userId", "planType", status, "startDate", "endDate", origin,
-        transactionid, lastevent, "webhookData", "subscriptionCode",
-        "planId", "paymentMethod", price, currency, "createdAt", "updatedAt"
+        transactionid, lastevent, "webhookData", subscriptioncode,
+        planid, paymentmethod, price, currency, "createdAt", "updatedAt"
       ) VALUES (
         $1, $2, 'active', $3, $4, 'hotmart',
         $5, $6, $7, $8,
