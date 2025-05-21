@@ -241,7 +241,7 @@ async function processWebhook(transactionId = 'HP1725562240') {
       // Atualizar status do webhook com erro
       await pool.query(`
         UPDATE webhook_logs 
-        SET status = 'error', processed_at = NOW(), error_message = $1
+        SET status = 'error', error_message = $1
         WHERE id = $2
       `, [error.message, webhook.id]);
       
