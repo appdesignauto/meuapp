@@ -342,44 +342,52 @@ router.post('/', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
     
-    // Processar o webhook assincronamente
-    if (webhookId && event === 'PURCHASE_APPROVED') {
-      // Processar em um timeout para garantir que a resposta já foi enviada
-      // Em produção, é recomendável executar isso em um thread separado ou fila de processamento
-      console.log(`⏳ Iniciando processamento automático do webhook ID: ${webhookId}`);
-      
-      // Disparamos imediatamente o processamento (sem setTimeout) para garantir que seja executado
-      processWebhook(webhookId as number)
-        .then(success => {
-          console.log(`🏁 Processamento automático concluído: ${success ? 'sucesso' : 'falha'}`);
-          // Atualizar o status no banco de dados
-          const pool = new Pool({
-            connectionString: process.env.DATABASE_URL
-          });
-          pool.query(
-            'UPDATE webhook_logs SET status = $1, updated_at = NOW() WHERE id = $2',
-            [success ? 'processed' : 'error', webhookId]
-          ).then(() => pool.end())
-            .catch(err => {
-              console.error('Erro ao atualizar status do webhook:', err);
-              pool.end();
+    // Garantir que a resposta seja enviada antes de continuar
+    // Sem o setTimeout, o Node pode acabar fechando a conexão antes de enviar a resposta
+    setTimeout(() => {
+      try {
+        // Processar o webhook assincronamente
+        if (webhookId && event === 'PURCHASE_APPROVED') {
+          console.log(`⏳ Iniciando processamento automático do webhook ID: ${webhookId} - Event: ${event}`);
+          
+          // Acionar o processamento do webhook
+          processWebhook(webhookId as number)
+            .then(success => {
+              console.log(`🏁 Processamento automático concluído: ${success ? 'sucesso' : 'falha'}`);
+              // Atualizar o status no banco de dados
+              const pool = new Pool({
+                connectionString: process.env.DATABASE_URL
+              });
+              
+              pool.query(
+                'UPDATE webhook_logs SET status = $1, updated_at = NOW() WHERE id = $2',
+                [success ? 'processed' : 'error', webhookId]
+              ).then(() => pool.end())
+                .catch(err => {
+                  console.error('Erro ao atualizar status do webhook:', err);
+                  pool.end();
+                });
+            })
+            .catch(processError => {
+              console.error('❌ Erro no processamento automático:', processError);
+              // Ainda tentamos atualizar o status para 'error'
+              const pool = new Pool({
+                connectionString: process.env.DATABASE_URL
+              });
+              
+              pool.query(
+                'UPDATE webhook_logs SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3',
+                ['error', processError.message || 'Erro desconhecido', webhookId]
+              ).then(() => pool.end())
+                .catch(() => pool.end());
             });
-        })
-        .catch(processError => {
-          console.error('❌ Erro no processamento automático:', processError);
-          // Ainda tentamos atualizar o status para 'error'
-          const pool = new Pool({
-            connectionString: process.env.DATABASE_URL
-          });
-          pool.query(
-            'UPDATE webhook_logs SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3',
-            ['error', processError.message || 'Erro desconhecido', webhookId]
-          ).then(() => pool.end())
-            .catch(() => pool.end());
-        });
-    }
-    
-    return; // Importante: não enviar uma segunda resposta
+        } else {
+          console.log(`⚠️ Webhook ID ${webhookId} não será processado automaticamente. Event: ${event}`);
+        }
+      } catch (processingError) {
+        console.error('❌ Erro ao iniciar processamento do webhook:', processingError);
+      }
+    }, 100); // Pequeno delay para garantir que a resposta seja enviada primeiro
   } catch (error) {
     console.error('❌ Erro ao processar webhook:', error);
     
