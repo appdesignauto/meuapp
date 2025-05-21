@@ -1,114 +1,81 @@
 /**
- * Script para testar diretamente o endpoint de webhook da Hotmart
+ * Script para testar o endpoint de webhook diretamente
  * 
- * Este script envia uma requisição para o endpoint de webhook da Hotmart
- * com um payload de teste para verificar se o servidor está processando
- * corretamente a requisição e retornando um JSON válido (não HTML)
+ * Este script envia uma requisição para o endpoint fixo de webhook
+ * usando um corpo fictício semelhante ao utilizado pela Hotmart
  */
-
 import fetch from 'node-fetch';
 
-// URL do webhook (porta 5000 para o servidor Express)
-const webhookUrl = 'http://localhost:5000/webhook/hotmart';
-
-// Payload de teste simulando um evento da Hotmart
-const testPayload = {
-  event: 'PURCHASE_APPROVED',
-  creation_date: Date.now(),
+// Payload para teste
+const payload = {
+  id: `test-webhook-${Date.now()}`,
   data: {
+    buyer: {
+      name: "Usuário de Teste Final",
+      email: "teste-final@designauto.com",
+      address: {
+        country: "Brasil",
+        country_iso: "BR"
+      }
+    },
     product: {
-      id: '1234567',
-      name: 'Produto Teste',
-      has_co_production: false
+      id: 5381714,
+      name: "App DesignAuto"
     },
     purchase: {
-      transaction: 'TX-' + Math.floor(Math.random() * 1000000),
-      approved_date: Date.now(),
-      status: 'APPROVED',
-      payment: {
-        type: 'CREDIT_CARD',
-        installments_number: 1
-      }
-    },
-    buyer: {
-      email: 'teste@example.com',
-      name: 'Cliente Teste',
-      checkout_phone: '+5511999999999'
+      status: "APPROVED",
+      transaction: `TEST-FINAL-${Date.now()}`,
     },
     subscription: {
-      subscriber: {
-        code: 'SUB-' + Math.floor(Math.random() * 1000000),
-        email: 'teste@example.com',
-        name: 'Cliente Teste'
-      },
       plan: {
-        name: 'Plano Premium',
-        status: 'ACTIVE'
+        name: "Plano Anual Premium"
+      },
+      status: "ACTIVE",
+      subscriber: {
+        code: `TEST-SUB-${Date.now()}`
       }
     }
-  }
+  },
+  event: "PURCHASE_APPROVED",
+  version: "2.0.0",
+  creation_date: Date.now()
 };
 
-// Cabeçalhos simulando requisição da Hotmart
-const headers = {
-  'Content-Type': 'application/json',
-  'User-Agent': 'Hotmart-Webhook/1.0',
-  'X-Hotmart-Webhook-Signature': 'test-signature'
-};
-
+// Realizar o teste
 async function testWebhook() {
-  console.log('🧪 Testando endpoint de webhook da Hotmart...');
-  console.log(`📮 Enviando requisição para: ${webhookUrl}`);
-  console.log(`📦 Payload de teste:`, JSON.stringify(testPayload, null, 2));
-
   try {
-    // Enviar requisição POST para o endpoint de webhook
-    const response = await fetch(webhookUrl, {
+    console.log('🧪 Iniciando teste do webhook fixo...');
+    console.log(`📧 Email: ${payload.data.buyer.email}`);
+    console.log(`🔄 Transaction ID: ${payload.data.purchase.transaction}`);
+    
+    // Enviar requisição
+    const response = await fetch('http://localhost:5000/webhook/hotmart', {
       method: 'POST',
-      headers: headers,
-      body: JSON.stringify(testPayload)
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Source-IP': '34.27.222.49', // IP da Hotmart para simulação
+        'User-Agent': 'Hotmart-Webhooks/1.0'
+      },
+      body: JSON.stringify(payload)
     });
-
-    // Obter texto da resposta para analisar
+    
+    // Verificar resposta
     const responseText = await response.text();
-
-    // Verificar status da resposta
-    console.log(`📥 Status da resposta: ${response.status} ${response.statusText}`);
-    console.log(`📄 Tipo de conteúdo: ${response.headers.get('content-type')}`);
-
-    try {
-      // Tentar parsear como JSON
-      const jsonResponse = JSON.parse(responseText);
-      console.log('✅ Resposta JSON válida:');
-      console.log(JSON.stringify(jsonResponse, null, 2));
-      return true;
-    } catch (jsonError) {
-      // Se não for um JSON válido, mostrar o início do texto (pode ser HTML)
-      console.error('❌ Resposta não é um JSON válido!');
-      console.log(`📃 Primeiros 200 caracteres da resposta:`);
-      console.log(responseText.substring(0, 200) + (responseText.length > 200 ? '...' : ''));
-      console.error('Erro ao parsear JSON:', jsonError.message);
-      return false;
-    }
+    
+    console.log(`\n✅ Resposta do servidor (${response.status}):`);
+    console.log(responseText);
+    
+    console.log('\n📊 Teste concluído!');
+    console.log('Aguarde 10 segundos para verificar o processamento automático nos logs...');
+    
+    // Aguardar para os logs de processamento aparecerem
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    
+    console.log('\n📝 Teste finalizado. Verifique os logs acima para confirmar se o processamento automático foi iniciado.');
   } catch (error) {
-    console.error('❌ Erro ao testar webhook:', error.message);
-    return false;
+    console.error('❌ Erro ao testar webhook:', error);
   }
 }
 
-// Executar o teste
-console.log('📊 TESTE DE WEBHOOK HOTMART');
-console.log('===========================');
-testWebhook()
-  .then(success => {
-    if (success) {
-      console.log('✅ TESTE CONCLUÍDO COM SUCESSO!');
-      console.log('O servidor está respondendo corretamente com JSON');
-    } else {
-      console.log('❌ TESTE FALHOU!');
-      console.log('O servidor não retornou uma resposta JSON válida');
-    }
-  })
-  .catch(err => {
-    console.error('❌ ERRO FATAL:', err);
-  });
+// Executar teste
+testWebhook().catch(console.error);
