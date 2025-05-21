@@ -360,17 +360,20 @@ router.post('/', async (req: Request, res: Response) => {
         
         // Iniciar o processamento como um processo separado
         // Isso evita problemas com o Node.js bloqueando a thread
-        const { exec } = require('child_process');
-        exec(`node auto-process-webhook.js ${webhookId}`, (error, stdout, stderr) => {
-          if (error) {
-            console.error(`❌ [AUTO-PROCESS] Erro ao executar script: ${error.message}`);
-            return;
-          }
-          if (stderr) {
-            console.error(`⚠️ [AUTO-PROCESS] Output de erro: ${stderr}`);
-            return;
-          }
-          console.log(`✅ [AUTO-PROCESS] Saída do processamento: ${stdout}`);
+        import('child_process').then(({ exec }) => {
+          exec(`node fix-webhook-processor.mjs ${webhookId}`, (error: any, stdout: any, stderr: any) => {
+            if (error) {
+              console.error(`❌ [AUTO-PROCESS] Erro ao executar script: ${error.message}`);
+              return;
+            }
+            if (stderr) {
+              console.error(`⚠️ [AUTO-PROCESS] Output de erro: ${stderr}`);
+              return;
+            }
+            console.log(`✅ [AUTO-PROCESS] Saída do processamento: ${stdout}`);
+          });
+        }).catch(err => {
+          console.error(`❌ [AUTO-PROCESS] Erro ao importar child_process: ${err.message}`);
         });
       } else {
         console.log(`⚠️ [AUTO-PROCESS] Webhook ID ${webhookId} não qualifica para processamento automático`);
