@@ -368,31 +368,25 @@ router.post('/', async (req: Request, res: Response) => {
     console.log('📝 [DEBUG WEBHOOK] Response:', JSON.stringify(responseObj, null, 2));
     res.status(200).json(responseObj);
     
-    // Processar webhook em segundo plano usando o novo script simplificado
+    // Processar webhook automático em segundo plano sem bloqueio
     if (webhookId) {
-      // Salvar payload em arquivo temporário para processamento
-      const tempFile = path.join(process.cwd(), `webhook-payload-${webhookId}.json`);
-      fs.writeFileSync(tempFile, JSON.stringify(payload));
+      console.log(`🔄 Iniciando processamento automático do webhook ${webhookId}`);
       
-      // Executar processamento em segundo plano (sem bloquear a resposta)
-      exec(`node webhook-handler.cjs ${webhookId} ${tempFile}`, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`❌ Erro no processamento em segundo plano: ${error.message}`);
-          return;
-        }
-        if (stderr) {
-          console.error(`⚠️ Erro no processamento: ${stderr}`);
-          return;
-        }
-        console.log(`✅ Processamento concluído: ${stdout}`);
-        
-        // Limpar arquivo temporário após processamento
+      // Executar o processamento diretamente em segundo plano
+      setTimeout(async () => {
         try {
-          fs.unlinkSync(tempFile);
-        } catch (err) {
-          console.error('Erro ao remover arquivo temporário:', err);
+          console.log(`⏱️ Processando webhook ${webhookId} após resposta ao cliente`);
+          const success = await processWebhook(webhookId);
+          
+          if (success) {
+            console.log(`✅ Processamento automático do webhook ${webhookId} concluído com sucesso`);
+          } else {
+            console.error(`❌ Falha no processamento automático do webhook ${webhookId}`);
+          }
+        } catch (processError) {
+          console.error(`❌ Erro fatal no processamento automático:`, processError);
         }
-      });
+      }, 100); // Pequeno delay para garantir que a resposta foi enviada
     }
     
     return;
