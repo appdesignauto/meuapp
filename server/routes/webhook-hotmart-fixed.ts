@@ -12,6 +12,7 @@ import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import { exec } from 'child_process';
 
 // Criar router para a rota fixa
 const router = Router();
@@ -298,7 +299,7 @@ function gerarUsuarioESenha(email: string) {
   return { username, password: hashedPassword };
 }
 
-// Implementação dedicada do webhook da Hotmart para garantir resposta JSON
+// Implementação simplificada do webhook da Hotmart
 router.post('/', async (req: Request, res: Response) => {
   // Forçar todos os cabeçalhos anti-cache possíveis
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
@@ -309,64 +310,30 @@ router.post('/', async (req: Request, res: Response) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-No-Cache', Date.now().toString());
   
-  console.log('📩 Webhook FIXO da Hotmart recebido em', new Date().toISOString());
+  console.log('📩 Webhook da Hotmart recebido em', new Date().toISOString());
+  
+  // Debugging - Log detalhado da requisição
+  console.log('📝 [DEBUG WEBHOOK] POST /hotmart - Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('📝 [DEBUG WEBHOOK] Body:', JSON.stringify(req.body, null, 2));
   
   try {
-    // Imprimir o corpo da requisição
-    console.log('📦 Corpo do webhook:', JSON.stringify(req.body, null, 2));
-    
-    // Capturar dados básicos do webhook
+    // Extrair dados essenciais
     const payload = req.body;
     
-    // 1. Validar evento
-    const isValid =
-      payload?.event === 'PURCHASE_APPROVED' &&
-      (payload?.data?.purchase?.status === 'APPROVED' || true);  // Flexibilizar para testes
-
-    if (!isValid) {
-      console.log('⚠️ Webhook ignorado: não é uma compra aprovada');
-      return res.status(200).json({ 
-        success: false,
-        message: 'Webhook ignorado - não é uma compra aprovada' 
-      });
-    }
+    const event = payload?.event || 'UNKNOWN';
+    const buyerEmail = payload?.data?.buyer?.email || findEmailInPayload(payload);
+    const buyerName = payload?.data?.buyer?.name || 'Novo Cliente';
+    const transactionId = payload?.data?.purchase?.transaction || findTransactionId(payload) || `TX-${Date.now()}`;
     
-    const buyer = payload.data?.buyer;
-    const purchase = payload.data?.purchase;
-    const subscription = payload.data?.subscription;
-    
-    const full_name = buyer?.name || payload.name || 'Novo Cliente';
-    const email = buyer?.email || findEmailInPayload(payload);
-    const phone = buyer?.checkout_phone || buyer?.document || null;
-    
-    const planType = subscription?.plan?.name?.toLowerCase() || 'mensal';
-    const startDate = purchase?.order_date ? new Date(purchase.order_date) : new Date();
-    const endDate = purchase?.date_next_charge ? new Date(purchase.date_next_charge) : new Date(Date.now() + 31536000000); // +1 ano
-    const transactionId = purchase?.transaction || findTransactionId(payload) || `TX-${Date.now()}`;
-    const paymentMethod = purchase?.payment?.type || 'unknown';
-    const price = purchase?.price?.value || 0;
-    const currency = purchase?.price?.currency_value || 'BRL';
-    const subscriptionCode = subscription?.subscriber?.code || '';
-    const planId = subscription?.plan?.id || '1';
-    const event = payload.event || 'PURCHASE_APPROVED';
-    
-    if (!email) {
-      console.error('❌ Email não encontrado no payload');
-      return res.status(200).json({ 
-        success: false,
-        message: 'Email não encontrado no payload' 
-      });
-    }
-    
-    // Registrar no banco de dados
-    let webhookId: number | null = null;
+    // Registrar webhook no banco
+    let webhookId = null;
     
     try {
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL
       });
       
-      // Registrar webhook no log
+      // 1. Registrar webhook no log
       const insertResult = await pool.query(
         `INSERT INTO webhook_logs 
           (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
@@ -375,7 +342,7 @@ router.post('/', async (req: Request, res: Response) => {
         [
           event,
           'received',
-          email,
+          buyerEmail,
           'hotmart',
           JSON.stringify(payload),
           transactionId,
@@ -385,122 +352,58 @@ router.post('/', async (req: Request, res: Response) => {
       );
       
       webhookId = insertResult.rows[0].id;
-      console.log(`✅ Webhook registrado no banco de dados com ID: ${webhookId}`);
-      
-      // 2. Verificar se o usuário já existe
-      const userQuery = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-      let userId;
-      
-      if (userQuery.rowCount === 0) {
-        // Criar novo usuário com username e senha gerados
-        const { username, password } = gerarUsuarioESenha(email);
-        
-        console.log(`➕ Criando novo usuário para ${email} com username ${username}`);
-        
-        // Registrando os detalhes da execução para debugging
-        console.log(`DEBUG - Criando usuário com os seguintes dados:
-          - username: ${username}
-          - email: ${email}
-          - name: ${full_name}
-          - phone: ${phone || 'não fornecido'}
-          - planType: ${planType}
-          - startDate: ${startDate?.toISOString() || 'não fornecido'}
-          - endDate: ${endDate?.toISOString() || 'não fornecido'}
-        `);
-        
-        const insertUser = await pool.query(`
-          INSERT INTO users (
-            username, password, email, name, phone,
-            nivelacesso, origemassinatura, tipoplano,
-            dataassinatura, dataexpiracao, acessovitalicio, 
-            isactive, emailconfirmed, criadoem, atualizadoem,
-            role
-          ) VALUES (
-            $1, $2, $3, $4, $5,
-            'premium', 'hotmart', $6,
-            $7, $8, false, 
-            true, true, NOW(), NOW(),
-            'user'
-          ) RETURNING id
-        `, [username, password, email, full_name, phone, planType, startDate, endDate]);
-        
-        userId = insertUser.rows[0].id;
-        console.log(`✅ Novo usuário criado com ID: ${userId}`);
-      } else {
-        userId = userQuery.rows[0].id;
-        console.log(`🔄 Atualizando usuário existente com ID: ${userId}`);
-        
-        await pool.query(`
-          UPDATE users SET
-            name = $1,
-            phone = $2,
-            nivelacesso = 'premium',
-            origemassinatura = 'hotmart',
-            tipoplano = $3,
-            dataassinatura = $4,
-            dataexpiracao = $5,
-            acessovitalicio = false,
-            atualizadoem = NOW()
-          WHERE id = $6
-        `, [full_name, phone, planType, startDate, endDate, userId]);
-      }
-      
-      // 3. Evitar duplicidade de transações
-      const existingSubQuery = await pool.query(
-        'SELECT id FROM subscriptions WHERE transactionid = $1', 
-        [transactionId]
-      );
-      
-      if (existingSubQuery.rowCount === 0) {
-        // 4. Registrar nova assinatura
-        console.log(`📝 Registrando nova assinatura para usuário ${userId}`);
-        
-        await pool.query(`
-          INSERT INTO subscriptions (
-            "userId", "planType", status, "startDate", "endDate", origin,
-            transactionid, lastevent, "webhookData", "paymentmethod", 
-            price, currency, "createdAt", "updatedAt", "planid", subscriptioncode
-          ) VALUES (
-            $1, $2, 'active', $3, $4, 'hotmart',
-            $5, $6, $7, $8, $9, $10, NOW(), NOW(), $11, $12
-          )
-        `, [
-          userId, planType, startDate, endDate,
-          transactionId, event, JSON.stringify(payload), paymentMethod,
-          price, currency, planId, subscriptionCode
-        ]);
-      } else {
-        console.log(`ℹ️ Assinatura com transactionId ${transactionId} já existe, ignorando`);
-      }
-      
-      // 5. Marcar webhook como processado
-      await pool.query(
-        `UPDATE webhook_logs SET status = 'processed' WHERE id = $1`,
-        [webhookId]
-      );
-      
       await pool.end();
     } catch (dbError) {
-      console.error('❌ Erro no processamento do banco de dados:', dbError);
-      // Continuar mesmo com erro para garantir resposta ao Hotmart
+      console.error('❌ Erro ao registrar webhook:', dbError);
     }
     
-    // Responder para a Hotmart
-    return res.status(200).json({
+    // Retornar resposta imediatamente para a Hotmart
+    // Importante: Evitar timeout
+    const responseObj = {
       success: true,
-      message: 'Webhook processado com sucesso',
+      message: 'Webhook recebido com sucesso',
       timestamp: new Date().toISOString()
-    });
+    };
     
+    console.log('📝 [DEBUG WEBHOOK] Response:', JSON.stringify(responseObj, null, 2));
+    res.status(200).json(responseObj);
+    
+    // Processar webhook em segundo plano usando o novo script simplificado
+    if (webhookId) {
+      // Salvar payload em arquivo temporário para processamento
+      const tempFile = path.join(process.cwd(), `webhook-payload-${webhookId}.json`);
+      fs.writeFileSync(tempFile, JSON.stringify(payload));
+      
+      // Executar processamento em segundo plano (sem bloquear a resposta)
+      exec(`node webhook-handler.cjs ${webhookId} ${tempFile}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`❌ Erro no processamento em segundo plano: ${error.message}`);
+          return;
+        }
+        if (stderr) {
+          console.error(`⚠️ Erro no processamento: ${stderr}`);
+          return;
+        }
+        console.log(`✅ Processamento concluído: ${stdout}`);
+        
+        // Limpar arquivo temporário após processamento
+        try {
+          fs.unlinkSync(tempFile);
+        } catch (err) {
+          console.error('Erro ao remover arquivo temporário:', err);
+        }
+      });
+    }
+    
+    return;
   } catch (error) {
-    console.error('❌ Erro ao processar webhook:', error);
+    console.error('❌ Erro geral ao processar webhook:', error);
     
     // Mesmo com erro, retornar 200 para evitar reenvios
     return res.status(200).json({
       success: false,
       message: 'Erro ao processar webhook, mas confirmamos o recebimento',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
+      timestamp: new Date().toISOString()
     });
   }
 });
