@@ -147,7 +147,59 @@ function findPlanInfo(payload: any): string {
   return 'plano premium';
 }
 
-// Função para processar o webhook automaticamente
+/**
+ * Validação correta do Webhook usando event + status
+ */
+function isValidWebhook(payload: any): boolean {
+  return payload?.event === 'PURCHASE_APPROVED' && 
+         payload?.data?.purchase?.status === 'APPROVED';
+}
+
+/**
+ * Extração correta dos dados do webhook da Hotmart
+ * Mapeia os dados exatamente como a Hotmart envia
+ */
+function extractWebhookData(payload: any) {
+  const buyer = payload.data.buyer;
+  const purchase = payload.data.purchase;
+  const subscription = payload.data.subscription;
+
+  const full_name = buyer?.name;
+  const email = buyer?.email?.toLowerCase().trim();
+  const phone = buyer?.document;
+
+  // Mapeia o nome do plano para nosso sistema
+  let planType = subscription?.plan?.name?.toLowerCase();
+  if (planType?.includes('anual') || planType?.includes('annual')) {
+    planType = 'anual';
+  } else if (planType?.includes('mensal') || planType?.includes('monthly')) {
+    planType = 'mensal';
+  } else {
+    planType = 'premium'; // fallback
+  }
+
+  const startDate = new Date(purchase?.order_date);
+  const endDate = new Date(purchase?.date_next_charge);
+
+  const transactionId = purchase?.transaction;
+  const event = payload.event;
+  const origin = "hotmart";
+
+  return {
+    full_name,
+    email,
+    phone,
+    planType,
+    startDate,
+    endDate,
+    transactionId,
+    event,
+    origin,
+    payload
+  };
+}
+
+// Função para processar o webhook automaticamente com validação aprimorada
 async function processWebhook(webhookId: number): Promise<boolean> {
   console.log(`🔄 Processando webhook ID: ${webhookId} automaticamente`);
   
@@ -178,25 +230,51 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       return true;
     }
     
-    // Analisar o payload para extrair informações
-    const payload = webhook.raw_payload;
-    const email = webhook.email;
+    // Parse do payload
+    let payload;
+    try {
+      if (typeof webhook.raw_payload === 'string') {
+        let parsedOnce = JSON.parse(webhook.raw_payload);
+        if (typeof parsedOnce === 'string') {
+          payload = JSON.parse(parsedOnce);
+        } else {
+          payload = parsedOnce;
+        }
+      } else {
+        payload = webhook.raw_payload;
+      }
+    } catch (parseError) {
+      console.error('❌ Erro ao fazer parse do payload:', parseError);
+      await pool.end();
+      return false;
+    }
+
+    // Validação melhorada
+    if (!isValidWebhook(payload)) {
+      console.log(`⚠️ Webhook ${webhookId} não é válido (event: ${payload?.event}, status: ${payload?.data?.purchase?.status})`);
+      await pool.query(
+        'UPDATE webhook_logs SET status = $1 WHERE id = $2',
+        ['invalid', webhookId]
+      );
+      await pool.end();
+      return false;
+    }
+
+    // Extrai dados com o mapeamento correto
+    const data = extractWebhookData(payload);
     
-    if (!email) {
+    if (!data.email) {
       console.error('❌ Email não encontrado no payload');
       await pool.end();
       return false;
     }
     
-    const name = findNameInPayload(payload) || email.split('@')[0];
-    const planType = findPlanInfo(payload);
-    
-    console.log(`📋 Dados extraídos: ${name}, ${email}, Plano: ${planType}`);
+    console.log(`📋 Dados extraídos: Nome=${data.full_name}, Email=${data.email}, Transação=${data.transactionId}`);
     
     // Verificar se o usuário já existe
     const userResult = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
+      'SELECT id FROM users WHERE email = $1',
+      [data.email]
     );
     
     let userId;
@@ -206,23 +284,22 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       userId = userResult.rows[0].id;
       console.log(`🔄 Atualizando usuário existente com ID: ${userId}`);
       
-      await pool.query(
-        `UPDATE users SET 
-         nivelacesso = 'premium', 
-         tipoplano = $1, 
-         origemassinatura = 'hotmart', 
-         dataassinatura = NOW(), 
-         dataexpiracao = NOW() + INTERVAL '1 year',
-         atualizadoem = NOW()
-         WHERE id = $2`,
-        [planType, userId]
-      );
+      await pool.query(`
+        UPDATE users SET
+          nivelacesso = 'premium',
+          origemassinatura = $1,
+          tipoplano = $2,
+          dataassinatura = $3,
+          dataexpiracao = $4,
+          acessovitalicio = false
+        WHERE id = $5
+      `, [data.origin, data.planType, data.startDate, data.endDate, userId]);
     } else {
       // Criar novo usuário
-      console.log(`➕ Criando novo usuário para ${email}...`);
+      console.log(`➕ Criando novo usuário para ${data.email}...`);
       
       // Gerar username único baseado no email
-      const username = `${email.split('@')[0]}_${Math.random().toString(16).slice(2, 10)}`;
+      const username = `${data.email.split('@')[0]}_${Math.random().toString(16).slice(2, 10)}`;
       
       // Gerar senha padrão e hash para o novo usuário
       const password = 'auto@123';
@@ -230,41 +307,50 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       const hash = crypto.scryptSync(password, salt, 64).toString("hex");
       const hashedPassword = `${hash}.${salt}`;
       
-      console.log(`Criando usuário com senha hash segura para ${email}`);
-
-      const insertResult = await pool.query(
-        `INSERT INTO users 
-         (username, email, name, password, nivelacesso, tipoplano, origemassinatura, dataassinatura, dataexpiracao, criadoem, atualizadoem, isactive, emailconfirmed)
-         VALUES ($1, $2, $3, $4, 'premium', $5, 'hotmart', NOW(), NOW() + INTERVAL '1 year', NOW(), NOW(), true, true)
-         RETURNING id`,
-        [username, email, name, hashedPassword, planType]
-      );
+      const insertResult = await pool.query(`
+        INSERT INTO users (
+          username, email, name, password, phone, nivelacesso, origemassinatura,
+          tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed
+        ) VALUES (
+          $1, $2, $3, $4, $5, 'premium', $6,
+          $7, $8, $9, false, true, true
+        ) RETURNING id
+      `, [username, data.email, data.full_name, hashedPassword, data.phone, data.origin, data.planType, data.startDate, data.endDate]);
       
       userId = insertResult.rows[0].id;
       console.log(`✅ Usuário criado com ID: ${userId}`);
     }
     
-    // Registrar a assinatura
-    console.log(`📝 Registrando assinatura para usuário ${userId}...`);
-    
-    await pool.query(
-      `INSERT INTO subscriptions 
-       (userid, planid, subscriptioncode, paymentmethod, price, currency, status, datacriacao, dataatualizacao)
-       VALUES ($1, $2, $3, $4, $5, $6, 'active', NOW(), NOW())`,
-      [
-        userId,
-        1, // ID padrão para plano premium
-        webhook.transaction_id || `MANUAL-${Date.now()}`,
-        'hotmart',
-        0, // Preço padrão (será atualizado posteriormente)
-        'BRL'
-      ]
+    // Verificar se já existe assinatura para este usuário
+    const existingSubscription = await pool.query(
+      'SELECT id FROM subscriptions WHERE "userId" = $1',
+      [userId]
     );
+
+    if (existingSubscription.rows.length > 0) {
+      console.log(`ℹ️ Usuário ${userId} já possui assinatura. Ignorando.`);
+    } else {
+      // Criar assinatura na tabela subscriptions
+      await pool.query(`
+        INSERT INTO subscriptions (
+          "userId", "planType", status, "startDate", "endDate",
+          origin, transactionid, lastevent, "webhookData"
+        ) VALUES (
+          $1, $2, 'active', $3, $4,
+          'hotmart', $5, $6, $7
+        )
+      `, [
+        userId, data.planType, data.startDate, data.endDate,
+        data.transactionId, data.event, JSON.stringify(data.payload)
+      ]);
+
+      console.log(`✅ Assinatura registrada para usuário ${userId}`);
+    }
     
     // Marcar webhook como processado
     await pool.query(
-      `UPDATE webhook_logs SET status = 'processed', updated_at = NOW() WHERE id = $1`,
-      [webhookId]
+      'UPDATE webhook_logs SET status = $1 WHERE id = $2',
+      ['processed', webhookId]
     );
     
     console.log(`✅ Webhook ${webhookId} processado com sucesso!`);
@@ -277,8 +363,8 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       // Marcar como erro no banco de dados
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       await pool.query(
-        `UPDATE webhook_logs SET status = 'error', error_message = $1, updated_at = NOW() WHERE id = $2`,
-        [errorMessage, webhookId]
+        'UPDATE webhook_logs SET status = $1 WHERE id = $2',
+        ['error', webhookId]
       );
     } catch (updateError) {
       console.error('Erro ao atualizar status do webhook:', updateError);
