@@ -476,44 +476,36 @@ router.post('/', async (req: Request, res: Response) => {
       console.error('❌ Erro ao registrar webhook:', dbError);
     }
     
-    // Retornar resposta imediatamente para a Hotmart
-    // Importante: Evitar timeout
+    // 🚀 PROCESSAMENTO IMEDIATO - ANTES DA RESPOSTA!
+    let processedSuccessfully = false;
+    
+    if (webhookId && event === 'PURCHASE_APPROVED') {
+      console.log(`⚡ PROCESSANDO WEBHOOK ${webhookId} IMEDIATAMENTE (antes da resposta)`);
+      
+      try {
+        processedSuccessfully = await processWebhook(webhookId);
+        
+        if (processedSuccessfully) {
+          console.log(`✅ Webhook ${webhookId} processado AUTOMATICAMENTE com sucesso!`);
+        } else {
+          console.log(`❌ Falha no processamento do webhook ${webhookId}`);
+        }
+      } catch (processError) {
+        console.error(`❌ Erro no processamento imediato:`, processError);
+      }
+    }
+    
+    // Retornar resposta para a Hotmart
     const responseObj = {
       success: true,
-      message: 'Webhook recebido com sucesso',
+      message: processedSuccessfully ? 'Webhook processado e usuário criado com sucesso' : 'Webhook recebido com sucesso',
+      processed: processedSuccessfully,
+      webhookId: webhookId,
       timestamp: new Date().toISOString()
     };
     
     console.log('📝 [DEBUG WEBHOOK] Response:', JSON.stringify(responseObj, null, 2));
     res.status(200).json(responseObj);
-    
-    // Processar webhook automático em segundo plano sem bloqueio
-    if (webhookId) {
-      console.log(`🔄 Iniciando processamento automático do webhook ${webhookId}`);
-      
-      // Executar o processamento diretamente em segundo plano
-      setTimeout(async () => {
-        try {
-          console.log(`⏱️ Processando webhook ${webhookId} após resposta ao cliente`);
-          
-          // Primeiro: processar o webhook específico
-          const success = await processWebhook(webhookId);
-          
-          if (success) {
-            console.log(`✅ Processamento automático do webhook ${webhookId} concluído com sucesso`);
-          } else {
-            console.error(`❌ Falha no processamento automático do webhook ${webhookId}`);
-            
-            // Se falhar o processamento específico, tentar o processamento massivo
-            console.log(`🔄 Tentando processamento alternativo de todos os webhooks pendentes...`);
-            const result = await processPendingWebhooks();
-            console.log(`⚙️ Resultado do processamento alternativo:`, result);
-          }
-        } catch (processError) {
-          console.error(`❌ Erro fatal no processamento automático:`, processError);
-        }
-      }, 500); // Pequeno delay maior para garantir que a resposta foi enviada
-    }
     
     return;
   } catch (error) {
