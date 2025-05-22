@@ -147,7 +147,7 @@ async function processarWebhook(webhook) {
     
     // Marcar webhook como processado
     await pool.query(
-      `UPDATE webhook_logs SET status = 'processed', updated_at = NOW() WHERE id = $1`,
+      `UPDATE webhook_logs SET status = 'processed' WHERE id = $1`,
       [webhook.id]
     );
     
@@ -159,7 +159,7 @@ async function processarWebhook(webhook) {
     
     try {
       await pool.query(
-        `UPDATE webhook_logs SET status = 'error', error_message = $1, updated_at = NOW() WHERE id = $2`,
+        `UPDATE webhook_logs SET status = 'error', error_message = $1 WHERE id = $2`,
         [error.message, webhook.id]
       );
     } catch (updateError) {
