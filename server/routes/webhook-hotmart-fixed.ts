@@ -230,21 +230,27 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       return true;
     }
     
-    // Parse do payload
+    // Parse do payload - versão mais robusta para lidar com strings escapadas
     let payload;
     try {
-      if (typeof webhook.raw_payload === 'string') {
-        let parsedOnce = JSON.parse(webhook.raw_payload);
-        if (typeof parsedOnce === 'string') {
-          payload = JSON.parse(parsedOnce);
-        } else {
-          payload = parsedOnce;
+      let rawData = webhook.raw_payload;
+      
+      // Se for string, tentar fazer parse múltiplas vezes se necessário
+      if (typeof rawData === 'string') {
+        // Primeira tentativa de parse
+        rawData = JSON.parse(rawData);
+        
+        // Se ainda for string após o primeiro parse, tentar novamente
+        while (typeof rawData === 'string') {
+          rawData = JSON.parse(rawData);
         }
-      } else {
-        payload = webhook.raw_payload;
       }
+      
+      payload = rawData;
+      console.log(`✅ Payload parseado com sucesso. Event: ${payload?.event}, Status: ${payload?.data?.purchase?.status}`);
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse do payload:', parseError);
+      console.error('Raw payload problem:', webhook.raw_payload);
       await pool.end();
       return false;
     }
