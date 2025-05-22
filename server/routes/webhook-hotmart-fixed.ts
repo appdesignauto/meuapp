@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { exec } from 'child_process';
+import { processPendingWebhooks } from '../../auto-webhook-processor.js';
 
 // Criar router para a rota fixa
 const router = Router();
@@ -299,6 +300,32 @@ function gerarUsuarioESenha(email: string) {
   return { username, password: hashedPassword };
 }
 
+// Rota para processamento manual de webhooks pendentes
+router.get('/process-pending', async (req: Request, res: Response) => {
+  console.log('🔄 Iniciando processamento manual de webhooks pendentes');
+  
+  try {
+    const result = await processPendingWebhooks();
+    console.log('✅ Resultado do processamento:', result);
+    
+    return res.status(200).json({
+      success: true,
+      result,
+      message: 'Processamento de webhooks concluído',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Erro ao processar webhooks pendentes:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      message: 'Falha ao processar webhooks pendentes',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Implementação simplificada do webhook da Hotmart
 router.post('/', async (req: Request, res: Response) => {
   // Forçar todos os cabeçalhos anti-cache possíveis
@@ -376,17 +403,24 @@ router.post('/', async (req: Request, res: Response) => {
       setTimeout(async () => {
         try {
           console.log(`⏱️ Processando webhook ${webhookId} após resposta ao cliente`);
+          
+          // Primeiro: processar o webhook específico
           const success = await processWebhook(webhookId);
           
           if (success) {
             console.log(`✅ Processamento automático do webhook ${webhookId} concluído com sucesso`);
           } else {
             console.error(`❌ Falha no processamento automático do webhook ${webhookId}`);
+            
+            // Se falhar o processamento específico, tentar o processamento massivo
+            console.log(`🔄 Tentando processamento alternativo de todos os webhooks pendentes...`);
+            const result = await processPendingWebhooks();
+            console.log(`⚙️ Resultado do processamento alternativo:`, result);
           }
         } catch (processError) {
           console.error(`❌ Erro fatal no processamento automático:`, processError);
         }
-      }, 100); // Pequeno delay para garantir que a resposta foi enviada
+      }, 500); // Pequeno delay maior para garantir que a resposta foi enviada
     }
     
     return;
