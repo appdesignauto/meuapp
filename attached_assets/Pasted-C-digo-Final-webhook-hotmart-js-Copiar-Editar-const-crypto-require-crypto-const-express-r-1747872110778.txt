@@ -1,0 +1,121 @@
+Código Final – /webhook/hotmart
+js
+Copiar
+Editar
+const crypto = require('crypto');
+const express = require('express');
+const bodyParser = require('body-parser');
+const { Pool } = require('pg');
+
+const app = express();
+app.use(bodyParser.json());
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
+// Gera username e senha fictícios
+function gerarUsuarioESenha(email) {
+  const username = email.split('@')[0] + '-' + Date.now();
+  const senha = crypto.randomBytes(16).toString('hex'); // senha aleatória
+  return { username, password: senha };
+}
+
+app.post('/webhook/hotmart', async (req, res) => {
+  const payload = req.body;
+
+  // 1. Validar evento
+  const isValid =
+    payload?.event === 'PURCHASE_APPROVED' &&
+    payload?.data?.purchase?.status === 'APPROVED';
+
+  if (!isValid) {
+    return res.status(400).json({ message: 'Webhook ignorado' });
+  }
+
+  try {
+    const buyer = payload.data.buyer;
+    const purchase = payload.data.purchase;
+    const subscription = payload.data.subscription;
+
+    const full_name = buyer?.name;
+    const email = buyer?.email;
+    const phone = buyer?.document || null;
+
+    const planType = subscription?.plan?.name?.toLowerCase() || 'mensal';
+    const startDate = new Date(purchase?.order_date);
+    const endDate = new Date(purchase?.date_next_charge);
+    const transactionId = purchase?.transaction;
+    const paymentMethod = purchase?.payment?.type || '';
+    const price = purchase?.price?.value || 0;
+    const currency = purchase?.price?.currency_value || 'BRL';
+    const subscriptionCode = subscription?.subscriber?.code || '';
+    const planId = subscription?.plan?.id || null;
+    const event = payload.event;
+    const webhookData = payload;
+
+    // 2. Verifica se o usuário já existe
+    const userQuery = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    let userId;
+
+    if (userQuery.rowCount === 0) {
+      const { username, password } = gerarUsuarioESenha(email);
+
+      const insertUser = await pool.query(`
+        INSERT INTO users (
+          name, email, phone, username, password,
+          nivelacesso, origemassinatura, tipoplano,
+          dataassinatura, dataexpiracao, acessovitalicio, isactive
+        ) VALUES (
+          $1, $2, $3, $4, $5,
+          'premium', 'hotmart', $6,
+          $7, $8, false, true
+        ) RETURNING id
+      `, [full_name, email, phone, username, password, planType, startDate, endDate]);
+
+      userId = insertUser.rows[0].id;
+
+    } else {
+      userId = userQuery.rows[0].id;
+
+      await pool.query(`
+        UPDATE users SET
+          name = $1,
+          phone = $2,
+          nivelacesso = 'premium',
+          origemassinatura = 'hotmart',
+          tipoplano = $3,
+          dataassinatura = $4,
+          dataexpiracao = $5,
+          acessovitalicio = false
+        WHERE id = $6
+      `, [full_name, phone, planType, startDate, endDate, userId]);
+    }
+
+    // 3. Evita duplicidade
+    const exists = await pool.query('SELECT id FROM subscriptions WHERE transactionid = $1', [transactionId]);
+    if (exists.rowCount > 0) {
+      return res.status(200).json({ message: 'Assinatura já registrada' });
+    }
+
+    // 4. Registra nova assinatura
+    await pool.query(`
+      INSERT INTO subscriptions (
+        userId, planType, status, startDate, endDate, origin,
+        transactionid, lastevent, webhookData
+      ) VALUES (
+        $1, $2, 'active', $3, $4, 'hotmart',
+        $5, $6, $7
+      )
+    `, [
+      userId, planType, startDate, endDate,
+      transactionId, event, webhookData
+    ]);
+
+    res.status(201).json({ message: 'Usuário e assinatura processados com sucesso' });
+
+  } catch (err) {
+    console.error('❌ Erro ao processar webhook Hotmart:', err);
+    res.status(500).json({ message: 'Erro interno', error: err.message });
+  }
+});
