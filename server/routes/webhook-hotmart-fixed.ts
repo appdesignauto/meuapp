@@ -397,19 +397,32 @@ router.post('/', async (req: Request, res: Response) => {
         
         console.log(`➕ Criando novo usuário para ${email} com username ${username}`);
         
+        // Registrando os detalhes da execução para debugging
+        console.log(`DEBUG - Criando usuário com os seguintes dados:
+          - username: ${username}
+          - email: ${email}
+          - name: ${full_name}
+          - phone: ${phone || 'não fornecido'}
+          - planType: ${planType}
+          - startDate: ${startDate?.toISOString() || 'não fornecido'}
+          - endDate: ${endDate?.toISOString() || 'não fornecido'}
+        `);
+        
         const insertUser = await pool.query(`
           INSERT INTO users (
-            name, email, phone, username, password,
+            username, password, email, name, phone,
             nivelacesso, origemassinatura, tipoplano,
-            dataassinatura, dataexpiracao, acessovitalicio, isactive, 
-            emailconfirmed, criadoem, atualizadoem
+            dataassinatura, dataexpiracao, acessovitalicio, 
+            isactive, emailconfirmed, criadoem, atualizadoem,
+            role
           ) VALUES (
             $1, $2, $3, $4, $5,
             'premium', 'hotmart', $6,
-            $7, $8, false, true,
-            true, NOW(), NOW()
+            $7, $8, false, 
+            true, true, NOW(), NOW(),
+            'user'
           ) RETURNING id
-        `, [full_name, email, phone, username, password, planType, startDate, endDate]);
+        `, [username, password, email, full_name, phone, planType, startDate, endDate]);
         
         userId = insertUser.rows[0].id;
         console.log(`✅ Novo usuário criado com ID: ${userId}`);
