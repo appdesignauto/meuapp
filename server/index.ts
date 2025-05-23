@@ -470,9 +470,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOYMENT
-  // Cloud Run espera porta 3000, desenvolvimento usa 5000
-  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  // 🚀 CONFIGURAÇÃO DE PORTA INTELIGENTE
+  // Replit development: porta 5000, Cloud Run deployment: porta do environment
+  const port = process.env.PORT || (process.env.REPL_ID ? 5000 : 3001);
   server.listen({
     port,
     host: "0.0.0.0",
