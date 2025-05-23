@@ -92,19 +92,18 @@ function findTransactionId(payload: any): string | null {
 
 const app = express();
 
-// ✅ HEALTH CHECK ROUTES - DEVEM SER AS PRIMEIRAS ROTAS!
-// Rota raiz para health check do Replit
+// ✅ HEALTH CHECK ROUTES - SOLUÇÃO DEFINITIVA!
+// Rota raiz SEMPRE retorna OK para deployment
 app.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    service: 'DesignAuto API',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: '1.0.0'
-  });
+  res.status(200).send('OK');
 });
 
-// Rota adicional de health check
+// Rota de deploy dedicada
+app.get('/deploy-check', (req, res) => {
+  res.status(200).send('HEALTHY');
+});
+
+// Rota adicional de health check com JSON
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
@@ -113,6 +112,17 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     database: 'connected',
     webhooks: 'active'
+  });
+});
+
+// Rota específica para API health check
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'DesignAuto API',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
   });
 });
 
@@ -492,6 +502,21 @@ app.use((req, res, next) => {
 
     res.status(status).json({ message });
     throw err;
+  });
+
+  // ✅ SOLUÇÃO DEFINITIVA: Health check antes do Vite/SPA
+  // Esta rota será processada ANTES do catch-all do SPA
+  app.get('/', (req, res, next) => {
+    // Se for um navegador normal, deixa o SPA processar
+    const userAgent = req.get('User-Agent') || '';
+    const isBot = userAgent.includes('bot') || userAgent.includes('curl') || userAgent.includes('health') || userAgent.includes('deployment');
+    
+    if (isBot || req.query.health !== undefined) {
+      return res.status(200).send('OK');
+    }
+    
+    // Caso contrário, continua para o SPA
+    next();
   });
 
   // importantly only setup vite in development and after
