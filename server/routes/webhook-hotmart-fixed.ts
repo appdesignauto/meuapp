@@ -178,8 +178,8 @@ function extractWebhookData(payload: any) {
     planType = 'premium'; // fallback
   }
 
-  const startDate = new Date(purchase?.order_date);
-  const endDate = new Date(purchase?.date_next_charge);
+  const startDate = new Date();
+  const endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 ano a partir de hoje
 
   const transactionId = purchase?.transaction;
   const event = payload.event;
