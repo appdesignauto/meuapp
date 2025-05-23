@@ -676,16 +676,8 @@ const PostCard: React.FC<{
               {user && user.id === post.user.id && (
                 <>
                   {(() => {
-                    // 🎯 DEBUG: Verificar dados completos do status do post
-                    console.log(`🎯 [STATUS DEBUG] Post ID ${post.id} - "${post.title}":`, {
-                      postCompleto: post,
-                      isApproved: post.isApproved,
-                      isApprovedType: typeof post.isApproved,
-                      status: (post as any).status,
-                      statusType: typeof (post as any).status,
-                      resultadoFinal: post.isApproved ? 'APROVADO' : 'PENDENTE'
-                    });
-                    
+                    // 🎯 DEBUG: Status do post
+                    console.log(`🎯 [STATUS] Post ${post.id}: isApproved=${post.isApproved} | Resultado: ${post.isApproved ? 'APROVADO' : 'PENDENTE'}`);
                     return post.isApproved;
                   })() ? (
                     <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
