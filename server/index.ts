@@ -436,17 +436,21 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
-  const server = await registerRoutes(app);
-
-  // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT (após as rotas)
+  // 🏥 HEALTH CHECK ENDPOINTS PARA DEPLOYMENT (antes das rotas)
   app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development'
-    });
+    res.status(200).send('OK');
   });
+
+  app.get('/', (req: Request, res: Response) => {
+    if (req.headers.accept?.includes('application/json')) {
+      res.status(200).json({ status: 'ok', message: 'DesignAuto API is running' });
+    } else {
+      // Se não for JSON, deixa o Vite servir a aplicação React
+      res.status(200).send('OK');
+    }
+  });
+
+  const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
