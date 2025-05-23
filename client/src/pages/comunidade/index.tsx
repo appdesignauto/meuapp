@@ -1146,11 +1146,18 @@ const CommunityPage: React.FC = () => {
     queryKey: ['/api/community/user-posts', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const response = await apiRequest('GET', `/api/community/posts/user/${user.id}`);
-      if (!response.ok) {
+      try {
+        const response = await apiRequest('GET', `/api/community/posts/user/${user.id}`);
+        if (!response.ok) {
+          throw new Error('Erro ao carregar seus posts');
+        }
+        const text = await response.text();
+        if (!text) return [];
+        return JSON.parse(text);
+      } catch (error) {
+        console.error('Erro ao buscar posts do usuário:', error);
         throw new Error('Erro ao carregar seus posts');
       }
-      return response.json();
     },
     enabled: !!user && activeTab === 'meus-posts',
     refetchOnWindowFocus: false,
