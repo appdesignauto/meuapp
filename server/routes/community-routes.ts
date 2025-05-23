@@ -3070,4 +3070,52 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
   }
 });
 
+// Endpoint NOVO e FUNCIONAL para Meus Posts
+router.get('/my-posts/:userId', auth, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    console.log(`[MEUS POSTS NOVO] Buscando posts do usuário ${userId}`);
+    
+    // Query SQL super simples
+    const result = await db.execute(sql`
+      SELECT 
+        id, title, content, "imageUrl", status, "createdAt", "viewCount"
+      FROM "communityPosts" 
+      WHERE "userId" = ${parseInt(userId)}
+      ORDER BY "createdAt" DESC
+      LIMIT 20
+    `);
+    
+    console.log(`[MEUS POSTS NOVO] Encontrados ${result.rows?.length || 0} posts`);
+    
+    if (!result.rows || result.rows.length === 0) {
+      return res.json([]);
+    }
+    
+    const posts = result.rows.map(row => ({
+      post: {
+        id: row.id,
+        title: row.title,
+        content: row.content,
+        imageUrl: row.imageUrl,
+        status: row.status,
+        createdAt: row.createdAt,
+        viewCount: row.viewCount,
+        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR')
+      },
+      user: {
+        username: 'admin',
+        name: 'Design Auto'
+      }
+    }));
+    
+    console.log(`[MEUS POSTS NOVO] Retornando:`, posts[0]?.post?.title || 'Nenhum');
+    return res.json(posts);
+    
+  } catch (error) {
+    console.error('[MEUS POSTS NOVO] ERRO:', error);
+    return res.status(500).json({ message: 'Erro ao buscar posts' });
+  }
+});
+
 export default router;

@@ -1147,13 +1147,11 @@ const CommunityPage: React.FC = () => {
     queryFn: async () => {
       if (!user) return [];
       try {
-        const response = await apiRequest('GET', `/api/community/posts/user/${user.id}`);
+        const response = await apiRequest('GET', `/api/community/my-posts/${user.id}`);
         if (!response.ok) {
           throw new Error('Erro ao carregar seus posts');
         }
-        const text = await response.text();
-        if (!text) return [];
-        return JSON.parse(text);
+        return await response.json();
       } catch (error) {
         console.error('Erro ao buscar posts do usuário:', error);
         throw new Error('Erro ao carregar seus posts');
