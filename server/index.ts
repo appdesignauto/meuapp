@@ -436,6 +436,18 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
 
+  // 🏥 ENDPOINT RAIZ CRÍTICO PARA DEPLOYMENT REPLIT
+  app.get('/', (req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'healthy',
+      message: 'DesignAuto API is running',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      port: process.env.PORT || 5000
+    });
+  });
+
   // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT
   app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({
