@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
-import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
@@ -437,43 +436,14 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
-  // 🏥 HEALTH CHECK ENDPOINTS PARA DEPLOYMENT (antes das rotas)
-  app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok', uptime: process.uptime() });
-  });
-
-  // Diagnóstico completo para identificar problemas em produção
-  app.get('/diagnostic', (req: Request, res: Response) => {
-    res.status(200).json({
-      environment: process.env.NODE_ENV,
-      port: process.env.PORT,
-      database_connected: !!process.env.DATABASE_URL,
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      version: process.version
-    });
-  });
-
-  // Rota simples para produção - sempre funciona
-  app.get('/', (req: Request, res: Response) => {
-    res.status(200).json({ 
-      message: 'DesignAuto API está funcionando!',
-      status: 'online',
-      timestamp: new Date().toISOString()
-    });
-  });
-
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = process.env.NODE_ENV === 'production' 
-      ? "Internal Server Error" 
-      : (err.message || "Internal Server Error");
+    const message = err.message || "Internal Server Error";
 
-    console.error('Server Error:', err);
     res.status(status).json({ message });
+    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -485,9 +455,10 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOY
-  // Prioridade: PORT do ambiente > porta 5000 (padrão Replit)
-  const port = process.env.PORT || 5000;
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",

@@ -1921,7 +1921,7 @@ const CommunityPage: React.FC = () => {
           {/* Área principal de conteúdo - feed central (estilo Instagram) */}
           <div className="w-full md:w-[470px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6 px-4 md:px-0">
+              <TabsList className="grid grid-cols-2 mb-6 px-4 md:px-0">
                 <TabsTrigger value="posts">
                   <Filter className="h-4 w-4 mr-2" />
                   Posts
@@ -1930,20 +1930,6 @@ const CommunityPage: React.FC = () => {
                   <Trophy className="h-4 w-4 mr-2" />
                   Ranking
                 </TabsTrigger>
-                {user && (
-                  <TabsTrigger value="meus-posts">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Meus Posts
-                    {!userPostsLoading && userPosts && userPosts.length > 0 && (
-                      <Badge 
-                        variant="secondary" 
-                        className="ml-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs py-0 px-1.5 h-4 rounded-full"
-                      >
-                        {userPosts.length}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                )}
               </TabsList>
               
               {/* Tab de Posts */}

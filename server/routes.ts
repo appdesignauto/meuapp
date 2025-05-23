@@ -84,7 +84,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
-  // Health check removido daqui - está no index.ts
+  // Rota simples de verificação de saúde
+  app.get('/health', (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      message: 'Servidor está funcionando corretamente'
+    });
+  });
 
   // Rota de debug para testar getUserByUsername
   app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
