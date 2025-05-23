@@ -1741,6 +1741,23 @@ const CommunityPage: React.FC = () => {
                       </div>
                     </div>
                     
+                    {/* Meus Posts - Nova seção */}
+                    {user && (
+                      <div 
+                        className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                        onClick={() => {
+                          setActiveTab('meus-posts');
+                        }}
+                      >
+                        <div className="bg-blue-100 dark:bg-blue-900 w-10 h-10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-300">
+                          <User className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">Meus Posts</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">Minhas publicações</p>
+                        </div>
+                      </div>
+                    )}
 
                     <a 
                       href="https://chat.whatsapp.com/GJoCJTnJNCBGQT3NvsmZ4R" 
