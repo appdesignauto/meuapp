@@ -3035,7 +3035,7 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
       LEFT JOIN "communityLikes" cl ON cp.id = cl."postId"
       LEFT JOIN "communityComments" cc ON cp.id = cc."postId" AND cc."isHidden" = false
       LEFT JOIN "communitySaves" cs ON cp.id = cs."postId"
-      WHERE cp."userId" = ${userId} AND ${statusFilter}
+      WHERE cp."userId" = ${userId}
       GROUP BY cp.id, u.id
       ORDER BY cp."createdAt" DESC
     `);
