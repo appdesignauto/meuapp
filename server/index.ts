@@ -7,6 +7,7 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
+import myPostsDefinitiveRouter from './routes/my-posts-definitive';
 // Importar o novo manipulador de webhook aprimorado
 import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
