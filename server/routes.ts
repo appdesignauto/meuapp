@@ -665,10 +665,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar a rota para o manifest.json dinâmico do PWA
   app.use(manifestRouter);
   
-  // ENDPOINT MEUS POSTS - ANTES DO MIDDLEWARE appConfigRouter (PRIORIDADE MÁXIMA)
-  app.get('/api/community/my-posts/:userId', async (req, res) => {
-    console.log('🎯 [PRIORIDADE MÁXIMA] Endpoint my-posts executado!');
-    console.log('🎯 [PRIORIDADE MÁXIMA] UserID:', req.params.userId);
+  // ENDPOINT DEFINITIVO MEUS POSTS - NOVA ROTA SEM CONFLITOS
+  app.get('/api/user-posts/:userId', async (req, res) => {
+    console.log('🚀 [DEFINITIVO] Novo endpoint user-posts executado!');
+    console.log('🚀 [DEFINITIVO] UserID:', req.params.userId);
     
     const userId = req.params.userId;
     
@@ -702,8 +702,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY cp."createdAt" DESC
       `, [userId]);
       
-      console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
-      console.log('🎯 [DADOS RAW] Primeiro post:', JSON.stringify(posts.rows[0], null, 2));
+      console.log('🚀 [DEFINITIVO] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      console.log('🚀 [DADOS COMPLETOS] Primeiro post:', {
+        title: posts.rows[0]?.title,
+        likes: posts.rows[0]?.likes_count,
+        comments: posts.rows[0]?.comments_count,
+        avatar: posts.rows[0]?.profileimageurl
+      });
       
       // Formatar os dados no formato esperado pelo frontend
       const formattedPosts = posts.rows.map(row => ({
@@ -713,12 +718,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: row.content,
         imageUrl: row.imageUrl,
         createdAt: row.createdAt,
-        isApproved: row.isApproved,
-        isPinned: row.isPinned,
+        updatedAt: row.updatedAt,
+        status: row.status || 'approved',
+        isApproved: row.isApproved || row.status === 'approved',
+        isPinned: row.isPinned || false,
         editLink: row.editLink,
         viewCount: row.viewCount || 0,
         likesCount: parseInt(row.likes_count) || 0,
         commentsCount: parseInt(row.comments_count) || 0,
+        featuredUntil: row.featuredUntil,
+        isWeeklyFeatured: row.isWeeklyFeatured || false,
         user: {
           id: row.userId,
           username: row.username,
@@ -729,11 +738,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }));
       
+      console.log('🚀 [RESULTADO FINAL] Retornando', formattedPosts.length, 'posts formatados com dados completos');
+      
       res.setHeader('Content-Type', 'application/json');
       return res.status(200).json(formattedPosts);
       
     } catch (error) {
-      console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
+      console.error('🚀 [DEFINITIVO] Erro:', error);
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }

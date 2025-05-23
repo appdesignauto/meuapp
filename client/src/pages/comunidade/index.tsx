@@ -1136,40 +1136,43 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
 
-  // Query NOVA e FUNCIONAL para buscar os posts do usuário logado
+  // Query DEFINITIVA para buscar os posts do usuário logado (NOVA ROTA SEM CONFLITOS)
   const {
     data: userPosts,
     isLoading: userPostsLoading,
     error: userPostsError,
     refetch: refetchUserPosts
   } = useQuery({
-    queryKey: ['/api/community/my-posts', user?.id],
+    queryKey: ['/api/user-posts', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`[FRONTEND] Buscando posts para usuário ${user.id}`);
+      console.log(`🚀 [FRONTEND] Buscando posts na nova rota para usuário ${user.id}`);
       
       try {
-        const response = await fetch(`/api/community/my-posts/${user.id}`, {
+        const response = await fetch(`/api/user-posts/${user.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
           }
         });
         
-        console.log(`[FRONTEND] Resposta do servidor: ${response.status}`);
+        console.log(`🚀 [FRONTEND] Resposta da nova rota: ${response.status}`);
         
         if (!response.ok) {
-          console.error(`[FRONTEND] Erro na resposta: ${response.status} ${response.statusText}`);
+          console.error(`🚀 [FRONTEND] Erro na nova rota: ${response.status} ${response.statusText}`);
           throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log(`[FRONTEND] Dados recebidos:`, data);
+        console.log(`🚀 [FRONTEND] Dados da nova rota:`, data);
+        console.log(`🚀 [FRONTEND] Primeiro post - Avatar:`, data[0]?.user?.profileimageurl);
+        console.log(`🚀 [FRONTEND] Primeiro post - Curtidas:`, data[0]?.likesCount);
+        console.log(`🚀 [FRONTEND] Primeiro post - Comentários:`, data[0]?.commentsCount);
         
         return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error('[FRONTEND] Erro ao buscar posts do usuário:', error);
+        console.error('🚀 [FRONTEND] Erro na nova rota:', error);
         throw error;
       }
     },
