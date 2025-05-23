@@ -264,7 +264,7 @@ app.use((req, res, next) => {
           LEFT JOIN users u ON cp.userId = u.id
           LEFT JOIN (
             SELECT postId, COUNT(*) as total 
-            FROM "communityPostLikes" 
+            FROM "communityLikes" 
             GROUP BY postId
           ) like_counts ON cp.id = like_counts.postId
           LEFT JOIN (
