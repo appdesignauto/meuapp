@@ -662,10 +662,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar a rota para upload de favicon
   app.use('/api/site-settings/favicon', faviconUploadRouter);
   
-  // Registrar a rota para o manifest.json dinâmico do PWA
-  app.use(manifestRouter);
-  
-  // ENDPOINT DEFINITIVO MEUS POSTS - NOVA ROTA SEM CONFLITOS
+  // ENDPOINT DEFINITIVO MEUS POSTS - PRIORIDADE MÁXIMA (ANTES DE QUALQUER MIDDLEWARE)
   app.get('/api/user-posts/:userId', async (req, res) => {
     console.log('🚀 [DEFINITIVO] Novo endpoint user-posts executado!');
     console.log('🚀 [DEFINITIVO] UserID:', req.params.userId);
