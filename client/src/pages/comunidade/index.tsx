@@ -1177,7 +1177,7 @@ const CommunityPage: React.FC = () => {
         throw error;
       }
     },
-    enabled: !!user && activeTab === 'meus-posts',
+    enabled: false, // Funcionalidade removida
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000
