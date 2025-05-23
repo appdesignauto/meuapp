@@ -328,15 +328,27 @@ app.use((req, res, next) => {
         return res.status(200).json({ success: false, message: 'Erro processando' });
       }
     });
-    
-    // Configurar rota principal de webhook Hotmart
-    try {
-      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart', hotmartFixedModule.default);
-      console.log("✅ Rota principal de webhook da Hotmart configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart principal:", error);
-    }
+          console.error('❌ Erro ao registrar webhook:', dbError);
+          // Continuar mesmo com erro de log
+        }
+        
+        // Sempre retornar sucesso para a Hotmart não reenviar
+        return res.status(200).json({
+          success: true,
+          message: 'Webhook recebido com sucesso',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('❌ Erro ao processar webhook:', error);
+        
+        // Mesmo com erro, retornar 200 para evitar reenvios
+        return res.status(200).json({
+          success: false,
+          message: 'Erro ao processar webhook, mas confirmamos o recebimento',
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
     
     // Inicializar o serviço da Hotmart
     // Importações serão feitas de forma dinâmica para evitar problemas
