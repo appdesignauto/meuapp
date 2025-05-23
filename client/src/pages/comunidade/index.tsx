@@ -1136,7 +1136,7 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
 
-  // Query NOVA e FUNCIONAL para buscar os posts do usuário logado
+  // Query para buscar os posts do usuário logado usando a nova implementação
   const {
     data: userPosts,
     isLoading: userPostsLoading,
@@ -1147,36 +1147,24 @@ const CommunityPage: React.FC = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`[FRONTEND] Buscando posts para usuário ${user.id}`);
-      
       try {
-        const response = await fetch(`/api/community/my-posts/${user.id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log(`[FRONTEND] Resposta do servidor: ${response.status}`);
+        const response = await fetch(`/api/community/my-posts/${user.id}`);
         
         if (!response.ok) {
-          console.error(`[FRONTEND] Erro na resposta: ${response.status} ${response.statusText}`);
           throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log(`[FRONTEND] Dados recebidos:`, data);
+        console.log(`[FRONTEND] Posts carregados:`, data);
         
         return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error('[FRONTEND] Erro ao buscar posts do usuário:', error);
+        console.error('[FRONTEND] Erro ao buscar posts:', error);
         throw error;
       }
     },
     enabled: !!user && activeTab === 'meus-posts',
-    refetchOnWindowFocus: false,
-    retry: 3,
-    retryDelay: 1000
+    refetchOnWindowFocus: false
   });
   
   // Efeito para adicionar novos posts ao array de posts existentes
