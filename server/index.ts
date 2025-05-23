@@ -446,11 +446,6 @@ app.use((req, res, next) => {
     });
   });
 
-  // 🏥 ENDPOINT RAIZ CRÍTICO PARA DEPLOYMENT REPLIT
-  app.get('/', (req: Request, res: Response) => {
-    res.status(200).send('OK');
-  });
-
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
