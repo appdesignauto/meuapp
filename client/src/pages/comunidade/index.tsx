@@ -1136,29 +1136,47 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
 
-  // Query para buscar os posts do usuário logado (todos, incluindo pendentes)
+  // Query NOVA e FUNCIONAL para buscar os posts do usuário logado
   const {
     data: userPosts,
     isLoading: userPostsLoading,
     error: userPostsError,
     refetch: refetchUserPosts
   } = useQuery({
-    queryKey: ['/api/community/user-posts', user?.id],
+    queryKey: ['/api/community/my-posts', user?.id],
     queryFn: async () => {
       if (!user) return [];
+      
+      console.log(`[FRONTEND] Buscando posts para usuário ${user.id}`);
+      
       try {
-        const response = await apiRequest('GET', `/api/community/my-posts/${user.id}`);
+        const response = await fetch(`/api/community/my-posts/${user.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log(`[FRONTEND] Resposta do servidor: ${response.status}`);
+        
         if (!response.ok) {
-          throw new Error('Erro ao carregar seus posts');
+          console.error(`[FRONTEND] Erro na resposta: ${response.status} ${response.statusText}`);
+          throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
-        return await response.json();
+        
+        const data = await response.json();
+        console.log(`[FRONTEND] Dados recebidos:`, data);
+        
+        return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error('Erro ao buscar posts do usuário:', error);
-        throw new Error('Erro ao carregar seus posts');
+        console.error('[FRONTEND] Erro ao buscar posts do usuário:', error);
+        throw error;
       }
     },
     enabled: !!user && activeTab === 'meus-posts',
     refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: 1000
   });
   
   // Efeito para adicionar novos posts ao array de posts existentes
