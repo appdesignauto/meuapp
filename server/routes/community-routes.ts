@@ -2998,7 +2998,8 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
       return res.status(403).json({ message: 'Você só pode ver seus próprios posts' });
     }
     
-    console.log(`Buscando posts do usuário ${userId} (solicitado por ${requestingUserId})`);
+    console.log(`[MEUS POSTS] Buscando posts do usuário ${userId} (solicitado por ${requestingUserId})`);
+    console.log(`[MEUS POSTS] isOwnPosts: ${isOwnPosts}, isAdmin: ${isAdmin}`);
     
     // Query para buscar posts do usuário
     // Se for o próprio usuário ou admin, mostrar todos os posts (incluindo pendentes)
@@ -3082,8 +3083,10 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
       }
     }
     
-    console.log(`Retornando ${formattedPosts.length} posts do usuário ${userId}`);
-    return res.json(formattedPosts);
+    console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts do usuário ${userId}`);
+    console.log(`[MEUS POSTS] Posts formatados:`, JSON.stringify(formattedPosts, null, 2));
+    
+    return res.status(200).json(formattedPosts);
     
   } catch (error) {
     console.error('Erro ao buscar posts do usuário:', error);
