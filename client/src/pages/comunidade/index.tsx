@@ -2169,6 +2169,13 @@ const CommunityPage: React.FC = () => {
                         // Mapear a estrutura para o formato esperado pelo PostCard
                         const formattedDate = post.formattedDate || `há ${formatRelativeTime(post.createdAt)}`;
                         
+                        // DEBUG: Verificar os dados recebidos do backend
+                        console.log(`[MEUS POSTS DEBUG] Post ID ${post.id}:`, {
+                          isApproved: post.isApproved,
+                          status: post.status,
+                          dadosCompletos: post
+                        });
+                        
                         const postCardData: CommunityPost = {
                           id: post.id,
                           title: post.title,
@@ -2178,7 +2185,7 @@ const CommunityPage: React.FC = () => {
                           likesCount: post.likesCount || 0,
                           commentsCount: post.commentsCount || 0,
                           sharesCount: post.sharesCount || 0,
-                          isApproved: post.isApproved,
+                          isApproved: post.isApproved, // Agora deve estar correto do backend
                           userId: post.userId,
                           isLikedByUser: post.isLikedByUser,
                           isPinned: post.isPinned,
