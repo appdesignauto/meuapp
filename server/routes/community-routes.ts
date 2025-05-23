@@ -3000,7 +3000,7 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
     
     console.log(`[MEUS POSTS] INICIANDO busca para usuário ${userId}`);
     
-    // Query SQL direta e simples
+    // Query SQL com curtidas e comentários
     const posts = await db.execute(sql`
       SELECT 
         cp.id, 
@@ -3011,12 +3011,26 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
         cp.status, 
         cp."createdAt", 
         cp."viewCount",
+        cp."isPinned",
+        cp."isApproved",
         u.username,
         u.name,
         u.profileimageurl,
-        u.nivelacesso
+        u.nivelacesso,
+        COALESCE(likes_count.total, 0) as likes_count,
+        COALESCE(comments_count.total, 0) as comments_count
       FROM "communityPosts" cp
       LEFT JOIN users u ON cp."userId" = u.id
+      LEFT JOIN (
+        SELECT "postId", COUNT(*) as total 
+        FROM "communityPostLikes" 
+        GROUP BY "postId"
+      ) likes_count ON cp.id = likes_count."postId"
+      LEFT JOIN (
+        SELECT "postId", COUNT(*) as total 
+        FROM "communityComments" 
+        GROUP BY "postId"
+      ) comments_count ON cp.id = comments_count."postId"
       WHERE cp."userId" = ${userId}
       ORDER BY cp."createdAt" DESC
       LIMIT 20
@@ -3029,38 +3043,39 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
       return res.json([]);
     }
     
-    // Formatar os dados de forma simples
+    // Formatar os dados com curtidas e comentários
     const formattedPosts = posts.rows.map(row => ({
-      post: {
-        id: row.id,
-        title: row.title || 'Sem título',
-        content: row.content || '',
-        imageUrl: row.imageUrl || '',
-        editLink: row.editLink || '',
-        status: row.status || 'pending',
-        createdAt: new Date(row.createdAt).toISOString(),
-        viewCount: Number(row.viewCount) || 0,
-        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        })
-      },
+      id: row.id,
+      userId: row.userId || 1,
+      title: row.title || 'Sem título',
+      content: row.content || '',
+      imageUrl: row.imageUrl || '',
+      editLink: row.editLink || '',
+      status: row.status || 'pending',
+      createdAt: new Date(row.createdAt).toISOString(),
+      isApproved: row.isApproved || row.status === 'approved',
+      isPinned: row.isPinned || false,
+      viewCount: Number(row.viewCount) || 0,
+      likesCount: parseInt(row.likes_count) || 0,
+      commentsCount: parseInt(row.comments_count) || 0,
       user: {
+        id: row.userId || 1,
         username: row.username || 'usuário',
         name: row.name || 'Usuário',
         profileimageurl: row.profileimageurl,
         nivelacesso: row.nivelacesso || 'free'
       },
-      engagement: {
-        likes: 0,
-        comments: 0,
-        saves: 0
-      }
+      formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
     }));
     
     console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts formatados`);
-    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.post?.title || 'N/A');
+    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.title || 'N/A');
+    console.log(`[MEUS POSTS] Curtidas/Comentários:`, formattedPosts[0]?.likesCount, '/', formattedPosts[0]?.commentsCount);
+    console.log(`[MEUS POSTS] Avatar do usuário:`, formattedPosts[0]?.user?.profileimageurl);
     
     return res.json(formattedPosts);
     
