@@ -670,7 +670,31 @@ const PostCard: React.FC<{
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{post.formattedDate}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{post.formattedDate}</p>
+              {/* Badge de status - visível apenas na seção "Meus Posts" */}
+              {user && user.id === post.user.id && (
+                <>
+                  {post.isApproved ? (
+                    <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Aprovado
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Pendente
+                    </span>
+                  )}
+                  {post.isPinned && (
+                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full flex items-center gap-1">
+                      <Pin className="h-3 w-3" />
+                      Fixado
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
