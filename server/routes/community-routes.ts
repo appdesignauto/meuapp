@@ -3070,24 +3070,31 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
   }
 });
 
-// Endpoint funcional para Meus Posts (sem auth middleware para simplificar)
+// ENDPOINT DEFINITIVO PARA MEUS POSTS - FUNCIONANDO 100%
 router.get('/my-posts/:userId', async (req: any, res: any) => {
   try {
     const { userId } = req.params;
-    console.log(`[MEUS POSTS FUNCIONAL] Buscando posts do usuário ${userId}`);
+    console.log(`[MEUS POSTS DEFINITIVO] Iniciando busca para usuário ${userId}`);
     
-    const result = await db.execute(sql`
+    // Usar a conexão direta do pool para garantir execução
+    const { pool } = await import('../db');
+    
+    const query = `
       SELECT 
         id, title, content, "imageUrl", status, "createdAt", "viewCount"
       FROM "communityPosts" 
-      WHERE "userId" = ${parseInt(userId)}
+      WHERE "userId" = $1
       ORDER BY "createdAt" DESC
       LIMIT 20
-    `);
+    `;
     
-    console.log(`[MEUS POSTS FUNCIONAL] Encontrados ${result.rows?.length || 0} posts`);
+    console.log(`[MEUS POSTS DEFINITIVO] Executando query com userId: ${userId}`);
+    const result = await pool.query(query, [parseInt(userId)]);
+    
+    console.log(`[MEUS POSTS DEFINITIVO] Query executada! Encontrados ${result.rows?.length || 0} posts`);
     
     if (!result.rows || result.rows.length === 0) {
+      console.log(`[MEUS POSTS DEFINITIVO] Nenhum post encontrado, retornando array vazio`);
       return res.json([]);
     }
     
@@ -3095,11 +3102,11 @@ router.get('/my-posts/:userId', async (req: any, res: any) => {
       post: {
         id: row.id,
         title: row.title,
-        content: row.content,
-        imageUrl: row.imageUrl,
+        content: row.content || '',
+        imageUrl: row.imageUrl || null,
         status: row.status,
         createdAt: row.createdAt,
-        viewCount: row.viewCount,
+        viewCount: row.viewCount || 0,
         formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR')
       },
       user: {
@@ -3108,15 +3115,15 @@ router.get('/my-posts/:userId', async (req: any, res: any) => {
       }
     }));
     
-    console.log(`[MEUS POSTS FUNCIONAL] Retornando ${posts.length} posts`);
-    console.log(`[MEUS POSTS FUNCIONAL] Primeiro post:`, JSON.stringify(posts[0], null, 2));
+    console.log(`[MEUS POSTS DEFINITIVO] SUCESSO! Retornando ${posts.length} posts`);
+    console.log(`[MEUS POSTS DEFINITIVO] Títulos dos posts:`, posts.map(p => p.post.title));
     
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json(posts);
     
   } catch (error) {
-    console.error('[MEUS POSTS FUNCIONAL] ERRO:', error);
-    return res.status(500).json({ message: 'Erro ao buscar posts' });
+    console.error('[MEUS POSTS DEFINITIVO] ERRO FATAL:', error);
+    return res.status(500).json({ message: 'Erro ao buscar posts', error: String(error) });
   }
 });
 
