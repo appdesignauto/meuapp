@@ -1,5 +1,4 @@
 export type UserRole = 'visitor' | 'free' | 'premium' | 'designer' | 'designer_adm' | 'support' | 'admin';
-export type NivelAcesso = 'admin' | 'designer_adm' | 'designer' | 'user';
 
 export interface User {
   id: number;
@@ -9,16 +8,10 @@ export interface User {
   profileImageUrl?: string;
   bio?: string;
   role: UserRole;
-  nivelacesso?: NivelAcesso;
   isActive: boolean;
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface AuthUser extends User {
-  nivelacesso: NivelAcesso;
-  isFollowing?: boolean;
 }
 
 export interface Art {

@@ -5,12 +5,12 @@ export type TipoPlano = 'mensal' | 'anual' | 'personalizado' | 'vitalicio';
 export interface User {
   id: number;
   username: string;
+  email: string;
   name: string | null;
-  profileimageurl: string | null;
-  nivelacesso: string;
-  email?: string;
-  role?: string;
-  isFollowing?: boolean;
+  role: string;
+  nivelacesso?: string;
+  profileimageurl?: string | null;
+  bio: string | null;
   
   // Campos para gerenciamento de assinatura
   origemassinatura?: OrigemAssinatura;

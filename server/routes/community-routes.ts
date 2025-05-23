@@ -2979,137 +2979,119 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
   }
 });
 
-// GET: Buscar posts do usuário logado (Meus Posts)
-router.get('/api/community/my-posts', async (req, res) => {
+// GET: Buscar posts de um usuário específico (MEUS POSTS - VERSÃO SIMPLIFICADA)
+router.get('/api/community/posts/user/:userId', async (req, res) => {
   try {
+    const userId = parseInt(req.params.userId);
+    const requestingUserId = req.user?.id;
+    
+    // Verificar se o usuário está logado
     if (!req.user) {
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
-
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const offset = (page - 1) * limit;
-    const userId = req.user.id;
-
-    // Buscar posts do usuário com contagens e informações
-    const rawPostsQuery = await db.execute(sql`
+    
+    // Verificar se o usuário está tentando ver seus próprios posts ou se é admin
+    const isOwnPosts = requestingUserId === userId;
+    const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
+    
+    if (!isOwnPosts && !isAdmin) {
+      return res.status(403).json({ message: 'Você só pode ver seus próprios posts' });
+    }
+    
+    console.log(`[MEUS POSTS] INICIANDO busca para usuário ${userId}`);
+    
+    // Query SQL direta e simples
+    const posts = await db.execute(sql`
       SELECT 
-        p.*,
-        u.id as user_id,
+        cp.id, 
+        cp.title, 
+        cp.content, 
+        cp."imageUrl", 
+        cp."editLink", 
+        cp.status, 
+        cp."createdAt", 
+        cp."viewCount",
         u.username,
         u.name,
         u.profileimageurl,
-        u.nivelacesso,
-        CAST(COALESCE(p."isPinned", false) AS BOOLEAN) as is_pinned, 
-        COUNT(DISTINCT l.id) as likes_count,
-        COUNT(DISTINCT s.id) as saves_count,
-        COUNT(DISTINCT c.id) as comments_count
-      FROM "communityPosts" p
-      LEFT JOIN users u ON p."userId" = u.id
-      LEFT JOIN "communityLikes" l ON p.id = l."postId"
-      LEFT JOIN "communitySaves" s ON p.id = s."postId"
-      LEFT JOIN "communityComments" c ON p.id = c."postId"
-      WHERE p."userId" = ${userId}
-      GROUP BY p.id, u.id
-      ORDER BY p."createdAt" DESC
-      LIMIT ${limit}
-      OFFSET ${offset}
+        u.nivelacesso
+      FROM "communityPosts" cp
+      LEFT JOIN users u ON cp."userId" = u.id
+      WHERE cp."userId" = ${userId}
+      ORDER BY cp."createdAt" DESC
+      LIMIT 20
     `);
-
-    // Preparar array de resultados formatados
-    const posts = [];
-
-    if (rawPostsQuery && rawPostsQuery.rows) {
-      for (const row of rawPostsQuery.rows) {
-        // Pré-formatar a data para evitar mudanças ao visualizar
-        const formattedDate = formatarDataCompleta(row.createdAt || new Date());
-
-        posts.push({
-          post: {
-            id: Number(row.id),
-            userId: Number(row.userId),
-            title: row.title || '',
-            content: row.content || '',
-            imageUrl: row.imageUrl || '',
-            status: row.status || 'pending',
-            createdAt: row.createdAt,
-            updatedAt: row.updatedAt,
-            viewCount: Number(row.viewCount || 0),
-            isPinned: row.is_pinned === true,
-            editLink: row.editLink || '',
-            featuredUntil: row.featuredUntil,
-            isWeeklyFeatured: !!row.isWeeklyFeatured,
-            formattedDate: formattedDate
-          },
-          user: {
-            id: Number(row.user_id),
-            username: row.username || '',
-            name: row.name || '',
-            profileimageurl: row.profileimageurl || null,
-            nivelacesso: row.nivelacesso || 'free'
-          },
-          likesCount: Number(row.likes_count || 0),
-          savesCount: Number(row.saves_count || 0),
-          commentsCount: Number(row.comments_count || 0)
-        });
-      }
+    
+    console.log(`[MEUS POSTS] Query executada. Linhas encontradas: ${posts.rows?.length || 0}`);
+    
+    if (!posts.rows || posts.rows.length === 0) {
+      console.log(`[MEUS POSTS] Nenhum post encontrado para usuário ${userId}`);
+      return res.json([]);
     }
-
-    // Adicionar informações de interação do usuário com seus próprios posts
-    const userInteractions = await Promise.all(
-      posts.map(async (post) => {
-        const [userLike] = await db
-          .select()
-          .from(communityLikes)
-          .where(
-            and(
-              eq(communityLikes.postId, post.post.id),
-              eq(communityLikes.userId, userId)
-            )
-          );
-
-        const [userSave] = await db
-          .select()
-          .from(communitySaves)
-          .where(
-            and(
-              eq(communitySaves.postId, post.post.id),
-              eq(communitySaves.userId, userId)
-            )
-          );
-
-        return {
-          ...post,
-          userHasLiked: !!userLike,
-          isLikedByUser: !!userLike,
-          userHasSaved: !!userSave,
-          post: {
-            ...post.post,
-            isPinned: post.post.isPinned === true
-          }
-        };
-      })
-    );
-
-    // Contar total de posts do usuário
-    const [{ count }] = await db
-      .select({ count: countFn() })
-      .from(communityPosts)
-      .where(eq(communityPosts.userId, userId));
-
-    return res.json({
-      posts: userInteractions,
-      total: Number(count),
-      page,
-      limit,
-      totalPages: Math.ceil(Number(count) / limit)
-    });
+    
+    // Formatar os dados de forma simples
+    const formattedPosts = posts.rows.map(row => ({
+      post: {
+        id: row.id,
+        title: row.title || 'Sem título',
+        content: row.content || '',
+        imageUrl: row.imageUrl || '',
+        editLink: row.editLink || '',
+        status: row.status || 'pending',
+        createdAt: new Date(row.createdAt).toISOString(),
+        viewCount: Number(row.viewCount) || 0,
+        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
+      },
+      user: {
+        username: row.username || 'usuário',
+        name: row.name || 'Usuário',
+        profileimageurl: row.profileimageurl,
+        nivelacesso: row.nivelacesso || 'free'
+      },
+      engagement: {
+        likes: 0,
+        comments: 0,
+        saves: 0
+      }
+    }));
+    
+    console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts formatados`);
+    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.post?.title || 'N/A');
+    
+    return res.json(formattedPosts);
+    
   } catch (error) {
-    console.error('Erro ao buscar meus posts:', error);
-    return res.status(500).json({ 
-      message: 'Erro ao buscar meus posts',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    });
+    console.error('[MEUS POSTS] ERRO:', error);
+    return res.status(500).json({ message: 'Erro ao buscar posts' });
+  }
+});
+
+router.get('/my-posts/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId não informado' });
+  }
+
+  try {
+    const { pool } = await import('../db');
+    
+    const posts = await pool.query(`
+      SELECT * FROM "communityPosts" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC
+    `, [userId]);
+
+    console.log(`[MEUS POSTS] Encontrados ${posts.rows.length} posts para usuário ${userId}`);
+    
+    res.json(posts.rows);
+  } catch (err) {
+    console.error('Erro ao buscar posts:', err);
+    res.status(500).json({ error: 'Erro ao buscar posts' });
   }
 });
 
