@@ -2138,96 +2138,47 @@ const CommunityPage: React.FC = () => {
                       </Button>
                     </div>
                   ) : userPosts && userPosts.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-4 mx-[-16px] sm:mx-0">
                       {userPosts.map((postData: any) => {
                         const post = postData.post || postData;
+                        
+                        // Mapear a estrutura para o formato esperado pelo PostCard
+                        const formattedDate = post.formattedDate || `há ${formatRelativeTime(post.createdAt)}`;
+                        
+                        const postCardData: CommunityPost = {
+                          id: post.id,
+                          title: post.title,
+                          content: post.content,
+                          imageUrl: post.imageUrl,
+                          createdAt: post.createdAt,
+                          likesCount: post.likesCount || 0,
+                          commentsCount: post.commentsCount || 0,
+                          sharesCount: post.sharesCount || 0,
+                          isApproved: post.isApproved,
+                          userId: post.userId,
+                          isLikedByUser: post.isLikedByUser,
+                          isPinned: post.isPinned,
+                          editLink: post.editLink,
+                          user: {
+                            id: post.user?.id || 0,
+                            username: post.user?.username || '',
+                            name: post.user?.name,
+                            profileimageurl: post.user?.profileimageurl,
+                            nivelacesso: post.user?.nivelacesso || 'free',
+                            role: post.user?.role
+                          },
+                          formattedDate: formattedDate
+                        };
+                        
                         return (
-                          <Card key={post.id} className="border border-zinc-100 dark:border-zinc-800">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <UserAvatar 
-                                    user={{
-                                      id: post.user?.id || 0,
-                                      username: post.user?.username || '',
-                                      name: post.user?.name,
-                                      profileimageurl: post.user?.profileimageurl,
-                                      nivelacesso: post.user?.nivelacesso || 'free',
-                                      role: post.user?.role
-                                    }} 
-                                    size="md" 
-                                    linkToProfile={false} 
-                                  />
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {post.user?.name || post.user?.username}
-                                    </p>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                      {post.formattedDate || formatRelativeTime(post.createdAt)}
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                {/* Status do post */}
-                                <div className="flex items-center gap-2">
-                                  {post.isApproved ? (
-                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <CheckCircle className="h-3 w-3" />
-                                      Aprovado
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      Pendente
-                                    </span>
-                                  )}
-                                  
-                                  {post.isPinned && (
-                                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <Pin className="h-3 w-3" />
-                                      Fixado
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </CardHeader>
-                            
-                            <CardContent>
-                              <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
-                              <p className="text-zinc-700 dark:text-zinc-300 mb-4 line-clamp-3">
-                                {post.content}
-                              </p>
-                              
-                              {post.imageUrl && (
-                                <div className="mb-4">
-                                  <img
-                                    src={post.imageUrl}
-                                    alt={post.title}
-                                    className="w-full h-64 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                                <span className="flex items-center gap-1">
-                                  <Heart className="h-4 w-4" />
-                                  {post.likesCount || 0}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MessageCircle className="h-4 w-4" />
-                                  {post.commentsCount || 0}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Share2 className="h-4 w-4" />
-                                  {post.sharesCount || 0}
-                                </span>
-                              </div>
-                            </CardContent>
-                          </Card>
+                          <PostCard
+                            key={post.id}
+                            post={postCardData}
+                            refetch={refetchUserPosts}
+                            user={user}
+                            setSelectedPostId={setSelectedPostId}
+                            setIsPostViewOpen={setIsPostViewOpen}
+                          />
                         );
                       })}
                     </div>
