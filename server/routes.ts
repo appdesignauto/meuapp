@@ -84,7 +84,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
-  // Rota simples de verificação de saúde
+  // Health check endpoints para deploy em produção
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      message: 'DesignAuto API está funcionando corretamente',
+      version: '1.0.0'
+    });
+  });
+
   app.get('/health', (req, res) => {
     res.status(200).json({
       status: 'ok',
