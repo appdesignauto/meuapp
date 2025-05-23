@@ -675,7 +675,19 @@ const PostCard: React.FC<{
               {/* Badge de status - visível apenas na seção "Meus Posts" */}
               {user && user.id === post.user.id && (
                 <>
-                  {post.isApproved ? (
+                  {(() => {
+                    // 🎯 DEBUG: Verificar dados completos do status do post
+                    console.log(`🎯 [STATUS DEBUG] Post ID ${post.id} - "${post.title}":`, {
+                      postCompleto: post,
+                      isApproved: post.isApproved,
+                      isApprovedType: typeof post.isApproved,
+                      status: post.status,
+                      statusType: typeof post.status,
+                      resultadoFinal: post.isApproved ? 'APROVADO' : 'PENDENTE'
+                    });
+                    
+                    return post.isApproved;
+                  })() ? (
                     <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
                       <CheckCircle className="h-3 w-3" />
                       Aprovado
