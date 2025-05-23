@@ -665,6 +665,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar a rota para o manifest.json dinâmico do PWA
   app.use(manifestRouter);
   
+  // ENDPOINT MEUS POSTS - ANTES DO MIDDLEWARE appConfigRouter (PRIORIDADE MÁXIMA)
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log('🎯 [PRIORIDADE MÁXIMA] Endpoint my-posts executado!');
+    console.log('🎯 [PRIORIDADE MÁXIMA] UserID:', req.params.userId);
+    
+    const userId = req.params.userId;
+    
+    try {
+      const { pool } = await import('./db');
+      
+      const posts = await pool.query(`
+        SELECT * FROM "communityPosts" 
+        WHERE "userId" = $1 
+        ORDER BY "createdAt" DESC
+      `, [userId]);
+      
+      console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(posts.rows);
+      
+    } catch (error) {
+      console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   // Registrar as rotas para configuração do PWA
   app.use('/api', appConfigRouter);
   
