@@ -681,8 +681,8 @@ const PostCard: React.FC<{
                       postCompleto: post,
                       isApproved: post.isApproved,
                       isApprovedType: typeof post.isApproved,
-                      status: post.status,
-                      statusType: typeof post.status,
+                      status: (post as any).status,
+                      statusType: typeof (post as any).status,
                       resultadoFinal: post.isApproved ? 'APROVADO' : 'PENDENTE'
                     });
                     
@@ -2210,7 +2210,7 @@ const CommunityPage: React.FC = () => {
                             id: post.user?.id || 0,
                             username: post.user?.username || '',
                             name: post.user?.name,
-                            profileimageurl: post.user?.profileimageurl,
+                            profileimageurl: post.user?.profileimageurl || null,
                             nivelacesso: post.user?.nivelacesso || 'free',
                             role: post.user?.role
                           },
@@ -2222,7 +2222,7 @@ const CommunityPage: React.FC = () => {
                             key={post.id}
                             post={postCardData}
                             refetch={refetchUserPosts}
-                            user={user}
+                            user={user as any}
                             setSelectedPostId={setSelectedPostId}
                             setIsPostViewOpen={setIsPostViewOpen}
                           />
