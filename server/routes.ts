@@ -675,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { pool } = await import('./db');
       
-      // Query para buscar posts com dados completos do usuário
+      // Query para buscar posts com dados completos do usuário, curtidas e comentários
       const posts = await pool.query(`
         SELECT 
           cp.*,
@@ -683,9 +683,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           u.name,
           u.profileimageurl,
           u.nivelacesso,
-          u.acessovitalicio
+          u.acessovitalicio,
+          COALESCE(likes_count.total, 0) as likes_count,
+          COALESCE(comments_count.total, 0) as comments_count
         FROM "communityPosts" cp
         LEFT JOIN "users" u ON cp."userId" = u.id
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityPostLikes" 
+          GROUP BY "postId"
+        ) likes_count ON cp.id = likes_count."postId"
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityComments" 
+          GROUP BY "postId"
+        ) comments_count ON cp.id = comments_count."postId"
         WHERE cp."userId" = $1 
         ORDER BY cp."createdAt" DESC
       `, [userId]);
@@ -704,6 +716,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPinned: row.isPinned,
         editLink: row.editLink,
         viewCount: row.viewCount || 0,
+        likesCount: parseInt(row.likes_count) || 0,
+        commentsCount: parseInt(row.comments_count) || 0,
         user: {
           id: row.userId,
           username: row.username,
