@@ -3085,32 +3085,6 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
   }
 });
 
-router.get('/my-posts/:userId', async (req, res) => {
-  console.log('🎯 [DEBUG] Endpoint /my-posts/:userId executado!');
-  console.log('🎯 [DEBUG] userId recebido:', req.params.userId);
-  
-  const userId = req.params.userId;
-
-  if (!userId) {
-    return res.status(400).json({ error: 'userId não informado' });
-  }
-
-  try {
-    console.log('[MEUS POSTS] Buscando posts para usuário:', userId);
-    const { pool } = await import('../db');
-    
-    const posts = await pool.query(`
-      SELECT * FROM "communityPosts" 
-      WHERE "userId" = $1 
-      ORDER BY "createdAt" DESC
-    `, [userId]);
-
-    console.log('[MEUS POSTS] Encontrados', posts.rows.length, 'posts');
-    res.json(posts.rows);
-  } catch (error) {
-    console.error('[MEUS POSTS] Erro:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
+// ENDPOINT DUPLICADO REMOVIDO - usando apenas o endpoint principal em routes.ts
 
 export default router;
