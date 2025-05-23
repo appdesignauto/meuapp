@@ -7015,7 +7015,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
   
-
+  // ENDPOINT MEUS POSTS - DIRETO NO SERVIDOR PRINCIPAL (SEMPRE EXECUTADO PRIMEIRO)
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log('🎯 [DEFINITIVO] Endpoint my-posts executado no servidor principal!');
+    console.log('🎯 [DEFINITIVO] UserID:', req.params.userId);
+    
+    const userId = req.params.userId;
+    
+    try {
+      const { pool } = await import('./db');
+      
+      const posts = await pool.query(`
+        SELECT * FROM "communityPosts" 
+        WHERE "userId" = $1 
+        ORDER BY "createdAt" DESC
+      `, [userId]);
+      
+      console.log('🎯 [DEFINITIVO] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(posts.rows);
+      
+    } catch (error) {
+      console.error('🎯 [DEFINITIVO] Erro:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
 
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
