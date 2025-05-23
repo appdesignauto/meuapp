@@ -7,7 +7,8 @@ import {
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
   Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star,
-  PlusCircle, Bookmark, Check, CheckCircle2, ThumbsUp as ThumbsUpIcon
+  PlusCircle, Bookmark, Check, CheckCircle2, ThumbsUp as ThumbsUpIcon,
+  AlertCircle, CheckCircle, Share2, Eye, FileText
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 

@@ -2979,4 +2979,119 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
   }
 });
 
+// GET: Buscar posts de um usuário específico (incluindo pendentes para o próprio usuário)
+router.get('/api/community/posts/user/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const requestingUserId = req.user?.id;
+    
+    // Verificar se o usuário está logado
+    if (!req.user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
+    
+    // Verificar se o usuário está tentando ver seus próprios posts ou se é admin
+    const isOwnPosts = requestingUserId === userId;
+    const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
+    
+    if (!isOwnPosts && !isAdmin) {
+      return res.status(403).json({ message: 'Você só pode ver seus próprios posts' });
+    }
+    
+    console.log(`Buscando posts do usuário ${userId} (solicitado por ${requestingUserId})`);
+    
+    // Query para buscar posts do usuário
+    // Se for o próprio usuário ou admin, mostrar todos os posts (incluindo pendentes)
+    // Se não, mostrar apenas aprovados
+    const statusFilter = isOwnPosts || isAdmin ? sql`TRUE` : sql`cp.status = 'approved'`;
+    
+    const result = await db.execute(sql`
+      SELECT 
+        cp.id, 
+        cp.title, 
+        cp.content, 
+        cp."imageUrl", 
+        cp."editLink", 
+        cp.status, 
+        cp."createdAt", 
+        cp."updatedAt", 
+        cp."viewCount",
+        cp."userId",
+        cp."featuredUntil",
+        cp."isWeeklyFeatured",
+        COALESCE(cp."isPinned", false)::boolean as "isPinned",
+        cp.status = 'approved' as "isApproved",
+        u.id as user_id,
+        u.username,
+        u.name,
+        u.profileimageurl,
+        u.nivelacesso,
+        COUNT(DISTINCT cl.id) as likes_count,
+        COUNT(DISTINCT cc.id) as comments_count,
+        COUNT(DISTINCT cs.id) as saves_count
+      FROM "communityPosts" cp
+      LEFT JOIN users u ON cp."userId" = u.id
+      LEFT JOIN "communityLikes" cl ON cp.id = cl."postId"
+      LEFT JOIN "communityComments" cc ON cp.id = cc."postId" AND cc."isHidden" = false
+      LEFT JOIN "communitySaves" cs ON cp.id = cs."postId"
+      WHERE cp."userId" = ${userId} AND ${statusFilter}
+      GROUP BY cp.id, u.id
+      ORDER BY cp."createdAt" DESC
+    `);
+    
+    // Formatar os resultados
+    const formattedPosts = [];
+    
+    if (result && result.rows && Array.isArray(result.rows)) {
+      for (const row of result.rows) {
+        try {
+          const formattedDate = formatarDataCompleta(row.createdAt || new Date());
+          
+          formattedPosts.push({
+            post: {
+              id: Number(row.id) || 0,
+              title: row.title || 'Sem título',
+              content: row.content || '',
+              imageUrl: row.imageUrl || '',
+              editLink: row.editLink || '',
+              status: row.status || 'pending',
+              createdAt: row.createdAt || new Date(),
+              updatedAt: row.updatedAt || new Date(),
+              viewCount: Number(row.viewCount) || 0,
+              userId: Number(row.userId) || 0,
+              formattedDate: formattedDate,
+              featuredUntil: row.featuredUntil,
+              isWeeklyFeatured: !!row.isWeeklyFeatured,
+              isPinned: !!row.isPinned,
+              isApproved: !!row.isApproved
+            },
+            user: {
+              id: Number(row.user_id) || 0,
+              username: row.username || 'usuário',
+              name: row.name || 'Usuário',
+              profileimageurl: row.profileimageurl || null,
+              nivelacesso: row.nivelacesso || 'free'
+            },
+            likesCount: Number(row.likes_count) || 0,
+            commentsCount: Number(row.comments_count) || 0,
+            sharesCount: Number(row.saves_count) || 0 // Using saves as shares for now
+          });
+        } catch (rowError) {
+          console.error('Erro ao processar post do usuário:', rowError);
+        }
+      }
+    }
+    
+    console.log(`Retornando ${formattedPosts.length} posts do usuário ${userId}`);
+    return res.json(formattedPosts);
+    
+  } catch (error) {
+    console.error('Erro ao buscar posts do usuário:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar posts do usuário',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
 export default router;
