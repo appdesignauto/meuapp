@@ -2120,7 +2120,17 @@ const CommunityPage: React.FC = () => {
               {user && (
                 <TabsContent value="meus-posts" className="space-y-4 px-4 md:px-0">
                   <div className="mb-6">
-                    <h2 className="text-lg font-semibold">Meus Posts</h2>
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold">Meus Posts</h2>
+                      <Button 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={() => setIsCreatePostOpen(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Novo Post
+                      </Button>
+                    </div>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
                       Todos os seus posts publicados e pendentes de aprovação
                     </p>

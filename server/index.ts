@@ -16,14 +16,14 @@ import crypto from "crypto";
 // Função para encontrar email em qualquer parte do payload da Hotmart
 function findEmailInPayload(payload: any): string | null {
   if (!payload) return null;
-
+  
   // Função recursiva para buscar emails em objetos aninhados
   function searchEmail(obj: any): string | null {
     // Caso base: é uma string e parece um email
     if (typeof obj === 'string' && obj.includes('@') && obj.includes('.')) {
       return obj;
     }
-
+    
     // Caso recursivo: objeto
     if (typeof obj === 'object' && obj !== null) {
       // Verificar chaves que provavelmente contêm email
@@ -31,14 +31,14 @@ function findEmailInPayload(payload: any): string | null {
       if (obj.buyer && obj.buyer.email) return obj.buyer.email;
       if (obj.customer && obj.customer.email) return obj.customer.email;
       if (obj.data && obj.data.buyer && obj.data.buyer.email) return obj.data.buyer.email;
-
+      
       // Buscar em todas as propriedades
       for (const key in obj) {
         const result = searchEmail(obj[key]);
         if (result) return result;
       }
     }
-
+    
     // Caso recursivo: array
     if (Array.isArray(obj)) {
       for (let i = 0; i < obj.length; i++) {
@@ -46,26 +46,26 @@ function findEmailInPayload(payload: any): string | null {
         if (result) return result;
       }
     }
-
+    
     return null;
   }
-
+  
   return searchEmail(payload);
 }
 
 // Função para encontrar ID da transação no payload
 function findTransactionId(payload: any): string | null {
   if (!payload) return null;
-
+  
   // Verificar locais comuns primeiro
   if (payload.data?.purchase?.transaction) return payload.data.purchase.transaction;
   if (payload.data?.transaction) return payload.data.transaction;
   if (payload.transaction) return payload.transaction;
-
+  
   // Função recursiva para busca profunda
   function searchTransactionId(obj: any): string | null {
     if (!obj || typeof obj !== 'object') return null;
-
+    
     // Procurar por chaves que possam conter o ID da transação
     for (const key in obj) {
       if (
@@ -76,17 +76,17 @@ function findTransactionId(payload: any): string | null {
       ) {
         return obj[key];
       }
-
+      
       // Buscar recursivamente
       if (typeof obj[key] === 'object') {
         const result = searchTransactionId(obj[key]);
         if (result) return result;
       }
     }
-
+    
     return null;
   }
-
+  
   return searchTransactionId(payload);
 }
 
@@ -108,7 +108,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use((req, res, next) => {
   // Gerar timestamp único para forçar revalidação
   const uniqueTimestamp = Date.now().toString();
-
+  
   // Para recursos estáticos e assets, permitir cache
   if (
     req.path.match(/\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$/)
@@ -126,10 +126,10 @@ app.use((req, res, next) => {
     res.setHeader('X-No-Cache', uniqueTimestamp);
     res.setHeader('ETag', uniqueTimestamp);
   }
-
+  
   // Adicionar cabeçalho de timestamp em todas as respostas para prevenir cache
   res.setHeader('X-Timestamp', Date.now().toString());
-
+  
   // Estender o objeto response com método personalizado para desativar cache
   // @ts-ignore - Adicionando método personalizado
   res.disableCache = function() {
@@ -141,7 +141,7 @@ app.use((req, res, next) => {
     this.setHeader('X-No-Cache', Date.now().toString());
     return this;
   };
-
+  
   next();
 });
 
@@ -196,20 +196,20 @@ app.use((req, res, next) => {
   try {
     // Verificar configuração de ambiente (migrado para Supabase Storage)
     validateR2Environment();
-
+    
     // Inicializar o banco de dados com dados
     await initializeDatabase();
     console.log("Banco de dados inicializado com sucesso");
-
+    
     // Criar usuário administrador
     await createAdminUser();
-
+    
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
-
+    
     // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
     const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
-
+    
     // Iniciar verificador de assinaturas expiradas
     setInterval(async () => {
       try {
@@ -220,69 +220,69 @@ app.use((req, res, next) => {
         console.error("Erro ao verificar assinaturas expiradas:", error);
       }
     }, VERIFICAR_ASSINATURAS_INTERVALO);
-
+    
     // Executar verificação inicial na inicialização do servidor
     console.log("Executando verificação inicial de assinaturas expiradas...");
     const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
     console.log(`Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
-
+    
     // IMPORTANTE: Configurar rotas de webhook ANTES de qualquer fallback para o SPA
     // Isso garante que webhooks da Hotmart e Doppus sejam processados corretamente
     console.log("Configurando rotas de webhook dedicadas...");
-
+    
     // Middleware de logging para Debug dos webhooks
     app.use('/webhook', (req, res, next) => {
       console.log(`📝 [DEBUG WEBHOOK] ${req.method} ${req.url} - Headers:`, JSON.stringify(req.headers, null, 2));
       if (req.method === 'POST') {
         console.log(`📝 [DEBUG WEBHOOK] Body:`, JSON.stringify(req.body, null, 2));
       }
-
+      
       // Salvar o método original
       const originalJson = res.json;
-
+      
       // Sobrescrever o método para fazer log
       res.json = function(body) {
         console.log(`📝 [DEBUG WEBHOOK] Response:`, JSON.stringify(body, null, 2));
         return originalJson.call(this, body);
       };
-
+      
       next();
     });
-
+    
     // 🔥 WEBHOOK ULTRA-SIMPLES QUE REALMENTE FUNCIONA!
     app.post('/webhook/hotmart', async (req, res) => {
       console.log('\n🚀 WEBHOOK RECEBIDO!', new Date().toISOString());
-
+      
       const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
+      
       try {
         const payload = req.body;
-
+        
         // Validar se é compra aprovada
         if (payload?.event !== 'PURCHASE_APPROVED' || payload?.data?.purchase?.status !== 'APPROVED') {
           console.log('❌ Não é compra aprovada');
           return res.status(200).json({ success: true, message: 'Ignorado' });
         }
-
+        
         const email = payload.data?.buyer?.email?.toLowerCase().trim();
         const name = payload.data?.buyer?.name || 'Cliente';
-
+        
         if (!email) {
           console.log('❌ Email não encontrado');
           return res.status(200).json({ success: true, message: 'Email não encontrado' });
         }
-
+        
         console.log(`✅ PROCESSANDO: ${name} - ${email}`);
-
+        
         // Verificar se usuário existe
         const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-
+        
         let userId;
-
+        
         if (userCheck.rows.length > 0) {
           userId = userCheck.rows[0].id;
           console.log(`🔄 Atualizando usuário ${userId}`);
-
+          
           await pool.query(`
             UPDATE users SET 
               nivelacesso = 'premium',
@@ -292,11 +292,11 @@ app.use((req, res, next) => {
           `, [userId]);
         } else {
           console.log(`➕ CRIANDO USUÁRIO: ${email}`);
-
+          
           const username = `${email.split('@')[0]}_${Date.now()}`;
           // Usar senha simples por enquanto - o usuário pode alterar depois
           const hashedPassword = 'temp_password_hash';
-
+          
           const userResult = await pool.query(`
             INSERT INTO users (
               username, email, name, password, nivelacesso, origemassinatura,
@@ -306,28 +306,28 @@ app.use((req, res, next) => {
               'anual', true, true
             ) RETURNING id
           `, [username, email, name, hashedPassword]);
-
+          
           userId = userResult.rows[0].id;
           console.log(`✅ USUÁRIO CRIADO: ID ${userId}`);
         }
-
+        
         console.log(`🎉 SUCESSO! Usuário ${userId} processado!`);
         await pool.end();
-
+        
         return res.status(200).json({
           success: true,
           message: 'USUÁRIO CRIADO AUTOMATICAMENTE!',
           userId: userId,
           email: email
         });
-
+        
       } catch (error) {
         console.error('💥 ERRO:', error);
         try { await pool.end(); } catch(e) {}
         return res.status(200).json({ success: false, message: 'Erro processando' });
       }
     });
-
+    
     // Configurar rota principal de webhook Hotmart
     try {
       const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
@@ -336,7 +336,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error("❌ Erro ao configurar rota Hotmart principal:", error);
     }
-
+    
     // Inicializar o serviço da Hotmart
     // Importações serão feitas de forma dinâmica para evitar problemas
     const initHotmartService = async () => {
@@ -344,28 +344,28 @@ app.use((req, res, next) => {
         const { PrismaClient } = await import('@prisma/client');
         const { default: mappingRoutes } = await import('./routes/mapping-routes');
         const { HotmartService } = await import('./services/hotmart-service');
-
+        
         const prisma = new PrismaClient();
         const hotmartService = new HotmartService(prisma);
-
+        
         // Registrar rotas para mapeamento de produtos Hotmart
         app.use(mappingRoutes);
-
+        
         console.log("Serviço da Hotmart inicializado com sucesso no modo " + 
                    (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
-
+        
         // NOTA: Não registramos '/webhook' rotas aqui, pois
         // já temos uma implementação direta acima que deve ter precedência
       } catch (error) {
         console.error("Erro ao inicializar serviço da Hotmart:", error);
       }
     };
-
+    
     // Iniciar serviço de forma assíncrona
     await initHotmartService();
-
+    
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
-
+    
     // NOVA SOLUÇÃO: Utilizar a rota fixa para webhooks diretamente no servidor principal
     // Isto elimina a necessidade do servidor standalone e simplifica a arquitetura
     try {
@@ -375,7 +375,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error("❌ Erro ao configurar rota Hotmart principal:", error);
     }
-
+    
     // Manter a rota fixa pelo caminho alternativo para compatibilidade
     try {
       const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
@@ -384,7 +384,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error("❌ Erro ao configurar rota Hotmart fixa alternativa:", error);
     }
-
+    
     // Adicionar a rota corrigida para detalhes de webhook
     try {
       const webhookDetailFixModule = await import('./routes/webhooks-detail-fix');
@@ -393,7 +393,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
     }
-
+    
     // Configurar a nova rota de webhook APRIMORADA para Hotmart
     try {
       // Usar o manipulador de webhook aprimorado importado no início do arquivo
@@ -402,7 +402,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error("❌ Erro ao configurar rota de webhook Hotmart aprimorada:", error);
     }
-
+    
     // Adicionar a rota de DEBUG para capturar qualquer webhook
     try {
       const webhookDebugModule = await import('./routes/webhook-debug');
@@ -411,7 +411,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error("❌ Erro ao configurar rota de diagnóstico de webhook:", error);
     }
-
+    
     // Manter a rota de status para diagnóstico
     app.get('/webhook/status', (req, res) => {
       res.json({
@@ -428,26 +428,14 @@ app.use((req, res, next) => {
         message: 'Os webhooks estão configurados e funcionando. Recomendamos usar o endpoint aprimorado para melhor compatibilidade.'
       });
     });
-
+    
     console.log("Rotas de webhook configuradas com sucesso");
     console.log("✅ Rotas de mapeamento de produtos implementadas diretamente");
     console.log("Serviço da Hotmart inicializado com sucesso no modo " + (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }
-
-  // 🏥 ENDPOINT RAIZ CRÍTICO PARA DEPLOYMENT REPLIT
-  app.get('/', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'healthy',
-      message: 'DesignAuto API is running',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-      port: process.env.PORT || 5000
-    });
-  });
-
+  
   // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT
   app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({
@@ -458,15 +446,16 @@ app.use((req, res, next) => {
     });
   });
 
-  // 🏥 ENDPOINT RAIZ PARA DEPLOYMENT REPLIT
-  app.get('/api/status', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'healthy',
-      message: 'DesignAuto API is running',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      port: process.env.PORT || 5000
-    });
+  // 🏥 ENDPOINT ALTERNATIVO DE HEALTH CHECK
+  app.get('/', (req: Request, res: Response) => {
+    // Se não for uma requisição de API, serve a aplicação normalmente
+    if (req.path === '/' && req.method === 'GET') {
+      res.status(200).json({
+        status: 'healthy',
+        message: 'DesignAuto API is running',
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   const server = await registerRoutes(app);
@@ -487,17 +476,15 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
-  
-  // Health check endpoint for deployment
-  app.get('/', (req, res) => {
-    res.status(200).json({
-      status: 'healthy',
-      message: 'DesignAuto API is running',
-      timestamp: new Date().toISOString()
-    });
-  });
 
-  app.listen(5000, '0.0.0.0', () => {
-    console.log('Server running on port 5000');
+  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOYMENT
+  // Cloud Run espera porta 3000, desenvolvimento usa 5000
+  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
   });
 })();
