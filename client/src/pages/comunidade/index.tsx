@@ -1136,43 +1136,44 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
 
-  // Query DEFINITIVA para buscar os posts do usuário logado (NOVA ROTA SEM CONFLITOS)
+  // Query ISOLADA E DEFINITIVA para buscar os posts do usuário logado
   const {
     data: userPosts,
     isLoading: userPostsLoading,
     error: userPostsError,
     refetch: refetchUserPosts
   } = useQuery({
-    queryKey: ['/api/user-posts', user?.id],
+    queryKey: ['/api/my-posts-data', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`🚀 [FRONTEND] Buscando posts na nova rota para usuário ${user.id}`);
+      console.log(`✨ [FRONTEND ISOLADO] Buscando posts na rota isolada para usuário ${user.id}`);
       
       try {
-        const response = await fetch(`/api/user-posts/${user.id}`, {
+        const response = await fetch(`/api/my-posts-data/${user.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
           }
         });
         
-        console.log(`🚀 [FRONTEND] Resposta da nova rota: ${response.status}`);
+        console.log(`✨ [FRONTEND ISOLADO] Resposta da rota isolada: ${response.status}`);
         
         if (!response.ok) {
-          console.error(`🚀 [FRONTEND] Erro na nova rota: ${response.status} ${response.statusText}`);
+          console.error(`✨ [FRONTEND ISOLADO] Erro na rota isolada: ${response.status} ${response.statusText}`);
           throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log(`🚀 [FRONTEND] Dados da nova rota:`, data);
-        console.log(`🚀 [FRONTEND] Primeiro post - Avatar:`, data[0]?.user?.profileimageurl);
-        console.log(`🚀 [FRONTEND] Primeiro post - Curtidas:`, data[0]?.likesCount);
-        console.log(`🚀 [FRONTEND] Primeiro post - Comentários:`, data[0]?.commentsCount);
+        console.log(`✨ [FRONTEND ISOLADO] Dados da rota isolada:`, data);
+        console.log(`✨ [FRONTEND ISOLADO] Avatar:`, data[0]?.user?.profileimageurl);
+        console.log(`✨ [FRONTEND ISOLADO] Curtidas:`, data[0]?.likesCount);
+        console.log(`✨ [FRONTEND ISOLADO] Comentários:`, data[0]?.commentsCount);
+        console.log(`✨ [FRONTEND ISOLADO] Status:`, data[0]?.status);
         
         return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error('🚀 [FRONTEND] Erro na nova rota:', error);
+        console.error('✨ [FRONTEND ISOLADO] Erro na rota isolada:', error);
         throw error;
       }
     },

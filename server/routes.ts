@@ -48,6 +48,7 @@ import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 import dateTestRouter from './routes/date-test-routes';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
+import myPostsDefinitiveRouter from './routes/my-posts-definitive';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
@@ -6492,6 +6493,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // REGISTRAR ROTA ISOLADA PARA MEUS POSTS (PRIORIDADE MÁXIMA)
+  app.use('/api', myPostsDefinitiveRouter);
+  
   // Registrar rotas de teste do Supabase
   app.use(supabaseRegisterTestRouter);
   
