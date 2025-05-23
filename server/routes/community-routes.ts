@@ -2979,43 +2979,28 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
   }
 });
 
-// GET: Buscar posts de um usuário específico (MEUS POSTS)
-router.get('/api/community/my-posts/:userId', async (req, res) => {
+// GET: Buscar posts de um usuário específico (MEUS POSTS - VERSÃO SIMPLIFICADA)
+router.get('/api/community/posts/user/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const requestingUserId = req.user?.id;
-
-    console.log('[MEUS POSTS] Requisição recebida:', {
-      userId,
-      requestingUserId,
-      isAuthenticated: req.isAuthenticated(),
-      user: req.user
-    });
-
+    
     // Verificar se o usuário está logado
     if (!req.user) {
-      console.log('[MEUS POSTS] Usuário não autenticado');
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
-
+    
     // Verificar se o usuário está tentando ver seus próprios posts ou se é admin
     const isOwnPosts = requestingUserId === userId;
     const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
-
-    console.log('[MEUS POSTS] Verificação de permissões:', {
-      isOwnPosts,
-      isAdmin,
-      userNivelAcesso: req.user.nivelacesso
-    });
-
+    
     if (!isOwnPosts && !isAdmin) {
-      console.log('[MEUS POSTS] Acesso negado: usuário tentando ver posts de outro usuário');
       return res.status(403).json({ message: 'Você só pode ver seus próprios posts' });
     }
-
-    console.log(`[MEUS POSTS] Buscando posts para usuário ${userId}`);
-
-    // Buscar posts com contagem de interações
+    
+    console.log(`[MEUS POSTS] INICIANDO busca para usuário ${userId}`);
+    
+    // Query SQL direta e simples
     const posts = await db.execute(sql`
       SELECT 
         cp.id, 
@@ -3029,36 +3014,22 @@ router.get('/api/community/my-posts/:userId', async (req, res) => {
         u.username,
         u.name,
         u.profileimageurl,
-        u.nivelacesso,
-        COUNT(DISTINCT cl.id) as likes_count,
-        COUNT(DISTINCT cc.id) as comments_count,
-        COUNT(DISTINCT cs.id) as saves_count
+        u.nivelacesso
       FROM "communityPosts" cp
       LEFT JOIN users u ON cp."userId" = u.id
-      LEFT JOIN "communityLikes" cl ON cp.id = cl."postId"
-      LEFT JOIN "communityComments" cc ON cp.id = cc."postId"
-      LEFT JOIN "communitySaves" cs ON cp.id = cs."postId"
       WHERE cp."userId" = ${userId}
-        AND (cp.status = 'approved' OR cp.status = 'pending')
-      GROUP BY 
-        cp.id,
-        u.id,
-        u.username,
-        u.name,
-        u.profileimageurl,
-        u.nivelacesso
       ORDER BY cp."createdAt" DESC
-      LIMIT 50
+      LIMIT 20
     `);
-
+    
+    console.log(`[MEUS POSTS] Query executada. Linhas encontradas: ${posts.rows?.length || 0}`);
+    
     if (!posts.rows || posts.rows.length === 0) {
       console.log(`[MEUS POSTS] Nenhum post encontrado para usuário ${userId}`);
       return res.json([]);
     }
-
-    console.log(`[MEUS POSTS] ${posts.rows.length} posts encontrados`);
-
-    // Formatar os dados incluindo contagens de interações
+    
+    // Formatar os dados de forma simples
     const formattedPosts = posts.rows.map(row => ({
       post: {
         id: row.id,
@@ -3081,17 +3052,46 @@ router.get('/api/community/my-posts/:userId', async (req, res) => {
         profileimageurl: row.profileimageurl,
         nivelacesso: row.nivelacesso || 'free'
       },
-      likesCount: parseInt(row.likes_count) || 0,
-      commentsCount: parseInt(row.comments_count) || 0,
-      savesCount: parseInt(row.saves_count) || 0
+      engagement: {
+        likes: 0,
+        comments: 0,
+        saves: 0
+      }
     }));
-
-    console.log('[MEUS POSTS] Posts formatados:', formattedPosts);
-
+    
+    console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts formatados`);
+    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.post?.title || 'N/A');
+    
     return res.json(formattedPosts);
+    
   } catch (error) {
     console.error('[MEUS POSTS] ERRO:', error);
     return res.status(500).json({ message: 'Erro ao buscar posts' });
+  }
+});
+
+router.get('/my-posts/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId não informado' });
+  }
+
+  try {
+    const { pool } = await import('../db');
+    
+    const posts = await pool.query(`
+      SELECT * FROM "communityPosts" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC
+    `, [userId]);
+
+    console.log(`[MEUS POSTS] Encontrados ${posts.rows.length} posts para usuário ${userId}`);
+    
+    res.json(posts.rows);
+  } catch (err) {
+    console.error('Erro ao buscar posts:', err);
+    res.status(500).json({ error: 'Erro ao buscar posts' });
   }
 });
 
