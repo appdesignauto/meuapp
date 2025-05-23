@@ -446,16 +446,9 @@ app.use((req, res, next) => {
     });
   });
 
-  // 🏥 ENDPOINT ALTERNATIVO DE HEALTH CHECK
+  // 🏥 ENDPOINT RAIZ CRÍTICO PARA DEPLOYMENT REPLIT
   app.get('/', (req: Request, res: Response) => {
-    // Se não for uma requisição de API, serve a aplicação normalmente
-    if (req.path === '/' && req.method === 'GET') {
-      res.status(200).json({
-        status: 'healthy',
-        message: 'DesignAuto API is running',
-        timestamp: new Date().toISOString()
-      });
-    }
+    res.status(200).send('OK');
   });
 
   const server = await registerRoutes(app);
