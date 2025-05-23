@@ -675,11 +675,7 @@ const PostCard: React.FC<{
               {/* Badge de status - visível apenas na seção "Meus Posts" */}
               {user && user.id === post.user.id && (
                 <>
-                  {(() => {
-                    // 🎯 DEBUG: Status do post
-                    console.log(`🎯 [STATUS] Post ${post.id}: isApproved=${post.isApproved} | Resultado: ${post.isApproved ? 'APROVADO' : 'PENDENTE'}`);
-                    return post.isApproved;
-                  })() ? (
+                  {post.isApproved ? (
                     <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
                       <CheckCircle className="h-3 w-3" />
                       Aprovado
@@ -2202,7 +2198,7 @@ const CommunityPage: React.FC = () => {
                             id: post.user?.id || 0,
                             username: post.user?.username || '',
                             name: post.user?.name,
-                            profileimageurl: post.user?.profileimageurl || null,
+                            profileimageurl: post.user?.profileimageurl,
                             nivelacesso: post.user?.nivelacesso || 'free',
                             role: post.user?.role
                           },
@@ -2214,7 +2210,7 @@ const CommunityPage: React.FC = () => {
                             key={post.id}
                             post={postCardData}
                             refetch={refetchUserPosts}
-                            user={user as any}
+                            user={user}
                             setSelectedPostId={setSelectedPostId}
                             setIsPostViewOpen={setIsPostViewOpen}
                           />
