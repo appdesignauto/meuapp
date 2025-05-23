@@ -436,7 +436,9 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
-  // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT
+  const server = await registerRoutes(app);
+
+  // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT (após as rotas)
   app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({
       status: 'ok',
@@ -445,8 +447,6 @@ app.use((req, res, next) => {
       environment: process.env.NODE_ENV || 'development'
     });
   });
-
-  const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
