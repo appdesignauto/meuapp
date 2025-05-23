@@ -27,7 +27,7 @@ router.get('/my-posts-data/:userId', async (req, res) => {
       LEFT JOIN "users" u ON cp."userId" = u.id
       LEFT JOIN (
         SELECT "postId", COUNT(*) as total 
-        FROM "communityPostLikes" 
+        FROM "communityLikes" 
         GROUP BY "postId"
       ) likes_count ON cp.id = likes_count."postId"
       LEFT JOIN (
