@@ -3071,6 +3071,9 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
 });
 
 router.get('/my-posts/:userId', async (req, res) => {
+  console.log('🎯 [DEBUG] Endpoint /my-posts/:userId executado!');
+  console.log('🎯 [DEBUG] userId recebido:', req.params.userId);
+  
   const userId = req.params.userId;
 
   if (!userId) {
@@ -3078,6 +3081,7 @@ router.get('/my-posts/:userId', async (req, res) => {
   }
 
   try {
+    console.log('[MEUS POSTS] Buscando posts para usuário:', userId);
     const { pool } = await import('../db');
     
     const posts = await pool.query(`
@@ -3086,12 +3090,11 @@ router.get('/my-posts/:userId', async (req, res) => {
       ORDER BY "createdAt" DESC
     `, [userId]);
 
-    console.log(`[MEUS POSTS] Encontrados ${posts.rows.length} posts para usuário ${userId}`);
-    
+    console.log('[MEUS POSTS] Encontrados', posts.rows.length, 'posts');
     res.json(posts.rows);
-  } catch (err) {
-    console.error('Erro ao buscar posts:', err);
-    res.status(500).json({ error: 'Erro ao buscar posts' });
+  } catch (error) {
+    console.error('[MEUS POSTS] Erro:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
