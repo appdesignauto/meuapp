@@ -3072,42 +3072,46 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
 
 // ENDPOINT DEFINITIVO PARA MEUS POSTS - FUNCIONANDO 100%
 router.get('/my-posts/:userId', async (req: any, res: any) => {
+  console.log(`[MEUS POSTS DEFINITIVO] =================== INÍCIO ===================`);
+  console.log(`[MEUS POSTS DEFINITIVO] Rota acessada: /my-posts/${req.params.userId}`);
+  
   try {
     const { userId } = req.params;
-    console.log(`[MEUS POSTS DEFINITIVO] Iniciando busca para usuário ${userId}`);
+    console.log(`[MEUS POSTS DEFINITIVO] UserID recebido: ${userId} (tipo: ${typeof userId})`);
     
-    // Usar a conexão direta do pool para garantir execução
-    const { pool } = await import('../db');
+    // Importar dependências necessárias
+    const { db } = await import('../db');
+    const { communityPosts } = await import('../../shared/schema');
+    const { eq, desc } = await import('drizzle-orm');
     
-    const query = `
-      SELECT 
-        id, title, content, "imageUrl", status, "createdAt", "viewCount"
-      FROM "communityPosts" 
-      WHERE "userId" = $1
-      ORDER BY "createdAt" DESC
-      LIMIT 20
-    `;
+    console.log(`[MEUS POSTS DEFINITIVO] Dependências importadas com sucesso`);
     
-    console.log(`[MEUS POSTS DEFINITIVO] Executando query com userId: ${userId}`);
-    const result = await pool.query(query, [parseInt(userId)]);
+    // Buscar posts usando Drizzle ORM
+    const posts = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.userId, parseInt(userId)))
+      .orderBy(desc(communityPosts.createdAt))
+      .limit(20);
     
-    console.log(`[MEUS POSTS DEFINITIVO] Query executada! Encontrados ${result.rows?.length || 0} posts`);
+    console.log(`[MEUS POSTS DEFINITIVO] Query executada! Encontrados ${posts.length} posts`);
     
-    if (!result.rows || result.rows.length === 0) {
+    if (posts.length === 0) {
       console.log(`[MEUS POSTS DEFINITIVO] Nenhum post encontrado, retornando array vazio`);
-      return res.json([]);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json([]);
     }
     
-    const posts = result.rows.map((row: any) => ({
+    const formattedPosts = posts.map(post => ({
       post: {
-        id: row.id,
-        title: row.title,
-        content: row.content || '',
-        imageUrl: row.imageUrl || null,
-        status: row.status,
-        createdAt: row.createdAt,
-        viewCount: row.viewCount || 0,
-        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR')
+        id: post.id,
+        title: post.title,
+        content: post.content || '',
+        imageUrl: post.imageUrl || null,
+        status: post.status,
+        createdAt: post.createdAt,
+        viewCount: post.viewCount || 0,
+        formattedDate: new Date(post.createdAt).toLocaleDateString('pt-BR')
       },
       user: {
         username: 'admin',
@@ -3115,15 +3119,23 @@ router.get('/my-posts/:userId', async (req: any, res: any) => {
       }
     }));
     
-    console.log(`[MEUS POSTS DEFINITIVO] SUCESSO! Retornando ${posts.length} posts`);
-    console.log(`[MEUS POSTS DEFINITIVO] Títulos dos posts:`, posts.map(p => p.post.title));
+    console.log(`[MEUS POSTS DEFINITIVO] SUCESSO! Retornando ${formattedPosts.length} posts formatados`);
+    console.log(`[MEUS POSTS DEFINITIVO] Títulos:`, formattedPosts.map(p => p.post.title));
     
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json(posts);
+    return res.status(200).json(formattedPosts);
     
   } catch (error) {
-    console.error('[MEUS POSTS DEFINITIVO] ERRO FATAL:', error);
-    return res.status(500).json({ message: 'Erro ao buscar posts', error: String(error) });
+    console.error('[MEUS POSTS DEFINITIVO] ================== ERRO FATAL ==================');
+    console.error('[MEUS POSTS DEFINITIVO] Detalhes do erro:', error);
+    console.error('[MEUS POSTS DEFINITIVO] Stack trace:', error instanceof Error ? error.stack : 'N/A');
+    
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ 
+      message: 'Erro interno do servidor', 
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
