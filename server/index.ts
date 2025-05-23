@@ -12,8 +12,6 @@ import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
 import { Pool } from "pg";
 import crypto from "crypto";
-import compression from 'compression';
-import helmet from 'helmet';
 
 // Função para encontrar email em qualquer parte do payload da Hotmart
 function findEmailInPayload(payload: any): string | null {
@@ -164,16 +162,6 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.use(compression()); // Comprimir respostas
-app.use(helmet()); // Segurança adicional
-
-// Configurar timeouts
-app.use((req, res, next) => {
-  req.setTimeout(30000); // 30 segundos
-  res.setTimeout(30000);
-  next();
-});
-
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -202,15 +190,6 @@ app.use((req, res, next) => {
   });
 
   next();
-});
-
-// Adicionar handler de erro global
-app.use((err, req, res, next) => {
-  console.error('Erro na aplicação:', err);
-  res.status(500).json({ 
-    message: 'Erro interno do servidor',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
 });
 
 (async () => {
