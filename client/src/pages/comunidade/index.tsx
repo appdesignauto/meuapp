@@ -1926,16 +1926,24 @@ const CommunityPage: React.FC = () => {
                   <Filter className="h-4 w-4 mr-2" />
                   Posts
                 </TabsTrigger>
-                {user && (
-                  <TabsTrigger value="meus-posts">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Meus Posts
-                  </TabsTrigger>
-                )}
                 <TabsTrigger value="ranking">
                   <Trophy className="h-4 w-4 mr-2" />
                   Ranking
                 </TabsTrigger>
+                {user && (
+                  <TabsTrigger value="meus-posts">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Meus Posts
+                    {!userPostsLoading && userPosts && userPosts.length > 0 && (
+                      <Badge 
+                        variant="secondary" 
+                        className="ml-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs py-0 px-1.5 h-4 rounded-full"
+                      >
+                        {userPosts.length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                )}
               </TabsList>
               
               {/* Tab de Posts */}
