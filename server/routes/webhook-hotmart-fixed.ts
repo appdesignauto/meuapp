@@ -315,13 +315,13 @@ async function processWebhook(webhookId: number): Promise<boolean> {
       
       const insertResult = await pool.query(`
         INSERT INTO users (
-          username, email, name, password, phone, nivelacesso, origemassinatura,
+          username, email, name, password, nivelacesso, origemassinatura,
           tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed
         ) VALUES (
-          $1, $2, $3, $4, $5, 'premium', $6,
-          $7, $8, $9, false, true, true
+          $1, $2, $3, $4, 'premium', $5,
+          $6, $7, $8, false, true, true
         ) RETURNING id
-      `, [username, data.email, data.full_name, hashedPassword, data.phone, data.origin, data.planType, data.startDate, data.endDate]);
+      `, [username, data.email, data.full_name, hashedPassword, data.origin, data.planType, data.startDate, data.endDate]);
       
       userId = insertResult.rows[0].id;
       console.log(`✅ Usuário criado com ID: ${userId}`);
