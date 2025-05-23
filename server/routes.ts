@@ -675,16 +675,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { pool } = await import('./db');
       
+      // Query para buscar posts com dados completos do usuário
       const posts = await pool.query(`
-        SELECT * FROM "communityPosts" 
-        WHERE "userId" = $1 
-        ORDER BY "createdAt" DESC
+        SELECT 
+          cp.*,
+          u.username,
+          u.name,
+          u.profileimageurl,
+          u.nivelacesso,
+          u.acessovitalicio
+        FROM "communityPosts" cp
+        LEFT JOIN "users" u ON cp."userId" = u.id
+        WHERE cp."userId" = $1 
+        ORDER BY cp."createdAt" DESC
       `, [userId]);
       
       console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
       
+      // Formatar os dados no formato esperado pelo frontend
+      const formattedPosts = posts.rows.map(row => ({
+        id: row.id,
+        userId: row.userId,
+        title: row.title,
+        content: row.content,
+        imageUrl: row.imageUrl,
+        createdAt: row.createdAt,
+        isApproved: row.isApproved,
+        isPinned: row.isPinned,
+        editLink: row.editLink,
+        viewCount: row.viewCount || 0,
+        user: {
+          id: row.userId,
+          username: row.username,
+          name: row.name,
+          profileimageurl: row.profileimageurl,
+          nivelacesso: row.nivelacesso,
+          acessovitalicio: row.acessovitalicio
+        }
+      }));
+      
       res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json(posts.rows);
+      return res.status(200).json(formattedPosts);
       
     } catch (error) {
       console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
