@@ -438,16 +438,7 @@ app.use((req, res, next) => {
   
   // 🏥 HEALTH CHECK ENDPOINTS PARA DEPLOYMENT (antes das rotas)
   app.get('/health', (req: Request, res: Response) => {
-    res.status(200).send('OK');
-  });
-
-  app.get('/', (req: Request, res: Response) => {
-    if (req.headers.accept?.includes('application/json')) {
-      res.status(200).json({ status: 'ok', message: 'DesignAuto API is running' });
-    } else {
-      // Se não for JSON, deixa o Vite servir a aplicação React
-      res.status(200).send('OK');
-    }
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
   });
 
   const server = await registerRoutes(app);
