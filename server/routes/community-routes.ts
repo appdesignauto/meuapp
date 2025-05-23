@@ -3046,7 +3046,13 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
     if (result && result.rows && Array.isArray(result.rows)) {
       for (const row of result.rows) {
         try {
-          const formattedDate = formatarDataCompleta(row.createdAt || new Date());
+          // Usar formatação simples e segura para datas
+          const safeCreatedAt = row.createdAt ? new Date(row.createdAt) : new Date();
+          const formattedDate = safeCreatedAt.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit', 
+            year: 'numeric'
+          });
           
           formattedPosts.push({
             post: {
@@ -3056,8 +3062,8 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
               imageUrl: row.imageUrl || '',
               editLink: row.editLink || '',
               status: row.status || 'pending',
-              createdAt: row.createdAt || new Date(),
-              updatedAt: row.updatedAt || new Date(),
+              createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
+              updatedAt: row.updatedAt ? new Date(row.updatedAt).toISOString() : new Date().toISOString(),
               viewCount: Number(row.viewCount) || 0,
               userId: Number(row.userId) || 0,
               formattedDate: formattedDate,
