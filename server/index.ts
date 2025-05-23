@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
+import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
@@ -441,14 +442,25 @@ app.use((req, res, next) => {
     res.status(200).json({ status: 'ok', uptime: process.uptime() });
   });
 
+  // Rota simples para produção - sempre funciona
+  app.get('/', (req: Request, res: Response) => {
+    res.status(200).json({ 
+      message: 'DesignAuto API está funcionando!',
+      status: 'online',
+      timestamp: new Date().toISOString()
+    });
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = process.env.NODE_ENV === 'production' 
+      ? "Internal Server Error" 
+      : (err.message || "Internal Server Error");
 
+    console.error('Server Error:', err);
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
