@@ -9,6 +9,7 @@ import PremiumFeatures from '@/components/home/PremiumFeatures';
 import Testimonials from '@/components/home/Testimonials';
 import CallToAction from '@/components/home/CallToAction';
 import FeatureStats from '@/components/home/FeatureStats';
+import { ArtModal } from '@/components/ArtModal';
 
 const Home = () => {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -18,6 +19,12 @@ const Home = () => {
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null);
   const [selectedFileType, setSelectedFileType] = useState<number | null>(null);
   const [location] = useLocation();
+  
+  // Estados para o modal de arte
+  const [selectedArt, setSelectedArt] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [allArts, setAllArts] = useState<any[]>([]);
+  const [currentArtIndex, setCurrentArtIndex] = useState(0);
 
   // Processar parâmetros da URL para aplicar filtros
   useEffect(() => {
