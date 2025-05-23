@@ -104,6 +104,24 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 // Configuração para servir arquivos de upload local (fallback quando Supabase falha)
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Adicionar rota estática para servir cliente diretamente
+app.use('/client', express.static(path.join(process.cwd(), 'client')));
+
+// Servir o arquivo index.html diretamente na rota /client/
+app.get('/client/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+});
+
+// Servir o arquivo main.tsx na rota src/main.tsx para resolver problemas do Vite
+app.get('/src/main.tsx', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'client', 'src', 'main.tsx'));
+});
+
+// Redirecionar raiz para o cliente
+app.get('/', (req, res) => {
+  res.redirect('/client/');
+});
+
 // Middleware para adicionar cabeçalhos de cache-control apropriados
 app.use((req, res, next) => {
   // Gerar timestamp único para forçar revalidação

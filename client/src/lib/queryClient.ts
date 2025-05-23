@@ -38,52 +38,83 @@ export async function apiRequest(
   data?: unknown | undefined,
   options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  // Adicionar timestamp para prevenir cache
-  const timestamp = Date.now();
-  const finalUrl = url.includes('?') 
-    ? `${url}&_t=${timestamp}` 
-    : `${url}?_t=${timestamp}`;
-  
-  // Configuração padrão para requisições com cabeçalhos anti-cache
-  const fetchOptions: RequestInit = {
-    method,
-    credentials: "include",
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-      'X-Timestamp': timestamp.toString()
-    }
-  };
-
-  // Se temos dados para enviar
-  if (data) {
-    // Se é FormData ou skipContentType é true, não definimos Content-Type
-    if (data instanceof FormData || options?.isFormData) {
-      fetchOptions.body = data instanceof FormData ? data : data as FormData;
-    } else {
-      // Para dados JSON normais
-      if (!options?.skipContentType) {
-        fetchOptions.headers = { 
-          ...fetchOptions.headers,
-          "Content-Type": "application/json" 
-        };
+  try {
+    console.log(`[API] Iniciando requisição ${method} para ${url}`);
+    
+    // Adicionar timestamp para prevenir cache
+    const timestamp = Date.now();
+    const finalUrl = url.includes('?') 
+      ? `${url}&_t=${timestamp}` 
+      : `${url}?_t=${timestamp}`;
+    
+    // Configuração padrão para requisições com cabeçalhos anti-cache
+    const fetchOptions: RequestInit = {
+      method,
+      credentials: "include",
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Timestamp': timestamp.toString()
       }
-      // Adicionar timestamp aos dados para evitar cache
-      const dataWithTimestamp = typeof data === 'object' && data !== null 
-        ? { ...data as object, _timestamp: timestamp } 
-        : data;
-      
-      fetchOptions.body = JSON.stringify(dataWithTimestamp);
-    }
-  }
+    };
 
-  console.log(`[API] Fazendo requisição para ${finalUrl} com anti-cache`);
-  
-  // Usar a URL com parâmetros anti-cache
-  const res = await fetch(finalUrl, fetchOptions);
-  await throwIfResNotOk(res);
-  return res;
+    // Se temos dados para enviar
+    if (data) {
+      console.log(`[API] Enviando dados:`, data);
+      
+      // Se é FormData ou skipContentType é true, não definimos Content-Type
+      if (data instanceof FormData || options?.isFormData) {
+        fetchOptions.body = data instanceof FormData ? data : data as FormData;
+      } else {
+        // Para dados JSON normais
+        if (!options?.skipContentType) {
+          fetchOptions.headers = { 
+            ...fetchOptions.headers,
+            "Content-Type": "application/json" 
+          };
+        }
+        // Adicionar timestamp aos dados para evitar cache
+        const dataWithTimestamp = typeof data === 'object' && data !== null 
+          ? { ...data as object, _timestamp: timestamp } 
+          : data;
+        
+        fetchOptions.body = JSON.stringify(dataWithTimestamp);
+      }
+    }
+
+    console.log(`[API] Opções da requisição:`, fetchOptions);
+    
+    // Usar a URL com parâmetros anti-cache
+    const res = await fetch(finalUrl, fetchOptions);
+    
+    if (!res.ok) {
+      console.error(`[API] Erro na requisição:`, {
+        status: res.status,
+        statusText: res.statusText,
+        url: finalUrl
+      });
+      
+      // Tentar obter mais detalhes do erro
+      try {
+        const errorData = await res.json();
+        console.error(`[API] Detalhes do erro:`, errorData);
+      } catch (e) {
+        console.error(`[API] Não foi possível obter detalhes do erro:`, e);
+      }
+    } else {
+      console.log(`[API] Requisição bem-sucedida:`, {
+        status: res.status,
+        url: finalUrl
+      });
+    }
+    
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    console.error(`[API] Erro ao fazer requisição:`, error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

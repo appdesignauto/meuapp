@@ -70,6 +70,8 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
+import { getSupabaseToken } from "@/lib/supabase";
+
 // Interface para usuário
 interface User {
   id: number;
@@ -1147,10 +1149,20 @@ const CommunityPage: React.FC = () => {
     queryFn: async () => {
       if (!user) return [];
       
+      console.log('[FRONTEND] Buscando posts para usuário:', user.id);
+      
       try {
-        const response = await fetch(`/api/community/my-posts/${user.id}`);
+        const response = await fetch(`/api/community/my-posts/${user.id}`, {
+          credentials: 'include' // Incluir cookies de sessão
+        });
         
         if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('[FRONTEND] Erro na resposta:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
           throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
         
@@ -1558,6 +1570,72 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 180000, // Recarrega a cada 3 minutos
     retry: 2
   });
+  
+  // Renderização dos meus posts
+  const renderMyPosts = () => {
+    if (userPostsLoading) {
+      return (
+        <div className="flex justify-center py-8">
+          <LoadingScreen size="sm" label="Carregando seus posts..." />
+        </div>
+      );
+    }
+
+    if (userPostsError) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">Ocorreu um erro ao carregar seus posts.</p>
+          <Button onClick={() => refetchUserPosts()}>
+            Tentar novamente
+          </Button>
+        </div>
+      );
+    }
+
+    if (!userPosts || userPosts.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">Você ainda não tem nenhum post.</p>
+          <Button onClick={() => setIsCreatePostOpen(true)}>
+            Criar meu primeiro post
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {userPosts.map((item) => {
+          const formattedPost = {
+            id: item.post.id,
+            title: item.post.title,
+            content: item.post.content,
+            imageUrl: item.post.imageUrl,
+            createdAt: item.post.createdAt,
+            likesCount: item.likesCount || 0,
+            commentsCount: item.commentsCount || 0,
+            sharesCount: 0,
+            isApproved: item.post.status === 'approved',
+            userId: user?.id || 0,
+            isPinned: false,
+            editLink: item.post.editLink || '',
+            user: item.user,
+            formattedDate: item.post.formattedDate
+          };
+          
+          return (
+            <PostCard 
+              key={item.post.id}
+              post={formattedPost}
+              refetch={refetchUserPosts}
+              setSelectedPostId={setSelectedPostId}
+              setIsPostViewOpen={setIsPostViewOpen}
+            />
+          );
+        })}
+      </div>
+    );
+  };
   
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 pb-16 md:pb-0">
@@ -2086,171 +2164,7 @@ const CommunityPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {userPostsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <Card key={i} className="border border-zinc-100 dark:border-zinc-800">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center gap-3">
-                              <Skeleton className="w-10 h-10 rounded-full" />
-                              <div className="flex-1">
-                                <Skeleton className="h-4 w-32 mb-1" />
-                                <Skeleton className="h-3 w-24" />
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <Skeleton className="h-4 w-full mb-2" />
-                            <Skeleton className="h-4 w-3/4 mb-4" />
-                            <Skeleton className="h-32 w-full rounded-md" />
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : userPostsError ? (
-                    <div className="text-center py-10">
-                      <AlertCircle className="h-12 w-12 mx-auto text-red-300 mb-3" />
-                      <h3 className="text-lg font-semibold text-red-600 mb-1">
-                        Erro ao carregar posts
-                      </h3>
-                      <p className="text-red-500 mb-4">
-                        {userPostsError.message || 'Ocorreu um erro ao carregar seus posts'}
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => refetchUserPosts()}
-                        className="gap-2"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                        Tentar Novamente
-                      </Button>
-                    </div>
-                  ) : userPosts && userPosts.length > 0 ? (
-                    <div className="space-y-6">
-                      {userPosts.map((postData: any) => {
-                        const post = postData.post || postData;
-                        return (
-                          <Card key={post.id} className="border border-zinc-100 dark:border-zinc-800">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <img
-                                      src={post.user?.profileimageurl || '/default-avatar.png'}
-                                      alt={post.user?.name || post.user?.username}
-                                      className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = '/default-avatar.png';
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {post.user?.name || post.user?.username}
-                                    </p>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                      {post.formattedDate || formatRelativeTime(post.createdAt)}
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                {/* Status do post */}
-                                <div className="flex items-center gap-2">
-                                  {post.isApproved ? (
-                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <CheckCircle className="h-3 w-3" />
-                                      Aprovado
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      Pendente
-                                    </span>
-                                  )}
-                                  
-                                  {post.isPinned && (
-                                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <Pin className="h-3 w-3" />
-                                      Fixado
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </CardHeader>
-                            
-                            <CardContent>
-                              <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
-                              <p className="text-zinc-700 dark:text-zinc-300 mb-4 line-clamp-3">
-                                {post.content}
-                              </p>
-                              
-                              {post.imageUrl && (
-                                <div className="mb-4">
-                                  <img
-                                    src={post.imageUrl}
-                                    alt={post.title}
-                                    className="w-full h-64 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                                  <span className="flex items-center gap-1">
-                                    <Heart className="h-4 w-4" />
-                                    {post.likesCount || 0}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <MessageCircle className="h-4 w-4" />
-                                    {post.commentsCount || 0}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Share2 className="h-4 w-4" />
-                                    {post.sharesCount || 0}
-                                  </span>
-                                </div>
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2"
-                                  onClick={() => {
-                                    setSelectedPostId(post.id);
-                                    setIsPostViewOpen(true);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  Ver Detalhes
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-10">
-                      <FileText className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
-                      <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                        Nenhum post criado
-                      </h3>
-                      <p className="text-zinc-500 dark:text-zinc-400 mb-4 max-w-md mx-auto">
-                        Você ainda não criou nenhum post na comunidade. Compartilhe suas criações e ideias!
-                      </p>
-                      <Button 
-                        onClick={() => setIsCreatePostOpen(true)}
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Criar Primeiro Post
-                      </Button>
-                    </div>
-                  )}
+                  {renderMyPosts()}
                 </TabsContent>
               )}
             </Tabs>
