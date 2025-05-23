@@ -92,6 +92,30 @@ function findTransactionId(payload: any): string | null {
 
 const app = express();
 
+// ✅ HEALTH CHECK ROUTES - DEVEM SER AS PRIMEIRAS ROTAS!
+// Rota raiz para health check do Replit
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'DesignAuto API',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
+  });
+});
+
+// Rota adicional de health check
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'DesignAuto API',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: 'connected',
+    webhooks: 'active'
+  });
+});
+
 // Configurar CORS para o domínio customizado
 configureCors(app);
 
@@ -364,6 +388,30 @@ app.use((req, res, next) => {
     // Iniciar serviço de forma assíncrona
     await initHotmartService();
     
+    // ✅ HEALTH CHECK ROUTES PARA DEPLOYMENT - DEVEM VIR PRIMEIRO!
+    // Rota raiz para health check do Replit
+    app.get('/', (req, res) => {
+      res.status(200).json({
+        status: 'healthy',
+        service: 'DesignAuto API',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: '1.0.0'
+      });
+    });
+
+    // Rota adicional de health check
+    app.get('/health', (req, res) => {
+      res.status(200).json({
+        status: 'healthy',
+        service: 'DesignAuto API',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: 'connected',
+        webhooks: 'active'
+      });
+    });
+
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
     // NOVA SOLUÇÃO: Utilizar a rota fixa para webhooks diretamente no servidor principal
