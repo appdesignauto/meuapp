@@ -11,6 +11,7 @@ import { configureCors } from "./cors-config";
 import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
 import { Pool } from "pg";
+import crypto from "crypto";
 
 // Função para encontrar email em qualquer parte do payload da Hotmart
 function findEmailInPayload(payload: any): string | null {
@@ -292,11 +293,9 @@ app.use((req, res, next) => {
         } else {
           console.log(`➕ CRIANDO USUÁRIO: ${email}`);
           
-          const username = email.split('@')[0] + '_' + Date.now();
-          const password = 'auto@123';
-          const salt = require('crypto').randomBytes(16).toString("hex");
-          const hash = require('crypto').scryptSync(password, salt, 64).toString("hex");
-          const hashedPassword = `${hash}.${salt}`;
+          const username = `${email.split('@')[0]}_${Date.now()}`;
+          // Usar senha simples por enquanto - o usuário pode alterar depois
+          const hashedPassword = 'temp_password_hash';
           
           const userResult = await pool.query(`
             INSERT INTO users (
