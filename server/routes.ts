@@ -7090,27 +7090,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // ENDPOINT MEUS POSTS - DIRETO NO SERVIDOR PRINCIPAL (SEMPRE EXECUTADO PRIMEIRO)
   app.get('/api/community/my-posts/:userId', async (req, res) => {
-    console.log('🎯 [DEFINITIVO] Endpoint my-posts executado no servidor principal!');
-    console.log('🎯 [DEFINITIVO] UserID:', req.params.userId);
+    console.log('🎯 [PRIORIDADE MÁXIMA] Endpoint my-posts executado!');
+    console.log('🎯 [PRIORIDADE MÁXIMA] UserID:', req.params.userId);
     
     const userId = req.params.userId;
     
     try {
       const { pool } = await import('./db');
       
+      // Query com posts, dados do usuário, curtidas e comentários
       const posts = await pool.query(`
-        SELECT * FROM "communityPosts" 
-        WHERE "userId" = $1 
-        ORDER BY "createdAt" DESC
+        SELECT 
+          cp.*,
+          u.username,
+          u.name,
+          u.profileimageurl,
+          u.nivelacesso,
+          u.acessovitalicio,
+          COALESCE(likes_count.total, 0) as likes_count,
+          COALESCE(comments_count.total, 0) as comments_count
+        FROM "communityPosts" cp
+        LEFT JOIN "users" u ON cp."userId" = u.id
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityLikes" 
+          GROUP BY "postId"
+        ) likes_count ON cp.id = likes_count."postId"
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityComments" 
+          GROUP BY "postId"
+        ) comments_count ON cp.id = comments_count."postId"
+        WHERE cp."userId" = $1 
+        ORDER BY cp."createdAt" DESC
       `, [userId]);
       
-      console.log('🎯 [DEFINITIVO] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      
+      // Formatar os dados no formato esperado pelo frontend
+      const formattedPosts = posts.rows.map(row => ({
+        id: row.id,
+        userId: row.userId,
+        title: row.title,
+        content: row.content,
+        imageUrl: row.imageUrl,
+        createdAt: row.createdAt,
+        isApproved: row.status === 'approved', // CORREÇÃO: Converter status para isApproved
+        isPinned: row.isPinned,
+        editLink: row.editLink,
+        viewCount: row.viewCount || 0,
+        likesCount: parseInt(row.likes_count) || 0,
+        commentsCount: parseInt(row.comments_count) || 0,
+        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }),
+        user: {
+          id: row.userId,
+          username: row.username,
+          name: row.name,
+          profileimageurl: row.profileimageurl,
+          nivelacesso: row.nivelacesso,
+          acessovitalicio: row.acessovitalicio
+        }
+      }));
       
       res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json(posts.rows);
+      return res.status(200).json(formattedPosts);
       
     } catch (error) {
-      console.error('🎯 [DEFINITIVO] Erro:', error);
+      console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
