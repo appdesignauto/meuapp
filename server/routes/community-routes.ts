@@ -3090,8 +3090,9 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
     }
     
     console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts do usuário ${userId}`);
-    console.log(`[MEUS POSTS] Posts formatados:`, JSON.stringify(formattedPosts, null, 2));
+    console.log(`[MEUS POSTS] Posts formatados:`, JSON.stringify(formattedPosts.slice(0, 2), null, 2));
     
+    // Retornar array simples sem wrapper
     return res.status(200).json(formattedPosts);
     
   } catch (error) {
