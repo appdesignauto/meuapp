@@ -446,16 +446,15 @@ app.use((req, res, next) => {
     });
   });
 
-  // 🏥 ENDPOINT ALTERNATIVO DE HEALTH CHECK
-  app.get('/', (req: Request, res: Response) => {
-    // Se não for uma requisição de API, serve a aplicação normalmente
-    if (req.path === '/' && req.method === 'GET') {
-      res.status(200).json({
-        status: 'healthy',
-        message: 'DesignAuto API is running',
-        timestamp: new Date().toISOString()
-      });
-    }
+  // 🏥 ENDPOINT RAIZ PARA DEPLOYMENT REPLIT
+  app.get('/api/status', (req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'healthy',
+      message: 'DesignAuto API is running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      port: process.env.PORT || 5000
+    });
   });
 
   const server = await registerRoutes(app);
@@ -477,9 +476,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOYMENT
-  // Cloud Run espera porta 3000, desenvolvimento usa 5000
-  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  // 🚀 CONFIGURAÇÃO DE PORTA OTIMIZADA PARA REPLIT DEPLOYMENT
+  const port = process.env.PORT || process.env.REPLIT_DEV_DOMAIN ? 5000 : 3000;
   server.listen({
     port,
     host: "0.0.0.0",
