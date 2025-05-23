@@ -1901,10 +1901,14 @@ const CommunityPage: React.FC = () => {
           {/* Área principal de conteúdo - feed central (estilo Instagram) */}
           <div className="w-full md:w-[470px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-6 px-4 md:px-0">
+              <TabsList className="grid grid-cols-3 mb-6 px-4 md:px-0">
                 <TabsTrigger value="posts">
                   <Filter className="h-4 w-4 mr-2" />
                   Posts
+                </TabsTrigger>
+                <TabsTrigger value="meus-posts">
+                  <User className="h-4 w-4 mr-2" />
+                  Meus Posts
                 </TabsTrigger>
                 <TabsTrigger value="ranking">
                   <Trophy className="h-4 w-4 mr-2" />
