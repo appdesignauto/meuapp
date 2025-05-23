@@ -2212,34 +2212,19 @@ const CommunityPage: React.FC = () => {
                                 </div>
                               )}
                               
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                                  <span className="flex items-center gap-1">
-                                    <Heart className="h-4 w-4" />
-                                    {post.likesCount || 0}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <MessageCircle className="h-4 w-4" />
-                                    {post.commentsCount || 0}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Share2 className="h-4 w-4" />
-                                    {post.sharesCount || 0}
-                                  </span>
-                                </div>
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2"
-                                  onClick={() => {
-                                    setSelectedPostId(post.id);
-                                    setIsPostViewOpen(true);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  Ver Detalhes
-                                </Button>
+                              <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                                <span className="flex items-center gap-1">
+                                  <Heart className="h-4 w-4" />
+                                  {post.likesCount || 0}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MessageCircle className="h-4 w-4" />
+                                  {post.commentsCount || 0}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Share2 className="h-4 w-4" />
+                                  {post.sharesCount || 0}
+                                </span>
                               </div>
                             </CardContent>
                           </Card>
