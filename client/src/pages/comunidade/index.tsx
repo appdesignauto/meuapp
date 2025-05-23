@@ -2146,40 +2146,18 @@ const CommunityPage: React.FC = () => {
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    {post.user?.profileimageurl ? (
-                                      <img
-                                        src={post.user.profileimageurl}
-                                        alt={post.user?.name || post.user?.username}
-                                        className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
-                                        onError={(e) => {
-                                          const target = e.target as HTMLImageElement;
-                                          target.style.display = 'none';
-                                          const parent = target.parentElement;
-                                          if (parent) {
-                                            const initials = (post.user?.name || post.user?.username || 'U')
-                                              .split(' ')
-                                              .map(word => word.charAt(0).toUpperCase())
-                                              .slice(0, 2)
-                                              .join('');
-                                            parent.innerHTML = `
-                                              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm border border-zinc-200 dark:border-zinc-700">
-                                                ${initials}
-                                              </div>
-                                            `;
-                                          }
-                                        }}
-                                      />
-                                    ) : (
-                                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm border border-zinc-200 dark:border-zinc-700">
-                                        {(post.user?.name || post.user?.username || 'U')
-                                          .split(' ')
-                                          .map(word => word.charAt(0).toUpperCase())
-                                          .slice(0, 2)
-                                          .join('')}
-                                      </div>
-                                    )}
-                                  </div>
+                                  <UserAvatar 
+                                    user={{
+                                      id: post.user?.id || 0,
+                                      username: post.user?.username || '',
+                                      name: post.user?.name,
+                                      profileimageurl: post.user?.profileimageurl,
+                                      nivelacesso: post.user?.nivelacesso || 'free',
+                                      role: post.user?.role
+                                    }} 
+                                    size="md" 
+                                    linkToProfile={false} 
+                                  />
                                   <div>
                                     <p className="font-medium text-sm">
                                       {post.user?.name || post.user?.username}
