@@ -3070,72 +3070,28 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
   }
 });
 
-// ENDPOINT DEFINITIVO PARA MEUS POSTS - FUNCIONANDO 100%
-router.get('/my-posts/:userId', async (req: any, res: any) => {
-  console.log(`[MEUS POSTS DEFINITIVO] =================== INÍCIO ===================`);
-  console.log(`[MEUS POSTS DEFINITIVO] Rota acessada: /my-posts/${req.params.userId}`);
-  
+router.get('/my-posts/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId não informado' });
+  }
+
   try {
-    const { userId } = req.params;
-    console.log(`[MEUS POSTS DEFINITIVO] UserID recebido: ${userId} (tipo: ${typeof userId})`);
+    const { pool } = await import('../db');
     
-    // Importar dependências necessárias
-    const { db } = await import('../db');
-    const { communityPosts } = await import('../../shared/schema');
-    const { eq, desc } = await import('drizzle-orm');
+    const posts = await pool.query(`
+      SELECT * FROM "communityPosts" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC
+    `, [userId]);
+
+    console.log(`[MEUS POSTS] Encontrados ${posts.rows.length} posts para usuário ${userId}`);
     
-    console.log(`[MEUS POSTS DEFINITIVO] Dependências importadas com sucesso`);
-    
-    // Buscar posts usando Drizzle ORM
-    const posts = await db
-      .select()
-      .from(communityPosts)
-      .where(eq(communityPosts.userId, parseInt(userId)))
-      .orderBy(desc(communityPosts.createdAt))
-      .limit(20);
-    
-    console.log(`[MEUS POSTS DEFINITIVO] Query executada! Encontrados ${posts.length} posts`);
-    
-    if (posts.length === 0) {
-      console.log(`[MEUS POSTS DEFINITIVO] Nenhum post encontrado, retornando array vazio`);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json([]);
-    }
-    
-    const formattedPosts = posts.map(post => ({
-      post: {
-        id: post.id,
-        title: post.title,
-        content: post.content || '',
-        imageUrl: post.imageUrl || null,
-        status: post.status,
-        createdAt: post.createdAt,
-        viewCount: post.viewCount || 0,
-        formattedDate: new Date(post.createdAt).toLocaleDateString('pt-BR')
-      },
-      user: {
-        username: 'admin',
-        name: 'Design Auto'
-      }
-    }));
-    
-    console.log(`[MEUS POSTS DEFINITIVO] SUCESSO! Retornando ${formattedPosts.length} posts formatados`);
-    console.log(`[MEUS POSTS DEFINITIVO] Títulos:`, formattedPosts.map(p => p.post.title));
-    
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json(formattedPosts);
-    
-  } catch (error) {
-    console.error('[MEUS POSTS DEFINITIVO] ================== ERRO FATAL ==================');
-    console.error('[MEUS POSTS DEFINITIVO] Detalhes do erro:', error);
-    console.error('[MEUS POSTS DEFINITIVO] Stack trace:', error instanceof Error ? error.stack : 'N/A');
-    
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ 
-      message: 'Erro interno do servidor', 
-      error: error instanceof Error ? error.message : String(error),
-      timestamp: new Date().toISOString()
-    });
+    res.json(posts.rows);
+  } catch (err) {
+    console.error('Erro ao buscar posts:', err);
+    res.status(500).json({ error: 'Erro ao buscar posts' });
   }
 });
 
