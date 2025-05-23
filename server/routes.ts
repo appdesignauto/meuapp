@@ -675,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { pool } = await import('./db');
       
-      // Query para buscar posts com dados completos do usuário, curtidas e comentários
+      // Query com posts, dados do usuário, curtidas e comentários
       const posts = await pool.query(`
         SELECT 
           cp.*,
@@ -690,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN "users" u ON cp."userId" = u.id
         LEFT JOIN (
           SELECT "postId", COUNT(*) as total 
-          FROM "communityPostLikes" 
+          FROM "communityLikes" 
           GROUP BY "postId"
         ) likes_count ON cp.id = likes_count."postId"
         LEFT JOIN (
