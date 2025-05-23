@@ -3109,7 +3109,10 @@ router.get('/my-posts/:userId', async (req: any, res: any) => {
     }));
     
     console.log(`[MEUS POSTS FUNCIONAL] Retornando ${posts.length} posts`);
-    return res.json(posts);
+    console.log(`[MEUS POSTS FUNCIONAL] Primeiro post:`, JSON.stringify(posts[0], null, 2));
+    
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).json(posts);
     
   } catch (error) {
     console.error('[MEUS POSTS FUNCIONAL] ERRO:', error);
