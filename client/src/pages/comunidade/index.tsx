@@ -8,9 +8,11 @@ import {
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
   Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star,
   PlusCircle, Bookmark, Check, CheckCircle2, ThumbsUp as ThumbsUpIcon,
-  AlertCircle, CheckCircle, Share2, Eye, FileText
+  AlertCircle, CheckCircle, Share2, Eye, FileText, Flame
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 import TopBar from '@/components/TopBar';
 import FooterMenu from '@/components/FooterMenu';
@@ -69,6 +71,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { Pagination } from '@/components/ui/pagination';
+
+// Importar o novo componente MyPosts
+import { MyPosts } from './MyPosts';
 
 // Interface para usuário
 interface User {
@@ -1136,48 +1142,15 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
 
-  // Query NOVA e FUNCIONAL para buscar os posts do usuário logado
-  const {
-    data: userPosts,
-    isLoading: userPostsLoading,
-    error: userPostsError,
-    refetch: refetchUserPosts
-  } = useQuery({
-    queryKey: ['/api/community/my-posts', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      console.log(`[FRONTEND] Buscando posts para usuário ${user.id}`);
-      
-      try {
-        const response = await fetch(`/api/community/my-posts/${user.id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log(`[FRONTEND] Resposta do servidor: ${response.status}`);
-        
-        if (!response.ok) {
-          console.error(`[FRONTEND] Erro na resposta: ${response.status} ${response.statusText}`);
-          throw new Error(`Erro ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log(`[FRONTEND] Dados recebidos:`, data);
-        
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.error('[FRONTEND] Erro ao buscar posts do usuário:', error);
-        throw error;
-      }
-    },
-    enabled: !!user && activeTab === 'meus-posts',
-    refetchOnWindowFocus: false,
-    retry: 3,
-    retryDelay: 1000
-  });
+  // Remover a query de meus posts
+  // const { data: userPosts, ... } = useQuery({ ... }); // removido
+
+  // Remover a tab de meus posts do array de tabs
+  const tabs = [
+    { id: 'feed', label: 'Feed' },
+    { id: 'populares', label: 'Populares' },
+    { id: 'meus-posts', label: 'Meus Posts' }
+  ];
   
   // Efeito para adicionar novos posts ao array de posts existentes
   useEffect(() => {
@@ -1571,6 +1544,37 @@ const CommunityPage: React.FC = () => {
     retry: 2
   });
   
+  // Adicionar novo estado para Meus Posts
+  const [myPosts, setMyPosts] = useState<CommunityPost[]>([]);
+  const [isLoadingMyPosts, setIsLoadingMyPosts] = useState(false);
+  const [myPostsPage, setMyPostsPage] = useState(1);
+  const [myPostsTotalPages, setMyPostsTotalPages] = useState(1);
+
+  // Adicionar função para buscar meus posts
+  const fetchMyPosts = async (page = 1) => {
+    if (!user) return;
+    
+    setIsLoadingMyPosts(true);
+    try {
+      const response = await axios.get(`/api/community/my-posts?page=${page}&limit=10`);
+      setMyPosts(response.data.posts);
+      setMyPostsTotalPages(response.data.totalPages);
+      setMyPostsPage(page);
+    } catch (error) {
+      console.error('Erro ao buscar meus posts:', error);
+      toast.error('Erro ao carregar seus posts');
+    } finally {
+      setIsLoadingMyPosts(false);
+    }
+  };
+
+  // Adicionar useEffect para carregar meus posts quando a tab mudar
+  useEffect(() => {
+    if (activeTab === 'meus-posts' && user) {
+      fetchMyPosts();
+    }
+  }, [activeTab, user]);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 pb-16 md:pb-0">
       <TopBar title="Comunidade">
@@ -1786,20 +1790,47 @@ const CommunityPage: React.FC = () => {
                     </div>
                     
                     {/* Meus Posts - Nova seção */}
-                    {user && (
-                      <div 
-                        className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                        onClick={() => {
-                          setActiveTab('meus-posts');
-                        }}
-                      >
-                        <div className="bg-blue-100 dark:bg-blue-900 w-10 h-10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-300">
-                          <User className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">Meus Posts</p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">Minhas publicações</p>
-                        </div>
+                    {activeTab === 'meus-posts' && (
+                      <div className="space-y-4">
+                        {isLoadingMyPosts ? (
+                          // Mostrar skeleton loader enquanto carrega
+                          Array.from({ length: 3 }).map((_, index) => (
+                            <PostCardSkeleton key={`skeleton-${index}`} />
+                          ))
+                        ) : myPosts.length > 0 ? (
+                          <>
+                            {myPosts.map((post) => (
+                              <PostCard
+                                key={post.id}
+                                post={post}
+                                refetch={() => fetchMyPosts(myPostsPage)}
+                                user={user}
+                              />
+                            ))}
+                            {/* Paginação para Meus Posts */}
+                            {myPostsTotalPages > 1 && (
+                              <div className="flex justify-center mt-4">
+                                <Pagination
+                                  currentPage={myPostsPage}
+                                  totalPages={myPostsTotalPages}
+                                  onPageChange={(page) => fetchMyPosts(page)}
+                                />
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-gray-500">
+                              Você ainda não fez nenhum post na comunidade.
+                            </p>
+                            <button
+                              onClick={() => setIsCreatePostOpen(true)}
+                              className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
+                            >
+                              Criar Primeiro Post
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1807,651 +1838,9 @@ const CommunityPage: React.FC = () => {
                       href="https://chat.whatsapp.com/GJoCJTnJNCBGQT3NvsmZ4R" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                      className="block"
                     >
-                      <div className="bg-emerald-100 dark:bg-emerald-900 w-10 h-10 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-300">
-                        <MessageCircle className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">Comunidade WhatsApp</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Participe do nosso grupo</p>
-                      </div>
-                    </a>
-                  </div>
-                  
-                  {user && (
-                    <Button 
-                      className="w-full gap-2"
-                      onClick={() => setIsCreatePostOpen(true)}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Criar Post
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-              
-              {/* Card de informações do sistema D.Auto */}
-              <Card className="overflow-hidden border border-zinc-100 dark:border-zinc-800">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Sobre o Sistema D.Auto</CardTitle>
-                </CardHeader>
-                
-                <CardContent className="space-y-3 text-sm">
-                  <p className="text-zinc-600 dark:text-zinc-300">
-                    O sistema D.Auto premia os criadores mais ativos da comunidade com base em pontos ganhos por
-                    contribuições, curtidas e destaques recebidos.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <h5 className="text-sm font-medium">Como Ganhar Pontos:</h5>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1 text-xs">
-                        <PlusCircle className="h-3 w-3 text-green-500" /> <span className="font-medium">Arte Aprovada:</span> <span className="text-zinc-500">5 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <ThumbsUp className="h-3 w-3 text-blue-500" /> <span className="font-medium">Curtida Recebida:</span> <span className="text-zinc-500">1 ponto</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Bookmark className="h-3 w-3 text-amber-500" /> <span className="font-medium">Salvamento:</span> <span className="text-zinc-500">2 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Star className="h-3 w-3 text-yellow-500" /> <span className="font-medium">Post em Destaque:</span> <span className="text-zinc-500">5 pontos extras</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h5 className="text-sm font-medium">Níveis e Pontos:</h5>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1 text-xs">
-                        <User className="h-3 w-3 text-amber-800" /> <span className="font-medium">Membro D.Auto:</span> <span className="text-zinc-500">0-199 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <User className="h-3 w-3 text-green-500" /> <span className="font-medium">Voluntário D.Auto:</span> <span className="text-zinc-500">200-699 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Award className="h-3 w-3 text-blue-500" /> <span className="font-medium">Cooperador D.Auto:</span> <span className="text-zinc-500">700-1.499 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Medal className="h-3 w-3 text-purple-600" /> <span className="font-medium">Destaque D.Auto:</span> <span className="text-zinc-500">1.500-2.999 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Trophy className="h-3 w-3 text-orange-500" /> <span className="font-medium">Referência D.Auto:</span> <span className="text-zinc-500">3.000-4.999 pontos</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Sparkles className="h-3 w-3 text-red-600" /> <span className="font-medium">Pro D.Auto:</span> <span className="text-zinc-500">5.000+ pontos</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Badge variant="outline" className="mt-2 text-xs py-0 px-2 h-6 gap-1">
-                    <Trophy className="h-3 w-3 text-yellow-500" />
-                    Premiação mensal
-                  </Badge>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-          
-          {/* Área principal de conteúdo - feed central (estilo Instagram) */}
-          <div className="w-full md:w-[470px] flex-shrink-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-6 px-4 md:px-0">
-                <TabsTrigger value="posts">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Posts
-                </TabsTrigger>
-                <TabsTrigger value="ranking">
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Ranking
-                </TabsTrigger>
-              </TabsList>
-              
-              {/* Tab de Posts */}
-              <TabsContent value="posts" className="space-y-0 px-4 md:px-0">
-                {/* Botão de atualização para mostrar posts mais recentes */}
-                <div className="mb-3 flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <h2 className="text-lg font-semibold">Posts Recentes</h2>
-                    </div>
-                    {!communityStatsLoading && communityStats && (
-                      <Badge 
-                        variant="outline" 
-                        className="bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs py-0.5 h-5 px-2 flex items-center gap-1.5"
-                      >
-                        <MessageSquare className="h-3 w-3 text-zinc-400" />
-                        <span>{communityStats.totalPosts} posts</span>
-                      </Badge>
-                    )}
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleRefreshPosts}
-                    className="gap-1"
-                  >
-                    <RefreshCw id="refresh-posts-icon" className="h-3.5 w-3.5" />
-                    Atualizar
-                  </Button>
-                </div>
-                
-                {/* Caixa de criação de post - estilo Facebook (visível apenas em desktop) */}
-                {user && (
-                  <Card className="mb-6 overflow-hidden border border-zinc-100 dark:border-zinc-800 hidden md:block">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar user={user} size="sm" />
-                        <button 
-                          className="flex-1 text-left p-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-full cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-                          onClick={() => setIsCreatePostOpen(true)}
-                        >
-                          Já compartilhou sua arte hoje?
-                        </button>
-                      </div>
-                      <Separator className="my-3" />
-                      <div className="flex justify-around">
-                        <button 
-                          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
-                          onClick={() => setIsCreatePostOpen(true)}
-                        >
-                          <ImageIcon className="h-5 w-5 text-green-500" />
-                          <span className="text-sm font-medium">Foto</span>
-                        </button>
-                        <button 
-                          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
-                          onClick={() => setIsCreatePostOpen(true)}
-                        >
-                          <ExternalLink className="h-5 w-5 text-blue-500" />
-                          <span className="text-sm font-medium">Link</span>
-                        </button>
-                        <button 
-                          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
-                          onClick={() => setIsCreatePostOpen(true)}
-                        >
-                          <FileEdit className="h-5 w-5 text-purple-500" />
-                          <span className="text-sm font-medium">Arte</span>
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {postsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <PostCardSkeleton key={i} />
-                    ))}
-                  </div>
-                ) : postsError ? (
-                  <ErrorContainer 
-                    title="Erro ao carregar posts" 
-                    description="Não foi possível carregar os posts da comunidade."
-                    onAction={() => refetchPosts()}
-                  />
-                ) : allPosts.length > 0 ? (
-                  <div className="space-y-4 mx-[-16px] sm:mx-0">
-                    {allPosts.map((item) => {
-                      // Mapear a estrutura da API para o formato esperado pelo PostCard
-                      // Calcular a data formatada aqui, apenas uma vez
-                      // Usar a data pré-formatada se disponível, caso contrário, calcular
-                      const formattedDate = item.post.formattedDate || `há ${formatRelativeTime(item.post.createdAt)}`;
-                      
-                      const formattedPost: CommunityPost = {
-                        id: item.post.id,
-                        title: item.post.title,
-                        content: item.post.content,
-                        imageUrl: item.post.imageUrl,
-                        createdAt: item.post.createdAt,
-                        likesCount: item.likesCount || 0,
-                        commentsCount: item.commentsCount || 0,
-                        sharesCount: 0,
-                        isApproved: item.post.status === 'approved',
-                        userId: item.post.userId,
-                        isLikedByUser: item.isLikedByUser || item.userHasLiked || false,
-                        isPinned: item.post.isPinned === true, // Forçar conversão para boolean
-                        editLink: item.post.editLink || '',
-                        user: item.user,
-                        formattedDate: formattedDate // Armazenar a data já formatada
-                      };
-                      return <PostCard 
-                        key={item.post.id}
-                        id={`post-item-${item.post.id}`}
-                        post={formattedPost} 
-                        refetch={handleRefreshPosts} 
-                        refetchPopularPosts={refetchPopularPosts}
-                        setSelectedPostId={setSelectedPostId}
-                        setIsPostViewOpen={setIsPostViewOpen}
-                      />;
-                    })}
-                    
-                    {/* Elemento observador para carregar mais quando o usuário rolar até aqui */}
-                    {hasMorePosts && (
-                      <div 
-                        ref={loaderRef} 
-                        className="py-4 flex justify-center"
-                      >
-                        {isLoadingMore && (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                            <p className="text-sm text-zinc-500">Carregando mais posts...</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-10">
-                    <User className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
-                    <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                      Nenhum post disponível
-                    </h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 mb-4 max-w-md mx-auto">
-                      Não há posts publicados na comunidade no momento. Seja o primeiro a compartilhar uma criação!
-                    </p>
-                    {user && (
-                      <Button onClick={() => setIsCreatePostOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar Post
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-              
-              {/* Tab de Ranking */}
-              <TabsContent value="ranking" className="space-y-4 px-4 md:px-0">
-                {/* Seção de Vencedores Mensais */}
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-4">Premiação mensal D.Auto</h2>
-                  <MonthlyWinners />
-                </div>
-                
-                {/* Ranking completo */}
-                <div id="ranking-completo" className="mt-8">
-                  <h2 className="text-lg font-semibold mb-4">Ranking completo</h2>
-                  <RankingList 
-                    initialPeriod="month"
-                    showPeriodSelector
-                  />
-                </div>
-              </TabsContent>
-
-              {/* Tab de Meus Posts */}
-              {user && (
-                <TabsContent value="meus-posts" className="space-y-4 px-4 md:px-0">
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">Meus Posts</h2>
-                      <Button 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={() => setIsCreatePostOpen(true)}
-                      >
-                        <Plus className="h-4 w-4" />
-                        Novo Post
-                      </Button>
-                    </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                      Todos os seus posts publicados e pendentes de aprovação
-                    </p>
-                  </div>
-
-                  {userPostsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <Card key={i} className="border border-zinc-100 dark:border-zinc-800">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center gap-3">
-                              <Skeleton className="w-10 h-10 rounded-full" />
-                              <div className="flex-1">
-                                <Skeleton className="h-4 w-32 mb-1" />
-                                <Skeleton className="h-3 w-24" />
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <Skeleton className="h-4 w-full mb-2" />
-                            <Skeleton className="h-4 w-3/4 mb-4" />
-                            <Skeleton className="h-32 w-full rounded-md" />
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : userPostsError ? (
-                    <div className="text-center py-10">
-                      <AlertCircle className="h-12 w-12 mx-auto text-red-300 mb-3" />
-                      <h3 className="text-lg font-semibold text-red-600 mb-1">
-                        Erro ao carregar posts
-                      </h3>
-                      <p className="text-red-500 mb-4">
-                        {userPostsError.message || 'Ocorreu um erro ao carregar seus posts'}
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => refetchUserPosts()}
-                        className="gap-2"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                        Tentar Novamente
-                      </Button>
-                    </div>
-                  ) : userPosts && userPosts.length > 0 ? (
-                    <div className="space-y-6">
-                      {userPosts.map((postData: any) => {
-                        const post = postData.post || postData;
-                        return (
-                          <Card key={post.id} className="border border-zinc-100 dark:border-zinc-800">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <img
-                                      src={post.user?.profileimageurl || '/default-avatar.png'}
-                                      alt={post.user?.name || post.user?.username}
-                                      className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = '/default-avatar.png';
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {post.user?.name || post.user?.username}
-                                    </p>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                      {post.formattedDate || formatRelativeTime(post.createdAt)}
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                {/* Status do post */}
-                                <div className="flex items-center gap-2">
-                                  {post.isApproved ? (
-                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <CheckCircle className="h-3 w-3" />
-                                      Aprovado
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      Pendente
-                                    </span>
-                                  )}
-                                  
-                                  {post.isPinned && (
-                                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full flex items-center gap-1">
-                                      <Pin className="h-3 w-3" />
-                                      Fixado
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </CardHeader>
-                            
-                            <CardContent>
-                              <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
-                              <p className="text-zinc-700 dark:text-zinc-300 mb-4 line-clamp-3">
-                                {post.content}
-                              </p>
-                              
-                              {post.imageUrl && (
-                                <div className="mb-4">
-                                  <img
-                                    src={post.imageUrl}
-                                    alt={post.title}
-                                    className="w-full h-64 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                                  <span className="flex items-center gap-1">
-                                    <Heart className="h-4 w-4" />
-                                    {post.likesCount || 0}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <MessageCircle className="h-4 w-4" />
-                                    {post.commentsCount || 0}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Share2 className="h-4 w-4" />
-                                    {post.sharesCount || 0}
-                                  </span>
-                                </div>
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2"
-                                  onClick={() => {
-                                    setSelectedPostId(post.id);
-                                    setIsPostViewOpen(true);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  Ver Detalhes
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-10">
-                      <FileText className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
-                      <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                        Nenhum post criado
-                      </h3>
-                      <p className="text-zinc-500 dark:text-zinc-400 mb-4 max-w-md mx-auto">
-                        Você ainda não criou nenhum post na comunidade. Compartilhe suas criações e ideias!
-                      </p>
-                      <Button 
-                        onClick={() => setIsCreatePostOpen(true)}
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Criar Primeiro Post
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-              )}
-            </Tabs>
-          </div>
-          
-          {/* Coluna Direita - Conteúdo adicional similar ao Facebook/Instagram */}
-          <div className="hidden md:block w-full md:w-72 lg:w-80 shrink-0">
-            <div className="sticky top-20">
-              {/* Card de usuários populares */}
-              <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Membros em Destaque</CardTitle>
-                  <CardDescription>Criadores populares para seguir</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="p-0">
-                  {/* Lista de designers populares */}
-                  {popularDesignersLoading ? (
-                    // Estado de loading
-                    <>
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
-                          <Skeleton className="w-10 h-10 rounded-full" />
-                          <div className="flex-1">
-                            <Skeleton className="h-4 w-24 mb-1" />
-                            <Skeleton className="h-3 w-32" />
-                          </div>
-                          <Skeleton className="h-8 w-16" />
-                        </div>
-                      ))}
-                    </>
-                  ) : popularDesignersError ? (
-                    // Estado de erro
-                    <div className="p-4 text-center">
-                      <Info className="h-8 w-8 mx-auto text-red-500 mb-2" />
-                      <p className="text-sm font-medium text-red-500">Erro ao carregar designers</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => {
-                          refetchPopularDesigners();
-                          // Adiciona classe de animação ao ícone
-                          const refreshIcon = document.getElementById('refresh-designers-icon');
-                          if (refreshIcon) {
-                            refreshIcon.classList.add('animate-spin');
-                            setTimeout(() => {
-                              refreshIcon.classList.remove('animate-spin');
-                            }, 1000);
-                          }
-                        }}
-                      >
-                        <RefreshCw id="refresh-designers-icon" className="h-3.5 w-3.5 mr-1.5" />
-                        Tentar novamente
-                      </Button>
-                    </div>
-                  ) : !popularDesignersData?.designers || popularDesignersData.designers.length === 0 ? (
-                    // Estado vazio
-                    <div className="p-4 text-center">
-                      <Users className="h-8 w-8 mx-auto text-zinc-300 dark:text-zinc-600 mb-2" />
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Nenhum designer encontrado</p>
-                    </div>
-                  ) : (
-                    // Designers populares carregados com sucesso
-                    <>
-                      {popularDesignersData.designers.slice(0, 5).map((designer) => (
-                        <div key={designer.id} className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
-                          <UserAvatar 
-                            user={{
-                              id: designer.id,
-                              username: designer.username,
-                              name: designer.name,
-                              profileimageurl: designer.profileimageurl,
-                              nivelacesso: designer.nivelacesso,
-                              role: designer.role || undefined
-                            }} 
-                            size="sm" 
-                            linkToProfile={true} 
-                          />
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{designer.name || designer.username}</p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {designer.followersCount} {designer.followersCount === 1 ? 'seguidor' : 'seguidores'} • {designer.postsCount} {designer.postsCount === 1 ? 'post' : 'posts'}
-                            </p>
-                          </div>
-                          <FollowButton 
-                            designerId={designer.id}
-                            isFollowing={designer.isFollowing}
-                            size="sm" 
-                            variant="outline" 
-                            compact={true}
-                            onFollowChange={() => refetchPopularDesigners()}
-                          />
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-              
-              {/* Card de posts populares */}
-              <Card id="popular-posts-section" className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-lg">Posts Populares</CardTitle>
-                      <CardDescription>Conteúdo mais engajado</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4 p-4">
-                  {popularPostsLoading ? (
-                    // Skeleton loading state
-                    <>
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <Skeleton className="w-16 h-16 rounded-md shrink-0" />
-                          <div className="flex-1">
-                            <Skeleton className="h-4 w-full mb-2" />
-                            <Skeleton className="h-3 w-24" />
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  ) : popularPostsError ? (
-                    // Erro ao carregar
-                    <div className="text-center py-4">
-                      <XCircle className="h-8 w-8 mx-auto text-red-500 mb-2" />
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Erro ao carregar posts populares
-                      </p>
-                    </div>
-                  ) : !popularPosts || popularPosts.length === 0 ? (
-                    // Nenhum post encontrado
-                    <div className="text-center py-4">
-                      <FileQuestion className="h-8 w-8 mx-auto text-zinc-400 mb-2" />
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Nenhum post popular disponível
-                      </p>
-                    </div>
-                  ) : (
-                    // Lista de posts populares
-                    <>
-                      {Array.isArray(popularPosts) && popularPosts.map((item: any) => {
-                        // Verificar se o objeto e suas propriedades existem antes de renderizar
-                        if (!item || !item.post) {
-                          console.log('Item de post popular inválido:', item);
-                          return null;
-                        }
-                        
-                        const postId = item.post?.id || 0;
-                        const imageUrl = item.post?.imageUrl || '';
-                        const title = item.post?.title || 'Post sem título';
-                        const likes = item.likesCount || 0;
-                        const comments = item.commentsCount || 0;
-                        const postUserId = item.user?.id;
-                        const isFollowing = item.user?.isFollowing || false;
-                        // Pré-calcular a data formatada para evitar problemas de atualização
-                        // Usar a data pré-formatada se disponível, caso contrário, calcular
-                        const formattedDate = item.post?.formattedDate || `há ${formatRelativeTime(item.post?.createdAt)}`;
-                        
-                        return (
-                          <div 
-                            key={postId} 
-                            onClick={() => {
-                              setSelectedPostId(postId);
-                              setIsPostViewOpen(true);
-                            }}
-                            className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors cursor-pointer"
-                          >
-                            <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                              {imageUrl ? (
-                                <img 
-                                  src={imageUrl} 
-                                  alt={title} 
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                                  <ImageIcon className="h-8 w-8" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1">
+                      <div className="flex-1">
                               <p className="font-medium text-sm line-clamp-2">
                                 {title}
                               </p>
@@ -2464,7 +1853,7 @@ const CommunityPage: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                          </div>
+                    </a>
                         );
                       })}
                     </>
