@@ -442,6 +442,19 @@ app.use((req, res, next) => {
     res.status(200).json({ status: 'ok', uptime: process.uptime() });
   });
 
+  // Diagnóstico completo para identificar problemas em produção
+  app.get('/diagnostic', (req: Request, res: Response) => {
+    res.status(200).json({
+      environment: process.env.NODE_ENV,
+      port: process.env.PORT,
+      database_connected: !!process.env.DATABASE_URL,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.version
+    });
+  });
+
   // Rota simples para produção - sempre funciona
   app.get('/', (req: Request, res: Response) => {
     res.status(200).json({ 
