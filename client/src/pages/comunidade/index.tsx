@@ -1136,44 +1136,40 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
 
-  // Query ISOLADA E DEFINITIVA para buscar os posts do usuário logado
+  // Query NOVA e FUNCIONAL para buscar os posts do usuário logado
   const {
     data: userPosts,
     isLoading: userPostsLoading,
     error: userPostsError,
     refetch: refetchUserPosts
   } = useQuery({
-    queryKey: ['/api/my-posts-data', user?.id],
+    queryKey: ['/api/community/my-posts', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`✨ [FRONTEND ISOLADO] Buscando posts na rota isolada para usuário ${user.id}`);
+      console.log(`[FRONTEND] Buscando posts para usuário ${user.id}`);
       
       try {
-        const response = await fetch(`/api/my-posts-data/${user.id}`, {
+        const response = await fetch(`/api/community/my-posts/${user.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
           }
         });
         
-        console.log(`✨ [FRONTEND ISOLADO] Resposta da rota isolada: ${response.status}`);
+        console.log(`[FRONTEND] Resposta do servidor: ${response.status}`);
         
         if (!response.ok) {
-          console.error(`✨ [FRONTEND ISOLADO] Erro na rota isolada: ${response.status} ${response.statusText}`);
+          console.error(`[FRONTEND] Erro na resposta: ${response.status} ${response.statusText}`);
           throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log(`✨ [FRONTEND ISOLADO] Dados da rota isolada:`, data);
-        console.log(`✨ [FRONTEND ISOLADO] Avatar:`, data[0]?.user?.profileimageurl);
-        console.log(`✨ [FRONTEND ISOLADO] Curtidas:`, data[0]?.likesCount);
-        console.log(`✨ [FRONTEND ISOLADO] Comentários:`, data[0]?.commentsCount);
-        console.log(`✨ [FRONTEND ISOLADO] Status:`, data[0]?.status);
+        console.log(`[FRONTEND] Dados recebidos:`, data);
         
         return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error('✨ [FRONTEND ISOLADO] Erro na rota isolada:', error);
+        console.error('[FRONTEND] Erro ao buscar posts do usuário:', error);
         throw error;
       }
     },
@@ -1901,14 +1897,10 @@ const CommunityPage: React.FC = () => {
           {/* Área principal de conteúdo - feed central (estilo Instagram) */}
           <div className="w-full md:w-[470px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6 px-4 md:px-0">
+              <TabsList className="grid grid-cols-2 mb-6 px-4 md:px-0">
                 <TabsTrigger value="posts">
                   <Filter className="h-4 w-4 mr-2" />
                   Posts
-                </TabsTrigger>
-                <TabsTrigger value="meus-posts">
-                  <User className="h-4 w-4 mr-2" />
-                  Meus Posts
                 </TabsTrigger>
                 <TabsTrigger value="ranking">
                   <Trophy className="h-4 w-4 mr-2" />

@@ -7,7 +7,6 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
-import myPostsDefinitiveRouter from './routes/my-posts-definitive';
 // Importar o novo manipulador de webhook aprimorado
 import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
@@ -227,95 +226,6 @@ app.use((req, res, next) => {
     const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
     console.log(`Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
     
-    // 🎯 ROTA DEFINITIVA PARA MEUS POSTS - REGISTRADA ANTES DE QUALQUER FALLBACK
-    console.log("🚀 Registrando rota definitiva para Meus Posts...");
-    
-    app.get('/api/my-posts-data/:userId', async (req, res) => {
-      console.log(`✨ [ROTA DEFINITIVA] Buscando posts para usuário ${req.params.userId}`);
-      
-      try {
-        const userId = parseInt(req.params.userId);
-        if (!userId) {
-          return res.status(400).json({ error: 'ID de usuário inválido' });
-        }
-
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-        
-        // Query SQL otimizada com todos os dados necessários
-        const result = await pool.query(`
-          SELECT 
-            cp.id,
-            cp.title,
-            cp.content,
-            cp.imageUrl,
-            cp.status,
-            cp.createdAt,
-            cp.updatedAt,
-            cp.views,
-            cp.editLink,
-            cp.isPinned,
-            u.id as userId,
-            u.name as userName,
-            u.username,
-            u.profileimageurl,
-            COALESCE(like_counts.total, 0) as likesCount,
-            COALESCE(comment_counts.total, 0) as commentsCount
-          FROM "communityPosts" cp
-          LEFT JOIN users u ON cp.userId = u.id
-          LEFT JOIN (
-            SELECT postId, COUNT(*) as total 
-            FROM "communityLikes" 
-            GROUP BY postId
-          ) like_counts ON cp.id = like_counts.postId
-          LEFT JOIN (
-            SELECT postId, COUNT(*) as total 
-            FROM "communityComments" 
-            GROUP BY postId
-          ) comment_counts ON cp.id = comment_counts.postId
-          WHERE cp.userId = $1
-          ORDER BY cp.createdAt DESC
-        `, [userId]);
-
-        // Formatar dados para o frontend
-        const posts = result.rows.map(row => ({
-          id: row.id,
-          title: row.title,
-          content: row.content,
-          imageUrl: row.imageurl,
-          status: row.status === 'pending' ? 'Pendente' : 'Aprovado',
-          createdAt: row.createdat,
-          updatedAt: row.updatedat,
-          views: row.views || 0,
-          editLink: row.editlink,
-          isPinned: row.ispinned || false,
-          likesCount: parseInt(row.likescount) || 0,
-          commentsCount: parseInt(row.commentscount) || 0,
-          user: {
-            id: row.userid,
-            name: row.username,
-            username: row.username,
-            profileimageurl: row.profileimageurl
-          }
-        }));
-
-        console.log(`✨ [ROTA DEFINITIVA] Retornando ${posts.length} posts`);
-        console.log(`✨ [ROTA DEFINITIVA] Primeiro post:`, posts[0] ? {
-          title: posts[0].title,
-          status: posts[0].status,
-          likes: posts[0].likesCount,
-          comments: posts[0].commentsCount
-        } : 'Nenhum post');
-
-        res.setHeader('Content-Type', 'application/json');
-        return res.json(posts);
-        
-      } catch (error) {
-        console.error('❌ [ROTA DEFINITIVA] Erro:', error);
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(500).json({ error: 'Erro interno do servidor' });
-      }
-    });
-
     // IMPORTANTE: Configurar rotas de webhook ANTES de qualquer fallback para o SPA
     // Isso garante que webhooks da Hotmart e Doppus sejam processados corretamente
     console.log("Configurando rotas de webhook dedicadas...");

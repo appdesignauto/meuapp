@@ -3000,7 +3000,7 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
     
     console.log(`[MEUS POSTS] INICIANDO busca para usuário ${userId}`);
     
-    // Query SQL com curtidas e comentários
+    // Query SQL direta e simples
     const posts = await db.execute(sql`
       SELECT 
         cp.id, 
@@ -3011,26 +3011,12 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
         cp.status, 
         cp."createdAt", 
         cp."viewCount",
-        cp."isPinned",
-        cp."isApproved",
         u.username,
         u.name,
         u.profileimageurl,
-        u.nivelacesso,
-        COALESCE(likes_count.total, 0) as likes_count,
-        COALESCE(comments_count.total, 0) as comments_count
+        u.nivelacesso
       FROM "communityPosts" cp
       LEFT JOIN users u ON cp."userId" = u.id
-      LEFT JOIN (
-        SELECT "postId", COUNT(*) as total 
-        FROM "communityPostLikes" 
-        GROUP BY "postId"
-      ) likes_count ON cp.id = likes_count."postId"
-      LEFT JOIN (
-        SELECT "postId", COUNT(*) as total 
-        FROM "communityComments" 
-        GROUP BY "postId"
-      ) comments_count ON cp.id = comments_count."postId"
       WHERE cp."userId" = ${userId}
       ORDER BY cp."createdAt" DESC
       LIMIT 20
@@ -3043,39 +3029,38 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
       return res.json([]);
     }
     
-    // Formatar os dados com curtidas e comentários
+    // Formatar os dados de forma simples
     const formattedPosts = posts.rows.map(row => ({
-      id: row.id,
-      userId: row.userId || 1,
-      title: row.title || 'Sem título',
-      content: row.content || '',
-      imageUrl: row.imageUrl || '',
-      editLink: row.editLink || '',
-      status: row.status || 'pending',
-      createdAt: new Date(row.createdAt).toISOString(),
-      isApproved: row.isApproved || row.status === 'approved',
-      isPinned: row.isPinned || false,
-      viewCount: Number(row.viewCount) || 0,
-      likesCount: parseInt(row.likes_count) || 0,
-      commentsCount: parseInt(row.comments_count) || 0,
+      post: {
+        id: row.id,
+        title: row.title || 'Sem título',
+        content: row.content || '',
+        imageUrl: row.imageUrl || '',
+        editLink: row.editLink || '',
+        status: row.status || 'pending',
+        createdAt: new Date(row.createdAt).toISOString(),
+        viewCount: Number(row.viewCount) || 0,
+        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
+      },
       user: {
-        id: row.userId || 1,
         username: row.username || 'usuário',
         name: row.name || 'Usuário',
         profileimageurl: row.profileimageurl,
         nivelacesso: row.nivelacesso || 'free'
       },
-      formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
+      engagement: {
+        likes: 0,
+        comments: 0,
+        saves: 0
+      }
     }));
     
     console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts formatados`);
-    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.title || 'N/A');
-    console.log(`[MEUS POSTS] Curtidas/Comentários:`, formattedPosts[0]?.likesCount, '/', formattedPosts[0]?.commentsCount);
-    console.log(`[MEUS POSTS] Avatar do usuário:`, formattedPosts[0]?.user?.profileimageurl);
+    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.post?.title || 'N/A');
     
     return res.json(formattedPosts);
     
@@ -3085,6 +3070,32 @@ router.get('/api/community/posts/user/:userId', async (req, res) => {
   }
 });
 
-// ENDPOINT DUPLICADO REMOVIDO - usando apenas o endpoint principal em routes.ts
+router.get('/my-posts/:userId', async (req, res) => {
+  console.log('🎯 [DEBUG] Endpoint /my-posts/:userId executado!');
+  console.log('🎯 [DEBUG] userId recebido:', req.params.userId);
+  
+  const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId não informado' });
+  }
+
+  try {
+    console.log('[MEUS POSTS] Buscando posts para usuário:', userId);
+    const { pool } = await import('../db');
+    
+    const posts = await pool.query(`
+      SELECT * FROM "communityPosts" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC
+    `, [userId]);
+
+    console.log('[MEUS POSTS] Encontrados', posts.rows.length, 'posts');
+    res.json(posts.rows);
+  } catch (error) {
+    console.error('[MEUS POSTS] Erro:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
 
 export default router;

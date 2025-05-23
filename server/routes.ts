@@ -48,7 +48,6 @@ import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 import dateTestRouter from './routes/date-test-routes';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
-import myPostsDefinitiveRouter from './routes/my-posts-definitive';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
@@ -663,10 +662,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar a rota para upload de favicon
   app.use('/api/site-settings/favicon', faviconUploadRouter);
   
-  // ENDPOINT DEFINITIVO MEUS POSTS - PRIORIDADE MÁXIMA (ANTES DE QUALQUER MIDDLEWARE)
-  app.get('/api/user-posts/:userId', async (req, res) => {
-    console.log('🚀 [DEFINITIVO] Novo endpoint user-posts executado!');
-    console.log('🚀 [DEFINITIVO] UserID:', req.params.userId);
+  // Registrar a rota para o manifest.json dinâmico do PWA
+  app.use(manifestRouter);
+  
+  // ENDPOINT MEUS POSTS - ANTES DO MIDDLEWARE appConfigRouter (PRIORIDADE MÁXIMA)
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log('🎯 [PRIORIDADE MÁXIMA] Endpoint my-posts executado!');
+    console.log('🎯 [PRIORIDADE MÁXIMA] UserID:', req.params.userId);
     
     const userId = req.params.userId;
     
@@ -700,13 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY cp."createdAt" DESC
       `, [userId]);
       
-      console.log('🚀 [DEFINITIVO] Encontrados', posts.rows.length, 'posts para usuário', userId);
-      console.log('🚀 [DADOS COMPLETOS] Primeiro post:', {
-        title: posts.rows[0]?.title,
-        likes: posts.rows[0]?.likes_count,
-        comments: posts.rows[0]?.comments_count,
-        avatar: posts.rows[0]?.profileimageurl
-      });
+      console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
       
       // Formatar os dados no formato esperado pelo frontend
       const formattedPosts = posts.rows.map(row => ({
@@ -716,16 +712,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: row.content,
         imageUrl: row.imageUrl,
         createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        status: row.status || 'approved',
-        isApproved: row.isApproved || row.status === 'approved',
-        isPinned: row.isPinned || false,
+        isApproved: row.isApproved,
+        isPinned: row.isPinned,
         editLink: row.editLink,
         viewCount: row.viewCount || 0,
         likesCount: parseInt(row.likes_count) || 0,
         commentsCount: parseInt(row.comments_count) || 0,
-        featuredUntil: row.featuredUntil,
-        isWeeklyFeatured: row.isWeeklyFeatured || false,
         user: {
           id: row.userId,
           username: row.username,
@@ -736,13 +728,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }));
       
-      console.log('🚀 [RESULTADO FINAL] Retornando', formattedPosts.length, 'posts formatados com dados completos');
-      
       res.setHeader('Content-Type', 'application/json');
       return res.status(200).json(formattedPosts);
       
     } catch (error) {
-      console.error('🚀 [DEFINITIVO] Erro:', error);
+      console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -6493,9 +6483,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // REGISTRAR ROTA ISOLADA PARA MEUS POSTS (PRIORIDADE MÁXIMA)
-  app.use('/api', myPostsDefinitiveRouter);
-  
   // Registrar rotas de teste do Supabase
   app.use(supabaseRegisterTestRouter);
   
@@ -7101,7 +7088,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
   
-  // ENDPOINT DUPLICADO REMOVIDO - usando apenas o endpoint completo da linha 669
+  // ENDPOINT MEUS POSTS - DIRETO NO SERVIDOR PRINCIPAL (SEMPRE EXECUTADO PRIMEIRO)
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log('🎯 [DEFINITIVO] Endpoint my-posts executado no servidor principal!');
+    console.log('🎯 [DEFINITIVO] UserID:', req.params.userId);
+    
+    const userId = req.params.userId;
+    
+    try {
+      const { pool } = await import('./db');
+      
+      const posts = await pool.query(`
+        SELECT * FROM "communityPosts" 
+        WHERE "userId" = $1 
+        ORDER BY "createdAt" DESC
+      `, [userId]);
+      
+      console.log('🎯 [DEFINITIVO] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(posts.rows);
+      
+    } catch (error) {
+      console.error('🎯 [DEFINITIVO] Erro:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
 
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
