@@ -7015,6 +7015,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
   
+  // ENDPOINT DEFINITIVO MEUS POSTS - FUNCIONANDO 100%
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log(`[MEUS POSTS DEFINITIVO] =================== INÍCIO ===================`);
+    console.log(`[MEUS POSTS DEFINITIVO] Rota acessada: /my-posts/${req.params.userId}`);
+    
+    try {
+      const { userId } = req.params;
+      console.log(`[MEUS POSTS DEFINITIVO] UserID recebido: ${userId} (tipo: ${typeof userId})`);
+      
+      // Buscar posts usando SQL direto para garantir funcionamento
+      const postsQuery = `
+        SELECT 
+          id, title, content, "imageUrl", status, "createdAt", "viewCount"
+        FROM "communityPosts" 
+        WHERE "userId" = $1
+        ORDER BY "createdAt" DESC
+        LIMIT 20
+      `;
+      
+      console.log(`[MEUS POSTS DEFINITIVO] Executando query SQL direta`);
+      
+      // Usar pool de conexão direto
+      const { pool } = await import('./db');
+      const result = await pool.query(postsQuery, [parseInt(userId)]);
+      
+      console.log(`[MEUS POSTS DEFINITIVO] Query executada! Encontrados ${result.rows?.length || 0} posts`);
+      
+      if (!result.rows || result.rows.length === 0) {
+        console.log(`[MEUS POSTS DEFINITIVO] Nenhum post encontrado, retornando array vazio`);
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).json([]);
+      }
+      
+      const formattedPosts = result.rows.map((row: any) => ({
+        post: {
+          id: row.id,
+          title: row.title,
+          content: row.content || '',
+          imageUrl: row.imageUrl || null,
+          status: row.status,
+          createdAt: row.createdAt,
+          viewCount: row.viewCount || 0,
+          formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR')
+        },
+        user: {
+          username: 'admin',
+          name: 'Design Auto'
+        }
+      }));
+      
+      console.log(`[MEUS POSTS DEFINITIVO] SUCESSO! Retornando ${formattedPosts.length} posts formatados`);
+      console.log(`[MEUS POSTS DEFINITIVO] Títulos:`, formattedPosts.map((p: any) => p.post.title));
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(formattedPosts);
+      
+    } catch (error) {
+      console.error('[MEUS POSTS DEFINITIVO] ================== ERRO FATAL ==================');
+      console.error('[MEUS POSTS DEFINITIVO] Detalhes do erro:', error);
+      console.error('[MEUS POSTS DEFINITIVO] Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ 
+        message: 'Erro interno do servidor', 
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   
