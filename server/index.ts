@@ -92,27 +92,21 @@ function findTransactionId(payload: any): string | null {
 
 const app = express();
 
-// ✅ HEALTH CHECK ROUTES - SOLUÇÃO DEFINITIVA!
-// Rota raiz SEMPRE retorna OK para deployment
+// ✅ HEALTH CHECK ROUTES - SOLUÇÃO DEFINITIVA PARA DEPLOYMENT!
 app.get('/', (req, res) => {
   res.status(200).send('OK');
 });
 
-// Rota de deploy dedicada
-app.get('/deploy-check', (req, res) => {
-  res.status(200).send('HEALTHY');
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
-// Rota adicional de health check com JSON
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    service: 'DesignAuto API',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    database: 'connected',
-    webhooks: 'active'
-  });
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
+app.get('/status', (req, res) => {
+  res.status(200).send('healthy');
 });
 
 // Rota específica para API health check
