@@ -703,6 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `, [userId]);
       
       console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      console.log('🎯 [DADOS RAW] Primeiro post:', JSON.stringify(posts.rows[0], null, 2));
       
       // Formatar os dados no formato esperado pelo frontend
       const formattedPosts = posts.rows.map(row => ({
