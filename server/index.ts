@@ -107,16 +107,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Simple root endpoint for health checks
-app.get('/', (req, res, next) => {
-  // If this is a health check request, respond immediately
-  if (req.headers['user-agent']?.includes('health') || 
-      req.headers['x-forwarded-for'] || 
-      req.query.health !== undefined) {
-    return res.status(200).json({ status: 'ok', service: 'DesignAuto' });
-  }
-  // Otherwise, continue to SPA routing
-  next();
+// Health check endpoint specifically for deployment health checks
+app.get('/health-check', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'DesignAuto' });
 });
 
 // Configuração para servir arquivos estáticos da pasta public
