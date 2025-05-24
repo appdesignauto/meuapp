@@ -98,7 +98,7 @@ configureCors(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Health check endpoint for deployment
+// Health check endpoints for deployment
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy', 
@@ -107,9 +107,32 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Health check endpoint specifically for deployment health checks
+// Root health check for deployment systems
 app.get('/health-check', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'DesignAuto' });
+});
+
+// Explicit endpoint that Replit deployment expects
+app.get('/', (req: Request, res: Response, next: NextFunction) => {
+  // Check if this is a deployment health check
+  const userAgent = req.get('User-Agent') || '';
+  const accept = req.get('Accept') || '';
+  
+  // If it's a health check request (usually from deployment systems)
+  if (userAgent.includes('curl') || 
+      userAgent.includes('health') || 
+      accept.includes('application/json') ||
+      req.query.ping !== undefined) {
+    return res.status(200).json({ 
+      status: 'ok', 
+      service: 'DesignAuto',
+      timestamp: new Date().toISOString(),
+      port: process.env.PORT || 5000
+    });
+  }
+  
+  // For browser requests, let the middleware handle it
+  next();
 });
 
 // Configuração para servir arquivos estáticos da pasta public
