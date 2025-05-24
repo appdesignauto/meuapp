@@ -494,20 +494,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // ✅ SOLUÇÃO DEFINITIVA: Health check antes do Vite/SPA
-  // Esta rota será processada ANTES do catch-all do SPA
-  app.get('/', (req, res, next) => {
-    // Detectar apenas requisições específicas de health check
-    const userAgent = req.get('User-Agent') || '';
-    const isHealthCheck = userAgent.includes('curl') || req.query.health !== undefined;
-    
-    if (isHealthCheck) {
-      return res.status(200).send('OK');
-    }
-    
-    // Para todos os outros casos (navegadores), continua para o SPA
-    next();
-  });
+  // ✅ HEALTH CHECK: Usando apenas rotas específicas, deixando / livre para o SPA
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
