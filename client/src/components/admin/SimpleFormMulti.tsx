@@ -793,6 +793,7 @@ export default function SimpleFormMulti({ isOpen, onClose }: SimpleFormMultiProp
             </div>
           )}
         </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
