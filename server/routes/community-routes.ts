@@ -100,7 +100,7 @@ router.get('/api/community/stats', async (req, res) => {
       WHERE status = 'approved'
     `);
     
-    const totalPosts = parseInt(result.rows[0]?.total_posts || '0');
+    const totalPosts = parseInt(String(result.rows[0]?.total_posts || '0'));
     
     // Buscar o total de usuários que já fizeram posts
     const usersResult = await db.execute(sql`
@@ -109,7 +109,7 @@ router.get('/api/community/stats', async (req, res) => {
       WHERE status = 'approved'
     `);
     
-    const totalCreators = parseInt(usersResult.rows[0]?.total_creators || '0');
+    const totalCreators = parseInt(String(usersResult.rows[0]?.total_creators || '0'));
     
     // Retornar estatísticas
     return res.json({
