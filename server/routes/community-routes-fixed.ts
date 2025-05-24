@@ -22,14 +22,47 @@ import { communityStorageService } from '../services/community-storage';
 
 const router = Router();
 
-// Função auxiliar para formatar datas
-function formatarDataCompleta(dateString: any): string {
+// Tipos para corrigir problemas de TypeScript
+interface DatabaseRow {
+  [key: string]: any;
+}
+
+interface UserData {
+  id: number;
+  username: string;
+  name: string;
+  profileimageurl?: string;
+  role?: string;
+  nivelacesso?: string;
+}
+
+interface PostData {
+  id: number;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  userId: number;
+  status: string;
+  createdAt: string | Date;
+  viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
+  isPinned?: boolean;
+  editLink?: string;
+}
+
+/**
+ * Função formatarDataCompleta
+ * Formata uma data no formato completo para exibição no frontend
+ */
+function formatarDataCompleta(dateString: string | Date | null | undefined): string {
   if (!dateString) return "Data não disponível";
   
   try {
-    const date = typeof dateString === 'string' ? new Date(dateString) : new Date(String(dateString));
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
     
     if (isNaN(date.getTime())) {
+      console.error("Data inválida:", dateString);
       return "Data não disponível";
     }
     
@@ -58,6 +91,7 @@ function formatarDataCompleta(dateString: any): string {
       }).format(date);
     }
   } catch (error) {
+    console.error("Erro ao formatar data:", error, "Data:", dateString);
     return "Data não disponível";
   }
 }
@@ -71,7 +105,7 @@ router.get('/api/community/stats', async (req: Request, res: Response) => {
       WHERE status = 'approved'
     `);
     
-    const totalPosts = Number((result.rows[0] as any)?.total_posts || 0);
+    const totalPosts = Number((result.rows[0] as DatabaseRow)?.total_posts || 0);
     
     res.json({ totalPosts });
   } catch (error) {
@@ -115,13 +149,13 @@ router.get('/api/community/populares', async (req: Request, res: Response) => {
       LIMIT ${validLimit}
     `);
     
-    const posts = result.rows.map((row: any) => ({
+    const posts = result.rows.map((row: DatabaseRow) => ({
       post: {
-        id: Number(row.id || 0),
+        id: Number(row.id),
         title: String(row.title || ''),
         content: String(row.content || ''),
         imageUrl: row.imageUrl ? String(row.imageUrl) : null,
-        userId: Number(row.userId || 0),
+        userId: Number(row.userId),
         status: String(row.status || 'pending'),
         createdAt: String(row.createdAt || ''),
         viewCount: Number(row.viewCount || 0),
@@ -132,7 +166,7 @@ router.get('/api/community/populares', async (req: Request, res: Response) => {
         timeAgo: formatarDataCompleta(row.createdAt)
       },
       user: {
-        id: Number(row.userId || 0),
+        id: Number(row.userId),
         username: String(row.username || ''),
         name: String(row.name || ''),
         profileimageurl: row.profileimageurl ? String(row.profileimageurl) : null,
@@ -203,10 +237,10 @@ router.get('/api/community/posts', async (req: Request, res: Response) => {
       LIMIT ${validLimit} OFFSET ${validOffset}
     `);
     
-    const posts = result.rows.map((row: any) => ({
+    const posts = result.rows.map((row: DatabaseRow) => ({
       post: {
-        id: Number(row.id || 0),
-        userId: Number(row.userId || 0),
+        id: Number(row.id),
+        userId: Number(row.userId),
         title: String(row.title || ''),
         content: String(row.content || ''),
         imageUrl: row.imageUrl ? String(row.imageUrl) : null,
@@ -222,7 +256,7 @@ router.get('/api/community/posts', async (req: Request, res: Response) => {
         isSaved: Boolean(row.isSaved)
       },
       user: {
-        id: Number(row.userId || 0),
+        id: Number(row.userId),
         username: String(row.username || ''),
         name: String(row.name || ''),
         profileimageurl: row.profileimageurl ? String(row.profileimageurl) : null,
@@ -234,54 +268,6 @@ router.get('/api/community/posts', async (req: Request, res: Response) => {
     res.json(posts);
   } catch (error) {
     console.error('Erro ao buscar posts:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// GET: Buscar ranking de usuários
-router.get('/api/community/ranking', async (req: Request, res: Response) => {
-  try {
-    console.log("Atualizando leaderboard para período 2025-05 (2025-05-01 a 2025-05-31)");
-    
-    const currentPeriod = '2025-05';
-    const startDate = '2025-05-01';
-    const endDate = '2025-05-31';
-    
-    // Buscar usuários ativos no período
-    const activeUsersResult = await db.execute(sql`
-      SELECT DISTINCT u.id, u.username, u.name, u.profileimageurl
-      FROM users u
-      JOIN "communityPosts" cp ON u.id = cp."userId"
-      WHERE cp."createdAt" >= ${startDate}
-        AND cp."createdAt" <= ${endDate}
-        AND cp.status = 'approved'
-    `);
-    
-    console.log(`Encontrados ${activeUsersResult.rows.length} usuários ativos no período ${currentPeriod}`);
-    
-    // Buscar configurações
-    const settingsResult = await db.execute(sql`
-      SELECT * FROM "communitySettings" WHERE id = 1
-    `);
-    
-    const settings = settingsResult.rows[0] as any || {
-      id: 1,
-      pointsPerPost: 10,
-      pointsPerLike: 5,
-      pointsPerComment: 3
-    };
-    
-    res.json({
-      users: [],
-      settings: {
-        id: settings.id,
-        pointsPerPost: Number(settings.pointsPerPost || 10),
-        pointsPerLike: Number(settings.pointsPerLike || 5),
-        pointsPerComment: Number(settings.pointsPerComment || 3)
-      }
-    });
-  } catch (error) {
-    console.error('Erro ao buscar ranking:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
