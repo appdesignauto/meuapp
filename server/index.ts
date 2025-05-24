@@ -98,6 +98,27 @@ configureCors(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Health check endpoint for deployment
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Simple root endpoint for health checks
+app.get('/', (req, res, next) => {
+  // If this is a health check request, respond immediately
+  if (req.headers['user-agent']?.includes('health') || 
+      req.headers['x-forwarded-for'] || 
+      req.query.health !== undefined) {
+    return res.status(200).json({ status: 'ok', service: 'DesignAuto' });
+  }
+  // Otherwise, continue to SPA routing
+  next();
+});
+
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 
@@ -197,12 +218,25 @@ app.use((req, res, next) => {
     // Verificar configuração de ambiente (migrado para Supabase Storage)
     validateR2Environment();
     
-    // Inicializar o banco de dados com dados
-    await initializeDatabase();
-    console.log("Banco de dados inicializado com sucesso");
-    
-    // Criar usuário administrador
-    await createAdminUser();
+    // Inicializar o banco de dados com dados (only in development or after health checks)
+    if (process.env.NODE_ENV !== 'production') {
+      await initializeDatabase();
+      console.log("Banco de dados inicializado com sucesso");
+      
+      // Criar usuário administrador
+      await createAdminUser();
+    } else {
+      // In production, defer database initialization until after server starts
+      setTimeout(async () => {
+        try {
+          await initializeDatabase();
+          await createAdminUser();
+          console.log("Banco de dados inicializado com sucesso (produção)");
+        } catch (error) {
+          console.error("Erro na inicialização diferida:", error);
+        }
+      }, 5000);
+    }
     
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
