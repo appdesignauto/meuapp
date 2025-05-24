@@ -105,16 +105,7 @@ app.get('/status', (req, res) => {
   res.status(200).send('healthy');
 });
 
-// Rota específica para API health check
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    service: 'DesignAuto API',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: '1.0.0'
-  });
-});
+// Rota específica para API health check (removida temporariamente para debug)
 
 // Configurar CORS para o domínio customizado
 configureCors(app);
