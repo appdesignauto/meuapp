@@ -507,6 +507,19 @@ app.use((req, res, next) => {
 
   // Use PORT environment variable for deployments, fallback to 5000 for development
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+  
+  // Add error handling for port conflicts
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} is busy, trying port ${port + 1}`);
+      server.listen(port + 1, "0.0.0.0", () => {
+        log(`serving on port ${port + 1}`);
+      });
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+  
   server.listen({
     port,
     host: "0.0.0.0",
