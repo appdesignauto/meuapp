@@ -3074,10 +3074,10 @@ router.get('/my-posts/:userId', async (req, res) => {
   console.log('🎯 [DEBUG] Endpoint /my-posts/:userId executado!');
   console.log('🎯 [DEBUG] userId recebido:', req.params.userId);
   
-  const userId = req.params.userId;
+  const userId = parseInt(req.params.userId);
 
-  if (!userId) {
-    return res.status(400).json({ error: 'userId não informado' });
+  if (!userId || isNaN(userId)) {
+    return res.status(400).json({ error: 'userId inválido' });
   }
 
   try {
@@ -3085,13 +3085,61 @@ router.get('/my-posts/:userId', async (req, res) => {
     const { pool } = await import('../db');
     
     const posts = await pool.query(`
-      SELECT * FROM "communityPosts" 
-      WHERE "userId" = $1 
-      ORDER BY "createdAt" DESC
+      SELECT 
+        p.*,
+        u.username,
+        u.name,
+        u.profileimageurl,
+        u.nivelacesso,
+        COALESCE(l.likes_count, 0) as "likesCount",
+        COALESCE(c.comments_count, 0) as "commentsCount",
+        COALESCE(s.saves_count, 0) as "savesCount"
+      FROM "communityPosts" p
+      LEFT JOIN users u ON p."userId" = u.id
+      LEFT JOIN (
+        SELECT "postId", COUNT(*) as likes_count 
+        FROM "communityLikes" 
+        GROUP BY "postId"
+      ) l ON p.id = l."postId"
+      LEFT JOIN (
+        SELECT "postId", COUNT(*) as comments_count 
+        FROM "communityComments" 
+        GROUP BY "postId"
+      ) c ON p.id = c."postId"
+      LEFT JOIN (
+        SELECT "postId", COUNT(*) as saves_count 
+        FROM "communitySaves" 
+        GROUP BY "postId"
+      ) s ON p.id = s."postId"
+      WHERE p."userId" = $1 
+      ORDER BY p."createdAt" DESC
     `, [userId]);
 
-    console.log('[MEUS POSTS] Encontrados', posts.rows.length, 'posts');
-    res.json(posts.rows);
+    // Formatar resposta no formato esperado pelo frontend
+    const formattedPosts = posts.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      content: row.content,
+      imageUrl: row.imageurl,
+      createdAt: row.createdat,
+      updatedAt: row.updatedat,
+      status: row.status,
+      user: {
+        id: row.userId,
+        username: row.username || 'usuário',
+        name: row.name || 'Usuário',
+        profileimageurl: row.profileimageurl,
+        nivelacesso: row.nivelacesso || 'free'
+      },
+      engagement: {
+        likes: parseInt(row.likesCount) || 0,
+        comments: parseInt(row.commentsCount) || 0,
+        saves: parseInt(row.savesCount) || 0
+      }
+    }));
+
+    console.log('[MEUS POSTS] Encontrados', formattedPosts.length, 'posts formatados');
+    res.json(formattedPosts);
   } catch (error) {
     console.error('[MEUS POSTS] Erro:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
