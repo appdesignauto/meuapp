@@ -92,21 +92,6 @@ function findTransactionId(payload: any): string | null {
 
 const app = express();
 
-// ✅ ROTAS DE HEALTH CHECK SECUNDÁRIAS (a rota principal / está implementada mais abaixo)
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
-});
-
-app.get('/ping', (req, res) => {
-  res.status(200).send('pong');
-});
-
-app.get('/status', (req, res) => {
-  res.status(200).send('healthy');
-});
-
-// Rota específica para API health check (removida temporariamente para debug)
-
 // Configurar CORS para o domínio customizado
 configureCors(app);
 
@@ -379,30 +364,6 @@ app.use((req, res, next) => {
     // Iniciar serviço de forma assíncrona
     await initHotmartService();
     
-    // ✅ HEALTH CHECK ROUTES PARA DEPLOYMENT - DEVEM VIR PRIMEIRO!
-    // Rota raiz para health check do Replit
-    app.get('/', (req, res) => {
-      res.status(200).json({
-        status: 'healthy',
-        service: 'DesignAuto API',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        version: '1.0.0'
-      });
-    });
-
-    // Rota adicional de health check
-    app.get('/health', (req, res) => {
-      res.status(200).json({
-        status: 'healthy',
-        service: 'DesignAuto API',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        database: 'connected',
-        webhooks: 'active'
-      });
-    });
-
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
     // NOVA SOLUÇÃO: Utilizar a rota fixa para webhooks diretamente no servidor principal
@@ -484,8 +445,6 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
-
-  // ✅ HEALTH CHECK: Usando apenas rotas específicas, deixando / livre para o SPA
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
