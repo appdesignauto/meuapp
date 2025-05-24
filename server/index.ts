@@ -92,11 +92,7 @@ function findTransactionId(payload: any): string | null {
 
 const app = express();
 
-// ✅ HEALTH CHECK ROUTES - SOLUÇÃO DEFINITIVA PARA DEPLOYMENT!
-app.get('/', (req, res) => {
-  res.status(200).send('OK');
-});
-
+// ✅ ROTAS DE HEALTH CHECK SECUNDÁRIAS (a rota principal / está implementada mais abaixo)
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
