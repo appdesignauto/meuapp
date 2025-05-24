@@ -7015,6 +7015,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
   
+
+
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   

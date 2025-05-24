@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { 
   users, 
@@ -2976,6 +2976,125 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
       message: 'Erro ao recalcular ranking D.Auto',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
+  }
+});
+
+// GET: Buscar posts de um usuário específico (MEUS POSTS - VERSÃO SIMPLIFICADA)
+router.get('/api/community/posts/user/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const requestingUserId = req.user?.id;
+    
+    // Verificar se o usuário está logado
+    if (!req.user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
+    
+    // Verificar se o usuário está tentando ver seus próprios posts ou se é admin
+    const isOwnPosts = requestingUserId === userId;
+    const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
+    
+    if (!isOwnPosts && !isAdmin) {
+      return res.status(403).json({ message: 'Você só pode ver seus próprios posts' });
+    }
+    
+    console.log(`[MEUS POSTS] INICIANDO busca para usuário ${userId}`);
+    
+    // Query SQL direta e simples
+    const posts = await db.execute(sql`
+      SELECT 
+        cp.id, 
+        cp.title, 
+        cp.content, 
+        cp."imageUrl", 
+        cp."editLink", 
+        cp.status, 
+        cp."createdAt", 
+        cp."viewCount",
+        u.username,
+        u.name,
+        u.profileimageurl,
+        u.nivelacesso
+      FROM "communityPosts" cp
+      LEFT JOIN users u ON cp."userId" = u.id
+      WHERE cp."userId" = ${userId}
+      ORDER BY cp."createdAt" DESC
+      LIMIT 20
+    `);
+    
+    console.log(`[MEUS POSTS] Query executada. Linhas encontradas: ${posts.rows?.length || 0}`);
+    
+    if (!posts.rows || posts.rows.length === 0) {
+      console.log(`[MEUS POSTS] Nenhum post encontrado para usuário ${userId}`);
+      return res.json([]);
+    }
+    
+    // Formatar os dados de forma simples
+    const formattedPosts = posts.rows.map(row => ({
+      post: {
+        id: row.id,
+        title: row.title || 'Sem título',
+        content: row.content || '',
+        imageUrl: row.imageUrl || '',
+        editLink: row.editLink || '',
+        status: row.status || 'pending',
+        createdAt: new Date(row.createdAt).toISOString(),
+        viewCount: Number(row.viewCount) || 0,
+        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
+      },
+      user: {
+        username: row.username || 'usuário',
+        name: row.name || 'Usuário',
+        profileimageurl: row.profileimageurl,
+        nivelacesso: row.nivelacesso || 'free'
+      },
+      engagement: {
+        likes: 0,
+        comments: 0,
+        saves: 0
+      }
+    }));
+    
+    console.log(`[MEUS POSTS] Retornando ${formattedPosts.length} posts formatados`);
+    console.log(`[MEUS POSTS] Primeiro post:`, formattedPosts[0]?.post?.title || 'N/A');
+    
+    return res.json(formattedPosts);
+    
+  } catch (error) {
+    console.error('[MEUS POSTS] ERRO:', error);
+    return res.status(500).json({ message: 'Erro ao buscar posts' });
+  }
+});
+
+router.get('/my-posts/:userId', async (req, res) => {
+  console.log('🎯 [DEBUG] Endpoint /my-posts/:userId executado!');
+  console.log('🎯 [DEBUG] userId recebido:', req.params.userId);
+  
+  const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId não informado' });
+  }
+
+  try {
+    console.log('[MEUS POSTS] Buscando posts para usuário:', userId);
+    const { pool } = await import('../db');
+    
+    const posts = await pool.query(`
+      SELECT * FROM "communityPosts" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC
+    `, [userId]);
+
+    console.log('[MEUS POSTS] Encontrados', posts.rows.length, 'posts');
+    res.json(posts.rows);
+  } catch (error) {
+    console.error('[MEUS POSTS] Erro:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
