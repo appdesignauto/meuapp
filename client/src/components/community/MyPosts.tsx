@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { 
-  User, CheckCircle2, Clock, XCircle, Heart, MessageCircle, 
+  User, CheckCircle2, Clock, XCircle, Filter, Heart, MessageCircle, 
   Share, MoreHorizontal, ExternalLink, ZoomIn 
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import ErrorContainer from '@/components/ErrorContainer';
+import UserAvatar from '@/components/users/UserAvatar';
 
 interface MyPostsProps {
   setSelectedPostId: (id: number | null) => void;
@@ -19,151 +20,190 @@ interface MyPostsProps {
   refetchPopularPosts?: () => void;
 }
 
-// PostCard simplificado específico para MyPosts
-interface PostCardProps {
+// Componente individual para cada post em "Meus Posts"
+const MyPostCard: React.FC<{
   post: any;
-  author: any;
-  hasLiked: boolean;
-  likeCount: number;
-  commentCount: number;
-  canDelete?: boolean;
-  showEditLink?: boolean;
-  onPostClick: () => void;
+  user: any;
+  likesCount: number;
+  commentsCount: number;
+  savesCount: number;
+  isLikedByUser: boolean;
   onRefresh: () => void;
-}
-
-const PostCard: React.FC<PostCardProps> = ({
-  post,
-  author,
-  hasLiked,
-  likeCount,
-  commentCount,
-  onPostClick,
-  onRefresh
+  setSelectedPostId: (id: number | null) => void;
+  setIsPostViewOpen: (open: boolean) => void;
+}> = ({ 
+  post, 
+  user, 
+  likesCount, 
+  commentsCount, 
+  savesCount, 
+  isLikedByUser, 
+  onRefresh, 
+  setSelectedPostId, 
+  setIsPostViewOpen 
 }) => {
   const { toast } = useToast();
+  const [isLiked, setIsLiked] = useState(isLikedByUser);
+  const [currentLikesCount, setCurrentLikesCount] = useState(likesCount);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-          <CheckCircle2 className="h-3 w-3 mr-1" />
-          Aprovado
-        </Badge>;
-      case 'pending':
-        return <Badge variant="outline" className="text-yellow-600 border-yellow-200 bg-yellow-50">
-          <Clock className="h-3 w-3 mr-1" />
-          Pendente
-        </Badge>;
-      case 'rejected':
-        return <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50">
-          <XCircle className="h-3 w-3 mr-1" />
-          Rejeitado
-        </Badge>;
-      default:
-        return <Badge variant="outline" className="text-gray-600 border-gray-200 bg-gray-50">
-          <Clock className="h-3 w-3 mr-1" />
-          Pendente
-        </Badge>;
+  // Função para curtir/descurtir
+  const handleLike = async () => {
+    setIsLoading(true);
+    try {
+      if (isLiked) {
+        const response = await apiRequest("DELETE", `/api/community/posts/${post.id}/like`);
+        if (response.ok) {
+          setIsLiked(false);
+          setCurrentLikesCount(prev => Math.max(0, prev - 1));
+          toast({
+            title: "Curtida removida",
+            description: "Você removeu sua curtida deste post",
+          });
+        }
+      } else {
+        const response = await apiRequest("POST", `/api/community/posts/${post.id}/like`);
+        if (response.ok) {
+          setIsLiked(true);
+          setCurrentLikesCount(prev => prev + 1);
+          toast({
+            title: "Post curtido",
+            description: "Você curtiu este post",
+          });
+        }
+      }
+      onRefresh();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao processar sua ação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch {
-      return 'Data inválida';
-    }
+  // Função para abrir o post em detalhes
+  const handleOpenPost = () => {
+    setSelectedPostId(post.id);
+    setIsPostViewOpen(true);
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-      <div onClick={onPostClick}>
-        {/* Imagem do post */}
-        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-zinc-800 dark:to-zinc-900">
-          {post.imageUrl ? (
-            <img
-              src={post.imageUrl}
-              alt={post.title}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ZoomIn className="h-12 w-12 text-zinc-400" />
+    <Card className="mb-5 overflow-hidden border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800 shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative">
+      {/* Badge de status */}
+      <div className="absolute top-4 right-4 z-10">
+        {post.status === 'approved' && (
+          <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Aprovado
+          </Badge>
+        )}
+        {post.status === 'pending' && (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+            <Clock className="h-3 w-3 mr-1" />
+            Pendente
+          </Badge>
+        )}
+        {post.status === 'rejected' && (
+          <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+            <XCircle className="h-3 w-3 mr-1" />
+            Rejeitado
+          </Badge>
+        )}
+      </div>
+
+      {/* Cabeçalho do post */}
+      <div className="p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <UserAvatar user={user} size="sm" linkToProfile={true} />
+          <div>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-semibold">{user.name || user.username}</span>
+              {user.nivelacesso === 'admin' && (
+                <span className="text-blue-500">
+                  <CheckCircle2 className="h-3.5 w-3.5 fill-blue-500 text-white" />
+                </span>
+              )}
             </div>
-          )}
-          
-          {/* Badge de status sobreposto */}
-          <div className="absolute top-2 right-2">
-            {getStatusBadge(post.status)}
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {post.formattedDate || 'há pouco tempo'}
+            </p>
           </div>
         </div>
-
-        <CardContent className="p-4">
-          {/* Header com avatar e info do autor */}
-          <div className="flex items-center mb-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium mr-3">
-              {author?.name?.charAt(0)?.toUpperCase() || author?.username?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm text-zinc-900 dark:text-white truncate">
-                {author?.name || author?.username || 'Usuário'}
-              </div>
-              <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                {formatDate(post.createdAt)}
-              </div>
-            </div>
-          </div>
-
-          {/* Título e descrição */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-zinc-900 dark:text-white line-clamp-2">
-              {post.title || 'Sem título'}
-            </h3>
-            {post.description && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300 line-clamp-2">
-                {post.description}
-              </p>
-            )}
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-700">
-            <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-              <div className="flex items-center gap-1">
-                <Heart className={`h-4 w-4 ${hasLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                <span>{likeCount || 0}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MessageCircle className="h-4 w-4" />
-                <span>{commentCount || 0}</span>
-              </div>
-            </div>
-
-            {/* Link de edição */}
-            {post.editLink && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-blue-600 hover:text-blue-700"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(post.editLink, '_blank');
-                }}
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Editar
-              </Button>
-            )}
-          </div>
-        </CardContent>
       </div>
+
+      {/* Imagem do post */}
+      {post.imageUrl && (
+        <div className="relative">
+          <img 
+            src={post.imageUrl} 
+            alt={post.title || 'Post image'} 
+            className="w-full h-auto object-cover cursor-pointer"
+            onClick={handleOpenPost}
+          />
+          <button
+            onClick={handleOpenPost}
+            className="absolute top-2 left-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Conteúdo do post */}
+      <CardContent className="p-3">
+        {post.title && (
+          <h3 className="text-sm font-semibold mb-2 line-clamp-2">{post.title}</h3>
+        )}
+        {post.content && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-3 line-clamp-3">
+            {post.content}
+          </p>
+        )}
+
+        {/* Ações do post */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLike}
+              disabled={isLoading}
+              className={`p-0 h-auto hover:bg-transparent ${
+                isLiked ? 'text-red-500' : 'text-zinc-600 dark:text-zinc-400'
+              }`}
+            >
+              <Heart 
+                className={`h-5 w-5 mr-1 ${isLiked ? 'fill-current' : ''}`} 
+              />
+              <span className="text-sm">{currentLikesCount}</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenPost}
+              className="p-0 h-auto hover:bg-transparent text-zinc-600 dark:text-zinc-400"
+            >
+              <MessageCircle className="h-5 w-5 mr-1" />
+              <span className="text-sm">{commentsCount}</span>
+            </Button>
+          </div>
+
+          {post.editLink && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open(post.editLink, '_blank')}
+              className="p-0 h-auto hover:bg-transparent text-zinc-600 dark:text-zinc-400"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };
@@ -174,6 +214,7 @@ const MyPosts: React.FC<MyPostsProps> = ({
   refetchPopularPosts
 }) => {
   const { user } = useAuth();
+  const [activeStatus, setActiveStatus] = useState('all');
 
   // Buscar meus posts
   const { 
@@ -195,8 +236,27 @@ const MyPosts: React.FC<MyPostsProps> = ({
     refetchOnWindowFocus: false,
   });
 
-  // Contar total de posts
-  const totalPosts = myPosts ? myPosts.length : 0;
+  // Filtrar posts por status
+  const filteredPosts = React.useMemo(() => {
+    if (!myPosts || !Array.isArray(myPosts)) return [];
+    
+    if (activeStatus === 'all') return myPosts;
+    return myPosts.filter((item: any) => item.post?.status === activeStatus);
+  }, [myPosts, activeStatus]);
+
+  // Contar posts por status
+  const statusCounts = React.useMemo(() => {
+    if (!myPosts || !Array.isArray(myPosts)) return { all: 0, approved: 0, pending: 0, rejected: 0 };
+    
+    return myPosts.reduce((counts, item: any) => {
+      const status = item.post?.status || 'pending';
+      counts.all++;
+      if (status === 'approved') counts.approved++;
+      else if (status === 'pending') counts.pending++;
+      else if (status === 'rejected') counts.rejected++;
+      return counts;
+    }, { all: 0, approved: 0, pending: 0, rejected: 0 });
+  }, [myPosts]);
 
   // Função para refetch que será passada para o PostCard
   const handleRefresh = () => {
@@ -206,122 +266,153 @@ const MyPosts: React.FC<MyPostsProps> = ({
     }
   };
 
-  // Estado de loading
-  if (myPostsLoading) {
+  if (!user) {
     return (
-      <div className="space-y-6">
-        {/* Header skeleton */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Meus Posts
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        {/* Posts skeleton */}
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <Skeleton className="w-12 h-12 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-[200px]" />
-                    <Skeleton className="h-3 w-[100px]" />
-                    <Skeleton className="h-48 w-full rounded-lg mt-3" />
-                    <div className="flex gap-2 mt-3">
-                      <Skeleton className="h-8 w-16" />
-                      <Skeleton className="h-8 w-16" />
-                      <Skeleton className="h-8 w-16" />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Estado de erro
-  if (myPostsError) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Meus Posts
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <ErrorContainer 
-          title="Erro ao carregar seus posts"
-          description="Não foi possível carregar suas publicações."
-          onAction={() => refetchMyPosts()}
-        />
+      <div className="text-center py-10">
+        <User className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
+        <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+          Faça login para ver seus posts
+        </h3>
+        <p className="text-zinc-500 dark:text-zinc-400">
+          Entre na sua conta para visualizar suas publicações na comunidade.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header simples */}
+      {/* Header com estatísticas */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Meus Posts
-            {totalPosts > 0 && (
-              <Badge variant="outline" className="ml-2">
-                {totalPosts} {totalPosts === 1 ? 'post' : 'posts'}
-              </Badge>
-            )}
           </CardTitle>
         </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-zinc-900 dark:text-white">
+                {statusCounts.all}
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">Total</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {statusCounts.approved}
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">Aprovados</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {statusCounts.pending}
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">Pendentes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {statusCounts.rejected}
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">Rejeitados</div>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
-      {/* Lista de posts */}
-      <div>
-        {!myPosts || myPosts.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <div className="max-w-md mx-auto space-y-3">
-                <User className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
-                <div className="text-zinc-400 dark:text-zinc-500 text-lg">
-                  Você ainda não fez nenhum post
-                </div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Compartilhe suas criações com a comunidade!
-                </div>
+      {/* Filtros por status */}
+      <Tabs value={activeStatus} onValueChange={setActiveStatus} className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Todos ({statusCounts.all})
+          </TabsTrigger>
+          <TabsTrigger value="approved" className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            Aprovados ({statusCounts.approved})
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Pendentes ({statusCounts.pending})
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="flex items-center gap-2">
+            <XCircle className="h-4 w-4" />
+            Rejeitados ({statusCounts.rejected})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeStatus} className="mt-6">
+          {myPostsLoading ? (
+            // Estado de loading
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="w-full h-56 sm:h-64" />
+                  <CardContent className="p-4">
+                    <div className="flex items-center mb-3">
+                      <Skeleton className="h-8 w-8 rounded-full mr-2" />
+                      <div>
+                        <Skeleton className="h-4 w-24 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-1" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : myPostsError ? (
+            // Estado de erro
+            <ErrorContainer 
+              title="Erro ao carregar seus posts" 
+              description="Não foi possível carregar suas publicações."
+              onAction={() => refetchMyPosts()}
+            />
+          ) : filteredPosts.length === 0 ? (
+            // Estado vazio
+            <div className="text-center py-10">
+              <div className="mb-4">
+                {activeStatus === 'approved' && <CheckCircle2 className="h-12 w-12 mx-auto text-green-300 mb-3" />}
+                {activeStatus === 'pending' && <Clock className="h-12 w-12 mx-auto text-yellow-300 mb-3" />}
+                {activeStatus === 'rejected' && <XCircle className="h-12 w-12 mx-auto text-red-300 mb-3" />}
+                {activeStatus === 'all' && <User className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />}
               </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {myPosts.map((item: any) => (
-              <PostCard
-                key={item.post.id}
-                post={item.post}
-                author={item.author}
-                hasLiked={item.hasLiked}
-                likeCount={item.likeCount}
-                commentCount={item.commentCount}
-                canDelete={true}
-                showEditLink={true}
-                onPostClick={() => {
-                  setSelectedPostId(item.post.id);
-                  setIsPostViewOpen(true);
-                }}
-                onRefresh={handleRefresh}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+              <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                {activeStatus === 'approved' && 'Nenhum post aprovado'}
+                {activeStatus === 'pending' && 'Nenhum post pendente'}
+                {activeStatus === 'rejected' && 'Nenhum post rejeitado'}
+                {activeStatus === 'all' && 'Você ainda não publicou nenhuma arte'}
+              </h3>
+              <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                {activeStatus === 'approved' && 'Seus posts aprovados aparecerão aqui.'}
+                {activeStatus === 'pending' && 'Posts aguardando moderação aparecerão aqui.'}
+                {activeStatus === 'rejected' && 'Posts rejeitados aparecerão aqui.'}
+                {activeStatus === 'all' && 'Compartilhe sua primeira criação na comunidade!'}
+              </p>
+            </div>
+          ) : (
+            // Lista de posts usando estrutura similar ao PostCard
+            <div className="space-y-4">
+              {filteredPosts.map((item: any) => (
+                <MyPostCard
+                  key={item.post.id}
+                  post={item.post}
+                  user={item.user}
+                  likesCount={item.likesCount || 0}
+                  commentsCount={item.commentsCount || 0}
+                  savesCount={item.savesCount || 0}
+                  isLikedByUser={item.isLikedByUser || item.userHasLiked || false}
+                  onRefresh={handleRefresh}
+                  setSelectedPostId={setSelectedPostId}
+                  setIsPostViewOpen={setIsPostViewOpen}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
