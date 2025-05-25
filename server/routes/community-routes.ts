@@ -99,7 +99,7 @@ router.get('/api/community/populares', async (req: Request, res: Response) => {
         cp.status,
         cp."createdAt",
         cp."viewCount",
-        cp."likeCount",
+        COALESCE(COUNT(cl.id), 0) as "likeCount",
         cp."commentCount",
         COALESCE(cp."isPinned", false)::boolean as "isPinned",
         cp."editLink",
@@ -110,8 +110,10 @@ router.get('/api/community/populares', async (req: Request, res: Response) => {
         u.nivelacesso
       FROM "communityPosts" cp
       JOIN users u ON cp."userId" = u.id
+      LEFT JOIN "communityLikes" cl ON cp.id = cl."postId"
       WHERE cp.status = 'approved'
-      ORDER BY cp."likeCount" DESC, cp."viewCount" DESC, cp."createdAt" DESC
+      GROUP BY cp.id, u.id, u.username, u.name, u.profileimageurl, u.role, u.nivelacesso
+      ORDER BY "likeCount" DESC, cp."viewCount" DESC, cp."createdAt" DESC
       LIMIT ${validLimit}
     `);
     
