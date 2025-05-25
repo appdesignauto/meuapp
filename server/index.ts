@@ -505,16 +505,22 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use PORT environment variable for deployments
+  // Use PORT environment variable for deployments (Replit uses dynamic port in production)
   const port = parseInt(process.env.PORT || '5000', 10);
   
-  console.log(`🚀 Starting server on port ${port}...`);
+  console.log(`🚀 Starting DesignAuto server on port ${port}...`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   
   server.listen(port, "0.0.0.0", () => {
-    console.log(`✅ Server successfully running on port ${port}`);
-    console.log(`✅ Root endpoint: http://0.0.0.0:${port}/`);
-    console.log(`✅ Health check: http://0.0.0.0:${port}/health`);
-    console.log(`✅ Community posts: http://0.0.0.0:${port}/comunidade`);
+    console.log(`✅ DesignAuto server successfully running on port ${port}`);
+    console.log(`✅ Ready for designauto.com.br domain`);
+    console.log(`✅ Root endpoint responding at /`);
+    console.log(`✅ Health check available at /health`);
     log(`serving on port ${port}`);
+    
+    // Log for deployment debugging
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`🚀 Production deployment ready - designauto.com.br should now work`);
+    }
   });
 })();
