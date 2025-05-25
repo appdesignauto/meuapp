@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { 
-  User, CheckCircle2, Clock, XCircle, Filter, Heart, MessageCircle, 
+  User, CheckCircle2, Clock, XCircle, Heart, MessageCircle, 
   Share, MoreHorizontal, ExternalLink, ZoomIn 
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -214,7 +214,6 @@ const MyPosts: React.FC<MyPostsProps> = ({
   refetchPopularPosts
 }) => {
   const { user } = useAuth();
-  const [activeStatus, setActiveStatus] = useState('all');
 
   // Buscar meus posts
   const { 
@@ -236,15 +235,7 @@ const MyPosts: React.FC<MyPostsProps> = ({
     refetchOnWindowFocus: false,
   });
 
-  // Filtrar posts por status
-  const filteredPosts = React.useMemo(() => {
-    if (!myPosts || !Array.isArray(myPosts)) return [];
-    
-    if (activeStatus === 'all') return myPosts;
-    return myPosts.filter((item: any) => item.post?.status === activeStatus);
-  }, [myPosts, activeStatus]);
-
-  // Contar posts por status
+  // Contar posts por status para exibir estatísticas
   const statusCounts = React.useMemo(() => {
     if (!myPosts || !Array.isArray(myPosts)) return { all: 0, approved: 0, pending: 0, rejected: 0 };
     
