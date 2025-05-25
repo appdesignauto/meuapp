@@ -7,8 +7,6 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
-// Importar o novo manipulador de webhook aprimorado
-import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
 import { Pool } from "pg";
 
@@ -248,158 +246,15 @@ app.use((req, res, next) => {
       next();
     });
     
-    // Rota dedicada para webhook da Hotmart - implementação direta para garantir resposta JSON
-    app.post('/webhook/hotmart', async (req, res) => {
-      console.log('📩 Webhook da Hotmart recebido em', new Date().toISOString());
-      
-      try {
-        // Capturar dados básicos do webhook
-        const payload = req.body;
-        const event = payload?.event || 'UNKNOWN';
-        const email = findEmailInPayload(payload);
-        const transactionId = findTransactionId(payload);
-        
-        // Registrar no banco de dados (log only)
-        try {
-          const pool = new Pool({
-            connectionString: process.env.DATABASE_URL
-          });
-          
-          await pool.query(
-            `INSERT INTO webhook_logs 
-             (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-            [
-              event,
-              'received',
-              email,
-              'hotmart',
-              JSON.stringify(payload),
-              transactionId,
-              req.ip,
-              new Date()
-            ]
-          );
-          
-          await pool.end();
-        } catch (dbError) {
-          console.error('❌ Erro ao registrar webhook:', dbError);
-          // Continuar mesmo com erro de log
-        }
-        
-        // Sempre retornar sucesso para a Hotmart não reenviar
-        return res.status(200).json({
-          success: true,
-          message: 'Webhook recebido com sucesso',
-          timestamp: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error('❌ Erro ao processar webhook:', error);
-        
-        // Mesmo com erro, retornar 200 para evitar reenvios
-        return res.status(200).json({
-          success: false,
-          message: 'Erro ao processar webhook, mas confirmamos o recebimento',
-          timestamp: new Date().toISOString()
-        });
-      }
-    });
-    
-    // Inicializar o serviço da Hotmart
-    // Importações serão feitas de forma dinâmica para evitar problemas
-    const initHotmartService = async () => {
-      try {
-        const { PrismaClient } = await import('@prisma/client');
-        const { default: mappingRoutes } = await import('./routes/mapping-routes');
-        const { HotmartService } = await import('./services/hotmart-service');
-        
-        const prisma = new PrismaClient();
-        const hotmartService = new HotmartService(prisma);
-        
-        // Registrar rotas para mapeamento de produtos Hotmart
-        app.use(mappingRoutes);
-        
-        console.log("Serviço da Hotmart inicializado com sucesso no modo " + 
-                   (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
-        
-        // NOTA: Não registramos '/webhook' rotas aqui, pois
-        // já temos uma implementação direta acima que deve ter precedência
-      } catch (error) {
-        console.error("Erro ao inicializar serviço da Hotmart:", error);
-      }
-    };
-    
-    // Iniciar serviço de forma assíncrona
-    await initHotmartService();
-    
-    console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
-    
-    // NOVA SOLUÇÃO: Utilizar a rota fixa para webhooks diretamente no servidor principal
-    // Isto elimina a necessidade do servidor standalone e simplifica a arquitetura
+    // Configurar APENAS o endpoint /webhook/hotmart-fixed conforme especificação
     try {
       const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart', hotmartFixedModule.default);
-      console.log("✅ Rota principal de webhook da Hotmart configurada com sucesso");
+      app.use('/webhook', hotmartFixedModule.default);
+      console.log("✅ Endpoint /webhook/hotmart-fixed configurado com sucesso");
     } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart principal:", error);
+      console.error("❌ Erro ao configurar endpoint webhook Hotmart:", error);
     }
     
-    // Manter a rota fixa pelo caminho alternativo para compatibilidade
-    try {
-      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart-fixed', hotmartFixedModule.default);
-      console.log("✅ Rota Hotmart fixa (alternativa) configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart fixa alternativa:", error);
-    }
-    
-    // Adicionar a rota corrigida para detalhes de webhook
-    try {
-      const webhookDetailFixModule = await import('./routes/webhooks-detail-fix');
-      app.use(webhookDetailFixModule.default);
-      console.log("✅ Rota de detalhes de webhook corrigida configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
-    }
-    
-    // Configurar a nova rota de webhook APRIMORADA para Hotmart
-    try {
-      // Usar o manipulador de webhook aprimorado importado no início do arquivo
-      app.use('/webhook/hotmart-enhanced', enhancedHotmartWebhook);
-      console.log("✅ Rota de webhook Hotmart aprimorada configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota de webhook Hotmart aprimorada:", error);
-    }
-    
-    // Adicionar a rota de DEBUG para capturar qualquer webhook
-    try {
-      const webhookDebugModule = await import('./routes/webhook-debug');
-      app.use('/webhook', webhookDebugModule.default);
-      console.log("✅ Rota de diagnóstico de webhook configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota de diagnóstico de webhook:", error);
-    }
-    
-    // Manter a rota de status para diagnóstico
-    app.get('/webhook/status', (req, res) => {
-      res.json({
-        status: 'online',
-        timestamp: new Date().toISOString(),
-        routes: [
-          { path: '/webhook/hotmart', status: 'configured' },
-          { path: '/webhook/hotmart-fixed', status: 'configured' },
-          { path: '/webhook/hotmart-enhanced', status: 'configured', version: '2.0', recommended: true }
-        ],
-        integrationService: 'HotmartService',
-        environment: process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção',
-        recommendedEndpoint: '/webhook/hotmart-enhanced',
-        message: 'Os webhooks estão configurados e funcionando. Recomendamos usar o endpoint aprimorado para melhor compatibilidade.'
-      });
-    });
-    
-    console.log("Rotas de webhook configuradas com sucesso");
-    console.log("✅ Rotas de mapeamento de produtos implementadas diretamente");
-    console.log("Serviço da Hotmart inicializado com sucesso no modo " + (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }

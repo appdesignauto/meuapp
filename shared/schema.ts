@@ -248,12 +248,14 @@ export const insertDownloadSchema = createInsertSchema(downloads).omit({
 // Subscriptions schema
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
-  userId: integer("userId").notNull().references(() => users.id).unique(),
+  userId: integer("userId").notNull().references(() => users.id),
   planType: text("planType").notNull().default("premium"),
-  status: text("status").notNull().default("active"), // active, canceled, pending
   startDate: timestamp("startDate").notNull().defaultNow(),
   endDate: timestamp("endDate"),
-  webhookData: text("webhookData"),
+  isActive: boolean("isActive").notNull().default(true),
+  transactionId: text("transactionId").unique(),
+  source: text("source").default("hotmart"), // hotmart, manual, auto
+  productId: text("productId"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
