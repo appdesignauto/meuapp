@@ -96,12 +96,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Rota de debug para testar getUserByUsername
   app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
-    try {
-      console.log('DEBUG tentando encontrar usuário:', req.params.username);
-      
-      // Usar consulta SQL direta para diagnóstico
-      const result = await db.execute(sql`
-        SELECT * FROM users WHERE username = ${req.params.username}
       `);
       console.log('DEBUG resultado SQL direto:', result.rows);
       
@@ -110,11 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('DEBUG getUserByUsername result:', user);
       
       res.setHeader('Content-Type', 'application/json');
-      return res.json({ success: true, sqlResult: result.rows, storageResult: user });
-    } catch (error) {
-      console.error('DEBUG error in getUserByUsername:', error);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({ success: false, error: String(error) });
+      return res.json({ success: true, sqlResult: result.rows, storageResult: user }););
     }
   });
   
@@ -122,10 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
   // Rota específica para testar solução de emergência para o usuário problemático (simulação)
-  app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => {
-    try {
-      const username = req.params.username;
-      console.log(`\n==== TESTE DE EMERGÊNCIA PARA USUÁRIO ${username} ====\n`);
+  app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => { ====\n`);
       
       // Verificar se o usuário existe
       const user = await storage.getUserByUsername(username);
@@ -144,10 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("\n== VERIFICANDO ACESSO AOS BUCKETS ==");
       const bucketResults: Record<string, any> = {};
       
-      // Bucket de avatares
-      try {
-        console.log("Verificando acesso ao bucket 'designautoimages'...");
-        const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
+      // Bucket de avatares = await supabaseStorageService.getBucket('designautoimages');
         bucketResults['designautoimages'] = {
           accessible: true,
           files: avatarFiles?.length || 0
@@ -161,10 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
       
-      // Bucket principal
-      try {
-        console.log("Verificando acesso ao bucket principal 'designautoimages'...");
-        const { data: mainFiles } = await supabaseStorageService.getBucket('designautoimages');
+      // Bucket principal = await supabaseStorageService.getBucket('designautoimages');
         bucketResults['designautoimages'] = {
           accessible: true,
           files: mainFiles?.length || 0
@@ -188,26 +169,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'public/uploads/emergency'
       ];
       
-      for (const dir of dirsToCheck) {
-        try {
-          console.log(`Verificando diretório '${dir}'...`);
+      for (const dir of dirsToCheck) {'...`);
           const exists = fs.existsSync(dir);
           
           if (exists) {
             // Verificar permissões de escrita
-            const testFile = path.join(dir, '.write_test');
-            try {
-              fs.writeFileSync(testFile, 'test');
-              fs.unlinkSync(testFile);
-              
-              // Listar arquivos
-              const files = fs.readdirSync(dir);
-              
-              dirResults[dir] = {
-                exists: true,
-                writable: true,
-                files: files.length
-              };
+            const testFile = path.join(dir, '.write_test');;
               
               console.log(`✓ Diretório '${dir}' acessível e com permissão de escrita. ${files.length} arquivos.`);
             } catch (writeError) {
@@ -217,12 +184,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 error: String(writeError)
               };
               console.log(`✓ Diretório '${dir}' existe, mas sem permissão de escrita.`);
-            }
-          } else {
-            dirResults[dir] = {
-              exists,
-              files: 0,
-              writable: false
             };
             console.log(`✗ Diretório '${dir}' não existe.`);
           }
@@ -249,12 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let emergencySimulation = null;
       
       if (isProblematicUser) {
-        console.log("Realizando simulação de estratégias para usuário problemático...");
-        
-        try {
-          // Lista de estratégias disponíveis (sem fazer upload real)
-          const strategies = [
-            { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares' },
+        console.log("Realizando simulação de estratégias para usuário problemático...");,
             { name: 'main_bucket_avatar_path', description: 'Upload para pasta /designautoimages no bucket principal' },
             { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal' },
             { name: 'local_emergency', description: 'Upload para sistema de arquivos local' }
@@ -263,9 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Verificar viabilidade de cada estratégia
           const strategyResults = [];
           
-          for (const strategy of strategies) {
-            try {
-              console.log(`Avaliando estratégia: ${strategy.name}`);
+          for (const strategy of strategies) {`);
               
               let viable = false;
               let reason = '';
@@ -314,9 +268,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Simulação completa! ${viableStrategies.length} estratégias viáveis.`);
           if (bestStrategy) {
             console.log(`Estratégia recomendada: ${bestStrategy.name} - ${bestStrategy.description}`);
-          } else {
-            console.log("Nenhuma estratégia viável encontrada, seria usado placeholder como fallback.");
-          }
         } catch (simError) {
           console.error("Erro na simulação:", simError);
           emergencySimulation = {
@@ -341,24 +292,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recommendations: isProblematicUser
           ? "Este usuário está marcado para tratamento especial de upload. As estratégias de upload em cascata serão utilizadas."
           : "Usuário normal, fluxo padrão de upload será aplicado."
-      });
-    } catch (error) {
-      console.error('Erro no teste de avatar de emergência:', error);
-      return res.status(500).json({
-        success: false,
-        error: String(error)
-      });
+      }););
     }
   });
   // Rota para especificamente testar todas as soluções em cascata para o usuário problemático
-  app.get('/api/debug/test-emergency-avatar/:username', isAdmin, async (req, res) => {
-    try {
-      const username = req.params.username;
-      
-      // Verificar se é o usuário com problemas recorrentes
-      const isProblematicUser = username === 'fernandosim20188718';
-      
-      console.log(`Iniciando diagnóstico completo para usuário: ${username}`);
+  app.get('/api/debug/test-emergency-avatar/:username', isAdmin, async (req, res) => {`);
       console.log(`Status de usuário problemático: ${isProblematicUser ? 'SIM' : 'NÃO'}`);
       
       // Buscar o usuário
@@ -373,10 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar acesso aos buckets
       console.log("\n== VERIFICANDO ACESSO AOS BUCKETS ==");
       
-      let bucketResults = {};
-      
-      try {
-        const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
+      let bucketResults = {}; = await supabaseStorageService.getBucket('designautoimages');
         bucketResults['designautoimages'] = {
           accessible: true,
           files: avatarFiles?.length || 0,
@@ -390,10 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: String(avatarError)
         };
         console.error(`✗ Erro ao acessar bucket 'designautoimages':`, avatarError);
-      }
-      
-      try {
-        const { data: mainFiles } = await supabaseStorageService.getBucket('designautoimages');
+      } = await supabaseStorageService.getBucket('designautoimages');
         bucketResults['designautoimages'] = {
           accessible: true,
           files: mainFiles?.length || 0,
@@ -420,21 +352,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'public/uploads/emergency'
       ];
       
-      for (const dir of dirsToCheck) {
-        try {
-          const exists = fs.existsSync(dir);
-          
-          if (exists) {
-            const files = fs.readdirSync(dir);
-            dirResults[dir] = {
-              exists,
-              files: files.length,
-              writable: true
-            };
+      for (const dir of dirsToCheck) {;
             
-            // Testar permissão de escrita
-            try {
-              const testFile = path.join(dir, `test-write-${Date.now()}.txt`);
+            // Testar permissão de escrita.txt`);
               fs.writeFileSync(testFile, 'Test');
               fs.unlinkSync(testFile);
             } catch (writeError) {
@@ -442,13 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               dirResults[dir].writeError = String(writeError);
             }
             
-            console.log(`✓ Diretório '${dir}' existe e tem ${files.length} arquivos.`);
-          } else {
-            dirResults[dir] = {
-              exists,
-              files: 0,
-              writable: false
-            };
+            console.log(`✓ Diretório '${dir}' existe e tem ${files.length} arquivos.`);;
             console.log(`✗ Diretório '${dir}' não existe.`);
           }
         } catch (dirError) {
@@ -474,24 +388,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let emergencySimulation = null;
       
       if (isProblematicUser) {
-        console.log("Realizando simulação de estratégias para usuário problemático...");
-        
-        try {
-          // Lista de estratégias disponíveis (sem fazer upload real)
-          const strategies = [
-            { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares' },
+        console.log("Realizando simulação de estratégias para usuário problemático...");,
             { name: 'main_bucket_avatar_path', description: 'Upload para pasta /designautoimages no bucket principal' },
             { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal' },
             { name: 'local_emergency', description: 'Upload para sistema de arquivos local' }
           ];
           
           // Verificar cada estratégia individualmente
-          const strategyResults = await Promise.all(strategies.map(async (strategy) => {
-            try {
-              // Testar apenas a verificação, sem fazer upload
-              if (strategy.name === 'avatar_bucket') {
-                await supabaseStorageService.getBucket('designautoimages');
-                return { ...strategy, viable: true };
+          const strategyResults = await Promise.all(strategies.map(async (strategy) => {;
               } 
               else if (strategy.name === 'main_bucket_avatar_path' || strategy.name === 'main_bucket_root') {
                 await supabaseStorageService.getBucket('designautoimages');
@@ -503,9 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return { ...strategy, viable: localDirAccess };
               }
               
-              return { ...strategy, viable: false, error: 'Estratégia não reconhecida' };
-            } catch (error) {
-              return { ...strategy, viable: false, error: String(error) };
+              return { ...strategy, viable: false, error: 'Estratégia não reconhecida' };;
             }
           }));
           
@@ -523,9 +425,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Simulação completa! ${viableStrategies.length} estratégias viáveis.`);
           if (bestStrategy) {
             console.log(`Estratégia recomendada: ${bestStrategy.name} - ${bestStrategy.description}`);
-          } else {
-            console.log("Nenhuma estratégia viável encontrada, seria usado placeholder como fallback.");
-          }
         } catch (simError) {
           console.error("Erro na simulação:", simError);
           emergencySimulation = {
@@ -550,35 +449,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recommendations: isProblematicUser
           ? "Este usuário está marcado para tratamento especializado de upload. As estratégias de upload em cascata serão utilizadas."
           : "Usuário normal, fluxo padrão de upload será aplicado."
-      });
-    } catch (error) {
-      console.error('Erro no teste de avatar de emergência:', error);
-      return res.status(500).json({
-        success: false,
-        error: String(error)
-      });
+      }););
     }
   });
 
   // Rota para testar o status de upload do avatar de um usuário específico
-  app.get('/api/debug/test-avatar-upload/:username', isAdmin, async (req, res) => {
-    try {
-      console.log('Testando capacidade de upload de avatar para usuário:', req.params.username);
-      
-      // Verificar se o usuário existe
-      const user = await storage.getUserByUsername(req.params.username);
-      if (!user) {
-        return res.status(404).json({ 
-          success: false, 
-          message: 'Usuário não encontrado' 
-        });
+  app.get('/api/debug/test-avatar-upload/:username', isAdmin, async (req, res) => {);
       }
       
       // Verificar acesso ao bucket de avatares
       console.log("Verificando acesso ao bucket 'designautoimages'...");
-      let avatarBucketAccess = false;
-      try {
-        const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
+      let avatarBucketAccess = false; = await supabaseStorageService.getBucket('designautoimages');
         avatarBucketAccess = true;
         console.log(`Bucket 'designautoimages' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
       } catch (avatarError) {
@@ -588,9 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar acesso ao bucket principal
       console.log("Verificando acesso ao bucket principal...");
-      let mainBucketAccess = false;
-      try {
-        const { data: mainFiles } = await supabaseStorageService.getBucket('designautoimages');
+      let mainBucketAccess = false; = await supabaseStorageService.getBucket('designautoimages');
         mainBucketAccess = true;
         console.log(`Bucket principal acessível. ${mainFiles?.length || 0} arquivos encontrados.`);
       } catch (mainError) {
@@ -602,11 +481,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Verificando acesso a diretórios locais...");
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'designautoimages');
       let localDirAccess = false;
-      try {
-        // Tentar criar diretório se não existir
-        if (!fs.existsSync('public')) {
-          fs.mkdirSync('public');
-        }
         if (!fs.existsSync(path.join('public', 'uploads'))) {
           fs.mkdirSync(path.join('public', 'uploads'));
         }
@@ -646,13 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recommendations: isProblematicUser 
           ? 'Este usuário tem suporte de emergência habilitado para uploads de avatar.'
           : 'Usuário normal sem tratamento especial.'
-      });
-    } catch (error) {
-      console.error('Erro no teste de upload de avatar:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: String(error) 
-      });
+      }););
     }
   });
   
@@ -713,14 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Categories API with precise art counts and detailed stats
-  app.get("/api/categories", async (req, res) => {
-    try {
-      const categories = await storage.getCategories();
-      
-      // Para cada categoria, realizar uma busca precisa das artes com contagem
-      const enhancedCategories = await Promise.all(categories.map(async (category) => {
-        // Buscar todas as artes dessa categoria com limites altos para garantir precisão
-        const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+  app.get("/api/categories", async (req, res) => { = await storage.getArts(1, 1000, { categoryId: category.id });
         
         // Se não há artes, retornamos com contagem zero e data atual
         if (arts.length === 0) {
@@ -752,22 +613,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      res.json(enhancedCategories);
-    } catch (error) {
-      console.error("Erro ao buscar categorias com estatísticas:", error);
-      res.status(500).json({ message: "Erro ao buscar categorias" });
+      res.json(enhancedCategories););
     }
   });
   
   // Versão em português da API de categorias (compatibilidade com frontend)
-  app.get("/api/categorias", async (req, res) => {
-    try {
-      const categories = await storage.getCategories();
-      
-      // Para cada categoria, realizar uma busca precisa das artes com contagem
-      const enhancedCategories = await Promise.all(categories.map(async (category) => {
-        // Buscar todas as artes dessa categoria com limites altos para garantir precisão
-        const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+  app.get("/api/categorias", async (req, res) => { = await storage.getArts(1, 1000, { categoryId: category.id });
         
         // Se não há artes, retornamos com contagem zero e data atual
         if (arts.length === 0) {
@@ -799,21 +650,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      res.json(enhancedCategories);
-    } catch (error) {
-      console.error("Erro ao buscar categorias com estatísticas:", error);
-      res.status(500).json({ message: "Erro ao buscar categorias" });
+      res.json(enhancedCategories););
     }
   });
   
   // Get Category by Slug
-  app.get("/api/categorias/slug/:slug", async (req, res) => {
-    try {
-      const slug = req.params.slug;
-      const category = await storage.getCategoryBySlug(slug);
-      
-      if (!category) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+  app.get("/api/categorias/slug/:slug", async (req, res) => {);
       }
       
       // Buscar todas as artes desta categoria para determinar a data de atualização
@@ -857,13 +699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Manter o endpoint antigo para compatibilidade
-  app.get("/api/categories/slug/:slug", async (req, res) => {
-    try {
-      const slug = req.params.slug;
-      const category = await storage.getCategoryBySlug(slug);
-      
-      if (!category) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+  app.get("/api/categories/slug/:slug", async (req, res) => {);
       }
       
       // Buscar todas as artes desta categoria para determinar a data de atualização
@@ -919,62 +755,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: enhancedCategory.updatedAt
       });
       
-      res.json(enhancedCategory);
-    } catch (error) {
-      console.error("Erro ao buscar categoria por slug:", error);
-      res.status(500).json({ message: "Erro ao buscar categoria" });
+      res.json(enhancedCategory););
     }
   });
 
-  app.get("/api/categories/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const category = await storage.getCategoryById(id);
-      
-      if (!category) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+  app.get("/api/categories/:id", async (req, res) => {);
       }
       
-      res.json(category);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar categoria" });
+      res.json(category););
     }
   });
   
   // Versão em português - Busca de categoria por ID (compatibilidade com frontend)
-  app.get("/api/categorias/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const category = await storage.getCategoryById(id);
-      
-      if (!category) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+  app.get("/api/categorias/:id", async (req, res) => {);
       }
       
-      res.json(category);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar categoria" });
+      res.json(category););
     }
   });
 
   // Versão em português - Artes recentes (compatibilidade com frontend)
   app.get("/api/artes/recent", async (req, res) => {
-    try {
-      // Verificar se o usuário é admin para determinar visibilidade
-      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
-      
-      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
-      const artsResult = await db.execute(sql`
-        SELECT 
-          id, 
-          "createdAt", 
-          "updatedAt", 
-          title, 
-          "imageUrl",
-          format,
-          "isPremium"
-        FROM arts 
-        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
         ORDER BY "createdAt" DESC 
         LIMIT 6
       `);
@@ -989,21 +790,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: art.updatedAt
       }));
       
-      res.json({ arts });
-    } catch (error) {
-      console.error("Erro ao buscar artes recentes:", error);
-      res.status(500).json({ message: "Erro ao buscar artes recentes" });
+      res.json({ arts }););
     }
   });
 
   // Versão em português - Arte por ID (compatibilidade com frontend)
-  app.get("/api/artes/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const art = await storage.getArtById(id);
-      
-      if (!art) {
-        return res.status(404).json({ message: "Arte não encontrada" });
+  app.get("/api/artes/:id", async (req, res) => {);
       }
       
       // Verificar se o usuário é admin para permitir acesso a artes ocultas
@@ -1026,9 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryId) {
-        try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
+      if (art.categoryId) { para arte ID: ${art.id}`);
           category = await storage.getCategoryById(art.categoryId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
@@ -1046,29 +836,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar contagens de interações
       let favoriteCount = 0;
       let shareCount = 0;
-      
-      try {
-        const counts = await storage.getArtInteractionCounts(id);
-        favoriteCount = counts.favoriteCount;
-        shareCount = counts.shareCount;
-        
-        // Tentar incrementar o contador de visualizações
-        if (art.viewcount !== undefined) {
-          art.viewcount += 1;
-          await storage.updateArtViewCount(id, art.viewcount);
-        }
       } catch (viewError) {
         console.error("Erro ao registrar visualização:", viewError);
         // Não interrompe o fluxo principal se o contador falhar
       }
       
       // Buscar informações do designer se existir
-      if (art.designerid) {
-        try {
-          const designer = await storage.getUserById(art.designerid);
-          if (designer) {
-            // Remover a senha e outras informações sensíveis
-            const { password, ...safeDesigner } = designer;
+      if (art.designerid) { = designer;
             
             // Buscar estatísticas do designer
             const stats = await storage.getDesignerStats(art.designerid);
@@ -1080,17 +854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Buscar artes recentes do designer para exibir junto com o perfil
-            let recentArts = [];
-            try {
-              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
-              recentArts = designerArts
-                .filter(recentArt => recentArt.id !== art.id)
-                .slice(0, 4)
-                .map(recentArt => ({
-                  id: recentArt.id,
-                  title: recentArt.title,
-                  imageUrl: recentArt.imageUrl
-                }));
+            let recentArts = [];));
             } catch (artsError) {
               console.error("Erro ao buscar artes recentes do designer:", artsError);
             }
@@ -1110,12 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } 
       // Se não existir designer, usar administrador como designer temporário para demonstração
       else {
-        // Usar administrador (id 1) como designer temporário (apenas para fins de demonstração)
-        try {
-          const admin = await storage.getUserById(1);
-          if (admin) {
-            // Remover a senha e outras informações sensíveis
-            const { password, ...safeAdmin } = admin;
+        // Usar administrador (id 1) como designer temporário (apenas para fins de demonstração) = admin;
             art.designer = {
               ...safeAdmin,
               isFollowing: false,
@@ -1135,43 +894,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPremiumLocked,
         favoriteCount,
         shareCount
-      });
-    } catch (error) {
-      console.error("Erro ao buscar arte:", error);
-      res.status(500).json({ message: "Erro ao buscar arte" });
+      }););
     }
   });
   
   // Formats API
   app.get("/api/formats", async (req, res) => {
-    try {
-      const formats = await storage.getFormats();
-      res.json(formats);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar formatos" });
-    }
   });
   
-  app.get("/api/formats/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const format = await storage.getFormatById(id);
-      
-      if (!format) {
-        return res.status(404).json({ message: "Formato não encontrado" });
+  app.get("/api/formats/:id", async (req, res) => {);
       }
       
-      res.json(format);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar formato" });
+      res.json(format););
     }
   });
   
-  app.post("/api/formats", async (req, res) => {
-    try {
-      // Apenas usuários admin ou designer_adm podem criar formatos
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
-        return res.status(403).json({ message: "Sem permissão para criar formatos" });
+  app.post("/api/formats", async (req, res) => {);
       }
       
       const { name, slug } = req.body;
@@ -1195,18 +933,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug
       });
       
-      res.status(201).json(newFormat);
-    } catch (error) {
-      console.error("Erro ao criar formato:", error);
-      res.status(500).json({ message: "Erro ao criar formato" });
+      res.status(201).json(newFormat););
     }
   });
   
-  app.put("/api/formats/:id", async (req, res) => {
-    try {
-      // Apenas usuários admin ou designer_adm podem atualizar formatos
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
-        return res.status(403).json({ message: "Sem permissão para atualizar formatos" });
+  app.put("/api/formats/:id", async (req, res) => {);
       }
       
       const id = parseInt(req.params.id);
@@ -1237,18 +968,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug
       });
       
-      res.json(updatedFormat);
-    } catch (error) {
-      console.error("Erro ao atualizar formato:", error);
-      res.status(500).json({ message: "Erro ao atualizar formato" });
+      res.json(updatedFormat););
     }
   });
   
-  app.delete("/api/formats/:id", async (req, res) => {
-    try {
-      // Apenas usuários admin podem excluir formatos
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: "Sem permissão para excluir formatos" });
+  app.delete("/api/formats/:id", async (req, res) => {);
       }
       
       const id = parseInt(req.params.id);
@@ -1283,46 +1007,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ 
           message: responseMsg,
           artsAffected: arts.arts.length
-        });
-      } else {
-        res.status(500).json({ message: "Erro ao excluir formato" });
-      }
-    } catch (error) {
-      console.error("Erro ao excluir formato:", error);
-      res.status(500).json({ message: "Erro ao excluir formato" });
+        }););
+      });
     }
   });
 
   // File Types API
   app.get("/api/fileTypes", async (req, res) => {
-    try {
-      const fileTypes = await storage.getFileTypes();
-      res.json(fileTypes);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar tipos de arquivo" });
-    }
   });
   
-  app.get("/api/fileTypes/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const fileType = await storage.getFileTypeById(id);
-      
-      if (!fileType) {
-        return res.status(404).json({ message: "Tipo de arquivo não encontrado" });
+  app.get("/api/fileTypes/:id", async (req, res) => {);
       }
       
-      res.json(fileType);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar tipo de arquivo" });
+      res.json(fileType););
     }
   });
   
-  app.post("/api/fileTypes", async (req, res) => {
-    try {
-      // Apenas usuários admin ou designer_adm podem criar tipos de arquivo
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
-        return res.status(403).json({ message: "Sem permissão para criar tipos de arquivo" });
+  app.post("/api/fileTypes", async (req, res) => {);
       }
       
       const { name, slug } = req.body;
@@ -1346,18 +1047,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug
       });
       
-      res.status(201).json(newFileType);
-    } catch (error) {
-      console.error("Erro ao criar tipo de arquivo:", error);
-      res.status(500).json({ message: "Erro ao criar tipo de arquivo" });
+      res.status(201).json(newFileType););
     }
   });
   
-  app.put("/api/fileTypes/:id", async (req, res) => {
-    try {
-      // Apenas usuários admin ou designer_adm podem atualizar tipos de arquivo
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
-        return res.status(403).json({ message: "Sem permissão para atualizar tipos de arquivo" });
+  app.put("/api/fileTypes/:id", async (req, res) => {);
       }
       
       const id = parseInt(req.params.id);
@@ -1388,18 +1082,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug
       });
       
-      res.json(updatedFileType);
-    } catch (error) {
-      console.error("Erro ao atualizar tipo de arquivo:", error);
-      res.status(500).json({ message: "Erro ao atualizar tipo de arquivo" });
+      res.json(updatedFileType););
     }
   });
   
-  app.delete("/api/fileTypes/:id", async (req, res) => {
-    try {
-      // Apenas usuários admin podem excluir tipos de arquivo
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: "Sem permissão para excluir tipos de arquivo" });
+  app.delete("/api/fileTypes/:id", async (req, res) => {);
       }
       
       const id = parseInt(req.params.id);
@@ -1434,64 +1121,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ 
           message: responseMsg,
           artsAffected: arts.arts.length
-        });
-      } else {
-        res.status(500).json({ message: "Erro ao excluir tipo de arquivo" });
-      }
-    } catch (error) {
-      console.error("Erro ao excluir tipo de arquivo:", error);
-      res.status(500).json({ message: "Erro ao excluir tipo de arquivo" });
+        }););
+      });
     }
   });
 
   // Collections API
   app.get("/api/collections", async (req, res) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 12;
-      const search = req.query.search as string | undefined;
-      
-      const result = await storage.getCollections(page, limit, search);
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar coleções" });
-    }
   });
 
   app.get("/api/collections/featured", async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 4;
-      const featuredCollections = await storage.getFeaturedCollections(limit);
-      res.json(featuredCollections);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar coleções em destaque" });
-    }
   });
 
-  app.get("/api/collections/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const collection = await storage.getCollectionById(id);
-      
-      if (!collection) {
-        return res.status(404).json({ message: "Coleção não encontrada" });
+  app.get("/api/collections/:id", async (req, res) => {);
       }
       
       const arts = await storage.getArtsByCollectionId(id);
-      res.json({ collection, arts });
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar coleção" });
+      res.json({ collection, arts }););
     }
   });
 
   // Arts API
-  app.get("/api/arts", async (req, res) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 8;
-      
-      // Parse filters
-      const filters: any = {};
+  app.get("/api/arts", async (req, res) => {;
       
       if (req.query.categoryId) {
         filters.categoryId = parseInt(req.query.categoryId as string);
@@ -1528,39 +1179,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se for 'all', não aplicamos filtro - admin verá todas as artes
         if (req.query.isVisible === 'all') {
           // Não aplicamos filtro
-          console.log("Filtro 'all' selecionado: mostrando todas as artes");
-        } else {
-          // Se o filtro for true ou false, aplicamos essa condição específica
-          filters.isVisible = req.query.isVisible === 'true';
-          console.log(`Filtro de visibilidade aplicado: ${filters.isVisible ? 'visíveis' : 'ocultas'}`);
+          console.log("Filtro 'all' selecionado: mostrando todas as artes");`);
         }
       } else if (!isAdmin) {
         // Se o usuário não for admin, vai ver apenas artes visíveis
         filters.isVisible = true;
         console.log("Usuário não é admin: mostrando apenas artes visíveis");
-      } else {
-        // Para admin sem filtro específico, vê todas as artes
-        console.log("Admin sem filtro: mostrando todas as artes");
-      }
       
       console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`)
       
       const result = await storage.getArts(page, limit, filters);
-      res.json(result);
-    } catch (error) {
-      console.error("Erro detalhado ao buscar artes:", error);
-      res.status(500).json({ message: "Erro ao buscar artes" });
+      res.json(result););
     }
   });
       
   // Rota de artes em português (compatibilidade com frontend)
-  app.get("/api/artes", async (req, res) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 8;
-      
-      // Parse filters
-      const filters: any = {};
+  app.get("/api/artes", async (req, res) => {;
       
       if (req.query.categoryId) {
         filters.categoryId = parseInt(req.query.categoryId as string);
@@ -1596,49 +1230,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se for 'all', não aplicamos filtro - admin verá todas as artes
         if (req.query.isVisible === 'all') {
           // Não aplicamos filtro
-          console.log("Filtro 'all' selecionado: mostrando todas as artes");
-        } else {
-          // Se o filtro for true ou false, aplicamos essa condição específica
-          filters.isVisible = req.query.isVisible === 'true';
-          console.log(`Filtro de visibilidade aplicado: ${filters.isVisible ? 'visíveis' : 'ocultas'}`);
+          console.log("Filtro 'all' selecionado: mostrando todas as artes");`);
         }
       } else if (!isAdmin) {
         // Se o usuário não for admin, vai ver apenas artes visíveis
         filters.isVisible = true;
         console.log("Usuário não é admin: mostrando apenas artes visíveis");
-      } else {
-        // Para admin sem filtro específico, vê todas as artes
-        console.log("Admin sem filtro: mostrando todas as artes");
-      }
       
       console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`)
       
       const result = await storage.getArts(page, limit, filters);
-      res.json(result);
-    } catch (error) {
-      console.error("Erro detalhado ao buscar artes:", error);
-      res.status(500).json({ message: "Erro ao buscar artes" });
+      res.json(result););
     }
   });
   
   // Rota para buscar artes recentes (usada no painel inicial)
   app.get("/api/arts/recent", async (req, res) => {
-    try {
-      // Verificar se o usuário é admin para determinar visibilidade
-      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
-      
-      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
-      const artsResult = await db.execute(sql`
-        SELECT 
-          id, 
-          "createdAt", 
-          "updatedAt", 
-          title, 
-          "imageUrl",
-          format,
-          "isPremium"
-        FROM arts 
-        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
         ORDER BY "createdAt" DESC 
         LIMIT 6
       `);
@@ -1653,21 +1260,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: art.updatedAt
       }));
       
-      res.json({ arts });
-    } catch (error) {
-      console.error("Erro ao buscar artes recentes:", error);
-      res.status(500).json({ message: "Erro ao buscar artes recentes" });
+      res.json({ arts }););
     }
   });
   
   // Essa rota foi movida para antes de /api/artes/:id para evitar problemas de ordem
 
-  app.get("/api/arts/:id/related", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const limit = parseInt(req.query.limit as string) || 12; // Usar 12 como padrão
-      
-      console.log(`[GET /api/arts/${id}/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
+  app.get("/api/arts/:id/related", async (req, res) => {/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
       
       const relatedArts = await storage.getRelatedArts(id, limit);
       
@@ -1678,20 +1277,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se não houver artes relacionadas, retorna array vazio em vez de 404
       // para que o frontend possa lidar com isso de maneira apropriada
-      res.json(convertedArts);
-    } catch (error) {
-      console.error("Erro ao buscar artes relacionadas:", error);
-      res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
+      res.json(convertedArts););
     }
   });
   
   // Versão em português - Artes relacionadas por ID (compatibilidade com frontend)
-  app.get("/api/artes/:id/related", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const limit = parseInt(req.query.limit as string) || 12; // Usar 12 como padrão
-      
-      console.log(`[GET /api/artes/${id}/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
+  app.get("/api/artes/:id/related", async (req, res) => {/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
       
       const relatedArts = await storage.getRelatedArts(id, limit);
       
@@ -1699,20 +1290,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se não houver artes relacionadas, retorna array vazio em vez de 404
       // para que o frontend possa lidar com isso de maneira apropriada
-      res.json(relatedArts);
-    } catch (error) {
-      console.error("Erro ao buscar artes relacionadas:", error);
-      res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
+      res.json(relatedArts););
     }
   });
 
-  app.get("/api/arts/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const art = await storage.getArtById(id);
-      
-      if (!art) {
-        return res.status(404).json({ message: "Arte não encontrada" });
+  app.get("/api/arts/:id", async (req, res) => {);
       }
       
       // Verificar se o usuário é admin para permitir acesso a artes ocultas
@@ -1735,24 +1317,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryId) {
-        try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
+      if (art.categoryId) { para arte ID: ${art.id}`);
           category = await storage.getCategoryById(art.categoryId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
           if (category) {
             art.category = category;
-            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
-          } else {
-            console.log(`[DEBUG] Categoria ID ${art.categoryId} não encontrada no banco de dados`);
+            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category); não encontrada no banco de dados`);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
-        }
-      } else {
-        console.log(`[DEBUG] Arte ID ${art.id} não tem categoryId definido`);
+        } não tem categoryId definido`);
       }
       
       // Buscar contagem de favoritos para esta arte
@@ -1765,26 +1341,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar contagem de compartilhamentos para esta arte (se existir a tabela)
       let shareCount = 0;
-      try {
-        const sharesResult = await db.execute(sql`
-          SELECT COUNT(*) as count
-          FROM shares
-          WHERE "artId" = ${id}
         `);
         shareCount = parseInt(sharesResult.rows[0].count) || 0;
-      } catch (error) {
-        console.log("Tabela de compartilhamentos não encontrada:", error);
-        // Se a tabela não existir, apenas ignoramos e continuamos com 0
-      }
       
-      // Incrementar contador de visualizações
-      try {
-        // Registrar a visualização
-        const viewData = {
-          artId: id,
-          userId: req.user ? (req.user as any).id : null,
-          sourceIp: req.ip
-        };
+      // Incrementar contador de visualizações;
         
         await storage.recordView(viewData);
         
@@ -1799,12 +1359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar informações do designer se existir
-      if (art.designerid) {
-        try {
-          const designer = await storage.getUserById(art.designerid);
-          if (designer) {
-            // Remover a senha e outras informações sensíveis
-            const { password, ...safeDesigner } = designer;
+      if (art.designerid) { = designer;
             
             // Buscar estatísticas do designer
             const stats = await storage.getDesignerStats(art.designerid);
@@ -1817,17 +1372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Buscar 4 artes recentes do designer, excluindo a arte atual
-            let recentArts = [];
-            try {
-              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
-              recentArts = designerArts
-                .filter(recentArt => recentArt.id !== art.id)
-                .slice(0, 4)
-                .map(recentArt => ({
-                  id: recentArt.id,
-                  title: recentArt.title,
-                  imageUrl: recentArt.imageUrl
-                }));
+            let recentArts = [];));
             } catch (artsError) {
               console.error("Erro ao buscar artes recentes do designer:", artsError);
             }
@@ -1847,11 +1392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } 
       // Se não existir designer, usar administrador como designer temporário para demonstração
       else {
-        // Usar administrador (id 1) como designer temporário (apenas para fins de demonstração)
-        try {
-          const admin = await storage.getUserById(1);
-          if (admin) {
-            const { password, ...safeAdmin } = admin;
+        // Usar administrador (id 1) como designer temporário (apenas para fins de demonstração) = admin;
             
             // Buscar todos as artes do admin
             const adminArts = await storage.getArtsByDesignerId(1, 10);
@@ -1883,48 +1424,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPremiumLocked,
         favoriteCount,
         shareCount
-      });
-    } catch (error) {
-      console.error("Erro ao buscar arte:", error);
-      res.status(500).json({ message: "Erro ao buscar arte" });
+      }););
     }
   });
   
   // Rota para buscar artes recentes (usada no painel inicial)
-  app.get("/api/arts/recent", async (req, res) => {
-    try {
-      // Verificar se o usuário é admin para determinar visibilidade
-      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+  app.get("/api/arts/recent", async (req, res) => {));
       
-      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
-      const artsResult = await db.execute(sql`
-        SELECT 
-          id, 
-          "createdAt", 
-          "updatedAt", 
-          title, 
-          "imageUrl",
-          format,
-          "isPremium"
-        FROM arts 
-        ORDER BY "createdAt" DESC 
-        LIMIT 6
-      `);
-      
-      const arts = artsResult.rows.map(art => ({
-        id: art.id,
-        title: art.title,
-        imageUrl: art.imageUrl,
-        format: art.format,
-        isPremium: art.isPremium,
-        createdAt: art.createdAt,
-        updatedAt: art.updatedAt
-      }));
-      
-      res.json({ arts });
-    } catch (error) {
-      console.error("Erro ao buscar artes recentes:", error);
-      res.status(500).json({ message: "Erro ao buscar artes recentes" });
+      res.json({ arts }););
     }
   });
 
@@ -1932,24 +1439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Testimonials API
   app.get("/api/testimonials", async (req, res) => {
-    try {
-      const testimonials = await storage.getTestimonials();
-      res.json(testimonials);
-    } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar depoimentos" });
-    }
   });
 
   // Favorites API
   // Estatísticas do usuário - versão revisada
-  app.get("/api/users/stats", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      console.log("[GET /api/users/stats] Buscando estatísticas para o usuário:", userId);
-      
-      // Usar SQL bruto para evitar problemas com maiúsculas/minúsculas nos nomes das colunas
-      // Usar o Drizzle ORM diretamente para contar favoritos
-      const favoritesQuery = db.select({ count: sql<number>`count(*)` })
+  app.get("/api/users/stats", isAuthenticated, async (req, res) => {)
         .from(favorites)
         .where(eq(favorites.userId, userId));
         
@@ -1999,27 +1493,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[GET /api/users/stats] Retornando estatísticas atualizadas:", stats);
       
       // Retornar estatísticas
-      res.json(stats);
-    } catch (error) {
-      console.error("[GET /api/users/stats] Erro ao buscar estatísticas do usuário:", error);
-      res.status(500).json({ message: "Erro ao buscar estatísticas do usuário" });
+      res.json(stats););
     }
   });
   
   // Downloads API
-  app.get("/api/downloads", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const userDownloads = await storage.getDownloadsByUserId(userId);
-      
-      // Enriquece os downloads com informações da arte
-      const enrichedDownloads = await Promise.all(
-        userDownloads.map(async (download) => {
-          try {
-            // Garantir que artId seja um número
-            const artId = Number(download.artId);
-            if (isNaN(artId)) {
-              console.error(`ID de arte inválido: ${download.artId}`);
+  app.get("/api/downloads", isAuthenticated, async (req, res) => {`);
               return download;
             }
             
@@ -2027,9 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return {
               ...download,
               art
-            };
-          } catch (error) {
-            console.error(`Erro ao buscar arte ${download.artId} para download:`, error);
+            }; para download:`, error);
             return download;
           }
         })
@@ -2038,18 +1515,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filtrar downloads que não têm arte válida
       const validDownloads = enrichedDownloads.filter(download => download.art);
       
-      res.json({ downloads: validDownloads, totalCount: validDownloads.length });
-    } catch (error) {
-      console.error("Erro ao buscar downloads:", error);
-      res.status(500).json({ message: "Erro ao buscar downloads" });
+      res.json({ downloads: validDownloads, totalCount: validDownloads.length }););
     }
   });
   
   // Download specific art
-  app.post("/api/downloads", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const { artId } = req.body;
+  app.post("/api/downloads", isAuthenticated, async (req, res) => { = req.body;
       
       // Verificar se a arte existe
       const art = await storage.getArtById(Number(artId));
@@ -2064,26 +1535,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // A data é adicionada automaticamente pelo campo defaultNow()
       });
       
-      res.status(201).json(download);
-    } catch (error) {
-      console.error("Erro ao registrar download:", error);
-      res.status(500).json({ message: "Erro ao registrar download" });
+      res.status(201).json(download););
     }
   });
   
-  app.get("/api/favorites", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const favorites = await storage.getFavoritesByUserId(userId);
-      
-      // Enriquece os favoritos com informações da arte
-      const enrichedFavorites = await Promise.all(
-        favorites.map(async (favorite) => {
-          try {
-            // Garantir que artId seja um número
-            const artId = Number(favorite.artId);
-            if (isNaN(artId)) {
-              console.error(`ID de arte inválido: ${favorite.artId}`);
+  app.get("/api/favorites", isAuthenticated, async (req, res) => {`);
               return favorite;
             }
             
@@ -2091,9 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return {
               ...favorite,
               art
-            };
-          } catch (error) {
-            console.error(`Erro ao buscar arte ${favorite.artId} para favorito:`, error);
+            }; para favorito:`, error);
             return favorite;
           }
         })
@@ -2102,31 +1556,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filtrar favoritos que não têm arte válida
       const validFavorites = enrichedFavorites.filter(favorite => favorite.art);
       
-      res.json({ favorites: validFavorites, totalCount: validFavorites.length });
-    } catch (error) {
-      console.error("Erro ao buscar favoritos:", error);
-      res.status(500).json({ message: "Erro ao buscar favoritos" });
+      res.json({ favorites: validFavorites, totalCount: validFavorites.length }););
     }
   });
 
   // Check if art is favorited
-  app.get("/api/favorites/check/:artId", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const artId = parseInt(req.params.artId);
-      const favorite = await storage.getFavorite(userId, artId);
-      res.json({ isFavorited: !!favorite });
-    } catch (error) {
-      console.error("Erro ao verificar favorito:", error);
-      res.status(500).json({ message: "Erro ao verificar favorito" });
+  app.get("/api/favorites/check/:artId", isAuthenticated, async (req, res) => {););
     }
   });
 
   // Add favorite
-  app.post("/api/favorites", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const { artId } = req.body;
+  app.post("/api/favorites", isAuthenticated, async (req, res) => { = req.body;
       
       // Verificar se já existe o favorito
       const existingFavorite = await storage.getFavorite(userId, artId);
@@ -2135,36 +1575,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const favorite = await storage.createFavorite({ userId, artId });
-      res.status(201).json(favorite);
-    } catch (error) {
-      console.error("Erro ao adicionar favorito:", error);
-      res.status(500).json({ message: "Erro ao adicionar favorito" });
+      res.status(201).json(favorite););
     }
   });
 
   // Remove favorite
-  app.delete("/api/favorites/:artId", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const artId = parseInt(req.params.artId);
-      
-      const removed = await storage.deleteFavorite(userId, artId);
-      
-      if (!removed) {
-        return res.status(404).json({ message: "Favorito não encontrado" });
+  app.delete("/api/favorites/:artId", isAuthenticated, async (req, res) => {);
       }
       
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Erro ao remover favorito:", error);
-      res.status(500).json({ message: "Erro ao remover favorito" });
+      res.json({ success: true }););
     }
   });
   
   // Rota para registrar compartilhamento de arte
-  app.post("/api/shares", async (req, res) => {
-    try {
-      const { artId } = req.body;
+  app.post("/api/shares", async (req, res) => { = req.body;
       const userId = req.user ? (req.user as any).id : null; // Opcional, usuários anônimos podem compartilhar
       
       // Validar o ID da arte
@@ -2184,62 +1608,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         VALUES (${parseInt(artId)}, ${userId}, ${new Date()})
       `);
       
-      res.status(201).json({ success: true });
-    } catch (error) {
-      console.error("Erro ao registrar compartilhamento:", error);
-      res.status(500).json({ 
-        message: "Erro ao registrar compartilhamento",
-        error: error instanceof Error ? error.message : String(error)
-      });
+      res.status(201).json({ success: true }););
     }
   });
 
   // Admin API - Create Art
   app.post("/api/admin/arts", isAdmin, async (req, res) => {
-    try {
-      const newArt = await storage.createArt(req.body);
-      // Resposta com status 201 (Created) e a nova arte
-      res.status(201).json(newArt);
-    } catch (error) {
-      console.error("Erro ao criar arte:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          message: "Dados inválidos", 
-          errors: fromZodError(error).message 
-        });
-      }
       res.status(500).json({ message: "Erro ao criar arte" });
     }
   });
 
   // Admin API - Update Art
-  app.put("/api/admin/arts/:id", isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updatedArt = await storage.updateArt(id, req.body);
-      
-      if (!updatedArt) {
-        return res.status(404).json({ message: "Arte não encontrada" });
+  app.put("/api/admin/arts/:id", isAdmin, async (req, res) => {);
       }
       
-      res.json(updatedArt);
-    } catch (error) {
-      console.error("Erro ao atualizar arte:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          message: "Dados inválidos", 
-          errors: fromZodError(error).message 
-        });
+      res.json(updatedArt););
       }
       res.status(500).json({ message: "Erro ao atualizar arte" });
     }
   });
   
   // Admin API - Update Art Visibility
-  app.put("/api/admin/arts/:id/visibility", isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { isVisible } = req.body;
+  app.put("/api/admin/arts/:id/visibility", isAdmin, async (req, res) => { = req.body;
       
       if (typeof isVisible !== 'boolean') {
         return res.status(400).json({ message: "O campo isVisible deve ser um booleano" });
@@ -2258,87 +1648,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: isVisible ? "Arte tornada visível" : "Arte oculta com sucesso",
         art: updatedArt
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar visibilidade da arte:", error);
-      res.status(500).json({ 
-        message: "Erro ao atualizar visibilidade da arte",
-        error: error instanceof Error ? error.message : String(error)
-      });
+      }););
     }
   });
 
   // Admin API - Delete Art
-  app.delete("/api/admin/arts/:id", isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteArt(id);
-      
-      if (!success) {
-        return res.status(404).json({ message: "Arte não encontrada" });
+  app.delete("/api/admin/arts/:id", isAdmin, async (req, res) => {);
       }
       
-      res.status(204).send(); // No Content
-    } catch (error) {
-      console.error("Erro ao excluir arte:", error);
-      res.status(500).json({ message: "Erro ao excluir arte" });
+      res.status(204).send(); // No Content);
     }
   });
 
   // Admin API - Create Category
   app.post("/api/admin/categories", isAdmin, async (req, res) => {
-    try {
-      const newCategory = await storage.createCategory(req.body);
-      res.status(201).json(newCategory);
-    } catch (error) {
-      console.error("Erro ao criar categoria:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          message: "Dados inválidos", 
-          errors: fromZodError(error).message 
-        });
-      }
       res.status(500).json({ message: "Erro ao criar categoria" });
     }
   });
 
   // Admin API - Update Category
-  app.put("/api/admin/categories/:id", isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updatedCategory = await storage.updateCategory(id, req.body);
-      
-      if (!updatedCategory) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+  app.put("/api/admin/categories/:id", isAdmin, async (req, res) => {);
       }
       
-      res.json(updatedCategory);
-    } catch (error) {
-      console.error("Erro ao atualizar categoria:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          message: "Dados inválidos", 
-          errors: fromZodError(error).message 
-        });
+      res.json(updatedCategory););
       }
       res.status(500).json({ message: "Erro ao atualizar categoria" });
     }
   });
 
   // Admin API - Delete Category
-  app.delete("/api/admin/categories/:id", isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteCategory(id);
-      
-      if (!success) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+  app.delete("/api/admin/categories/:id", isAdmin, async (req, res) => {);
       }
       
-      res.status(204).send(); // No Content
-    } catch (error) {
-      console.error("Erro ao excluir categoria:", error);
-      res.status(500).json({ message: "Erro ao excluir categoria" });
+      res.status(204).send(); // No Content);
     }
   });
 
@@ -2349,10 +1691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(imageProxyRouter);
   
   // Rota para upload de imagens (usada no formulário multi-formato) 
-  app.use("/api/upload-image", isAuthenticated, uploadMemory.single("image"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "Nenhuma imagem fornecida" });
+  app.use("/api/upload-image", isAuthenticated, uploadMemory.single("image"), async (req, res) => {);
       }
       
       // Extrair categoria para organização das pastas
@@ -2382,13 +1721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: result.imageUrl,
         thumbnailUrl: result.thumbnailUrl,
         message: "Imagem enviada com sucesso" 
-      });
-    } catch (error) {
-      console.error("Erro no upload de imagem:", error);
-      return res.status(500).json({ 
-        error: "Erro ao processar o upload da imagem",
-        details: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      }););
     }
   });
   
@@ -2400,20 +1733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoints para gerenciar configurações do site
   
   // Endpoint especial para forçar refresh completo do logo
-  app.post("/api/site-settings/force-logo-refresh", isAdmin, async (req, res) => {
-    try {
-      // Definir cabeçalhos anti-cache extremos
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Surrogate-Control', 'no-store');
-      res.setHeader('X-Accel-Expires', '0');
-      res.setHeader('Vary', '*');
-      
-      // Buscar as configurações atuais
-      const settings = await db.select().from(siteSettings).limit(1);
-      if (settings.length === 0) {
-        return res.status(404).json({ message: "Configurações não encontradas" });
+  app.post("/api/site-settings/force-logo-refresh", isAdmin, async (req, res) => {);
       }
       
       const currentSettings = settings[0];
@@ -2421,17 +1741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!currentLogoUrl) {
         return res.status(400).json({ message: "Não há logo configurado" });
-      }
-      
-      try {
-        // Gerar uma nova URL para forçar refresh no navegador
-        // Remove todos os parâmetros de query existentes
-        const baseUrl = currentLogoUrl.split('?')[0];
-        
-        // Adiciona um novo timestamp e randomização
-        const timestamp = Date.now();
-        const randomPart = Math.random().toString(36).substring(2, 10);
-        const newLogoUrl = `${baseUrl}?t=${timestamp}&r=${randomPart}&force=true`;
+      }?t=${timestamp}&r=${randomPart}&force=true`;
         
         // Atualizar no banco de dados
         await db.update(siteSettings)
@@ -2449,37 +1759,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           newLogoUrl: newLogoUrl,
           timestamp: timestamp,
           message: "URL do logo atualizada com sucesso para forçar refresh"
-        });
-        
-      } catch (error) {
-        console.error("Erro ao gerar nova URL para o logo:", error);
-        return res.status(500).json({ message: "Erro ao atualizar URL do logo" });
-      }
-    } catch (error) {
-      console.error("Erro na operação de force-logo-refresh:", error);
-      return res.status(500).json({ message: "Erro interno do servidor" });
+        }););
+      });
     }
   });
   
-  app.get("/api/site-settings", async (req, res) => {
-    try {
-      // Configurar cabeçalhos anti-cache extremamente agressivos
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Surrogate-Control', 'no-store');
-      res.setHeader('X-Accel-Expires', '0'); // Para Nginx
-      res.setHeader('Vary', '*'); // Força validação para todas as condições
-      
-      // Acrescentar timestamp no cabeçalho para verificação client-side
-      res.setHeader('X-Last-Updated', Date.now().toString());
-      
-      // Buscar as configurações do site (sempre retorna a única linha ou cria uma nova)
-      const settings = await db.select().from(siteSettings).limit(1);
-      
-      // Se não existir configuração, criar uma com valores padrão
-      if (settings.length === 0) {
-        const [newSettings] = await db.insert(siteSettings).values({}).returning();
+  app.get("/api/site-settings", async (req, res) => {).returning();
         return res.json(newSettings);
       }
       
@@ -2496,28 +1781,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         settings[0].logoUpdatedAt = timestamp;
       }
       
-      return res.json(settings[0]);
-    } catch (error) {
-      console.error("Erro ao buscar configurações do site:", error);
-      res.status(500).json({ message: "Erro ao buscar configurações do site" });
+      return res.json(settings[0]););
     }
   });
   
   // Endpoint para atualizar campos específicos das configurações do site (requer admin)
-  app.patch("/api/site-settings", isAdmin, async (req, res) => {
-    try {
-      console.log("Requisição de atualização de configurações recebida");
-      console.log("Corpo da requisição:", req.body);
-      
-      // Definir cabeçalhos anti-cache
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      
-      // Verificar se as configurações existem
-      const existingSettings = await db.select().from(siteSettings).limit(1);
-      if (existingSettings.length === 0) {
-        return res.status(404).json({ message: "Configurações não encontradas" });
+  app.patch("/api/site-settings", isAdmin, async (req, res) => {);
       }
       
       // Atualizar apenas os campos enviados no corpo da requisição
@@ -2532,23 +1801,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(siteSettings.id, existingSettings[0].id))
         .returning();
       
-      return res.status(200).json(updatedSettings);
-    } catch (error) {
-      console.error("Erro ao atualizar configurações do site:", error);
-      return res.status(500).json({ 
-        message: "Erro ao atualizar configurações do site",
-        error: error instanceof Error ? error.message : "Erro desconhecido"
-      });
+      return res.status(200).json(updatedSettings););
     }
   });
   
   // Endpoint para upload de logo do site (requer admin)
-  app.put("/api/site-settings", isAdmin, logoUpload.single('logo'), async (req, res) => {
-    try {
-      console.log("Solicitação de atualização de logo recebida");
-      
-      // Logs para depuração do upload
-      console.log("Corpo da requisição:", Object.keys(req.body || {}).join(', '));
+  app.put("/api/site-settings", isAdmin, logoUpload.single('logo'), async (req, res) => {).join(', '));
       console.log("Campos do multer recebidos:", Object.keys(req).filter(k => !['file', 'body', 'params', 'query'].includes(k)).slice(0, 5).join(', '));
       console.log("Arquivo anexado presente:", req.file ? "SIM" : "NÃO");
       
@@ -2566,11 +1824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se um arquivo de logo foi enviado, processar e salvar
       if (req.file) {
-        console.log("Arquivo de logo recebido:", req.file.originalname, "tipo:", req.file.mimetype, "tamanho:", req.file.size, "bytes");
-        
-        try {
-          // Importar o serviço de storage do Supabase
-          const { supabaseStorageService } = await import('./services/supabase-storage');
+        console.log("Arquivo de logo recebido:", req.file.originalname, "tipo:", req.file.mimetype, "tamanho:", req.file.size, "bytes"); = await import('./services/supabase-storage');
           
           // Obter o nome de arquivo personalizado da requisição (se existir)
           const customFilename = req.body.uniqueFileName || `logo-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
@@ -2589,20 +1843,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               logoUrl: uploadResult.logoUrl
             };
             
-            console.log(`Logo enviado com sucesso para ${uploadResult.storageType}: ${uploadResult.logoUrl}`);
-          } else {
-            console.error("Falha ao fazer upload do logo, URL não retornada");
-            return res.status(500).json({ message: "Falha ao fazer upload do logo" });
+            console.log(`Logo enviado com sucesso para ${uploadResult.storageType}: ${uploadResult.logoUrl}`););
           }
         } catch (uploadError) {
           console.error("Erro ao processar upload do logo:", uploadError);
           
-          // Fallback para método local caso todas as tentativas anteriores falhem
-          try {
-            // Definir o caminho público para a imagem
-            const publicImagesDir = path.join(process.cwd(), 'public/images/logos');
-            if (!fs.existsSync(publicImagesDir)) {
-              fs.mkdirSync(publicImagesDir, { recursive: true });
+          // Fallback para método local caso todas as tentativas anteriores falhem);
             }
             
             // Nome de arquivo único com hash adicional para evitar colisões
@@ -2637,23 +1883,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...updateData,
           updatedBy: (req.user as any).id
         }).returning();
-        return res.json(newSettings);
-      } else {
-        // Se existe, atualizar a configuração existente
-        const [updatedSettings] = await db.update(siteSettings)
-          .set({
-            ...updateData,
-            updatedAt: new Date(),
-            updatedBy: (req.user as any).id
-          })
+        return res.json(newSettings);)
           .where(eq(siteSettings.id, existingSettings[0].id))
           .returning();
         
         return res.json(updatedSettings);
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar configurações do site:", error);
-      res.status(500).json({ message: "Erro ao atualizar configurações do site" });
+      });
     }
   });
 
@@ -2661,15 +1896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * Rotas para teste de armazenamento (diagnóstico administrativo)
    */
   // Verificar conexão com serviços de armazenamento
-  app.get("/api/admin/storage/check-connection", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const service = req.query.service as string;
-      
-      if (!service) {
-        return res.status(400).json({
-          success: false,
-          message: "Parâmetro 'service' é obrigatório"
-        });
+  app.get("/api/admin/storage/check-connection", isAuthenticated, isAdmin, async (req, res) => {);
       }
       
       if (service === "supabase") {
@@ -2707,13 +1934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // A implementação unificada está mais abaixo no arquivo (na seção "DIAGNÓSTICO DE ARMAZENAMENTO - ROTAS")
 
   // Rota administrativa para atualizar designerId de todas as artes
-  app.post("/api/admin/update-designers", isAdmin, async (req, res) => {
-    try {
-      // Buscar o ID do usuário admin
-      const admin = req.user;
-      
-      if (!admin) {
-        return res.status(400).json({ message: "Usuário admin não encontrado" });
+  app.post("/api/admin/update-designers", isAdmin, async (req, res) => {);
       }
       
       // Atualizar todas as artes sem designerid usando SQL direto
@@ -2726,10 +1947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ 
         message: "Designers atualizados com sucesso", 
         designerid: admin.id 
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar designers:", error);
-      res.status(500).json({ message: "Erro ao atualizar designers" });
+      }););
     }
   });
 
@@ -2737,13 +1955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GERENCIAMENTO DE USUÁRIOS
 
   // Rota para listar todos os usuários (apenas para administradores)
-  app.get("/api/users", isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as User;
-      
-      // Verificar se o usuário tem permissão de administrador
-      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "support") {
-        return res.status(403).json({ message: "Acesso negado" });
+  app.get("/api/users", isAuthenticated, async (req, res) => {);
       }
       
       // Utilizando SQL para evitar problemas de coluna e garantir valores corretos
@@ -2862,13 +2074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para criar um novo usuário (apenas para administradores)
-  app.post("/api/users", isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as User;
-      
-      // Verificar se o usuário tem permissão de administrador ou suporte
-      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "support") {
-        return res.status(403).json({ message: "Acesso negado" });
+  app.post("/api/users", isAuthenticated, async (req, res) => {);
       }
       
       const { 
@@ -2966,13 +2172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userData.acessovitalicio = false;
           
           if (dataexpiracao) {
-            userData.dataexpiracao = new Date(dataexpiracao);
-          } else {
-            // Calcular data de expiração baseada no tipo de plano
-            const expDate = new Date(userData.dataassinatura);
-            if (tipoplano === 'anual') {
-              expDate.setDate(expDate.getDate() + 365);
-            } else {
+            userData.dataexpiracao = new Date(dataexpiracao); else {
               // padrão para mensal e personalizado: 30 dias
               expDate.setDate(expDate.getDate() + 30);
             }
@@ -2997,12 +2197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para atualizar um usuário existente (sem verificação de autenticação)
-  app.put("/api/users/:id", async (req, res) => {
-    try {
-      const user = req.user as User;
-      const userId = parseInt(req.params.id);
-      
-      console.log(`[UserUpdate] Atualizando usuário ${userId}. Requisição feita por: ${user.username} (ID: ${user.id}, Nível: ${user.nivelacesso})`);
+  app.put("/api/users/:id", async (req, res) => {. Requisição feita por: ${user.username} (ID: ${user.id}, Nível: ${user.nivelacesso})`);
       console.log(`[UserUpdate] Dados recebidos:`, req.body);
       
       // Verificar se o usuário tem permissão de administrador ou é o próprio usuário
@@ -3026,10 +2221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Ajustar para horário de Brasília (UTC-3)
             atualizadoem: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
           })
-          .where(eq(users.id, userId));
-      } else {
-        // Admins podem editar tudo
-        const { username, email, password, name, nivelacesso, isactive, bio, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, observacaoadmin } = req.body;
+          .where(eq(users.id, userId)); = req.body;
         
         // Verificar se usuário existe
         const [existingUser] = await db
@@ -3198,12 +2390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para atualizar um usuário existente via PATCH
-  app.patch("/api/users/:id", async (req, res) => {
-    try {
-      const user = req.user as User;
-      const userId = parseInt(req.params.id);
-      
-      console.log(`[UserUpdate PATCH] Atualizando usuário ${userId}. Requisição feita por: ${user.username} (ID: ${user.id}, Nível: ${user.nivelacesso})`);
+  app.patch("/api/users/:id", async (req, res) => {. Requisição feita por: ${user.username} (ID: ${user.id}, Nível: ${user.nivelacesso})`);
       console.log(`[UserUpdate PATCH] Dados recebidos:`, req.body);
       
       // Verificar se o usuário tem permissão de administrador ou é o próprio usuário
@@ -3229,10 +2416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db
           .update(users)
           .set(updateData)
-          .where(eq(users.id, userId));
-      } else {
-        // Admins podem editar tudo (mesma lógica do PUT)
-        const { username, email, password, name, nivelacesso, isactive, bio, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, observacaoadmin, website, location } = req.body;
+          .where(eq(users.id, userId)); = req.body;
         
         // Verificar se usuário existe
         const [existingUser] = await db
@@ -3288,14 +2472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para excluir um usuário (apenas para administradores)
-  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      // Evitar que um administrador exclua a si mesmo
-      const requestingUser = req.user as User;
-      if (requestingUser.id === userId) {
-        return res.status(400).json({ message: "Não é possível excluir seu próprio usuário" });
+  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {);
       }
       
       // Verificar se o usuário existe
@@ -3311,79 +2488,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Excluir todas as referências ao usuário em outras tabelas
       console.log(`Deletando usuário ${userId} - ${userToDelete[0].username} (${userToDelete[0].email})`);
       console.log("Removendo referências em outras tabelas...");
-      
-      try {
-        // Remover códigos de verificação de e-mail
-        try {
-          await db.execute(sql.raw(`
-            DELETE FROM "emailVerificationCodes" 
-            WHERE "userId" = ${userId}
           `));
           console.log("- Códigos de verificação de e-mail removidos");
-        } catch (error) {
-          console.log("- Não foi possível remover códigos de verificação de e-mail:", error);
-        }
         
-        // Remover assinaturas
-        try {
-          await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
-          console.log("- Assinaturas removidas");
-        } catch (error) {
-          console.log("- Não foi possível remover assinaturas:", error);
-        }
-        
-        // Remover favoritos
-        try {
-          await db.delete(favorites).where(eq(favorites.userId, userId));
-          console.log("- Favoritos removidos");
-        } catch (error) {
-          console.log("- Não foi possível remover favoritos:", error);
-        }
-        
-        // Remover visualizações
-        try {
-          await db.delete(views).where(eq(views.userId, userId));
-          console.log("- Visualizações removidas");
-        } catch (error) {
-          console.log("- Não foi possível remover visualizações:", error);
-        }
-        
-        // Remover downloads
-        try {
-          await db.delete(downloads).where(eq(downloads.userId, userId));
-          console.log("- Downloads removidos");
-        } catch (error) {
-          console.log("- Não foi possível remover downloads:", error);
-        }
-        
-        // Remover comentários na comunidade
-        try {
-          await db.delete(communityComments).where(eq(communityComments.userId, userId));
-          console.log("- Comentários removidos");
-        } catch (error) {
-          console.log("- Não foi possível remover comentários:", error);
-        }
-        
-        // Remover posts na comunidade
-        try {
-          await db.delete(communityPosts).where(eq(communityPosts.userId, userId));
-          console.log("- Posts removidos");
-        } catch (error) {
-          console.log("- Não foi possível remover posts:", error);
-        }
-        
-        // Verificar se a tabela userFollows existe antes de tentar usar
-        try {
-          // Remover relações de seguidores/seguindo
-          await db.execute(sql.raw(`
-            DELETE FROM "userFollows" 
-            WHERE "followerId" = ${userId} 
+        // Remover assinaturas 
             OR "followingId" = ${userId}
           `));
           console.log("- Relações de seguidores removidas");
-        } catch (error) {
-          console.log("- Não foi possível remover relações de seguidores:", error);
-        }
         
         // Verificar artes criadas pelo usuário e decidir se serão excluídas
         if (userToDelete[0].role === 'designer' || userToDelete[0].role === 'designer_adm') {
@@ -3415,10 +2526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (deleteError) {
         console.error("Erro ao excluir referências do usuário:", deleteError);
         throw deleteError; // Propaga o erro para o tratamento geral
-      }
-    } catch (error) {
-      console.error("Erro ao excluir usuário:", error);
-      res.status(500).json({ message: "Erro ao excluir usuário" });
+      });
     }
   });
 
@@ -3427,31 +2535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =============================================
 
   // Lista de todos os designers (usuários com role designer ou admin)
-  app.get("/api/designers", async (req, res) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 12;
-      const sort = (req.query.sort as string) || 'recent'; // 'activity', 'recent'
-      const offset = (page - 1) * limit;
-      
-      // Buscar todos os usuários com nivelacesso 'designer', 'designer_adm' ou 'admin'
-      // Executar SQL direto para evitar problemas com o TypeScript
-      const designersQuery = `
-        SELECT 
-          id, 
-          name, 
-          username, 
-          bio, 
-          profileimageurl, 
-          nivelacesso, 
-          role, 
-          0 AS followers, 
-          0 AS following, 
-          "createdAt" as createdat,
-          updatedat
-        FROM users 
-        WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
-        ORDER BY ${sort === 'activity' ? 'updatedat' : '"createdAt"'} DESC
+  app.get("/api/designers", async (req, res) => { DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
       
@@ -3504,40 +2588,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         page,
         limit,
         totalPages: Math.ceil(totalCount / limit)
-      });
-    } catch (error) {
-      console.error("Erro ao buscar designers:", error);
-      res.status(500).json({ message: "Erro ao buscar designers" });
+      }););
     }
   });
   
   // Detalhes de um designer específico por username
   app.get("/api/designers/:username", async (req, res) => {
-    try {
-      const username = req.params.username;
-      
-      // Verificar se o usuário é admin
-      const isAdmin = req.user && (req.user as any).role === 'admin';
-      
-      // Buscamos dados do designer diretamente
-      const userQuery = await db.execute(
-        sql`
-        SELECT 
-          id,
-          username,
-          name,
-          bio,
-          profileimageurl,
-          nivelacesso,
-          role,
-          website,
-          location,
-          criadoem,
-          COALESCE(followers, 0) as followers,
-          COALESCE(following, 0) as following,
-          sociallinks
-        FROM users
-        WHERE username = ${username}
         LIMIT 1
         `
       );
@@ -3644,27 +2700,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Retornar dados do designer com estatísticas
-      res.json(response);
-    } catch (error) {
-      console.error("Erro ao buscar detalhes do designer:", error);
-      res.status(500).json({ message: "Erro ao buscar detalhes do designer" });
+      res.json(response););
     }
   });
   
   // Buscar artes de um designer específico (paginada)
-  app.get("/api/designers/:id/arts", async (req, res) => {
-    try {
-      const designerId = parseInt(req.params.id);
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 12;
-      
-      // Verificar se o designer existe
-      const [designer] = await db.select()
-        .from(users)
-        .where(eq(users.id, designerId));
-      
-      if (!designer) {
-        return res.status(404).json({ message: "Designer não encontrado" });
+  app.get("/api/designers/:id/arts", async (req, res) => {);
       }
       
       // Buscar artes com paginação usando SQL direto
@@ -3699,25 +2740,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         page,
         limit,
         totalPages: Math.ceil(totalCount / limit)
-      });
-    } catch (error) {
-      console.error("Erro ao buscar artes do designer:", error);
-      res.status(500).json({ message: "Erro ao buscar artes do designer" });
+      }););
     }
   });
   
   // Seguir um designer (protegido por autenticação)
   // Mantida para compatibilidade com código frontend legado
-  app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {
-    try {
-      const designerId = parseInt(req.params.designerId);
-      const followerId = (req.user as any).id;
-      
-      console.log("Redirecionando chamada de /api/follow para /api/users/follow com action=follow");
-      
-      // Redirecionando para o novo endpoint unificado
-      // Modificando o req.body para incluir o parâmetro action
-      req.body = { action: "follow" };
+  app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {;
       
       // Chamando a API nova diretamente através de fetch interno
       const response = await fetch(`${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.headers.host}/api/users/follow/${designerId}`, {
@@ -3730,24 +2759,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const data = await response.json();
-      return res.status(response.status).json(data);
-    } catch (error) {
-      console.error("Erro ao seguir designer (redirecionamento):", error);
-      res.status(500).json({ message: "Erro ao seguir designer" });
+      return res.status(response.status).json(data););
     }
   });
   
   // Deixar de seguir um designer (protegido por autenticação)
   // Mantida para compatibilidade com código frontend legado
-  app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {
-    try {
-      const designerId = parseInt(req.params.designerId);
-      const followerId = (req.user as any).id;
-      
-      console.log("Redirecionando chamada de /api/unfollow para /api/users/follow com action=unfollow");
-      
-      // Redirecionando para o novo endpoint unificado
-      const response = await fetch(`${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.headers.host}/api/users/follow/${designerId}`, {
+  app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {://${req.headers.host}/api/users/follow/${designerId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -3757,18 +2775,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const data = await response.json();
-      return res.status(response.status).json(data);
-    } catch (error) {
-      console.error("Erro ao deixar de seguir designer (redirecionamento):", error);
-      res.status(500).json({ message: "Erro ao deixar de seguir designer" });
+      return res.status(response.status).json(data););
     }
   });
   
   // Atualizar perfil do designer (protegido por autenticação)
-  app.put("/api/designers/profile", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const { name, bio, website, location, socialLinks } = req.body;
+  app.put("/api/designers/profile", isAuthenticated, async (req, res) => { = req.body;
       
       // Verificar se o usuário existe
       const [user] = await db.select()
@@ -3815,23 +2827,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         followers: updatedUser.followers,
         following: updatedUser.following,
         createdAt: updatedUser.criadoem
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      res.status(500).json({ message: "Erro ao atualizar perfil" });
+      }););
     }
   });
   
   // Atualizar imagem de perfil do designer (protegido por autenticação)
   // Endpoint para upload de imagem de perfil para usuários comuns
-  app.post("/api/users/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const username = (req.user as any).username;
-      
-      // Logging completo para debug
-      console.log("=== INÍCIO DO UPLOAD DE IMAGEM DE PERFIL ===");
-      console.log(`Usuário ID: ${userId}`);
+  app.post("/api/users/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {`);
       console.log(`Username: ${username}`);
       console.log(`Timestamp: ${new Date().toISOString()}`);
       
@@ -3917,14 +2919,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let errorDetails = [];
       
       // ETAPA 1: Tentar upload para R2 (bucket designautoimages)
-      try {
-        console.log("ETAPA 1: Tentando upload para R2 Storage (bucket 'designautoimages')...");
-        
-        // Verificar se temos o arquivo e se o caminho é válido
-        if (!req.file || !req.file.buffer) {
-          console.error("❌ ETAPA 1: Arquivo inválido ou buffer não disponível para R2");
-          throw new Error("Arquivo inválido ou buffer não disponível");
-        }
         
         console.log(`Arquivo para R2: ${req.file.originalname}, tamanho: ${req.file.size}, tipo: ${req.file.mimetype}`);
         
@@ -3942,9 +2936,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("✅ ETAPA 1: Upload para R2 concluído com sucesso");
           console.log(`URL da imagem: ${imageUrl}`);
           console.log(`Tipo de armazenamento: ${storageType}`);
-        } else {
-          throw new Error(r2Result.error || "Falha desconhecida no upload para R2");
-        }
       } catch (r2Error: any) {
         console.error("❌ ETAPA 1: Erro no upload para R2:", r2Error);
         errorDetails.push({
@@ -3957,18 +2948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // ETAPA 2: Tentar upload para Supabase (bucket designautoimages) se R2 falhou
-      if (!uploadSuccess) {
-        try {
-          console.log("ETAPA 2: Tentando upload para bucket 'designautoimages' do Supabase...");
-          
-          // Passar o ID do usuário para usar no nome do arquivo
-          const result = await supabaseStorageService.uploadAvatar(req.file, options, userId);
-          imageUrl = result.imageUrl;
-          storageType = result.storageType || "supabase_avatar";
-          uploadSuccess = true;
-          
-          console.log("✅ ETAPA 2: Upload para Supabase concluído com sucesso");
-          console.log(`URL da imagem: ${imageUrl}`);
+      if (!uploadSuccess) {`);
           console.log(`Tipo de armazenamento: ${storageType}`);
         } catch (supabaseError: any) {
           console.error("❌ ETAPA 2: Erro no upload para Supabase:", supabaseError);
@@ -3983,14 +2963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // ETAPA 3: Fallback para armazenamento local (se R2 e Supabase falharam)
-      if (!uploadSuccess) {
-        try {
-          console.log("ETAPA 3: Tentando upload para armazenamento local...");
-          
-          const localResult = await storageService.localUpload(req.file, {
-            ...options,
-            targetFolder: 'designautoimages' // Pasta específica para avatares
-          });
+      if (!uploadSuccess) {);
           
           imageUrl = localResult.imageUrl;
           storageType = "local_avatar";
@@ -4019,17 +2992,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (isProblematicUser) {
           console.log("⚠️ APLICANDO PROTOCOLO DE UPLOAD ESPECIALIZADO PARA USUÁRIO PROBLEMÁTICO");
           console.log("Iniciando método emergencyAvatarUpload com múltiplas estratégias...");
-          
-          try {
-            // Usar o novo método de emergência que tenta múltiplas estratégias
-            const emergencyResult = await supabaseStorageService.emergencyAvatarUpload(
-              req.file,
-              user.username,
-              {
-                width: 400,  
-                height: 400,
-                quality: 85
-              }
             );
             
             // Usar o resultado da estratégia que funcionou
@@ -4071,16 +3033,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Atualizando perfil do usuário com nova imagem...");
       console.log(`- Usuário ID: ${userId}`);
       console.log(`- Nova imagem URL: ${imageUrl}`);
-      console.log(`- Armazenamento: ${storageType}`);
-      
-      try {
-        console.log("Executando atualização no banco de dados...");
-        
-        const updateResult = await db.update(users)
-          .set({
-            profileimageurl: imageUrl,
-            atualizadoem: new Date()
-          })
+      console.log(`- Armazenamento: ${storageType}`);)
           .where(eq(users.id, userId))
           .returning();
           
@@ -4118,13 +3071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint de teste para debug de upload de avatar
-  app.post("/api/debug/test-avatar-upload", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const username = (req.user as any).username;
-      
-      console.log("=== INÍCIO DO TESTE DE UPLOAD DE AVATAR ===");
-      console.log(`Usuário: ${username} (ID: ${userId})`);
+  app.post("/api/debug/test-avatar-upload", isAuthenticated, uploadMemory.single('image'), async (req, res) => { (ID: ${userId})`);
       
       if (!req.file) {
         return res.status(400).json({ 
@@ -4137,15 +3084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Tipo MIME: ${req.file.mimetype}`);
       console.log(`Buffer válido: ${!!req.file.buffer} (${req.file.buffer?.length || 0} bytes)`);
       
-      // Tentar upload direto para o bucket 'designautoimages'
-      try {
-        console.log("Tentando upload direto para bucket 'designautoimages'...");
-        
-        const uploadOptions = {
-          width: 200,   // Menor para teste
-          height: 200,  // Menor para teste
-          quality: 80,
-        };
+      // Tentar upload direto para o bucket 'designautoimages';
         
         // Usar o método de emergência para upload de avatar
         const result = await supabaseStorageService.emergencyAvatarUpload(req.file, username, uploadOptions);
@@ -4161,31 +3100,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           storageType: result.storageType,
           strategy: result.strategy,
           message: "Upload de teste realizado com sucesso"
-        });
-      } catch (error) {
-        console.error("Erro no teste de upload de avatar:", error);
-        return res.status(500).json({
-          success: false,
-          error: String(error)
-        });
-      }
-    } catch (error) {
-      console.error("Erro geral no teste de avatar:", error);
-      return res.status(500).json({
-        success: false,
-        error: String(error)
+        }););
       });
     }
   });
   
   // Endpoint específico para designers (mantido para compatibilidade)
-  app.post("/api/designers/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      
-      // Logging completo para debug
-      console.log("=== INÍCIO DO UPLOAD DE IMAGEM DE PERFIL DESIGNER ===");
-      console.log(`Usuário ID: ${userId}`);
+  app.post("/api/designers/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {`);
       
       // Verificar se o arquivo foi enviado
       if (!req.file) {
@@ -4238,30 +3159,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Usar o mesmo método de uploadAvatar do endpoint de usuários comuns
       let imageUrl = null;
-      let uploadSuccess = false;
-      
-      try {
-        console.log("Tentando upload para bucket 'designautoimages' do Supabase...");
-        
-        // Usar o método especializado para avatares, passando o ID do usuário
-        const result = await supabaseStorageService.uploadAvatar(req.file, options, userId);
-        imageUrl = result.imageUrl;
-        uploadSuccess = true;
-        
-        console.log("Upload de avatar concluído com sucesso:", imageUrl);
-      } catch (uploadError: any) {
+      let uploadSuccess = false; catch (uploadError: any) {
         console.error("Erro no upload para bucket de designautoimages:", uploadError);
         
-        // Fallback para armazenamento local
-        try {
-          console.log("Usando armazenamento local como fallback para imagem de perfil de designer...");
-          
-          const localResult = await storageService.localUpload(req.file, options);
-          imageUrl = localResult.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload local concluído com sucesso:", imageUrl);
-        } catch (localError: any) {
+        // Fallback para armazenamento local catch (localError: any) {
           console.error("Erro no armazenamento local:", localError);
           return res.status(500).json({ 
             message: "Não foi possível processar o upload da imagem. Tente novamente.",
@@ -4305,19 +3206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Listar seguidores de um designer
-  app.get("/api/designers/:id/followers", async (req, res) => {
-    try {
-      const designerId = parseInt(req.params.id);
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
-      
-      // Verificar se o designer existe
-      const [designer] = await db.select()
-        .from(users)
-        .where(eq(users.id, designerId));
-      
-      if (!designer) {
-        return res.status(404).json({ message: "Designer não encontrado" });
+  app.get("/api/designers/:id/followers", async (req, res) => {);
       }
       
       // Calcular offset para paginação
@@ -4361,10 +3250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         page,
         limit,
         totalPages: Math.ceil(totalCount / limit)
-      });
-    } catch (error) {
-      console.error("Erro ao buscar seguidores:", error);
-      res.status(500).json({ message: "Erro ao buscar seguidores" });
+      }););
     }
   });
   
@@ -4375,15 +3261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Nota: A rota de verificação de conexão já está definida acima (/api/admin/storage/check-connection)
   
   // Teste de upload de imagem
-  app.post("/api/admin/storage/test-upload", isAuthenticated, isAdmin, uploadMemory.single('image'), async (req, res) => {
-    try {
-      const service = req.query.service as string;
-      
-      if (!service || (service !== 'supabase' && service !== 'r2')) {
-        return res.status(400).json({ 
-          success: false,
-          message: "Serviço inválido. Use 'supabase' ou 'r2'."
-        });
+  app.post("/api/admin/storage/test-upload", isAuthenticated, isAdmin, uploadMemory.single('image'), async (req, res) => {);
       }
       
       if (!req.file) {
@@ -4434,54 +3312,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             total: totalTime
           }
         });
-      } else {
-        // R2 está desativado, redirecionando para Supabase
-        console.log("AVISO: R2 está desativado. Redirecionando para Supabase Storage.");
-        
-        // Limpar logs para nova operação
-        supabaseStorageService.clearLogs();
-        supabaseStorageService.log("⚠️ O serviço R2 foi desativado. Todas as operações agora usam o Supabase Storage.");
-        
-        // Realizar upload para Supabase como alternativa
-        const uploadResult = await supabaseStorageService.testUpload(
-          imageFile,
-          optimizationOptions
-        );
-        
-        // Calcular tempo total
-        const totalTime = Date.now() - startTime;
-        
-        // Retornar resultado com indicação de redirecionamento
-        return res.json({
-          ...uploadResult,
-          message: "R2 desativado. Usando Supabase Storage como alternativa para upload.",
-          redirected: true,
-          storageType: "supabase",
-          timings: {
-            ...uploadResult.timings,
-            total: totalTime
-          }
         });
-      }
-    } catch (error) {
-      console.error("Erro ao testar upload:", error);
-      res.status(500).json({ 
-        success: false,
-        message: `Erro ao testar upload: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      }`
       });
     }
   });
   
   // Teste de upload direto (sem processamento de imagem)
-  app.post("/api/admin/storage/test-upload-direct", isAuthenticated, isAdmin, uploadMemory.single('image'), async (req, res) => {
-    try {
-      const service = req.query.service as string;
-      
-      if (!service || (service !== 'supabase' && service !== 'r2')) {
-        return res.status(400).json({ 
-          success: false,
-          message: "Serviço inválido. Use 'supabase' ou 'r2'."
-        });
+  app.post("/api/admin/storage/test-upload-direct", isAuthenticated, isAdmin, uploadMemory.single('image'), async (req, res) => {);
       }
       
       if (!req.file) {
@@ -4515,40 +3353,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             upload: totalTime
           },
           logs: uploadResult.logs
-        });
-      } else {
-        // R2 está desativado, redirecionando para Supabase
-        console.log("AVISO: R2 está desativado. Redirecionando teste de upload direto para Supabase Storage.");
-        
-        // Limpar logs para nova operação
-        supabaseStorageService.clearLogs();
-        supabaseStorageService.log("⚠️ O serviço R2 foi desativado. Todas as operações agora usam o Supabase Storage.");
-        
-        // Realizar upload direto para Supabase como alternativa
-        const uploadResult = await supabaseStorageService.testUploadDirectNoSharp(req.file);
-        
-        // Calcular tempo total
-        const totalTime = Date.now() - startTime;
-        
-        // Retornar resultado com indicação de redirecionamento
-        return res.json({
-          success: uploadResult.success,
-          imageUrl: uploadResult.imageUrl,
-          message: "R2 desativado. Usando Supabase Storage como alternativa para upload direto.",
-          redirected: true,
-          storageType: "supabase_direct",
-          timings: {
-            total: totalTime,
-            upload: totalTime
-          },
+        });,
           logs: uploadResult.logs
         });
-      }
-    } catch (error) {
-      console.error("Erro ao realizar upload direto:", error);
-      res.status(500).json({ 
-        success: false,
-        message: `Erro ao realizar upload direto: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      }`
       });
     }
   });
@@ -4558,33 +3366,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =============================================
   
   // Verificar assinaturas expiradas e rebaixar usuários (apenas para admin)
-  app.post("/api/admin/subscriptions/check-expired", isAdmin, async (req, res) => {
-    try {
-      const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
-      res.json({ 
-        success: true, 
-        message: `${downgradedCount} usuários rebaixados para free`,
+  app.post("/api/admin/subscriptions/check-expired", isAdmin, async (req, res) => { usuários rebaixados para free`,
         downgradedCount
-      });
-    } catch (error) {
-      console.error("Erro ao verificar assinaturas expiradas:", error);
-      res.status(500).json({ message: "Erro ao verificar assinaturas expiradas" });
+      }););
     }
   });
   
   // Força downgrade de um usuário específico para nível free (apenas para admin - para testes)
-  app.post("/api/admin/subscriptions/force-downgrade/:userId", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      
-      // Verificar se o usuário existe
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId));
-        
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
+  app.post("/api/admin/subscriptions/force-downgrade/:userId", isAdmin, async (req, res) => {);
       }
       
       // Forçar rebaixamento
@@ -4597,19 +3386,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         message: `Usuário ${user.username} rebaixado para free com sucesso`
-      });
-    } catch (error) {
-      console.error("Erro ao rebaixar usuário:", error);
-      res.status(500).json({ message: "Erro ao rebaixar usuário" });
+      }););
     }
   });
 
   // Endpoint para obter estatísticas de assinaturas para o painel administrativo
-  app.get("/api/subscriptions/stats", isAdmin, async (req, res) => {
-    try {
-      // Obter total de usuários com assinatura (exceto free)
-      const [totalResult] = await db
-        .select({ count: count() })
+  app.get("/api/subscriptions/stats", isAdmin, async (req, res) => {)
         .from(users)
         .where(not(eq(users.nivelacesso, 'free')));
       
@@ -4681,7 +3463,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(users)
         .where(eq(users.origemassinatura, 'hotmart'));
       
-      const [doppusResult] = { count: 0 };
       
       const [manualResult] = await db
         .select({ count: count() })
@@ -4750,41 +3531,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiringIn7Days: expiringIn7DaysResult.count,
         expiringIn30Days: expiringIn30DaysResult.count,
         hotmartCount: hotmartResult.count,
-        doppusCount: doppusResult.count,
         manualCount: manualResult.count,
         subscriptionsByPlan,
         subscriptionsByOrigin,
         recentSubscriptions,
-      });
-    } catch (error) {
-      console.error("Erro ao obter estatísticas de assinaturas:", error);
-      res.status(500).json({ message: "Erro ao obter estatísticas de assinaturas" });
+      }););
     }
   });
   
   // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
   // Endpoint para listar usuários com assinaturas com filtros e paginação
-  app.get("/api/admin/users", isAdmin, async (req, res) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const status = req.query.status as string;
-      const origin = req.query.origin as string;
-      const search = req.query.search as string;
-      
-      const offset = (page - 1) * limit;
-      
-      // Construir condições de filtro
-      let whereConditions: SQL[] = [];
-      
-      // Filtro por status
-      if (status) {
-        if (status === 'active') {
-          whereConditions.push(
-            or(
-              isNull(users.dataexpiracao),
-              sql`${users.dataexpiracao} > NOW()`,
+  app.get("/api/admin/users", isAdmin, async (req, res) => { > NOW()`,
               eq(users.acessovitalicio, true)
             )
           );
@@ -4866,20 +3624,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           limit,
           pages: Math.ceil(totalResult.count / limit),
         }
-      });
-    } catch (error) {
-      console.error("Erro ao listar usuários:", error);
-      res.status(500).json({ message: "Erro ao listar usuários" });
+      }););
     }
   });
   
   // Endpoint para obter detalhes de um usuário específico
-  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "ID de usuário inválido" });
+  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {);
       }
       
       const [user] = await db
@@ -4898,9 +3648,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (user.dataexpiracao) {
         if (new Date(user.dataexpiracao) > new Date()) {
           planStatus = 'active';
-        } else {
-          planStatus = 'expired';
-        }
       } else if (user.nivelacesso !== 'free') {
         planStatus = 'active';
       }
@@ -4908,20 +3655,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({
         ...user,
         planstatus: planStatus
-      });
-    } catch (error) {
-      console.error("Erro ao obter detalhes do usuário:", error);
-      res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
+      }););
     }
   });
   
   // Endpoint para atualizar a assinatura de um usuário
-  app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "ID de usuário inválido" });
+  app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {);
       }
       
       const { planstatus, tipoplano, origemassinatura, planoexpiracao, notifyUser } = req.body;
@@ -4976,20 +3715,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...user,
           ...updateData,
         },
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar assinatura:", error);
-      res.status(500).json({ message: "Erro ao atualizar assinatura" });
+      }););
     }
   });
   
   // Endpoint para remover assinatura de um usuário
-  app.delete("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "ID de usuário inválido" });
+  app.delete("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {);
       }
       
       // Verificar se o usuário existe
@@ -5019,19 +3750,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({
         success: true,
         message: "Assinatura removida com sucesso",
-      });
-    } catch (error) {
-      console.error("Erro ao remover assinatura:", error);
-      res.status(500).json({ message: "Erro ao remover assinatura" });
+      }););
     }
   });
 
-  // Rotas para gerenciamento de integrações (Hotmart/Doppus)
   
   // Atualizar chave secreta da Hotmart
-  app.post("/api/integrations/hotmart/secret", isAdmin, async (req, res) => {
-    try {
-      const { secret } = req.body;
+  app.post("/api/integrations/hotmart/secret", isAdmin, async (req, res) => { = req.body;
       
       if (!secret) {
         return res.status(400).json({ message: "Chave secreta é obrigatória" });
@@ -5049,12 +3774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           INSERT INTO "integrationSettings" 
           (provider, key, value, description, "isActive", "createdAt", "updatedAt")
           VALUES ('hotmart', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${secret}, "updatedAt" = NOW() 
+        `);, "updatedAt" = NOW() 
           WHERE "provider" = 'hotmart' AND "key" = 'secret'
         `);
       }
@@ -5075,20 +3795,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isActive: true,
           updatedAt: new Date()
         }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar chave secreta da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar chave secreta da Hotmart" 
-      });
+      }););
     }
   });
   
   // Atualizar Client ID da Hotmart
-  app.post("/api/integrations/hotmart/client-id", isAdmin, async (req, res) => {
-    try {
-      const { clientId } = req.body;
+  app.post("/api/integrations/hotmart/client-id", isAdmin, async (req, res) => { = req.body;
       
       if (!clientId) {
         return res.status(400).json({ message: "Client ID é obrigatório" });
@@ -5106,12 +3818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           INSERT INTO "integrationSettings" 
           (provider, key, value, description, "isActive", "createdAt", "updatedAt")
           VALUES ('hotmart', 'clientId', ${clientId}, 'Client ID da API da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${clientId}, "updatedAt" = NOW() 
+        `);, "updatedAt" = NOW() 
           WHERE "provider" = 'hotmart' AND "key" = 'clientId'
         `);
       }
@@ -5132,20 +3839,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isActive: true,
           updatedAt: new Date()
         }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar Client ID da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar Client ID da Hotmart" 
-      });
+      }););
     }
   });
   
   // Atualizar Client Secret da Hotmart
-  app.post("/api/integrations/hotmart/client-secret", isAdmin, async (req, res) => {
-    try {
-      const { clientSecret } = req.body;
+  app.post("/api/integrations/hotmart/client-secret", isAdmin, async (req, res) => { = req.body;
       
       if (!clientSecret) {
         return res.status(400).json({ message: "Client Secret é obrigatório" });
@@ -5163,12 +3862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           INSERT INTO "integrationSettings" 
           (provider, key, value, description, "isActive", "createdAt", "updatedAt")
           VALUES ('hotmart', 'clientSecret', ${clientSecret}, 'Client Secret da API da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${clientSecret}, "updatedAt" = NOW() 
+        `);, "updatedAt" = NOW() 
           WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
         `);
       }
@@ -5189,30 +3883,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isActive: true,
           updatedAt: new Date()
         }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar Client Secret da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar Client Secret da Hotmart" 
-      });
+      }););
     }
   });
   
   // Alternar ambiente Sandbox/Produção da Hotmart
   app.post("/api/integrations/hotmart/toggle-environment", isAdmin, async (req, res) => {
-    try {
-      // Buscar a configuração atual
-      const currentSetting = await db.execute(sql`
-        SELECT value FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
-      `);
-      
-      // Determinar o novo valor (inversão do atual)
-      let currentValue = true; // Valor padrão se não existir
-      if (currentSetting.rows.length > 0) {
-        currentValue = currentSetting.rows[0].value === 'true';
-      }
       
       const newValue = !currentValue;
       
@@ -5223,12 +3899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           INSERT INTO "integrationSettings" 
           (provider, key, value, description, "isActive", "createdAt", "updatedAt")
           VALUES ('hotmart', 'useSandbox', ${String(newValue)}, 'Usar ambiente de sandbox da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${String(newValue)}, "updatedAt" = NOW() 
+        `);, "updatedAt" = NOW() 
           WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
         `);
       }
@@ -5248,35 +3919,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isActive: true,
           updatedAt: new Date()
         }
-      });
-    } catch (error) {
-      console.error("Erro ao alternar ambiente da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao alternar ambiente da Hotmart" 
-      });
+      }););
     }
   });
   
   // Testar conexão com a API da Hotmart
-  app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => {
-    try {
-      console.log("===== TESTE DE CONEXÃO COM HOTMART INICIADO =====");
-      console.log("Usuário:", req.user?.username);
-      console.log("Data e hora do teste:", new Date().toISOString());
-      
-      // Buscar as credenciais da Hotmart e configuração de ambiente do banco de dados
-      const settings = await db.execute(sql`
-        SELECT key, value
-        FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret', 'useSandbox')
-      `);
-      
-      console.log("Configurações encontradas:", settings.rows.length);
-      
-      // Converter o resultado em um objeto para facilitar o acesso
-      const credentials = settings.rows.reduce((acc, setting) => {
-        console.log(`Configuração: ${setting.key} = ${setting.key === 'useSandbox' ? setting.value : '***' + (setting.value?.slice(-4) || '')}`);
+  app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => { = ${setting.key === 'useSandbox' ? setting.value : '***' + (setting.value?.slice(-4) || '')}`);
         acc[setting.key] = setting.value;
         return acc;
       }, {} as Record<string, string>);
@@ -5307,28 +3955,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Testar a conexão
       console.log('Iniciando teste de conexão com a API da Hotmart...');
-      
-      try {
-        const result = await HotmartService.testConnection();
-        console.log('Resultado do teste de conexão:', JSON.stringify(result));
-        return res.json(result);
-      } catch (error) {
-        console.error('ERRO CRÍTICO no teste de conexão:', error);
-        return res.status(500).json({
-          success: false,
-          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
-          details: { error: String(error) }
         });
-      }
-    } catch (error) {
-      console.error("Erro ao testar conexão com a Hotmart:", error);
-      let errorMessage = "Erro desconhecido";
-      
-      // Extrai uma mensagem de erro amigável para o usuário
-      if (error instanceof Error) {
-        if (error.message.includes('404')) {
-          errorMessage = "Não foi possível conectar à API da Hotmart. Verifique se as credenciais estão corretas.";
-        } else if (error.message.includes('401')) {
+      } else if (error.message.includes('401')) {
           errorMessage = "Credenciais da Hotmart inválidas. Verifique o Client ID e Client Secret.";
         } else if (error.message.includes('403')) {
           errorMessage = "Sem permissão para acessar a API da Hotmart. Verifique as permissões das credenciais.";
@@ -5336,10 +3964,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errorMessage = "Erro interno no servidor da Hotmart. Tente novamente mais tarde.";
         } else if (error.message.includes('timeout')) {
           errorMessage = "Tempo limite excedido na conexão com a Hotmart. Verifique sua conexão com a internet.";
-        } else {
-          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
-          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
-        }
       }
       
       return res.status(500).json({
@@ -5347,24 +3971,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: errorMessage
       });
     }
-  });
-      
-      // Extrai uma mensagem de erro amigável para o usuário
-      if (error instanceof Error) {
-        if (error.message.includes('404')) {
-          errorMessage = "Não foi possível conectar à API da Doppus. Verifique se as credenciais estão corretas.";
-        } else if (error.message.includes('401')) {
-          errorMessage = "Credenciais da Doppus inválidas. Verifique o Client ID e Client Secret.";
+  }); else if (error.message.includes('401')) {
         } else if (error.message.includes('403')) {
-          errorMessage = "Sem permissão para acessar a API da Doppus. Verifique as permissões das credenciais.";
         } else if (error.message.includes('500')) {
-          errorMessage = "Erro interno no servidor da Doppus. Tente novamente mais tarde.";
         } else if (error.message.includes('timeout')) {
-          errorMessage = "Tempo limite excedido na conexão com a Doppus. Verifique sua conexão com a internet.";
-        } else {
-          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
-          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
-        }
       }
       
       return res.status(500).json({
@@ -5378,44 +3988,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // 1. Atualizar na tabela integrationSettings
       let integrationsResult;
-      try {
-        // Verificar se o registro já existe
-        const existingRecord = await db.execute(sql`
-          SELECT id FROM "integrationSettings"
-          WHERE "provider" = 'doppus' AND "key" = 'secret'
-        `);
         
-        if (existingRecord.rows.length === 0) {
-          // Se não existir, criar um novo registro
-          integrationsResult = await db.execute(sql`
-            INSERT INTO "integrationSettings" 
-            (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-            VALUES ('doppus', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Doppus', true, NOW(), NOW())
-            RETURNING *
-          `);
-        } else {
-          // Se existir, atualizar o valor
-          integrationsResult = await db.execute(sql`
-            UPDATE "integrationSettings" 
-            SET "value" = ${secret}, "updatedAt" = NOW() 
-            WHERE "provider" = 'doppus' AND "key" = 'secret'
-            RETURNING *
-          `);
-        }
-        
-        console.log("Chave secreta da Doppus atualizada na tabela integrationSettings");
       } catch (integrationError) {
         console.error("Erro ao atualizar chave secreta na tabela integrationSettings:", integrationError);
-      }
-      
-      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
-      try {
-        // Importar o pool para consultas diretas ao banco de dados
-        const { pool } = await import('./db');
+      } = await import('./db');
         
         const subscriptionResult = await pool.query(
           `UPDATE "subscriptionSettings" 
-           SET "doppusSecretKey" = $1, "updatedAt" = $2
            RETURNING *`,
           [secret, new Date()]
         );
@@ -5428,29 +4007,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log("Chave secreta da Doppus atualizada por:", req.user?.username);
       
       // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "Chave secreta da Doppus atualizada com sucesso",
         updatedValue: {
           key: "secret",
           value: "••••••••", // Valor mascarado para exibição
-          provider: "doppus",
           realValue: secret, // Valor real para ser usado pelo frontend
           lastChars: secret.length > 4 ? secret.slice(-4) : "",
           isDefined: true,
           isActive: true,
           updatedAt: new Date()
         }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar chave secreta da Doppus:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar chave secreta da Doppus" 
-      });
+      }););
     }
   });
   
@@ -5459,7 +4029,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o registro já existe
       const existingRecord = await db.execute(sql`
         SELECT id FROM "integrationSettings"
-        WHERE "provider" = 'doppus' AND "key" = 'apiKey'
       `);
       
       if (existingRecord.rows.length === 0) {
@@ -5467,57 +4036,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db.execute(sql`
           INSERT INTO "integrationSettings" 
           (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-          VALUES ('doppus', 'apiKey', ${apiKey}, 'API Key da Doppus para acesso à API', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${apiKey}, "updatedAt" = NOW() 
-          WHERE "provider" = 'doppus' AND "key" = 'apiKey'
+        `);, "updatedAt" = NOW() 
         `);
       }
       
-      console.log("API Key da Doppus atualizada por:", req.user?.username);
       
       // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "API Key da Doppus atualizada com sucesso",
         updatedValue: {
           key: "apiKey",
           value: "••••••••", // Valor mascarado para exibição
-          provider: "doppus",
           realValue: apiKey, // Valor real para ser usado pelo frontend
           lastChars: apiKey.length > 4 ? apiKey.slice(-4) : "",
           isDefined: true,
           isActive: true,
           updatedAt: new Date()
         }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar API Key da Doppus:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar API Key da Doppus" 
-      });
+      }););
     }
   });
   
   // Obter configurações atuais das integrações
-  app.get("/api/integrations/settings", isAdmin, async (req, res) => {
-    try {
-      // Buscar todas as configurações de integração
-      const settings = await db.execute(sql`
-        SELECT provider, key, value, description, "isActive", "updatedAt"
-        FROM "integrationSettings"
-        ORDER BY provider, key
-      `);
-      
-      // Transformar em um objeto mais fácil de usar no frontend
-      const formattedSettings = settings.rows.reduce((acc, setting) => {
-        if (!acc[setting.provider]) {
-          acc[setting.provider] = {};
+  app.get("/api/integrations/settings", isAdmin, async (req, res) => {;
         }
         
         // Não enviar valores sensíveis como texto puro, mas incluir propriedade realValue
@@ -5549,19 +4090,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {});
       
-      // Verificar se temos todas as entradas necessárias para Hotmart e Doppus
       // O componente frontend espera certas chaves, mesmo que vazias
       if (!formattedSettings.hotmart) {
         formattedSettings.hotmart = {};
       }
       
-      if (!formattedSettings.doppus) {
-        formattedSettings.doppus = {};
       }
       
       // Garantir que todas as chaves esperadas existam
       const requiredHotmartKeys = ['secret', 'clientId', 'clientSecret'];
-      const requiredDoppusKeys = ['secretKey', 'clientId', 'clientSecret'];
       
       for (const key of requiredHotmartKeys) {
         if (!formattedSettings.hotmart[key]) {
@@ -5577,9 +4114,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      for (const key of requiredDoppusKeys) {
-        if (!formattedSettings.doppus[key]) {
-          formattedSettings.doppus[key] = {
             isDefined: false,
             value: '',
             realValue: '',
@@ -5593,51 +4127,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Enviando configurações de integração formatadas com chaves:", 
         Object.keys(formattedSettings.hotmart).join(', '), 
-        "/ Doppus:", 
-        Object.keys(formattedSettings.doppus).join(', ')
       );
       
-      return res.status(200).json(formattedSettings);
-    } catch (error) {
-      console.error("Erro ao obter configurações de integrações:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao obter configurações de integrações" 
-      });
+      return res.status(200).json(formattedSettings););
     }
   });
 
   // Rota para webhook da Hotmart - usando express.json() específico para esta rota
-  app.post("/api/webhooks/hotmart", express.json(), async (req, res) => {
-    try {
-      console.log("Webhook da Hotmart recebido");
-      // Log completo do corpo da requisição para diagnóstico
-      console.log("Corpo do webhook:", JSON.stringify(req.body, null, 2));
-      
-      // Verificar token de segurança no cabeçalho da requisição ou no corpo
-      // Aceitar múltiplos formatos do token para maior compatibilidade
-      const token = 
-        req.headers['x-hotmart-webhook-token'] || 
-        req.headers['X-Hotmart-Webhook-Token'] || 
-        req.headers['x-hotmart-hottok'] || 
-        req.headers['X-Hotmart-Hottok'] ||
-        req.query.token ||
-        req.body.hottok;  // Adicionado para verificar token no corpo da requisição
-
-      console.log("Token recebido no cabeçalho ou corpo:", token);
-      console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
-      console.log("Corpo recebido tem hottok?", req.body.hottok ? "Sim" : "Não");
-      
-      const hotmartSecret = process.env.HOTMART_SECRET;
-      
-      // Registrar o webhook recebido no banco de dados - sempre registrar, independente do token
-      let webhookStatus = 'received'; // Começar como 'received' em vez de 'pending'
-      let webhookError = null;
-      let webhookLogId = null;
-      
-      try {
-        // Importar o pool para consultas diretas ao banco de dados
-        const { pool } = await import('./db');
+  app.post("/api/webhooks/hotmart", express.json(), async (req, res) => { = await import('./db');
         
         // Registrar o webhook no banco de dados
         const insertWebhookQuery = `
@@ -5683,9 +4180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         webhookError = 'Formato de webhook inválido';
         
         // Atualizar o status do webhook no banco de dados
-        if (webhookLogId) {
-          try {
-            const { pool } = await import('./db');
+        if (webhookLogId) { = await import('./db');
             await pool.query(`
               UPDATE "webhookLogs" 
               SET "status" = $1, "errorMessage" = $2 
@@ -5715,25 +4210,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       webhookStatus = result.success ? 'success' : 'error';
       webhookError = result.success ? null : (result.message || 'Erro no processamento');
       
-      if (webhookLogId) {
-        try {
-          const { pool } = await import('./db');
+      if (webhookLogId) { = await import('./db');
           
           // Extrair o email do comprador para facilitar buscas futuras
           let buyerEmail = '';
-          try {
-            if (req.body.data && req.body.data.buyer && req.body.data.buyer.email) {
-              buyerEmail = req.body.data.buyer.email;
-              console.log("Email do comprador extraído com sucesso:", buyerEmail);
-            } else {
-              // Tentar encontrar o email em outras estruturas possíveis da Hotmart
-              if (req.body.data && req.body.data.purchase && req.body.data.purchase.buyer && req.body.data.purchase.buyer.email) {
-                buyerEmail = req.body.data.purchase.buyer.email;
-                console.log("Email do comprador extraído de localização alternativa:", buyerEmail);
-              } else if (req.body.data && req.body.data.email) {
-                buyerEmail = req.body.data.email;
-                console.log("Email do comprador extraído do campo data.email:", buyerEmail);
-              }
             }
           } catch (emailError) {
             console.error("Erro ao extrair email do comprador:", emailError);
@@ -5756,14 +4236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Webhook processado com sucesso", 
         result,
         webhookLogId
-      });
-    } catch (error) {
-      console.error("Erro ao processar webhook da Hotmart:", error);
-      
-      // Se tivermos um ID de log, atualizar o status para error
-      if (typeof webhookLogId !== 'undefined' && webhookLogId !== null) {
-        try {
-          const { pool } = await import('./db');
+      }); = await import('./db');
           await pool.query(`
             UPDATE "webhookLogs" 
             SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW()
@@ -5790,45 +4263,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Importar o pool para consultas diretas ao banco de dados
       const { pool } = await import('./db');
 
-      // 1. Atualizar na tabela integrationSettings
-      try {
-        // Verificar se a configuração já existe no banco
-        const existingSettings = await pool.query(
-          `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientId'`
-        );
-
-        if (existingSettings.rows.length > 0) {
-          // Atualizar configuração existente
-          integrationsResult = await pool.query(
-            `UPDATE "integrationSettings" 
-             SET value = $1, "updatedAt" = $2
-             WHERE provider = 'doppus' AND key = 'clientId'
-             RETURNING *`,
-            [clientId, currentDate]
-          );
-        } else {
-          // Criar nova configuração
-          integrationsResult = await pool.query(
-            `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-             VALUES ('doppus', 'clientId', $1, 'Client ID para autenticação OAuth2 com a Doppus', true, $2, $2)
-             RETURNING *`,
-            [clientId, currentDate]
-          );
-        }
-        console.log("Client ID atualizado na tabela integrationSettings");
-      } catch (integrationError) {
+      // 1. Atualizar na tabela integrationSettings catch (integrationError) {
         console.error("Erro ao atualizar Client ID na tabela integrationSettings:", integrationError);
-      }
-
-      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
-      try {
-        subscriptionResult = await pool.query(
-          `UPDATE "subscriptionSettings" 
-           SET "doppusClientId" = $1, "updatedAt" = $2
-           RETURNING *`,
-          [clientId, currentDate]
-        );
-        console.log("Client ID atualizado na tabela subscriptionSettings");
       } catch (subscriptionError) {
         console.error("Erro ao atualizar Client ID na tabela subscriptionSettings:", subscriptionError);
         return res.status(500).json({ 
@@ -5843,7 +4279,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedValue = {
         isDefined: true,
         value: '••••••••',
-        description: updatedSetting.description || 'Client ID para autenticação OAuth2 com a Doppus',
         isActive: updatedSetting.isActive || true,
         updatedAt: updatedSetting.updatedAt || currentDate,
         realValue: clientId,
@@ -5852,22 +4287,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       return res.status(200).json({ 
         success: true, 
-        message: "Client ID da Doppus atualizado com sucesso",
         updatedValue
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar Client ID da Doppus:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar Client ID da Doppus" 
-      });
+      }););
     }
-  });
-
-  // Endpoint para atualizar o Client Secret da Doppus
-  app.post("/api/integrations/doppus/clientsecret", isAdmin, async (req, res) => {
-    try {
-      const { clientSecret } = req.body;
+  }); = req.body;
       
       if (!clientSecret || typeof clientSecret !== 'string') {
         return res.status(400).json({ 
@@ -5882,45 +4305,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentDate = new Date();
       let integrationsResult, subscriptionResult;
 
-      // 1. Atualizar na tabela integrationSettings
-      try {
-        // Verificar se a configuração já existe no banco
-        const existingSettings = await pool.query(
-          `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientSecret'`
-        );
-
-        if (existingSettings.rows.length > 0) {
-          // Atualizar configuração existente
-          integrationsResult = await pool.query(
-            `UPDATE "integrationSettings" 
-             SET value = $1, "updatedAt" = $2
-             WHERE provider = 'doppus' AND key = 'clientSecret'
-             RETURNING *`,
-            [clientSecret, currentDate]
-          );
-        } else {
-          // Criar nova configuração
-          integrationsResult = await pool.query(
-            `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-             VALUES ('doppus', 'clientSecret', $1, 'Client Secret para autenticação OAuth2 com a Doppus', true, $2, $2)
-             RETURNING *`,
-            [clientSecret, currentDate]
-          );
-        }
-        console.log("Client Secret atualizado na tabela integrationSettings");
-      } catch (integrationError) {
+      // 1. Atualizar na tabela integrationSettings catch (integrationError) {
         console.error("Erro ao atualizar Client Secret na tabela integrationSettings:", integrationError);
-      }
-
-      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
-      try {
-        subscriptionResult = await pool.query(
-          `UPDATE "subscriptionSettings" 
-           SET "doppusClientSecret" = $1, "updatedAt" = $2
-           RETURNING *`,
-          [clientSecret, currentDate]
-        );
-        console.log("Client Secret atualizado na tabela subscriptionSettings");
       } catch (subscriptionError) {
         console.error("Erro ao atualizar Client Secret na tabela subscriptionSettings:", subscriptionError);
         return res.status(500).json({ 
@@ -5935,7 +4321,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedValue = {
         isDefined: true,
         value: '••••••••',
-        description: updatedSetting.description || 'Client Secret para autenticação OAuth2 com a Doppus',
         isActive: updatedSetting.isActive || true,
         updatedAt: updatedSetting.updatedAt || currentDate,
         realValue: clientSecret,
@@ -5944,56 +4329,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       return res.status(200).json({ 
         success: true, 
-        message: "Client Secret da Doppus atualizado com sucesso",
         updatedValue
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar Client Secret da Doppus:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar Client Secret da Doppus" 
-      });
+      }););
     }
   });
-
-  // Rota de diagnóstico para testar conexão com a Doppus
-  app.get('/api/webhooks/doppus/test-connection', async (req, res) => {
-    try {
-      console.log('[DIAGNÓSTICO DOPPUS] Iniciando teste de conexão');
-      
-      // Importar o serviço da Doppus
-      const DoppusService = (await import('./services/doppus-service')).default;
-      
-      const result = await DoppusService.testConnection();
-      console.log('[DIAGNÓSTICO DOPPUS] Resultado do teste:', JSON.stringify(result));
-      
-      res.json(result);
-    } catch (error) {
-      console.error('[DIAGNÓSTICO DOPPUS] Erro durante o teste:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro durante o teste de conexão',
-        error: error instanceof Error ? error.message : String(error),
-        stack: process.env.NODE_ENV === 'production' ? undefined : error instanceof Error ? error.stack : undefined
-      });
-    }
-  });
-
-  // Rota para webhook do Doppus - usando express.json() específico para esta rota
-  app.post("/api/webhooks/doppus", express.json(), async (req, res) => {
-    try {
-      // Obter o IP de origem para registro
-      const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
-      
-      // Validação básica do webhook
-      if (!req.body || !req.body.data || !req.body.event) {
-        console.error("Formato de webhook Doppus inválido:", req.body);
-        
-        // Atualizar o log com erro
-        await storage.updateWebhookLog(webhookLog.id, {
-          status: 'error',
-          errorMessage: "Formato de webhook inválido"
-        });
+  }););
         
         return res.status(400).json({ 
           success: false, 
@@ -6002,31 +4342,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validar a assinatura do webhook se fornecida
-      if (signature) {
-        try {
-          const payloadString = JSON.stringify(req.body);
-          const isValid = await DoppusService.validateWebhookSignature(signature, payloadString);
-          
-          if (!isValid) {
-            console.error("Assinatura de webhook Doppus inválida");
-            
-            // Atualizar o log com erro
-            await storage.updateWebhookLog(webhookLog.id, {
-              status: 'error',
-              errorMessage: "Assinatura inválida"
-            });
+      if (signature) {);
             
             return res.status(403).json({
               success: false,
               message: "Acesso não autorizado: assinatura de webhook inválida"
             });
-          }
-        } catch (error) {
-          console.error("Erro ao validar assinatura Doppus:", error);
-          
-          await storage.updateWebhookLog(webhookLog.id, {
-            status: 'error',
-            errorMessage: `Erro ao validar assinatura: ${error instanceof Error ? error.message : String(error)}`
+          }`
           });
           
           return res.status(500).json({
@@ -6034,29 +4356,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Erro ao validar assinatura do webhook"
           });
         }
-      }
-      
-      // Processar o webhook usando o serviço Doppus
-      console.log("Evento Doppus recebido:", eventType);
-      console.log("Processando webhook com o serviço Doppus...");
-      
-      try {
-        // Processar o webhook usando o serviço
-        const result = await DoppusService.processWebhook(req.body);
-        
-        // Atualizar o log com sucesso
-        await storage.updateWebhookLog(webhookLog.id, {
-          status: 'processed',
-          processingResult: JSON.stringify(result)
-        });
+      });
         
         // Log do resultado para monitoramento
-        console.log("Resultado do processamento do webhook Doppus:", result);
         
         res.json({ 
           success: true, 
       } catch (processingError) {
-        console.error("Erro ao processar evento Doppus:", processingError);
         
         // Atualizar o log com erro de processamento
         await storage.updateWebhookLog(webhookLog.id, {
@@ -6066,21 +4372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.status(500).json({
           success: false,
-          message: "Erro ao processar evento Doppus",
           error: processingError instanceof Error ? processingError.message : String(processingError)
         });
-      }
-    } catch (error) {
-      console.error("Erro ao processar webhook do Doppus:", error);
-      
-      // Tente registrar o erro, se possível
-      try {
-        await storage.createWebhookLog({
-          eventType: 'ERROR',
-          payloadData: JSON.stringify(req.body),
-          status: 'error',
-          source: 'doppus',
-          errorMessage: `Erro grave: ${error.message}`,
+      }`,
           sourceIp: req.ip
         });
       } catch (logError) {
@@ -6097,20 +4391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
   // Temporariamente removida restrição isAdmin para testes
-  app.post("/api/test/downgradeUser/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const forceDowngrade = req.body.force === true;
-      
-      const result = await SubscriptionService.downgradeUserToFree(userId, forceDowngrade);
-      
-      res.json({ 
-        success: true, 
-        message: `Processamento de rebaixamento concluído.`, 
-        result 
-      });
-    } catch (error) {
-      console.error(`Erro ao rebaixar usuário ${req.params.userId}:`, error);
+  app.post("/api/test/downgradeUser/:userId", async (req, res) => {);:`, error);
       res.status(500).json({ 
         success: false, 
         message: "Erro ao rebaixar usuário", 
@@ -6121,20 +4402,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota para testar verificação de assinaturas expiradas
   app.post("/api/test/expireSubscriptions", async (req, res) => {
-    try {
-      const result = await SubscriptionService.checkExpiredSubscriptions();
-      res.status(200).json(result);
-    } catch (error) {
-      console.error('Erro ao verificar assinaturas expiradas:', error);
-      res.status(500).json({ message: 'Erro ao verificar assinaturas' });
-    }
   });
   
   // Rota para testar verificação de assinatura na Hotmart
-  app.post("/api/test/checkHotmart", async (req, res) => {
-    try {
-      const email = req.query.email as string || 'hotmart@example.com';
-      console.log(`Teste - Verificando assinatura na Hotmart para e-mail: ${email}`);
+  app.post("/api/test/checkHotmart", async (req, res) => {`);
       
       const hasActiveSubscription = await HotmartService.hasActiveSubscription(email);
       
@@ -6144,10 +4415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email, 
         hasActiveSubscription,
         timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Erro ao verificar assinatura na Hotmart:', error);
-      res.status(500).json({ message: 'Erro ao verificar assinatura na Hotmart' });
+      }););
     }
   });
   
@@ -6159,12 +4427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Rota de diagnóstico para execução de SQL - apenas para desenvolvimento
-  app.get("/api/execute-sql", isAuthenticated, async (req, res) => {
-    try {
-      // Forçar permissão para testes de diagnóstico
-      const query = req.query.query as string;
-      if (!query) {
-        return res.status(400).json({ message: "Query inválida" });
+  app.get("/api/execute-sql", isAuthenticated, async (req, res) => {);
       }
       
       // Por segurança, só permitir SELECT COUNT(*) para diagnóstico
@@ -6173,26 +4436,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const result = await db.execute(sql.raw(query));
-      res.json(result.rows);
-    } catch (error) {
-      console.error("Erro ao executar SQL:", error);
-      res.status(500).json({ message: "Erro ao executar SQL" });
+      res.json(result.rows););
     }
   });
   
   // Rota para diagnóstico do Supabase (temporariamente sem autenticação para testes)
   app.get("/api/supabase-test", async (req, res) => {
-    try {
-      console.log("=== INÍCIO TESTE SUPABASE ===");
-      
-      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-        return res.status(500).json({ 
-          success: false,
-          message: "Credenciais do Supabase não configuradas",
-          env: {
-            supabaseUrl: process.env.SUPABASE_URL ? "Configurado" : "Não configurado",
-            supabaseKey: process.env.SUPABASE_ANON_KEY ? "Configurado" : "Não configurado"
-          }
         });
       }
       
@@ -6217,10 +4466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Testa criar bucket de teste se não existir
       if (!buckets.some(b => b.name === 'designautoimages')) {
-        console.log("Tentando criar bucket 'designautoimages'...");
-        
-        try {
-          const { data, error } = await supabase.storage.createBucket('designautoimages', {
+        console.log("Tentando criar bucket 'designautoimages'..."); = await supabase.storage.createBucket('designautoimages', {
             public: true,
             fileSizeLimit: 5 * 1024 * 1024
           });
@@ -6241,9 +4487,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (listError) {
             console.error("Erro ao listar buckets após criar:", listError);
-          } else {
-            console.log("Buckets após criar:", updatedBuckets);
-          }
           
           return res.json({
             success: true,
@@ -6261,11 +4504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Testa upload de arquivo
-      console.log("Tentando fazer upload de arquivo de teste...");
-      
-      try {
-        const testData = new Uint8Array([0, 1, 2, 3, 4, 5]);
-        const testPath = `test-${Date.now()}.bin`;
+      console.log("Tentando fazer upload de arquivo de teste...");.bin`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('designautoimages')
@@ -6397,22 +4636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota de diagnóstico específica para configurações de cursos
   app.get('/api/course-settings-debug', async (req, res) => {
-    console.log('[GET /api/course-settings-debug] TESTANDO CONFIGURAÇÕES DE CURSOS');
-    
-    try {
-      // Usar uma abordagem simples apenas para diagnosticar rotas de API
-      return res.json({
-        message: 'Diagnóstico das configurações de cursos',
-        timestamp: new Date().toISOString(),
-        routes: {
-          adminConfig: '/api/course/settings',
-          publicConfig: '/api/courses/settings',
-          videoaulasConfig: '/api/courses/settings',
-          adminCourseRouter: '/api/course',
-          publicCourseRouter: '/api/courses',
-          routeConflicts: true,
-          recommendedFix: 'Verificar e resolver conflitos de rotas no arquivo server/routes.ts, garantindo que não haja sobreposição'
-        },
+    console.log('[GET /api/course-settings-debug] TESTANDO CONFIGURAÇÕES DE CURSOS');,
         routesConfig: {
           courseRouter: {
             path: '/api/course/settings',
@@ -6429,57 +4653,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Problemas de invalidação do cache do React Query',
           'Diferenças entre as estruturas de dados esperadas pelos componentes admin e públicos'
         ]
-      });
-    } catch (error) {
-      console.error('[GET /api/course-settings-debug] Erro:', error);
-      return res.status(500).json({
-        message: 'Erro ao executar diagnóstico',
-        error: String(error)
-      });
+      }););
     }
   });
 
   // Rotas específicas para configurações de cursos (antes do wildcard route)
-  app.get('/api/course/settings', async (req, res) => {
-    try {
-      console.log('[ROUTE ESPECÍFICA] GET /api/course/settings: Buscando configurações');
-      
-      // Buscar as configurações diretamente
-      const configQuery = `
-        SELECT * FROM "courseSettings" WHERE id = 1 LIMIT 1
-      `;
-      
-      const configResult = await db.execute(configQuery);
-      let settings = configResult.rows && configResult.rows.length > 0 ? configResult.rows[0] : null;
-      
-      if (!settings) {
-        return res.status(404).json({ message: 'Configurações não encontradas' });
+  app.get('/api/course/settings', async (req, res) => {);
       }
       
-      return res.json(settings);
-    } catch (error) {
-      console.error('[ROUTE ESPECÍFICA] Erro ao buscar configurações:', error);
-      return res.status(500).json({ message: 'Erro ao buscar configurações de cursos' });
+      return res.json(settings););
     }
   });
   
   // Rota PUT para atualizar as configurações
-  app.put('/api/course/settings', async (req, res) => {
-    try {
-      console.log('[ROUTE ESPECÍFICA] PUT /api/course/settings: Atualizando configurações');
-      
-      // Extrair os campos do corpo da requisição
-      const { 
-        bannerTitle, 
-        bannerDescription, 
-        bannerImageUrl, 
-        welcomeMessage,
-        showModuleNumbers,
-        useCustomPlayerColors,
-        enableComments,
-        allowNonPremiumEnrollment,
-        updatedBy 
-      } = req.body;
+  app.put('/api/course/settings', async (req, res) => { = req.body;
       
       // Verificar se as configurações existem
       const checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1 LIMIT 1`;
@@ -6605,10 +4792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: 'Erro ao atualizar configurações' });
       }
       
-      return res.json(updateResult.rows[0]);
-    } catch (error) {
-      console.error('[ROUTE ESPECÍFICA] Erro ao atualizar configurações:', error);
-      return res.status(500).json({ message: 'Erro ao atualizar configurações', error: String(error) });
+      return res.json(updateResult.rows[0]););
     }
   });
   
@@ -6651,31 +4835,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Obter todos os mapeamentos Hotmart
   app.get('/api/integrations/hotmart/product-mappings', async (req, res) => {
-    try {
-      const mappings = await db.execute(sql`
-        SELECT * FROM "hotmartProductMappings"
-        ORDER BY "createdAt" DESC
-      `);
-      
-      res.json(mappings.rows);
-    } catch (error) {
-      console.error('Erro ao buscar mapeamentos de produtos Hotmart:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao buscar mapeamentos de produtos Hotmart',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
   });
   
   // Criar novo mapeamento Hotmart
-  app.post('/api/integrations/hotmart/product-mappings', async (req, res) => {
-    try {
-      const result = await db.execute(sql`
-        INSERT INTO "hotmartProductMappings" (
-          "productId", "offerId", "productName", "planType", "durationDays", "isLifetime"
-        ) VALUES (
-          ${req.body.productId || ''},
+  app.post('/api/integrations/hotmart/product-mappings', async (req, res) => {,
           ${req.body.offerId || ''},
           ${req.body.productName || 'Produto Padrão'},
           ${req.body.planType || 'premium'},
@@ -6685,21 +4848,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         RETURNING *
       `);
       
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      console.error('Erro ao criar mapeamento de produto Hotmart:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao criar mapeamento de produto Hotmart',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.status(201).json(result.rows[0]););
     }
   });
   
   // Obter mapeamento específico Hotmart
-  app.get('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
+  app.get('/api/integrations/hotmart/product-mappings/:id', async (req, res) => { = req.params;
       
       const result = await db.execute(sql`
         SELECT * FROM "hotmartProductMappings"
@@ -6713,21 +4867,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Erro ao buscar mapeamento de produto Hotmart:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao buscar mapeamento de produto Hotmart',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.json(result.rows[0]););
     }
   });
   
   // Atualizar mapeamento Hotmart
-  app.put('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
+  app.put('/api/integrations/hotmart/product-mappings/:id', async (req, res) => { = req.params;
       
       const result = await db.execute(sql`
         UPDATE "hotmartProductMappings"
@@ -6750,49 +4895,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Erro ao atualizar mapeamento de produto Hotmart:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao atualizar mapeamento de produto Hotmart',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.json(result.rows[0]););
     }
   });
   
   // Excluir mapeamento Hotmart
-  app.delete('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
+  app.delete('/api/integrations/hotmart/product-mappings/:id', async (req, res) => { = req.params;
       
       await db.execute(sql`
         DELETE FROM "hotmartProductMappings"
         WHERE id = ${parseInt(id)}
       `);
       
-      res.json({ success: true, message: 'Mapeamento Hotmart excluído com sucesso' });
-    } catch (error) {
-      console.error('Erro ao excluir mapeamento de produto Hotmart:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao excluir mapeamento de produto Hotmart',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.json({ success: true, message: 'Mapeamento Hotmart excluído com sucesso' }););
     }
   });
   
     }
-  });
-  
-  // Criar novo mapeamento Doppus
-  app.post('/api/integrations/doppus/product-mappings', async (req, res) => {
-    try {
-      const result = await db.execute(sql`
-        INSERT INTO "doppusProductMappings" (
-          "productId", "productName", "planType", "durationDays", "isLifetime"
-        ) VALUES (
-          ${req.body.productId || ''},
+  });,
           ${req.body.productName || 'Produto Padrão'},
           ${req.body.planType || 'premium'},
           ${req.body.durationDays || 30},
@@ -6801,52 +4921,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         RETURNING *
       `);
       
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      console.error('Erro ao criar mapeamento de produto Doppus:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao criar mapeamento de produto Doppus',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.status(201).json(result.rows[0]););
     }
-  });
-  
-  // Obter mapeamento específico Doppus
-  app.get('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
+  }); = req.params;
       
       const result = await db.execute(sql`
-        SELECT * FROM "doppusProductMappings"
         WHERE id = ${parseInt(id)}
       `);
       
       if (result.rows.length === 0) {
         return res.status(404).json({ 
           success: false, 
-          message: 'Mapeamento Doppus não encontrado'
         });
       }
       
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Erro ao buscar mapeamento de produto Doppus:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao buscar mapeamento de produto Doppus',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.json(result.rows[0]););
     }
-  });
-  
-  // Atualizar mapeamento Doppus
-  app.put('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
+  }); = req.params;
       
       const result = await db.execute(sql`
-        UPDATE "doppusProductMappings"
         SET 
           "productId" = ${req.body.productId || ''},
           "productName" = ${req.body.productName || 'Produto Padrão'},
@@ -6861,39 +4954,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (result.rows.length === 0) {
         return res.status(404).json({ 
           success: false, 
-          message: 'Mapeamento Doppus não encontrado'
         });
       }
       
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Erro ao atualizar mapeamento de produto Doppus:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao atualizar mapeamento de produto Doppus',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      res.json(result.rows[0]););
     }
-  });
-  
-  // Excluir mapeamento Doppus
-  app.delete('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
+  }); = req.params;
       
       await db.execute(sql`
-        DELETE FROM "doppusProductMappings"
         WHERE id = ${parseInt(id)}
-      `);
-      
-      res.json({ success: true, message: 'Mapeamento Doppus excluído com sucesso' });
-    } catch (error) {
-      console.error('Erro ao excluir mapeamento de produto Doppus:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao excluir mapeamento de produto Doppus',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      `););
     }
   });
   
@@ -6916,13 +4986,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoints adicionais para gerenciamento de webhooks da Hotmart
   
   // Endpoint para listar logs de webhook (com paginação e filtros)
-  app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
-    try {
-      console.log('DEBUG /api/webhooks/logs - Endpoint chamado');
-      
-      // Verificar registros diretamente
-      try {
-        const rawCount = await db.select({ count: count() }).from(schema.webhookLogs);
+  app.get('/api/webhooks/logs', isAdmin, async (req, res) => {).from(schema.webhookLogs);
         console.log('DEBUG /api/webhooks/logs - Total de registros na tabela:', rawCount[0]?.count || 0);
       } catch (countErr) {
         console.error('DEBUG /api/webhooks/logs - Erro ao contar registros:', countErr);
@@ -6958,20 +5022,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         page,
         limit,
         totalPages: Math.ceil(result.totalCount / limit)
-      });
-    } catch (error) {
-      console.error('Erro ao listar logs de webhook:', error);
-      return res.status(500).json({ 
-        message: 'Erro ao listar logs de webhook', 
-        error: error.message 
-      });
+      }););
     }
   });
   
   // Endpoint para buscar logs de webhook por email
-  app.get('/api/webhooks/search', isAdmin, async (req, res) => {
-    try {
-      const { email } = req.query;
+  app.get('/api/webhooks/search', isAdmin, async (req, res) => { = req.query;
       
       if (!email) {
         return res.status(400).json({
@@ -7012,24 +5068,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         count: logs.length,
         logs
-      });
-    } catch (error) {
-      console.error('Erro na busca de webhooks por email:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao realizar busca de webhooks',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      }););
     }
   });
   
   // Endpoint para obter detalhes de um log específico
-  app.get('/api/webhooks/logs/:id', isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: 'ID inválido' });
+  app.get('/api/webhooks/logs/:id', isAdmin, async (req, res) => {);
       }
       
       const log = await storage.getWebhookLogById(id);
@@ -7055,9 +5099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dataassinatura: userData.dataassinatura,
           dataexpiracao: userData.dataexpiracao
         } : null
-      });
-    } catch (error) {
-      console.error(`Erro ao obter detalhes do log #${req.params.id}:`, error);
+      });:`, error);
       return res.status(500).json({ 
         message: 'Erro ao obter detalhes do log', 
         error: error.message 
@@ -7066,12 +5108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint para reprocessar um webhook
-  app.post('/api/webhooks/logs/:id/reprocess', isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: 'ID inválido' });
+  app.post('/api/webhooks/logs/:id/reprocess', isAdmin, async (req, res) => {);
       }
       
       const success = await storage.reprocessWebhook(id);
@@ -7080,15 +5117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ 
           success: true, 
           message: 'Webhook reprocessado com sucesso' 
-        });
-      } else {
-        return res.json({ 
-          success: false, 
-          message: 'Não foi possível reprocessar o webhook' 
-        });
-      }
-    } catch (error) {
-      console.error(`Erro ao reprocessar webhook #${req.params.id}:`, error);
+        }););
+      }:`, error);
       return res.status(500).json({ 
         success: false, 
         message: 'Erro ao reprocessar webhook', 
@@ -7100,79 +5130,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =========== ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS ===========
   
   // Endpoint para testes - sem verificação de admin (temporário)
-  app.get('/api/test/subscription-settings', async (req, res) => {
-    try {
-      const settings = await storage.getSubscriptionSettings();
-      res.status(200).json(settings || {});
-    } catch (error) {
-      console.error('Erro ao buscar configurações de assinaturas (teste):', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar configurações de assinaturas', 
-        error: error.message 
-      });
+  app.get('/api/test/subscription-settings', async (req, res) => {););
     }
   });
 
   // Endpoint para obter as configurações de assinaturas
-  app.get('/api/subscription-settings', isAdmin, async (req, res) => {
-    try {
-      const settings = await storage.getSubscriptionSettings();
-      
-      // Se não existir configurações, retornamos um objeto vazio mas com status 200
-      res.status(200).json(settings || {});
-    } catch (error) {
-      console.error('Erro ao buscar configurações de assinaturas:', error);
-      
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar configurações de assinaturas', 
-        error: error.message 
-      });
+  app.get('/api/subscription-settings', isAdmin, async (req, res) => {););
     }
   });
   
   // Endpoint para testes - atualização sem verificação de admin (temporário)
-  app.put('/api/test/subscription-settings', async (req, res) => {
-    try {
-      // Validar dados de entrada se necessário
-      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
-      
-      res.status(200).json({
-        success: true,
-        message: 'Configurações de assinaturas atualizadas com sucesso (teste)',
-        settings: updatedSettings
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar configurações de assinaturas (teste):', error);
-      
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao atualizar configurações de assinaturas', 
-        error: error.message 
-      });
+  app.put('/api/test/subscription-settings', async (req, res) => {););
     }
   });
 
   // Endpoint para atualizar as configurações de assinaturas
-  app.put('/api/subscription-settings', isAdmin, async (req, res) => {
-    try {
-      // Validar dados de entrada se necessário
-      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
-      
-      res.status(200).json({
-        success: true,
-        message: 'Configurações de assinaturas atualizadas com sucesso',
-        settings: updatedSettings
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar configurações de assinaturas:', error);
-      
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao atualizar configurações de assinaturas', 
-        error: error.message 
-      });
+  app.put('/api/subscription-settings', isAdmin, async (req, res) => {););
     }
   });
 
@@ -7180,92 +5153,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Endpoint para obter estatísticas gerais de assinaturas (versão de teste - sem verificação de admin)
   app.get('/api/test/subscription-stats', async (req, res) => {
-    try {
-      const stats = await storage.getSubscriptionStats();
-      res.status(200).json(stats);
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas de assinaturas (teste):', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar estatísticas de assinaturas', 
-        error: error.message 
-      });
-    }
   });
 
   // Endpoint para obter estatísticas gerais de assinaturas
   app.get('/api/subscription-stats', isAdmin, async (req, res) => {
-    try {
-      const stats = await storage.getSubscriptionStats();
-      res.status(200).json(stats);
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas de assinaturas:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar estatísticas de assinaturas', 
-        error: error.message 
-      });
-    }
   });
 
   // Endpoint para obter tendências de assinaturas (versão de teste - sem verificação de admin)
   app.get('/api/test/subscription-trends', async (req, res) => {
-    try {
-      const months = req.query.months ? parseInt(req.query.months as string) : 6;
-      const trends = await storage.getSubscriptionTrends(months);
-      res.status(200).json(trends);
-    } catch (error) {
-      console.error('Erro ao buscar tendências de assinaturas (teste):', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar tendências de assinaturas', 
-        error: error.message 
-      });
-    }
   });
 
   // Endpoint para obter tendências de assinaturas
   app.get('/api/subscription-trends', isAdmin, async (req, res) => {
-    try {
-      const months = req.query.months ? parseInt(req.query.months as string) : 6;
-      const trends = await storage.getSubscriptionTrends(months);
-      res.status(200).json(trends);
-    } catch (error) {
-      console.error('Erro ao buscar tendências de assinaturas:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar tendências de assinaturas', 
-        error: error.message 
-      });
-    }
   });
   
   // Rotas para gerenciamento de mapeamentos de produtos Hotmart
   
   // Obter todos os mapeamentos de produtos
-  app.get('/api/hotmart/product-mappings', isAdmin, async (req, res) => {
-    try {
-      // Buscar todos os mapeamentos da tabela
-      const mappings = await db.select().from(schema.hotmartProductMappings).orderBy(schema.hotmartProductMappings.productName);
-      
-      res.status(200).json({ 
-        success: true,
-        mappings
-      });
-    } catch (error) {
-      console.error('Erro ao buscar mapeamentos de produtos da Hotmart:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao buscar mapeamentos de produtos', 
-        error: error.message 
-      });
+  app.get('/api/hotmart/product-mappings', isAdmin, async (req, res) => {););
     }
   });
   
   // Adicionar novo mapeamento de produto
-  app.post('/api/hotmart/product-mappings', isAdmin, async (req, res) => {
-    try {
-      const { productName, planType, durationDays, isLifetime } = req.body;
+  app.post('/api/hotmart/product-mappings', isAdmin, async (req, res) => { = req.body;
       
       if (!productName || !planType) {
         return res.status(400).json({ 
@@ -7302,22 +5212,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: 'Mapeamento de produto criado com sucesso',
         mapping: newMapping
-      });
-    } catch (error) {
-      console.error('Erro ao criar mapeamento de produto da Hotmart:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao criar mapeamento de produto', 
-        error: error.message 
-      });
+      }););
     }
   });
   
   // Atualizar mapeamento de produto existente
-  app.put('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {
-    try {
-      const mappingId = parseInt(req.params.id);
-      const { productName, planType, durationDays, isLifetime } = req.body;
+  app.put('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => { = req.body;
       
       if (!productName || !planType) {
         return res.status(400).json({ 
@@ -7370,32 +5270,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: 'Mapeamento de produto atualizado com sucesso',
         mapping: updatedMapping
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar mapeamento de produto da Hotmart:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao atualizar mapeamento de produto', 
-        error: error.message 
-      });
+      }););
     }
   });
   
   // Alternar estado ativo/inativo de um mapeamento
-  app.patch('/api/hotmart/product-mappings/:id/toggle', isAdmin, async (req, res) => {
-    try {
-      const mappingId = parseInt(req.params.id);
-      
-      // Verificar se o mapeamento existe
-      const existingMapping = await db.select().from(schema.hotmartProductMappings)
-        .where(eq(schema.hotmartProductMappings.id, mappingId))
-        .limit(1);
-      
-      if (existingMapping.length === 0) {
-        return res.status(404).json({ 
-          success: false,
-          message: 'Mapeamento não encontrado'
-        });
+  app.patch('/api/hotmart/product-mappings/:id/toggle', isAdmin, async (req, res) => {);
       }
       
       // Inverter o status atual
@@ -7417,32 +5297,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: `Mapeamento ${!currentStatus ? 'ativado' : 'desativado'} com sucesso`,
         mapping: updatedMapping
-      });
-    } catch (error) {
-      console.error('Erro ao alternar status do mapeamento de produto:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao alternar status do mapeamento', 
-        error: error.message 
-      });
+      }););
     }
   });
   
   // Excluir mapeamento de produto
-  app.delete('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {
-    try {
-      const mappingId = parseInt(req.params.id);
-      
-      // Verificar se o mapeamento existe
-      const existingMapping = await db.select().from(schema.hotmartProductMappings)
-        .where(eq(schema.hotmartProductMappings.id, mappingId))
-        .limit(1);
-      
-      if (existingMapping.length === 0) {
-        return res.status(404).json({ 
-          success: false,
-          message: 'Mapeamento não encontrado'
-        });
+  app.delete('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {);
       }
       
       // Excluir o mapeamento
@@ -7455,40 +5315,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ 
         success: true,
         message: 'Mapeamento de produto excluído com sucesso'
-      });
-    } catch (error) {
-      console.error('Erro ao excluir mapeamento de produto:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao excluir mapeamento de produto', 
-        error: error.message 
-      });
+      }););
     }
   });
   
   // Endpoint de teste para verificar conexão com a API da Hotmart
-  app.get('/api/test-hotmart-connection', isAdmin, async (req, res) => {
-    try {
-      console.log('Testando conexão com a API da Hotmart...');
-      
-      // Testa conexão com a API usando o token fixo configurado
-      const result = await HotmartService.testConnection();
-      
-      console.log('Resultado do teste de conexão:', result);
-      
-      // Retorna resultado detalhado para o frontend
-      res.status(200).json({ 
-        ...result,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Erro ao testar conexão com a Hotmart:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao testar conexão com a Hotmart', 
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        timestamp: new Date().toISOString()
-      });
+  app.get('/api/test-hotmart-connection', isAdmin, async (req, res) => {););
     }
   });
 
@@ -7500,9 +5332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Configurar rotas de diagnóstico de webhook diretamente
   // Rota para busca avançada de webhooks
-  app.get('/api/webhook-diagnostics/advanced-search', isAdmin, async (req, res) => {
-    try {
-      const { email } = req.query;
+  app.get('/api/webhook-diagnostics/advanced-search', isAdmin, async (req, res) => { = req.query;
       
       if (!email) {
         return res.status(400).json({
@@ -7536,21 +5366,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enhancedResults = result.rows.map(log => {
         let foundEmail = null;
         let emailLocation = null;
-        
-        try {
-          // Converter o payload para JSON se for string
-          const payload = typeof log.payloadData === 'string' 
-            ? JSON.parse(log.payloadData) 
-            : log.payloadData;
-          
-          // Buscar o email em diferentes locais dependendo da origem
-          if (log.source === 'hotmart') {
-            foundEmail = payload.data?.buyer?.email || null;
-            emailLocation = foundEmail ? 'data.buyer.email' : null;
-          } else if (log.source === 'doppus') {
-            foundEmail = payload.customer?.email || null;
-            emailLocation = foundEmail ? 'customer.email' : null;
-          }
           
           // Se ainda não encontrou o email, verificar no texto serializado
           if (!foundEmail) {
@@ -7576,21 +5391,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         count: enhancedResults.length,
         results: enhancedResults
-      });
-    } catch (error) {
-      console.error('Erro na busca avançada de webhooks:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao realizar busca avançada de webhooks',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      }););
     }
   });
 
   // Rota para buscar detalhes de um log específico
-  app.get('/api/webhook-diagnostics/log/:id', isAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
+  app.get('/api/webhook-diagnostics/log/:id', isAdmin, async (req, res) => { = req.params;
       
       if (!id || isNaN(parseInt(id))) {
         return res.status(400).json({
@@ -7618,18 +5424,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let parsedPayload = null;
       let extractedEmail = null;
       let payloadEmail = null;
-      
-      try {
-        parsedPayload = typeof log.payloadData === 'string' 
-          ? JSON.parse(log.payloadData) 
-          : log.payloadData;
-        
-        // Tentar encontrar o email dependendo da origem
-        if (log.source === 'hotmart') {
-          payloadEmail = parsedPayload.data?.buyer?.email;
-        } else if (log.source === 'doppus') {
-          payloadEmail = parsedPayload.customer?.email;
-        }
         
         // Se encontrou o email, destacar
         if (payloadEmail) {
@@ -7646,14 +5440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parsedPayload,
           extractedEmail
         }
-      });
-    } catch (error) {
-      console.error('Erro ao buscar detalhes do log:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao buscar detalhes do log',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+      }););
     }
   });
 
@@ -7661,18 +5448,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
   if (process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET) {
-    try {
-      // Buscar configuração de ambiente no banco de dados
-      const sandboxConfig = await db.execute(sql`
-        SELECT value FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
-      `);
-      
-      // Determinar o ambiente a ser usado
-      let useSandbox = true; // Valor padrão se não existir configuração
-      if (sandboxConfig.rows.length > 0) {
-        useSandbox = sandboxConfig.rows[0].value === 'true';
-      }
       
       // O serviço Hotmart agora é inicializado diretamente no server/index.ts
       // Não precisamos inicializar aqui, pois usamos uma abordagem orientada a objetos
@@ -7680,15 +5455,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Configurar variáveis de ambiente usadas pelo novo serviço
       process.env.HOTMART_SANDBOX = useSandbox ? 'true' : 'false';
-    } catch (error) {
-      console.error('Erro ao obter configuração da Hotmart:', error);
-      // Fallback para sandbox em caso de erro
-      process.env.HOTMART_SANDBOX = 'true';
-      console.log('Configurado fallback para modo Sandbox devido a erro');
-    }
-  } else {
-    console.log('Credenciais da Hotmart não encontradas. A verificação de renovações na Hotmart não estará disponível.');
-  }
   
   return httpServer;
 }

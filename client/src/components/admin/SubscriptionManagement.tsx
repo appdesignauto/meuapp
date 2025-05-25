@@ -2348,16 +2348,7 @@ export default function SubscriptionManagement() {
               {/* Card de mapeamento removido pois estava duplicado, 
                  * mantido apenas o card que usa o componente DoppusProductMapping */}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Mapeamento de Produtos Doppus</CardTitle>
-                  <CardDescription>Configure como os produtos da Doppus são mapeados no sistema</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Utilizando o componente DoppusProductMapping */}
-                  <DoppusProductMapping standalone={false} />
-                </CardContent>
-              </Card>
+
             </TabsContent>
           </Tabs>
         </TabsContent>
