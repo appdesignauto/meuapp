@@ -25,7 +25,7 @@ import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
-import { HotmartService } from "./services/hotmart-service";
+
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
 
@@ -76,8 +76,7 @@ import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middle
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
-import mappingRouter from './routes/mapping-routes'; // Rotas para mapeamento de produtos Hotmart
-import webhookLogsRouter from './routes/webhook-logs'; // Rotas para visualização de logs de webhook
+
 import { PrismaClient } from '@prisma/client';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -4676,10 +4675,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       
       // Obter contagem por origem de assinatura
-      const [hotmartResult] = await db
-        .select({ count: count() })
-        .from(users)
-        .where(eq(users.origemassinatura, 'hotmart'));
       
       const [doppusResult] = await db
         .select({ count: count() })
@@ -4752,7 +4747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trialCount: trialResult.count,
         expiringIn7Days: expiringIn7DaysResult.count,
         expiringIn30Days: expiringIn30DaysResult.count,
-        hotmartCount: hotmartResult.count,
+
         doppusCount: doppusResult.count,
         manualCount: manualResult.count,
         subscriptionsByPlan,
@@ -5029,328 +5024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rotas para gerenciamento de integrações (Hotmart/Doppus)
-  
-  // Atualizar chave secreta da Hotmart
-  app.post("/api/integrations/hotmart/secret", isAdmin, async (req, res) => {
-    try {
-      const { secret } = req.body;
-      
-      if (!secret) {
-        return res.status(400).json({ message: "Chave secreta é obrigatória" });
-      }
-      
-      // Verificar se o registro já existe
-      const existingRecord = await db.execute(sql`
-        SELECT id FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'secret'
-      `);
-      
-      if (existingRecord.rows.length === 0) {
-        // Se não existir, criar um novo registro
-        await db.execute(sql`
-          INSERT INTO "integrationSettings" 
-          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-          VALUES ('hotmart', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${secret}, "updatedAt" = NOW() 
-          WHERE "provider" = 'hotmart' AND "key" = 'secret'
-        `);
-      }
-      
-      console.log("Chave secreta da Hotmart atualizada por:", req.user?.username);
-      
-      // Retornar o valor atualizado para o frontend poder atualizar a exibição
-      return res.status(200).json({ 
-        success: true, 
-        message: "Chave secreta da Hotmart atualizada com sucesso",
-        updatedValue: {
-          key: "secret",
-          value: "••••••••", // Valor mascarado para exibição
-          provider: "hotmart",
-          realValue: secret, // Valor real para ser usado pelo frontend
-          lastChars: secret.length > 4 ? secret.slice(-4) : "",
-          isDefined: true,
-          isActive: true,
-          updatedAt: new Date()
-        }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar chave secreta da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar chave secreta da Hotmart" 
-      });
-    }
-  });
-  
-  // Atualizar Client ID da Hotmart
-  app.post("/api/integrations/hotmart/client-id", isAdmin, async (req, res) => {
-    try {
-      const { clientId } = req.body;
-      
-      if (!clientId) {
-        return res.status(400).json({ message: "Client ID é obrigatório" });
-      }
-      
-      // Verificar se o registro já existe
-      const existingRecord = await db.execute(sql`
-        SELECT id FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'clientId'
-      `);
-      
-      if (existingRecord.rows.length === 0) {
-        // Se não existir, criar um novo registro
-        await db.execute(sql`
-          INSERT INTO "integrationSettings" 
-          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-          VALUES ('hotmart', 'clientId', ${clientId}, 'Client ID da API da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${clientId}, "updatedAt" = NOW() 
-          WHERE "provider" = 'hotmart' AND "key" = 'clientId'
-        `);
-      }
-      
-      console.log("Client ID da Hotmart atualizado por:", req.user?.username);
-      
-      // Retornar o valor atualizado para o frontend poder atualizar a exibição
-      return res.status(200).json({ 
-        success: true, 
-        message: "Client ID da Hotmart atualizado com sucesso",
-        updatedValue: {
-          key: "clientId",
-          value: "••••••••", // Valor mascarado para exibição
-          provider: "hotmart",
-          realValue: clientId, // Valor real para ser usado pelo frontend
-          lastChars: clientId.length > 4 ? clientId.slice(-4) : "",
-          isDefined: true,
-          isActive: true,
-          updatedAt: new Date()
-        }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar Client ID da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar Client ID da Hotmart" 
-      });
-    }
-  });
-  
-  // Atualizar Client Secret da Hotmart
-  app.post("/api/integrations/hotmart/client-secret", isAdmin, async (req, res) => {
-    try {
-      const { clientSecret } = req.body;
-      
-      if (!clientSecret) {
-        return res.status(400).json({ message: "Client Secret é obrigatório" });
-      }
-      
-      // Verificar se o registro já existe
-      const existingRecord = await db.execute(sql`
-        SELECT id FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
-      `);
-      
-      if (existingRecord.rows.length === 0) {
-        // Se não existir, criar um novo registro
-        await db.execute(sql`
-          INSERT INTO "integrationSettings" 
-          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-          VALUES ('hotmart', 'clientSecret', ${clientSecret}, 'Client Secret da API da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${clientSecret}, "updatedAt" = NOW() 
-          WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
-        `);
-      }
-      
-      console.log("Client Secret da Hotmart atualizado por:", req.user?.username);
-      
-      // Retornar o valor atualizado para o frontend poder atualizar a exibição
-      return res.status(200).json({ 
-        success: true, 
-        message: "Client Secret da Hotmart atualizado com sucesso",
-        updatedValue: {
-          key: "clientSecret",
-          value: "••••••••", // Valor mascarado para exibição
-          provider: "hotmart",
-          realValue: clientSecret, // Valor real para ser usado pelo frontend
-          lastChars: clientSecret.length > 4 ? clientSecret.slice(-4) : "",
-          isDefined: true,
-          isActive: true,
-          updatedAt: new Date()
-        }
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar Client Secret da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao atualizar Client Secret da Hotmart" 
-      });
-    }
-  });
-  
-  // Alternar ambiente Sandbox/Produção da Hotmart
-  app.post("/api/integrations/hotmart/toggle-environment", isAdmin, async (req, res) => {
-    try {
-      // Buscar a configuração atual
-      const currentSetting = await db.execute(sql`
-        SELECT value FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
-      `);
-      
-      // Determinar o novo valor (inversão do atual)
-      let currentValue = true; // Valor padrão se não existir
-      if (currentSetting.rows.length > 0) {
-        currentValue = currentSetting.rows[0].value === 'true';
-      }
-      
-      const newValue = !currentValue;
-      
-      // Atualizar ou criar a configuração
-      if (currentSetting.rows.length === 0) {
-        // Se não existir, criar um novo registro
-        await db.execute(sql`
-          INSERT INTO "integrationSettings" 
-          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-          VALUES ('hotmart', 'useSandbox', ${String(newValue)}, 'Usar ambiente de sandbox da Hotmart', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${String(newValue)}, "updatedAt" = NOW() 
-          WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
-        `);
-      }
-      
-      console.log(`Ambiente da Hotmart alterado para ${newValue ? 'Sandbox' : 'Produção'} por: ${req.user?.username}`);
-      
-      // Retornar o valor atualizado
-      return res.status(200).json({ 
-        success: true, 
-        message: `Ambiente da Hotmart alterado para ${newValue ? 'Sandbox' : 'Produção'}`,
-        updatedValue: {
-          key: "useSandbox",
-          value: String(newValue),
-          provider: "hotmart",
-          realValue: String(newValue),
-          isDefined: true,
-          isActive: true,
-          updatedAt: new Date()
-        }
-      });
-    } catch (error) {
-      console.error("Erro ao alternar ambiente da Hotmart:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Erro ao alternar ambiente da Hotmart" 
-      });
-    }
-  });
-  
-  // Testar conexão com a API da Hotmart
-  app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => {
-    try {
-      console.log("===== TESTE DE CONEXÃO COM HOTMART INICIADO =====");
-      console.log("Usuário:", req.user?.username);
-      console.log("Data e hora do teste:", new Date().toISOString());
-      
-      // Buscar as credenciais da Hotmart e configuração de ambiente do banco de dados
-      const settings = await db.execute(sql`
-        SELECT key, value
-        FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret', 'useSandbox')
-      `);
-      
-      console.log("Configurações encontradas:", settings.rows.length);
-      
-      // Converter o resultado em um objeto para facilitar o acesso
-      const credentials = settings.rows.reduce((acc, setting) => {
-        console.log(`Configuração: ${setting.key} = ${setting.key === 'useSandbox' ? setting.value : '***' + (setting.value?.slice(-4) || '')}`);
-        acc[setting.key] = setting.value;
-        return acc;
-      }, {} as Record<string, string>);
-      
-      // Verificar se as credenciais estão configuradas
-      if (!credentials.clientId || !credentials.clientSecret) {
-        return res.status(400).json({
-          success: false,
-          message: "Credenciais da Hotmart não configuradas. Configure o Client ID e Client Secret primeiro."
-        });
-      }
-      
-      // Importar o serviço da Hotmart
-      const { HotmartService } = await import('./services/hotmart-service');
-      
-      // Determinar ambiente baseado na configuração useSandbox
-      const useSandbox = credentials.useSandbox === 'true';
-      
-      // Usar as credenciais reais fornecidas pelo usuário a partir do banco de dados
-      const clientId = credentials.clientId;
-      const clientSecret = credentials.clientSecret;
-      
-      console.log(`Teste de conexão - usando ambiente: ${useSandbox ? 'sandbox' : 'produção'}`);
-      console.log(`Credenciais utilizadas - Client ID: ${clientId.substring(0, 10)}... | Client Secret: ${clientSecret.substring(0, 5)}...`);
-      
-      // Inicializar o serviço com as credenciais reais do usuário
-      HotmartService.initialize(clientId, clientSecret, useSandbox);
-      
-      // Testar a conexão
-      console.log('Iniciando teste de conexão com a API da Hotmart...');
-      
-      try {
-        const result = await HotmartService.testConnection();
-        console.log('Resultado do teste de conexão:', JSON.stringify(result));
-        return res.json(result);
-      } catch (error) {
-        console.error('ERRO CRÍTICO no teste de conexão:', error);
-        return res.status(500).json({
-          success: false,
-          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
-          details: { error: String(error) }
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao testar conexão com a Hotmart:", error);
-      let errorMessage = "Erro desconhecido";
-      
-      // Extrai uma mensagem de erro amigável para o usuário
-      if (error instanceof Error) {
-        if (error.message.includes('404')) {
-          errorMessage = "Não foi possível conectar à API da Hotmart. Verifique se as credenciais estão corretas.";
-        } else if (error.message.includes('401')) {
-          errorMessage = "Credenciais da Hotmart inválidas. Verifique o Client ID e Client Secret.";
-        } else if (error.message.includes('403')) {
-          errorMessage = "Sem permissão para acessar a API da Hotmart. Verifique as permissões das credenciais.";
-        } else if (error.message.includes('500')) {
-          errorMessage = "Erro interno no servidor da Hotmart. Tente novamente mais tarde.";
-        } else if (error.message.includes('timeout')) {
-          errorMessage = "Tempo limite excedido na conexão com a Hotmart. Verifique sua conexão com a internet.";
-        } else {
-          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
-          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
-        }
-      }
-      
-      return res.status(500).json({
-        success: false,
-        message: errorMessage
-      });
-    }
-  });
+  // Rotas para gerenciamento de integrações (Doppus)
   
   // Testar conexão com a API da Doppus
   app.get("/api/integrations/doppus/test-connection", isAdmin, async (req, res) => {
