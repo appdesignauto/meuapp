@@ -5348,52 +5348,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
-  // Testar conexão com a API da Doppus
-  app.get("/api/integrations/doppus/test-connection", isAdmin, async (req, res) => {
-    try {
-      console.log("===== TESTE DE CONEXÃO COM DOPPUS INICIADO =====");
-      console.log("Usuário:", req.user?.username);
-      console.log("Data e hora do teste:", new Date().toISOString());
-      
-      // Importar o serviço da Doppus
-      const doppusService = await import('./services/doppus-service');
-      
-      // Testar a conexão
-      console.log('Iniciando teste de conexão com a API da Doppus...');
-      
-      try {
-        const result = await doppusService.default.testConnection();
-        console.log('Resultado do teste de conexão:', JSON.stringify(result));
-        
-        // Garantir que a resposta tenha um formato consistente
-        // e que o status success seja explícito para que a UI possa processar corretamente
-        if (result && result.success === true) {
-          console.log('✅ Teste de conexão com a Doppus bem-sucedido: Token obtido');
-          return res.json({
-            success: true,
-            message: result.message || 'Conexão com a API da Doppus estabelecida com sucesso.',
-            details: result.details || {}
-          });
-        } else {
-          console.log('❌ Teste de conexão com a Doppus falhou, mas não lançou exceção');
-          return res.status(500).json({
-            success: false,
-            message: result.message || 'Falha no teste de conexão com a API da Doppus',
-            details: result.details || {}
-          });
-        }
-      } catch (error) {
-        console.error('ERRO CRÍTICO no teste de conexão:', error);
-        return res.status(500).json({
-          success: false,
-          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
-          details: { error: String(error) }
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao testar conexão com a Doppus:", error);
-      let errorMessage = "Erro desconhecido";
       
       // Extrai uma mensagem de erro amigável para o usuário
       if (error instanceof Error) {
@@ -5420,13 +5374,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Atualizar chave secreta da Doppus
-  app.post("/api/integrations/doppus/secret", isAdmin, async (req, res) => {
-    try {
-      const { secret } = req.body;
-      
-      if (!secret) {
-        return res.status(400).json({ message: "Chave secreta é obrigatória" });
       }
       
       // 1. Atualizar na tabela integrationSettings
@@ -5507,13 +5454,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Atualizar API Key da Doppus
-  app.post("/api/integrations/doppus/apikey", isAdmin, async (req, res) => {
-    try {
-      const { apiKey } = req.body;
-      
-      if (!apiKey) {
-        return res.status(400).json({ message: "API Key é obrigatória" });
       }
       
       // Verificar se o registro já existe
@@ -5842,16 +5782,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint para atualizar o Client ID da Doppus
-  app.post("/api/integrations/doppus/clientid", isAdmin, async (req, res) => {
-    try {
-      const { clientId } = req.body;
-      
-      if (!clientId || typeof clientId !== 'string') {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Client ID inválido" 
-        });
       }
 
       const currentDate = new Date();
@@ -6054,28 +5984,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Obter o IP de origem para registro
       const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
-      console.log("Webhook Doppus recebido de IP:", sourceIp);
-      // Log completo do corpo da requisição para diagnóstico
-      console.log("Corpo do webhook Doppus:", JSON.stringify(req.body, null, 2));
-      
-      // Importar o serviço da Doppus
-      const DoppusService = (await import('./services/doppus-service')).default;
-      
-      // Extrai assinatura de segurança do webhook Doppus no cabeçalho da requisição
-      const signature = req.headers['x-doppus-signature'] as string;
-      const eventType = req.headers['x-doppus-event'] as string || 'unknown';
-      
-      // Registrar o webhook no banco de dados primeiro para garantir que não perdemos dados
-      const transactionId = req.body?.data?.transaction?.code || null;
-      const webhookLog = await storage.createWebhookLog({
-        eventType: req.body?.event || eventType,
-        payloadData: JSON.stringify(req.body),
-        status: 'received',
-        source: 'doppus',
-        errorMessage: null,
-        sourceIp,
-        transactionId
-      });
       
       // Validação básica do webhook
       if (!req.body || !req.body.data || !req.body.event) {
@@ -6147,9 +6055,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json({ 
           success: true, 
-          message: "Webhook Doppus processado com sucesso", 
-          result 
-        });
       } catch (processingError) {
         console.error("Erro ao processar evento Doppus:", processingError);
         
@@ -6877,24 +6782,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // === DOPPUS PRODUCT MAPPINGS ===
-  
-  // Obter todos os mapeamentos Doppus
-  app.get('/api/integrations/doppus/product-mappings', async (req, res) => {
-    try {
-      const mappings = await db.execute(sql`
-        SELECT * FROM "doppusProductMappings"
-        ORDER BY "createdAt" DESC
-      `);
-      
-      res.json(mappings.rows);
-    } catch (error) {
-      console.error('Erro ao buscar mapeamentos de produtos Doppus:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erro ao buscar mapeamentos de produtos Doppus',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
     }
   });
   
