@@ -1,0 +1,68 @@
+SOLUÇÃO IMEDIATA:
+1. Versão Simplificada SEM JOIN (para funcionar agora)
+typescriptrouter.get('/my-posts/:userId', async (req, res) => {
+  console.log('🎯 [DEBUG] Endpoint executado para userId:', req.params.userId);
+  
+  try {
+    // Query simples apenas com posts
+    const posts = await pool.query(`
+      SELECT * FROM "communityPosts" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC
+    `, [req.params.userId]);
+    
+    console.log('🎯 [SUCCESS] Posts encontrados:', posts.rows.length);
+    
+    // Adicionar dados mockados temporariamente
+    const postsWithExtras = posts.rows.map(post => ({
+      ...post,
+      user: {
+        name: 'Usuário Teste',
+        image: null
+      },
+      likesCount: 0,
+      commentsCount: 0
+    }));
+    
+    res.json(postsWithExtras);
+    
+  } catch (error) {
+    console.error('🚨 [ERRO] Detalhes:', error);
+    res.status(500).json({ error: 'Erro interno', details: error.message });
+  }
+});
+2. Verificar Nomes Corretos das Tabelas
+Execute esta query no seu banco para ver as tabelas existentes:
+sqlSELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name LIKE '%community%';
+3. Versão Corrigida com Nomes Corretos
+Depois que soubermos os nomes corretos, use:
+typescriptrouter.get('/my-posts/:userId', async (req, res) => {
+  try {
+    const posts = await pool.query(`
+      SELECT 
+        cp.*,
+        u.name as "userName",
+        u.image as "userImage",
+        (SELECT COUNT(*) FROM "communityLikes" cl WHERE cl."postId" = cp.id) as "likesCount",
+        (SELECT COUNT(*) FROM "communityComments" cc WHERE cc."postId" = cp.id) as "commentsCount"
+      FROM "communityPosts" cp
+      LEFT JOIN users u ON cp."userId" = u.id
+      WHERE cp."userId" = $1
+      ORDER BY cp."createdAt" DESC
+    `, [req.params.userId]);
+    
+    res.json(posts.rows);
+  } catch (error) {
+    console.error('🚨 [ERRO]:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+AÇÃO IMEDIATA:
+
+Substitua o endpoint pela versão simplificada (sem JOIN)
+Teste se funciona
+Me diga quais são os nomes corretos das tabelas de likes e comments
+Corrigimos a query com os nomes corretos

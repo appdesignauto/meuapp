@@ -98,43 +98,6 @@ configureCors(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Health check endpoints for deployment
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// Root health check for deployment systems
-app.get('/health-check', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'DesignAuto' });
-});
-
-// Explicit endpoint that Replit deployment expects
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
-  // Check if this is a deployment health check
-  const userAgent = req.get('User-Agent') || '';
-  const accept = req.get('Accept') || '';
-  
-  // If it's a health check request (usually from deployment systems)
-  if (userAgent.includes('curl') || 
-      userAgent.includes('health') || 
-      accept.includes('application/json') ||
-      req.query.ping !== undefined) {
-    return res.status(200).json({ 
-      status: 'ok', 
-      service: 'DesignAuto',
-      timestamp: new Date().toISOString(),
-      port: process.env.PORT || 5000
-    });
-  }
-  
-  // For browser requests, let the middleware handle it
-  next();
-});
-
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 
@@ -234,25 +197,12 @@ app.use((req, res, next) => {
     // Verificar configuração de ambiente (migrado para Supabase Storage)
     validateR2Environment();
     
-    // Inicializar o banco de dados com dados (only in development or after health checks)
-    if (process.env.NODE_ENV !== 'production') {
-      await initializeDatabase();
-      console.log("Banco de dados inicializado com sucesso");
-      
-      // Criar usuário administrador
-      await createAdminUser();
-    } else {
-      // In production, defer database initialization until after server starts
-      setTimeout(async () => {
-        try {
-          await initializeDatabase();
-          await createAdminUser();
-          console.log("Banco de dados inicializado com sucesso (produção)");
-        } catch (error) {
-          console.error("Erro na inicialização diferida:", error);
-        }
-      }, 5000);
-    }
+    // Inicializar o banco de dados com dados
+    await initializeDatabase();
+    console.log("Banco de dados inicializado com sucesso");
+    
+    // Criar usuário administrador
+    await createAdminUser();
     
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
@@ -486,6 +436,28 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
+  // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT
+  app.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+
+  // 🏥 ENDPOINT ALTERNATIVO DE HEALTH CHECK
+  app.get('/', (req: Request, res: Response) => {
+    // Se não for uma requisição de API, serve a aplicação normalmente
+    if (req.path === '/' && req.method === 'GET') {
+      res.status(200).json({
+        status: 'healthy',
+        message: 'DesignAuto API is running',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -505,22 +477,14 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use PORT environment variable for deployments (Replit uses dynamic port in production)
-  const port = parseInt(process.env.PORT || '5000', 10);
-  
-  console.log(`🚀 Starting DesignAuto server on port ${port}...`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`✅ DesignAuto server successfully running on port ${port}`);
-    console.log(`✅ Ready for designauto.com.br domain`);
-    console.log(`✅ Root endpoint responding at /`);
-    console.log(`✅ Health check available at /health`);
+  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOYMENT
+  // Cloud Run espera porta 3000, desenvolvimento usa 5000
+  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
     log(`serving on port ${port}`);
-    
-    // Log for deployment debugging
-    if (process.env.NODE_ENV === 'production') {
-      console.log(`🚀 Production deployment ready - designauto.com.br should now work`);
-    }
   });
 })();

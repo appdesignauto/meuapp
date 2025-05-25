@@ -84,35 +84,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
-  // Root endpoint for deployment verification
-  app.get('/', (req, res) => {
-    res.status(200).json({
-      message: 'DesignAuto Community API is running',
-      status: 'operational',
-      version: '1.0.0',
-      timestamp: new Date().toISOString(),
-      port: process.env.PORT || 5000
-    });
-  });
-
-  // Additional health check endpoint
+  // Rota simples de verificação de saúde
   app.get('/health', (req, res) => {
     res.status(200).json({
-      status: 'healthy',
-      service: 'DesignAuto',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime()
-    });
-  });
-
-  // Ping endpoint for quick health checks
-  app.get('/ping', (req, res) => {
-    res.status(200).json({
-      status: 'healthy',
+      status: 'ok',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
-      message: 'Servidor está funcionando corretamente',
-      uptime: process.uptime()
+      message: 'Servidor está funcionando corretamente'
     });
   });
 
@@ -687,6 +665,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar a rota para o manifest.json dinâmico do PWA
   app.use(manifestRouter);
   
+  // ENDPOINT MEUS POSTS - ANTES DO MIDDLEWARE appConfigRouter (PRIORIDADE MÁXIMA)
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log('🎯 [PRIORIDADE MÁXIMA] Endpoint my-posts executado!');
+    console.log('🎯 [PRIORIDADE MÁXIMA] UserID:', req.params.userId);
+    
+    const userId = req.params.userId;
+    
+    try {
+      const { pool } = await import('./db');
+      
+      // Query com posts, dados do usuário, curtidas e comentários
+      const posts = await pool.query(`
+        SELECT 
+          cp.*,
+          u.username,
+          u.name,
+          u.profileimageurl,
+          u.nivelacesso,
+          u.acessovitalicio,
+          COALESCE(likes_count.total, 0) as likes_count,
+          COALESCE(comments_count.total, 0) as comments_count
+        FROM "communityPosts" cp
+        LEFT JOIN "users" u ON cp."userId" = u.id
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityLikes" 
+          GROUP BY "postId"
+        ) likes_count ON cp.id = likes_count."postId"
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityComments" 
+          GROUP BY "postId"
+        ) comments_count ON cp.id = comments_count."postId"
+        WHERE cp."userId" = $1 
+        ORDER BY cp."createdAt" DESC
+      `, [userId]);
+      
+      console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      
+      // Formatar os dados no formato esperado pelo frontend
+      const formattedPosts = posts.rows.map(row => ({
+        id: row.id,
+        userId: row.userId,
+        title: row.title,
+        content: row.content,
+        imageUrl: row.imageUrl,
+        createdAt: row.createdAt,
+        isApproved: row.isApproved,
+        isPinned: row.isPinned,
+        editLink: row.editLink,
+        viewCount: row.viewCount || 0,
+        likesCount: parseInt(row.likes_count) || 0,
+        commentsCount: parseInt(row.comments_count) || 0,
+        user: {
+          id: row.userId,
+          username: row.username,
+          name: row.name,
+          profileimageurl: row.profileimageurl,
+          nivelacesso: row.nivelacesso,
+          acessovitalicio: row.acessovitalicio
+        }
+      }));
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(formattedPosts);
+      
+    } catch (error) {
+      console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   // Registrar as rotas para configuração do PWA
   app.use('/api', appConfigRouter);
   
@@ -7037,7 +7088,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
   
-
+  // ENDPOINT MEUS POSTS - DIRETO NO SERVIDOR PRINCIPAL (SEMPRE EXECUTADO PRIMEIRO)
+  app.get('/api/community/my-posts/:userId', async (req, res) => {
+    console.log('🎯 [PRIORIDADE MÁXIMA] Endpoint my-posts executado!');
+    console.log('🎯 [PRIORIDADE MÁXIMA] UserID:', req.params.userId);
+    
+    const userId = req.params.userId;
+    
+    try {
+      const { pool } = await import('./db');
+      
+      // Query com posts, dados do usuário, curtidas e comentários
+      const posts = await pool.query(`
+        SELECT 
+          cp.*,
+          u.username,
+          u.name,
+          u.profileimageurl,
+          u.nivelacesso,
+          u.acessovitalicio,
+          COALESCE(likes_count.total, 0) as likes_count,
+          COALESCE(comments_count.total, 0) as comments_count
+        FROM "communityPosts" cp
+        LEFT JOIN "users" u ON cp."userId" = u.id
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityLikes" 
+          GROUP BY "postId"
+        ) likes_count ON cp.id = likes_count."postId"
+        LEFT JOIN (
+          SELECT "postId", COUNT(*) as total 
+          FROM "communityComments" 
+          GROUP BY "postId"
+        ) comments_count ON cp.id = comments_count."postId"
+        WHERE cp."userId" = $1 
+        ORDER BY cp."createdAt" DESC
+      `, [userId]);
+      
+      console.log('🎯 [PRIORIDADE MÁXIMA] Encontrados', posts.rows.length, 'posts para usuário', userId);
+      
+      // Formatar os dados no formato esperado pelo frontend
+      const formattedPosts = posts.rows.map(row => ({
+        id: row.id,
+        userId: row.userId,
+        title: row.title,
+        content: row.content,
+        imageUrl: row.imageUrl,
+        createdAt: row.createdAt,
+        isApproved: row.status === 'approved', // CORREÇÃO: Converter status para isApproved
+        isPinned: row.isPinned,
+        editLink: row.editLink,
+        viewCount: row.viewCount || 0,
+        likesCount: parseInt(row.likes_count) || 0,
+        commentsCount: parseInt(row.comments_count) || 0,
+        formattedDate: new Date(row.createdAt).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }),
+        user: {
+          id: row.userId,
+          username: row.username,
+          name: row.name,
+          profileimageurl: row.profileimageurl,
+          nivelacesso: row.nivelacesso,
+          acessovitalicio: row.acessovitalicio
+        }
+      }));
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(formattedPosts);
+      
+    } catch (error) {
+      console.error('🎯 [PRIORIDADE MÁXIMA] Erro:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
 
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
