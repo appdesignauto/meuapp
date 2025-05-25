@@ -4681,10 +4681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(users)
         .where(eq(users.origemassinatura, 'hotmart'));
       
-      const [doppusResult] = await db
-        .select({ count: count() })
-        .from(users)
-        .where(eq(users.origemassinatura, 'doppus'));
+      const [doppusResult] = { count: 0 };
       
       const [manualResult] = await db
         .select({ count: count() })
