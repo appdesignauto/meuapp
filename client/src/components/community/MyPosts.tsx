@@ -311,99 +311,69 @@ const MyPosts: React.FC<MyPostsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Filtros por status */}
-      <Tabs value={activeStatus} onValueChange={setActiveStatus} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Todos ({statusCounts.all})
-          </TabsTrigger>
-          <TabsTrigger value="approved" className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Aprovados ({statusCounts.approved})
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Pendentes ({statusCounts.pending})
-          </TabsTrigger>
-          <TabsTrigger value="rejected" className="flex items-center gap-2">
-            <XCircle className="h-4 w-4" />
-            Rejeitados ({statusCounts.rejected})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeStatus} className="mt-6">
-          {myPostsLoading ? (
-            // Estado de loading
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="w-full h-56 sm:h-64" />
-                  <CardContent className="p-4">
-                    <div className="flex items-center mb-3">
-                      <Skeleton className="h-8 w-8 rounded-full mr-2" />
-                      <div>
-                        <Skeleton className="h-4 w-24 mb-1" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
+      {/* Lista de posts */}
+      <div className="mt-6">
+        {myPostsLoading ? (
+          // Estado de loading
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="w-full h-56 sm:h-64" />
+                <CardContent className="p-4">
+                  <div className="flex items-center mb-3">
+                    <Skeleton className="h-8 w-8 rounded-full mr-2" />
+                    <div>
+                      <Skeleton className="h-4 w-24 mb-1" />
+                      <Skeleton className="h-3 w-16" />
                     </div>
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-full mb-1" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full mb-1" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : myPostsError ? (
+          // Estado de erro
+          <ErrorContainer 
+            title="Erro ao carregar seus posts" 
+            description="Não foi possível carregar suas publicações."
+            onAction={() => refetchMyPosts()}
+          />
+        ) : !myPosts || myPosts.length === 0 ? (
+          // Estado vazio
+          <div className="text-center py-10">
+            <div className="mb-4">
+              <User className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
             </div>
-          ) : myPostsError ? (
-            // Estado de erro
-            <ErrorContainer 
-              title="Erro ao carregar seus posts" 
-              description="Não foi possível carregar suas publicações."
-              onAction={() => refetchMyPosts()}
-            />
-          ) : filteredPosts.length === 0 ? (
-            // Estado vazio
-            <div className="text-center py-10">
-              <div className="mb-4">
-                {activeStatus === 'approved' && <CheckCircle2 className="h-12 w-12 mx-auto text-green-300 mb-3" />}
-                {activeStatus === 'pending' && <Clock className="h-12 w-12 mx-auto text-yellow-300 mb-3" />}
-                {activeStatus === 'rejected' && <XCircle className="h-12 w-12 mx-auto text-red-300 mb-3" />}
-                {activeStatus === 'all' && <User className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />}
-              </div>
-              <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                {activeStatus === 'approved' && 'Nenhum post aprovado'}
-                {activeStatus === 'pending' && 'Nenhum post pendente'}
-                {activeStatus === 'rejected' && 'Nenhum post rejeitado'}
-                {activeStatus === 'all' && 'Você ainda não publicou nenhuma arte'}
-              </h3>
-              <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-                {activeStatus === 'approved' && 'Seus posts aprovados aparecerão aqui.'}
-                {activeStatus === 'pending' && 'Posts aguardando moderação aparecerão aqui.'}
-                {activeStatus === 'rejected' && 'Posts rejeitados aparecerão aqui.'}
-                {activeStatus === 'all' && 'Compartilhe sua primeira criação na comunidade!'}
-              </p>
-            </div>
-          ) : (
-            // Lista de posts usando estrutura similar ao PostCard
-            <div className="space-y-4">
-              {filteredPosts.map((item: any) => (
-                <MyPostCard
-                  key={item.post.id}
-                  post={item.post}
-                  user={item.user}
-                  likesCount={item.likesCount || 0}
-                  commentsCount={item.commentsCount || 0}
-                  savesCount={item.savesCount || 0}
-                  isLikedByUser={item.isLikedByUser || item.userHasLiked || false}
-                  onRefresh={handleRefresh}
-                  setSelectedPostId={setSelectedPostId}
-                  setIsPostViewOpen={setIsPostViewOpen}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+              Você ainda não publicou nenhuma arte
+            </h3>
+            <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+              Compartilhe sua primeira criação na comunidade!
+            </p>
+          </div>
+        ) : (
+          // Lista de posts usando estrutura similar ao PostCard
+          <div className="space-y-4">
+            {myPosts.map((item: any) => (
+              <MyPostCard
+                key={item.post.id}
+                post={item.post}
+                user={item.user}
+                likesCount={item.likesCount || 0}
+                commentsCount={item.commentsCount || 0}
+                savesCount={item.savesCount || 0}
+                isLikedByUser={item.isLikedByUser || item.userHasLiked || false}
+                onRefresh={handleRefresh}
+                setSelectedPostId={setSelectedPostId}
+                setIsPostViewOpen={setIsPostViewOpen}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
