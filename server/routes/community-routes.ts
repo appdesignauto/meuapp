@@ -2979,4 +2979,91 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
   }
 });
 
+// GET: Buscar posts do usuário logado (para seção "Meus Posts")
+router.get('/api/community/my-posts', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string);
+    const limit = parseInt(req.query.limit as string) || 5;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'ID do usuário é obrigatório' });
+    }
+    
+    // Verificar se o usuário está logado e se está buscando seus próprios posts
+    if (!req.user || req.user.id !== userId) {
+      return res.status(403).json({ message: 'Você só pode ver seus próprios posts' });
+    }
+    
+    // Buscar posts do usuário (todos os status - pendente, aprovado, rejeitado)
+    const rawPostsQuery = await db.execute(sql`
+      SELECT 
+        p.*,
+        u.id as user_id,
+        u.username,
+        u.name,
+        u.profileimageurl,
+        u.nivelacesso,
+        COUNT(DISTINCT l.id) as likes_count,
+        COUNT(DISTINCT c.id) as comments_count
+      FROM "communityPosts" p
+      LEFT JOIN users u ON p."userId" = u.id
+      LEFT JOIN "communityLikes" l ON p.id = l."postId"
+      LEFT JOIN "communityComments" c ON p.id = c."postId"
+      WHERE p."userId" = ${userId}
+      GROUP BY p.id, u.id
+      ORDER BY p."createdAt" DESC
+      LIMIT ${limit}
+    `);
+    
+    const posts = rawPostsQuery.rows;
+    const formattedResults = [];
+    
+    for (const row of posts) {
+      try {
+        // Pré-formatar a data para evitar mudanças ao visualizar
+        const formattedDate = formatarDataCompleta(row.createdAt || new Date());
+        
+        formattedResults.push({
+          post: {
+            id: row.id ? Number(row.id) : 0,
+            title: row.title || 'Sem título',
+            content: row.content || '',
+            imageUrl: row.imageUrl || '',
+            editLink: row.editLink || '',
+            status: row.status || 'pending',
+            createdAt: row.createdAt || new Date(),
+            updatedAt: row.updatedAt || new Date(),
+            userId: row.userId ? Number(row.userId) : 0,
+            formattedDate: formattedDate
+          },
+          user: {
+            id: Number(row.user_id),
+            username: row.username || 'usuário',
+            name: row.name || 'Usuário',
+            profileimageurl: row.profileimageurl || null,
+            nivelacesso: row.nivelacesso || 'free'
+          },
+          likesCount: (typeof row.likes_count === 'number' || typeof row.likes_count === 'string') 
+              ? Number(row.likes_count) : 0,
+          commentsCount: (typeof row.comments_count === 'number' || typeof row.comments_count === 'string') 
+              ? Number(row.comments_count) : 0
+        });
+      } catch (rowError) {
+        console.error('Erro ao processar post do usuário:', rowError);
+        // Continuar para o próximo post
+      }
+    }
+    
+    console.log(`Retornando ${formattedResults.length} posts do usuário ${userId}`);
+    return res.json(formattedResults);
+    
+  } catch (error) {
+    console.error('Erro ao buscar posts do usuário:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar seus posts',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
 export default router;

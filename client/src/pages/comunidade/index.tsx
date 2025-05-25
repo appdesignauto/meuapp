@@ -1058,6 +1058,130 @@ const getLevelIcon = (level: string): React.ReactNode => {
   return <User className="h-3 w-3 text-amber-800" />; // Membro (padrão)
 };
 
+// Componente para seção "Meus Posts"
+const MyPostsSection: React.FC<{ userId: number }> = ({ userId }) => {
+  const { data: myPosts, isLoading: myPostsLoading, error: myPostsError } = useQuery({
+    queryKey: ['/api/community/my-posts', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/community/my-posts?userId=${userId}&limit=5`);
+      if (!response.ok) {
+        throw new Error('Falha ao carregar seus posts');
+      }
+      return response.json();
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  return (
+    <CardContent className="space-y-4 p-4">
+      {myPostsLoading ? (
+        // Estado de loading
+        <>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-start gap-3">
+              <Skeleton className="w-16 h-16 rounded-md shrink-0" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        </>
+      ) : myPostsError ? (
+        // Estado de erro
+        <div className="text-center py-4">
+          <XCircle className="h-8 w-8 mx-auto text-red-500 mb-2" />
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Erro ao carregar seus posts
+          </p>
+        </div>
+      ) : !myPosts || myPosts.length === 0 ? (
+        // Estado vazio
+        <div className="text-center py-4">
+          <FileQuestion className="h-8 w-8 mx-auto text-zinc-400 mb-2" />
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Você ainda não publicou nenhuma arte
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">
+            Compartilhe sua primeira criação!
+          </p>
+        </div>
+      ) : (
+        // Lista dos meus posts
+        <>
+          {myPosts.map((item: any) => {
+            if (!item || !item.post) return null;
+            
+            const postId = item.post?.id || 0;
+            const imageUrl = item.post?.imageUrl || '';
+            const title = item.post?.title || 'Post sem título';
+            const status = item.post?.status || 'pending';
+            const likes = item.likesCount || 0;
+            const comments = item.commentsCount || 0;
+            const formattedDate = item.post?.formattedDate || `há ${formatRelativeTime(item.post?.createdAt)}`;
+            
+            return (
+              <div 
+                key={postId} 
+                className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors"
+              >
+                <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 relative">
+                  {imageUrl ? (
+                    <img 
+                      src={imageUrl} 
+                      alt={title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                      <ImageIcon className="h-8 w-8" />
+                    </div>
+                  )}
+                  {/* Badge de status */}
+                  <div className="absolute top-1 right-1">
+                    {status === 'approved' ? (
+                      <div className="w-3 h-3 bg-green-500 rounded-full border border-white" title="Aprovado" />
+                    ) : status === 'pending' ? (
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full border border-white" title="Pendente" />
+                    ) : (
+                      <div className="w-3 h-3 bg-red-500 rounded-full border border-white" title="Rejeitado" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm line-clamp-2">
+                    {title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge 
+                      variant={status === 'approved' ? 'default' : status === 'pending' ? 'secondary' : 'destructive'}
+                      className="text-xs py-0 h-4"
+                    >
+                      {status === 'approved' ? 'Aprovado' : status === 'pending' ? 'Pendente' : 'Rejeitado'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    {status === 'approved' && (
+                      <>
+                        {likes === 1 ? '1 curtida' : `${likes} curtidas`} • {comments === 1 ? '1 comentário' : `${comments} comentários`} • 
+                      </>
+                    )}
+                    {formattedDate}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
+    </CardContent>
+  );
+};
+
 // Página principal da comunidade
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
@@ -2113,6 +2237,22 @@ const CommunityPage: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
+              
+              {/* Card de Meus Posts - apenas para usuários logados */}
+              {user && (
+                <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="text-lg">Meus Posts</CardTitle>
+                        <CardDescription>Suas artes publicadas na comunidade</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <MyPostsSection userId={user.id} />
+                </Card>
+              )}
               
               {/* Card de posts populares */}
               <Card id="popular-posts-section" className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
