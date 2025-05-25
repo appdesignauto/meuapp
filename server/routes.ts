@@ -5672,7 +5672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
+  // Rota para testar rebaixamento de usuário específico
   // Temporariamente removida restrição isAdmin para testes
   app.post("/api/test/downgradeUser/:userId", async (req, res) => {
     try {
@@ -5707,26 +5707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Rota para testar verificação de assinatura na Hotmart
-  app.post("/api/test/checkHotmart", async (req, res) => {
-    try {
-      const email = req.query.email as string || 'hotmart@example.com';
-      console.log(`Teste - Verificando assinatura na Hotmart para e-mail: ${email}`);
-      
-      const hasActiveSubscription = await HotmartService.hasActiveSubscription(email);
-      
-      console.log(`Teste - Resultado da verificação na Hotmart: ${hasActiveSubscription ? 'Ativa' : 'Inativa'}`);
-      
-      res.status(200).json({ 
-        email, 
-        hasActiveSubscription,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Erro ao verificar assinatura na Hotmart:', error);
-      res.status(500).json({ message: 'Erro ao verificar assinatura na Hotmart' });
-    }
-  });
+
   
   // Rota para teste de logs
   app.post("/api/test/log", (req, res) => {
@@ -6752,10 +6733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             : log.payloadData;
           
           // Buscar o email em diferentes locais dependendo da origem
-          if (log.source === 'hotmart') {
-            foundEmail = payload.data?.buyer?.email || null;
-            emailLocation = foundEmail ? 'data.buyer.email' : null;
-          } else if (log.source === 'doppus') {
+          if (log.source === 'doppus') {
             foundEmail = payload.customer?.email || null;
             emailLocation = foundEmail ? 'customer.email' : null;
           }
@@ -6833,9 +6811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : log.payloadData;
         
         // Tentar encontrar o email dependendo da origem
-        if (log.source === 'hotmart') {
-          payloadEmail = parsedPayload.data?.buyer?.email;
-        } else if (log.source === 'doppus') {
+        if (log.source === 'doppus') {
           payloadEmail = parsedPayload.customer?.email;
         }
         
@@ -6867,36 +6843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
-  if (process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET) {
-    try {
-      // Buscar configuração de ambiente no banco de dados
-      const sandboxConfig = await db.execute(sql`
-        SELECT value FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
-      `);
-      
-      // Determinar o ambiente a ser usado
-      let useSandbox = true; // Valor padrão se não existir configuração
-      if (sandboxConfig.rows.length > 0) {
-        useSandbox = sandboxConfig.rows[0].value === 'true';
-      }
-      
-      // O serviço Hotmart agora é inicializado diretamente no server/index.ts
-      // Não precisamos inicializar aqui, pois usamos uma abordagem orientada a objetos
-      console.log(`Configuração do ambiente Hotmart: ${useSandbox ? 'Sandbox' : 'Produção'}`);
-      
-      // Configurar variáveis de ambiente usadas pelo novo serviço
-      process.env.HOTMART_SANDBOX = useSandbox ? 'true' : 'false';
-    } catch (error) {
-      console.error('Erro ao obter configuração da Hotmart:', error);
-      // Fallback para sandbox em caso de erro
-      process.env.HOTMART_SANDBOX = 'true';
-      console.log('Configurado fallback para modo Sandbox devido a erro');
-    }
-  } else {
-    console.log('Credenciais da Hotmart não encontradas. A verificação de renovações na Hotmart não estará disponível.');
-  }
+
   
   return httpServer;
 }
