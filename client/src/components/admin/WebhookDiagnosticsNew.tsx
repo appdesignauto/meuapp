@@ -67,7 +67,7 @@ export default function WebhookDiagnosticsTab() {
             
             if (log.source === 'hotmart') {
               extractedEmail = parsedData.data?.buyer?.email;
-            } else if (log.source === 'doppus') {
+            } else {
               extractedEmail = parsedData.data?.customer?.email || parsedData.customer?.email;
             }
             
