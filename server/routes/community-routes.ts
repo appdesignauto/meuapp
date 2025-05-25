@@ -2995,6 +2995,7 @@ router.get('/api/community/my-posts', async (req, res) => {
     }
     
     // Buscar posts do usuário (todos os status - pendente, aprovado, rejeitado)
+    // Usando a mesma estrutura da query principal para garantir compatibilidade
     const rawPostsQuery = await db.execute(sql`
       SELECT 
         p.*,
@@ -3003,11 +3004,14 @@ router.get('/api/community/my-posts', async (req, res) => {
         u.name,
         u.profileimageurl,
         u.nivelacesso,
+        CAST(COALESCE(p."isPinned", false) AS BOOLEAN) as is_pinned,
         COUNT(DISTINCT l.id) as likes_count,
+        COUNT(DISTINCT s.id) as saves_count,
         COUNT(DISTINCT c.id) as comments_count
       FROM "communityPosts" p
       LEFT JOIN users u ON p."userId" = u.id
       LEFT JOIN "communityLikes" l ON p.id = l."postId"
+      LEFT JOIN "communitySaves" s ON p.id = s."postId"
       LEFT JOIN "communityComments" c ON p.id = c."postId"
       WHERE p."userId" = ${userId}
       GROUP BY p.id, u.id
@@ -3023,6 +3027,24 @@ router.get('/api/community/my-posts', async (req, res) => {
         // Pré-formatar a data para evitar mudanças ao visualizar
         const formattedDate = formatarDataCompleta(row.createdAt || new Date());
         
+        // Garantir que userId seja do tipo correto
+        const postAuthorId = row.userId ? Number(row.userId) : Number(row.user_id) || 0;
+        
+        // Verificar se o usuário logado curtiu este post
+        let isLikedByUser = false;
+        if (req.user && row.id) {
+          try {
+            const likeCheck = await db.execute(sql`
+              SELECT id FROM "communityLikes" 
+              WHERE "postId" = ${Number(row.id)} AND "userId" = ${req.user.id}
+              LIMIT 1
+            `);
+            isLikedByUser = likeCheck.rows.length > 0;
+          } catch (likeError) {
+            console.error(`Erro ao verificar curtida para post ${row.id}:`, likeError);
+          }
+        }
+        
         formattedResults.push({
           post: {
             id: row.id ? Number(row.id) : 0,
@@ -3033,11 +3055,16 @@ router.get('/api/community/my-posts', async (req, res) => {
             status: row.status || 'pending',
             createdAt: row.createdAt || new Date(),
             updatedAt: row.updatedAt || new Date(),
-            userId: row.userId ? Number(row.userId) : 0,
-            formattedDate: formattedDate
+            viewCount: (typeof row.viewCount === 'number' || typeof row.viewCount === 'string') 
+                ? Number(row.viewCount) : 0,
+            userId: postAuthorId,
+            formattedDate: formattedDate,
+            isPinned: !!row.is_pinned,
+            featuredUntil: row.featuredUntil,
+            isWeeklyFeatured: !!row.isWeeklyFeatured
           },
           user: {
-            id: Number(row.user_id),
+            id: postAuthorId,
             username: row.username || 'usuário',
             name: row.name || 'Usuário',
             profileimageurl: row.profileimageurl || null,
@@ -3046,7 +3073,11 @@ router.get('/api/community/my-posts', async (req, res) => {
           likesCount: (typeof row.likes_count === 'number' || typeof row.likes_count === 'string') 
               ? Number(row.likes_count) : 0,
           commentsCount: (typeof row.comments_count === 'number' || typeof row.comments_count === 'string') 
-              ? Number(row.comments_count) : 0
+              ? Number(row.comments_count) : 0,
+          savesCount: (typeof row.saves_count === 'number' || typeof row.saves_count === 'string') 
+              ? Number(row.saves_count) : 0,
+          isLikedByUser: isLikedByUser,
+          userHasLiked: isLikedByUser
         });
       } catch (rowError) {
         console.error('Erro ao processar post do usuário:', rowError);
