@@ -1,0 +1,43 @@
+🎯 PROMPT PARA O REPLIT - IMPLEMENTAÇÃO FRONTEND "MEUS POSTS"
+ Download
+ Copy
+Agora que a API /api/community/my-posts está funcionando corretamente e retornando dados no formato idêntico ao feed principal, preciso implementar a funcionalidade "Meus Posts" no frontend.   
+  
+REQUISITOS ESPECÍFICOS:  
+  
+1. **REUTILIZAR COMPONENTES EXISTENTES**: Use exatamente os mesmos componentes que já funcionam no feed principal (PostCard, PostActions, etc.) para garantir consistência visual e funcional.  
+  
+2. **FILTROS POR STATUS**: Adicione filtros/tabs para separar os posts por status:  
+   - "Todos" (padrão)  
+   - "Aprovados"   
+   - "Pendentes"  
+   - "Rejeitados"  
+  
+3. **INTEGRAÇÃO COM ESTADO GLOBAL**: Certifique-se de que as ações (curtir, comentar, salvar) funcionem normalmente e atualizem o estado global da aplicação.  
+  
+4. **INDICADORES VISUAIS**: Adicione badges/indicadores visuais para mostrar o status de cada post de forma clara.  
+  
+5. **ESTRUTURA SUGERIDA**:  
+   - Criar um novo componente `MyPosts.tsx`   
+   - Usar a mesma estrutura de grid/layout do feed principal  
+   - Implementar loading states e error handling  
+   - Adicionar contadores por status (ex: "Aprovados (5)")  
+  
+6. **ENDPOINT**: Consumir `/api/community/my-posts` que já retorna dados no formato correto.  
+  
+7. **RESPONSIVIDADE**: Manter o mesmo padrão responsivo do resto da aplicação.  
+  
+Por favor, implemente essa funcionalidade mantendo a consistência com o código existente e garantindo que todas as interações (curtir, comentar, etc.) funcionem perfeitamente.  
+Este prompt é inteligente porque:
+
+✅ Aproveita o trabalho já feito - Reconhece que a API está pronta
+
+✅ Reutiliza componentes - Evita recriar funcionalidades que já existem
+
+✅ Específico e claro - Define exatamente o que precisa ser feito
+
+✅ Mantém consistência - Garante que a nova funcionalidade se integre bem
+
+✅ Previne erros - Menciona pontos importantes como estado global e responsividade
+
+O Replit vai conseguir implementar isso sem quebrar nada porque você está pedindo para ele usar a estrutura que já funciona, apenas adaptando para mostrar os posts do usuário com filtros por status.
