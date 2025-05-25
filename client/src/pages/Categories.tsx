@@ -175,7 +175,7 @@ const Categories = () => {
       
       {/* Área de busca centralizada */}
       <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-blue-600 mb-2">
           CATEGORIAS
         </h1>
         <p className="text-neutral-600 mb-8 max-w-2xl mx-auto">
@@ -187,7 +187,7 @@ const Categories = () => {
             <input
               type="text"
               placeholder="Buscar categoria..."
-              className="w-full py-6 pl-14 pr-12 text-center rounded-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+              className="w-full py-3 pl-12 pr-10 text-center rounded-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
