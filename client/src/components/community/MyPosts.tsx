@@ -267,43 +267,41 @@ const MyPosts: React.FC<MyPostsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header com estatísticas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      {/* Header minimalista com estatísticas */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <User className="h-5 w-5" />
             Meus Posts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {statusCounts.all}
-              </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">Total</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {statusCounts.approved}
-              </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">Aprovados</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">
-                {statusCounts.pending}
-              </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">Pendentes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {statusCounts.rejected}
-              </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">Rejeitados</div>
-            </div>
+          </h2>
+        </div>
+        
+        {/* Dashboard minimalista */}
+        <div className="flex items-center gap-4 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-700">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-zinc-500"></div>
+            <span className="text-sm font-medium">{statusCounts.all}</span>
+            <span className="text-xs text-zinc-500">Total</span>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-sm font-medium">{statusCounts.approved}</span>
+            <span className="text-xs text-zinc-500">Aprovados</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <span className="text-sm font-medium">{statusCounts.pending}</span>
+            <span className="text-xs text-zinc-500">Pendentes</span>
+          </div>
+          {statusCounts.rejected > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              <span className="text-sm font-medium">{statusCounts.rejected}</span>
+              <span className="text-xs text-zinc-500">Rejeitados</span>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Lista de posts */}
       <div className="mt-6">
