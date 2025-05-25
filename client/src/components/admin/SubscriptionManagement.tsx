@@ -4,7 +4,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import WebhookList from './WebhookList';
 import SubscriptionSettings from './SubscriptionSettings';
-import DoppusProductMapping from './DoppusProductMapping';
+
 import SubscriptionTrends from './SubscriptionTrends';
 import {
   Table,
@@ -108,10 +108,7 @@ interface IntegrationSetting {
 }
 
 interface IntegrationSettings {
-  doppus?: {
-    clientId?: IntegrationSetting;
-    clientSecret?: IntegrationSetting;
-  };
+  // Reserved for future integrations
 }
 
 interface PaginationInfo {
@@ -734,17 +731,7 @@ export default function SubscriptionManagement() {
           )}
         </TabsContent>
             
-        <TabsContent value="doppus" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Configurações da Doppus</CardTitle>
-              <CardDescription>Configure a integração com a plataforma Doppus</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DoppusProductMapping />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="settings" className="space-y-4">
           <Card>
