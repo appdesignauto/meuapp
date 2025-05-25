@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import WebhookList from './WebhookList';
 import SubscriptionSettings from './SubscriptionSettings';
 import HotmartProductMapping from './HotmartProductMapping';
-
+import DoppusProductMapping from './DoppusProductMapping';
 import SubscriptionTrends from './SubscriptionTrends';
 import {
   Table,
@@ -2348,7 +2348,16 @@ export default function SubscriptionManagement() {
               {/* Card de mapeamento removido pois estava duplicado, 
                  * mantido apenas o card que usa o componente DoppusProductMapping */}
 
-
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Mapeamento de Produtos Doppus</CardTitle>
+                  <CardDescription>Configure como os produtos da Doppus são mapeados no sistema</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {/* Utilizando o componente DoppusProductMapping */}
+                  <DoppusProductMapping standalone={false} />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </TabsContent>
