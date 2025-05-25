@@ -143,12 +143,6 @@ const MyPostCard: React.FC<{
             className="w-full h-auto object-cover cursor-pointer"
             onClick={handleOpenPost}
           />
-          <button
-            onClick={handleOpenPost}
-            className="absolute top-2 left-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </button>
         </div>
       )}
 
