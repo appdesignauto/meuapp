@@ -6198,7 +6198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para gerenciamento de analytics
   app.use('/api/analytics', analyticsRouter);
   
-  // Rotas para mapeamentos de produtos Hotmart - implementação direta
+
   // Implementação direta das rotas para evitar problemas de importação
   
 
@@ -6349,10 +6349,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Implementada em reports-v2.ts para resolver problemas de ORM
   app.use('/api/reports-v2', reportsV2Router);
   
-  // Nota: A implementação do endpoint de webhook da Hotmart foi unificada na versão acima
+
   // Removendo código duplicado para evitar conflitos de rotas
   
-  // Endpoints adicionais para gerenciamento de webhooks da Hotmart
+
   
   // Endpoint para listar logs de webhook (com paginação e filtros)
   app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
