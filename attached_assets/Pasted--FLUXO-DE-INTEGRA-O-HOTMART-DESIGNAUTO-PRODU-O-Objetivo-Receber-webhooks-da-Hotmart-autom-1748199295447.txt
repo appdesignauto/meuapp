@@ -1,0 +1,91 @@
+✅ FLUXO DE INTEGRAÇÃO HOTMART - DESIGNAUTO (PRODUÇÃO)
+🎯 Objetivo:
+Receber webhooks da Hotmart automaticamente e criar usuários com acesso premium vinculados a uma assinatura no banco de dados.
+
+🔧 Estrutura Técnica Implementada
+✅ 1. Endpoint principal do Webhook
+URL: /webhook/hotmart-fixed
+
+Arquivo: server/routes/webhook-hotmart-fixed.ts
+
+Método: POST
+
+Execução: Instantânea (sem setTimeout)
+
+⚙️ 2. Fluxo do Webhook
+🚨 Validação:
+ts
+Copiar
+Editar
+event === 'PURCHASE_APPROVED' && purchase.status === 'APPROVED'
+🧾 Extração:
+buyer.name, buyer.email, buyer.document
+
+purchase.transaction, order_date, date_next_charge
+
+subscription.plan.name
+
+👤 Criação de Usuário:
+sql
+Copiar
+Editar
+INSERT INTO users (
+  username, email, name, password, nivelacesso, 
+  origemassinatura, tipoplano, dataassinatura, 
+  dataexpiracao, acessovitalicio, isactive, emailconfirmed
+)
+🔐 Registro de Assinatura:
+sql
+Copiar
+Editar
+INSERT INTO subscriptions (
+  userId, planType, startDate, endDate, 
+  isActive, transactionId, source
+)
+✅ Validações Implementadas
+Evento válido (PURCHASE_APPROVED)
+
+Status de compra (APPROVED)
+
+Campos obrigatórios presentes (email, name)
+
+Duplicidade de transactionId evitada
+
+🔧 Componentes Envolvidos
+📁 Arquivos:
+server/routes/webhook-hotmart-fixed.ts
+
+server/index.ts com:
+
+ts
+Copiar
+Editar
+app.use('/webhook', webhookHotmartFixedRoutes);
+🗃️ Estrutura no banco:
+Tabela users: com campos como email, nivelacesso, tipoplano, dataassinatura, etc.
+
+Tabela subscriptions: com transactionId, startDate, source, isActive
+
+🧱 Pontos Críticos Resolvidos
+Problema	Solução aplicada
+require is not defined	Substituição por senha temporária simples
+0NaN-NaN-NaN em datas	Uso de new Date() + manipulação segura de ms
+Erro por setTimeout	Execução síncrona na rota
+Formatos diferentes de payload	Validação dinâmica e segura
+
+🌐 Configuração na Hotmart
+URL cadastrada no produto:
+https://designauto.com.br/webhook/hotmart-fixed
+
+Webhook configurado para evento: PURCHASE_APPROVED
+
+✅ Resultado final:
+🔒 Automação 100% funcional
+
+⚙️ Zero intervenção manual
+
+👥 Criação instantânea de usuários
+
+⭐ Acesso premium liberado com base no plano
+
+🧠 Estrutura escalável e replicável para outros projetos
