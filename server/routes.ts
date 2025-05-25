@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
   // Rota específica para testar solução de emergência para o usuário problemático (simulação)
-  app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => { ====\n`);
+  app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => {
       
       // Verificar se o usuário existe
       const user = await storage.getUserByUsername(username);
