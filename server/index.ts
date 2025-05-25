@@ -11,7 +11,6 @@ import { configureCors } from "./cors-config";
 import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
 import { Pool } from "pg";
-import crypto from "crypto";
 
 // Função para encontrar email em qualquer parte do payload da Hotmart
 function findEmailInPayload(payload: any): string | null {
@@ -249,93 +248,62 @@ app.use((req, res, next) => {
       next();
     });
     
-    // 🔥 WEBHOOK ULTRA-SIMPLES QUE REALMENTE FUNCIONA!
+    // Rota dedicada para webhook da Hotmart - implementação direta para garantir resposta JSON
     app.post('/webhook/hotmart', async (req, res) => {
-      console.log('\n🚀 WEBHOOK RECEBIDO!', new Date().toISOString());
-      
-      const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+      console.log('📩 Webhook da Hotmart recebido em', new Date().toISOString());
       
       try {
+        // Capturar dados básicos do webhook
         const payload = req.body;
+        const event = payload?.event || 'UNKNOWN';
+        const email = findEmailInPayload(payload);
+        const transactionId = findTransactionId(payload);
         
-        // Validar se é compra aprovada
-        if (payload?.event !== 'PURCHASE_APPROVED' || payload?.data?.purchase?.status !== 'APPROVED') {
-          console.log('❌ Não é compra aprovada');
-          return res.status(200).json({ success: true, message: 'Ignorado' });
+        // Registrar no banco de dados (log only)
+        try {
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL
+          });
+          
+          await pool.query(
+            `INSERT INTO webhook_logs 
+             (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [
+              event,
+              'received',
+              email,
+              'hotmart',
+              JSON.stringify(payload),
+              transactionId,
+              req.ip,
+              new Date()
+            ]
+          );
+          
+          await pool.end();
+        } catch (dbError) {
+          console.error('❌ Erro ao registrar webhook:', dbError);
+          // Continuar mesmo com erro de log
         }
         
-        const email = payload.data?.buyer?.email?.toLowerCase().trim();
-        const name = payload.data?.buyer?.name || 'Cliente';
-        
-        if (!email) {
-          console.log('❌ Email não encontrado');
-          return res.status(200).json({ success: true, message: 'Email não encontrado' });
-        }
-        
-        console.log(`✅ PROCESSANDO: ${name} - ${email}`);
-        
-        // Verificar se usuário existe
-        const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-        
-        let userId;
-        
-        if (userCheck.rows.length > 0) {
-          userId = userCheck.rows[0].id;
-          console.log(`🔄 Atualizando usuário ${userId}`);
-          
-          await pool.query(`
-            UPDATE users SET 
-              nivelacesso = 'premium',
-              origemassinatura = 'hotmart',
-              tipoplano = 'anual'
-            WHERE id = $1
-          `, [userId]);
-        } else {
-          console.log(`➕ CRIANDO USUÁRIO: ${email}`);
-          
-          const username = `${email.split('@')[0]}_${Date.now()}`;
-          // Usar senha simples por enquanto - o usuário pode alterar depois
-          const hashedPassword = 'temp_password_hash';
-          
-          const userResult = await pool.query(`
-            INSERT INTO users (
-              username, email, name, password, nivelacesso, origemassinatura,
-              tipoplano, isactive, emailconfirmed
-            ) VALUES (
-              $1, $2, $3, $4, 'premium', 'hotmart',
-              'anual', true, true
-            ) RETURNING id
-          `, [username, email, name, hashedPassword]);
-          
-          userId = userResult.rows[0].id;
-          console.log(`✅ USUÁRIO CRIADO: ID ${userId}`);
-        }
-        
-        console.log(`🎉 SUCESSO! Usuário ${userId} processado!`);
-        await pool.end();
-        
+        // Sempre retornar sucesso para a Hotmart não reenviar
         return res.status(200).json({
           success: true,
-          message: 'USUÁRIO CRIADO AUTOMATICAMENTE!',
-          userId: userId,
-          email: email
+          message: 'Webhook recebido com sucesso',
+          timestamp: new Date().toISOString()
         });
-        
       } catch (error) {
-        console.error('💥 ERRO:', error);
-        try { await pool.end(); } catch(e) {}
-        return res.status(200).json({ success: false, message: 'Erro processando' });
+        console.error('❌ Erro ao processar webhook:', error);
+        
+        // Mesmo com erro, retornar 200 para evitar reenvios
+        return res.status(200).json({
+          success: false,
+          message: 'Erro ao processar webhook, mas confirmamos o recebimento',
+          timestamp: new Date().toISOString()
+        });
       }
     });
-    
-    // Configurar rota principal de webhook Hotmart
-    try {
-      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart', hotmartFixedModule.default);
-      console.log("✅ Rota principal de webhook da Hotmart configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart principal:", error);
-    }
     
     // Inicializar o serviço da Hotmart
     // Importações serão feitas de forma dinâmica para evitar problemas
@@ -436,28 +404,6 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
-  // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT
-  app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development'
-    });
-  });
-
-  // 🏥 ENDPOINT ALTERNATIVO DE HEALTH CHECK
-  app.get('/', (req: Request, res: Response) => {
-    // Se não for uma requisição de API, serve a aplicação normalmente
-    if (req.path === '/' && req.method === 'GET') {
-      res.status(200).json({
-        status: 'healthy',
-        message: 'DesignAuto API is running',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -477,9 +423,10 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOYMENT
-  // Cloud Run espera porta 3000, desenvolvimento usa 5000
-  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",

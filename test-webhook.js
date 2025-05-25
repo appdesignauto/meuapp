@@ -1,55 +1,80 @@
 /**
- * Script de teste SIMPLIFICADO para webhook da Hotmart
- * Usa ESModules conforme exigido pelo projeto
+ * Script simples para testar o endpoint de webhook da Hotmart
+ * 
+ * Este script envia um exemplo de webhook da Hotmart para testar a funcionalidade
+ * sem depender de configurações complexas
  */
 
 import fetch from 'node-fetch';
 
-// Payload simplificado de teste
-const payload = {
-  event: 'PURCHASE_APPROVED',
-  data: {
-    buyer: {
-      name: 'Cliente Teste Final',
-      email: 'cliente-teste-final@example.com',
-      document: '12345678900'
-    },
-    purchase: {
-      status: 'APPROVED',
-      order_date: new Date().toISOString(),
-      transaction: `TX-FINAL-${Date.now()}`,
-      price: {
-        value: 97.00
-      }
-    }
-  }
-};
-
-// Função para testar o webhook
-async function testWebhook() {
-  console.log('Enviando payload para o webhook...');
-  
+async function enviarWebhook() {
   try {
-    const response = await fetch('http://localhost:5000/webhook/hotmart', {
+    console.log('Iniciando teste de webhook...');
+    
+    // URL do endpoint de webhook (deve ser a URL local do seu servidor)
+    const webhookUrl = 'http://localhost:5000/api/webhooks/hotmart';
+    
+    // Exemplo simplificado de payload do webhook da Hotmart
+    const payload = {
+      data: {
+        id: 'TEST-' + Date.now(),
+        purchase: {
+          transaction: 'TEST-TXN-' + Math.floor(Math.random() * 1000000),
+          status: 'APPROVED'
+        },
+        product: {
+          id: 12345,
+          name: 'Produto de Teste'
+        },
+        offer: {
+          code: 'TESTCODE'
+        },
+        subscriber: {
+          email: 'teste@example.com',
+          name: 'Usuário de Teste'
+        },
+        commissions: [],
+        event: 'PURCHASE_APPROVED'
+      },
+      token: 'teste-token',
+      creation_date: new Date().toISOString(),
+      event: 'PURCHASE_APPROVED'
+    };
+    
+    // Header simulado da Hotmart (normalmente incluiria uma assinatura)
+    const headers = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Hotmart-Webhook/1.0',
+      'X-Hotmart-Signature': 'teste-signature'
+    };
+    
+    console.log('Enviando payload para:', webhookUrl);
+    console.log('Payload:', JSON.stringify(payload, null, 2));
+    
+    // Enviar a requisição POST para o endpoint do webhook
+    const response = await fetch(webhookUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify(payload)
     });
     
-    const data = await response.json();
+    // Verificar a resposta
+    const responseText = await response.text();
     
-    console.log(`Status: ${response.status}`);
-    console.log('Resposta:', data);
+    console.log('Status da resposta:', response.status);
+    console.log('Corpo da resposta:', responseText);
     
-    console.log('\nTeste concluído!\n');
-    console.log('Para verificar o webhook e usuário criado, execute:');
-    console.log("1. SELECT * FROM webhook_logs WHERE email = 'cliente-teste-final@example.com' ORDER BY id DESC LIMIT 1;");
-    console.log("2. SELECT * FROM users WHERE email = 'cliente-teste-final@example.com';");
-    
+    if (response.ok) {
+      console.log('✅ Webhook enviado com sucesso!');
+    } else {
+      console.error('❌ Falha ao enviar webhook:', responseText);
+    }
   } catch (error) {
-    console.error('Erro ao testar webhook:', error);
+    console.error('Erro ao enviar webhook:', error.message);
   }
 }
 
 // Executar o teste
-testWebhook();
+enviarWebhook().finally(() => {
+  console.log('Teste de webhook concluído');
+});
