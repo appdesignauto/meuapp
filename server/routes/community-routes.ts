@@ -314,6 +314,7 @@ router.get('/api/community/posts', async (req, res) => {
       for (const row of rawPostsQuery.rows) {
         // Pré-formatar a data para evitar mudanças ao visualizar
         const formattedDate = formatarDataCompleta(row.createdAt);
+        console.log(`[POSTS DEBUG] Post ID ${row.id}: createdAt=${row.createdAt}, formattedDate="${formattedDate}"`);
         
         posts.push({
           post: {
