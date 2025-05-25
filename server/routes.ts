@@ -84,13 +84,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
+  // Root endpoint for deployment verification
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      message: 'DesignAuto Community API is running',
+      status: 'operational',
+      version: '1.0.0'
+    });
+  });
+
   // Rota simples de verificação de saúde
   app.get('/health', (req, res) => {
     res.status(200).json({
-      status: 'ok',
+      status: 'healthy',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
-      message: 'Servidor está funcionando corretamente'
+      message: 'Servidor está funcionando corretamente',
+      uptime: process.uptime()
     });
   });
 
