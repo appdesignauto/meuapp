@@ -314,7 +314,6 @@ router.get('/api/community/posts', async (req, res) => {
       for (const row of rawPostsQuery.rows) {
         // Pré-formatar a data para evitar mudanças ao visualizar
         const formattedDate = formatarDataCompleta(row.createdAt);
-        console.log(`[POSTS DEBUG] Post ID ${row.id}: createdAt=${row.createdAt}, formattedDate="${formattedDate}"`);
         
         posts.push({
           post: {
@@ -3022,10 +3021,7 @@ router.get('/api/community/my-posts', async (req, res) => {
     for (const row of posts) {
       try {
         // Pré-formatar a data para evitar mudanças ao visualizar
-        const rawDate = row.createdAt || new Date();
-        console.log(`[MEUS POSTS DEBUG] Post ID ${row.id}: rawDate=${rawDate}, tipo=${typeof rawDate}`);
-        const formattedDate = formatarDataCompleta(rawDate);
-        console.log(`[MEUS POSTS DEBUG] Post ID ${row.id}: formattedDate="${formattedDate}"`);
+        const formattedDate = formatarDataCompleta(row.createdAt || new Date());
         
         // Garantir que userId seja do tipo correto
         const postAuthorId = row.userId ? Number(row.userId) : Number(row.user_id) || 0;
