@@ -1994,9 +1994,8 @@ const CommunityPage: React.FC = () => {
                   <div className="space-y-4 mx-[-16px] sm:mx-0">
                     {allPosts.map((item) => {
                       // Mapear a estrutura da API para o formato esperado pelo PostCard
-                      // Calcular a data formatada aqui, apenas uma vez
-                      // Usar a data pré-formatada se disponível, caso contrário, calcular
-                      const formattedDate = item.post.formattedDate || `há ${formatRelativeTime(item.post.createdAt)}`;
+                      // Usar SEMPRE a data pré-formatada que vem do backend (já no formato "Há X dias")
+                      const formattedDate = item.post.formattedDate || "Data não disponível";
                       
                       const formattedPost: CommunityPost = {
                         id: item.post.id,
