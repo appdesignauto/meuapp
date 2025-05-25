@@ -505,25 +505,16 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use PORT environment variable for deployments, fallback to 5000 for development
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+  // Use PORT environment variable for deployments
+  const port = parseInt(process.env.PORT || '5000', 10);
   
-  // Add error handling for port conflicts
-  server.on('error', (err: any) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${port} is busy, trying port ${port + 1}`);
-      server.listen(port + 1, "0.0.0.0", () => {
-        log(`serving on port ${port + 1}`);
-      });
-    } else {
-      console.error('Server error:', err);
-    }
-  });
+  console.log(`🚀 Starting server on port ${port}...`);
   
-  server.listen({
-    port,
-    host: "0.0.0.0",
-  }, () => {
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`✅ Server successfully running on port ${port}`);
+    console.log(`✅ Root endpoint: http://0.0.0.0:${port}/`);
+    console.log(`✅ Health check: http://0.0.0.0:${port}/health`);
+    console.log(`✅ Community posts: http://0.0.0.0:${port}/comunidade`);
     log(`serving on port ${port}`);
   });
 })();

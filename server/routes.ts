@@ -89,12 +89,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({
       message: 'DesignAuto Community API is running',
       status: 'operational',
-      version: '1.0.0'
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      port: process.env.PORT || 5000
     });
   });
 
-  // Rota simples de verificação de saúde
+  // Additional health check endpoint
   app.get('/health', (req, res) => {
+    res.status(200).json({
+      status: 'healthy',
+      service: 'DesignAuto',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
+  // Ping endpoint for quick health checks
+  app.get('/ping', (req, res) => {
     res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
