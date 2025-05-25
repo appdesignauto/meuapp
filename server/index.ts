@@ -12,42 +12,7 @@ import { Pool } from "pg";
 
 
 
-// Função para encontrar ID da transação no payload
-function findTransactionId(payload: any): string | null {
-  if (!payload) return null;
-  
-  // Verificar locais comuns primeiro
-  if (payload.data?.purchase?.transaction) return payload.data.purchase.transaction;
-  if (payload.data?.transaction) return payload.data.transaction;
-  if (payload.transaction) return payload.transaction;
-  
-  // Função recursiva para busca profunda
-  function searchTransactionId(obj: any): string | null {
-    if (!obj || typeof obj !== 'object') return null;
-    
-    // Procurar por chaves que possam conter o ID da transação
-    for (const key in obj) {
-      if (
-        (key.toLowerCase().includes('transaction') || 
-         key.toLowerCase().includes('order') || 
-         key.toLowerCase().includes('pedido')) && 
-        typeof obj[key] === 'string'
-      ) {
-        return obj[key];
-      }
-      
-      // Buscar recursivamente
-      if (typeof obj[key] === 'object') {
-        const result = searchTransactionId(obj[key]);
-        if (result) return result;
-      }
-    }
-    
-    return null;
-  }
-  
-  return searchTransactionId(payload);
-}
+
 
 const app = express();
 
@@ -265,53 +230,12 @@ app.use((req, res, next) => {
       }
     });
     
-    // Inicializar o serviço da Hotmart
-    // Importações serão feitas de forma dinâmica para evitar problemas
-    const initHotmartService = async () => {
-      try {
-        const { PrismaClient } = await import('@prisma/client');
-        const { default: mappingRoutes } = await import('./routes/mapping-routes');
-        const { HotmartService } = await import('./services/hotmart-service');
-        
-        const prisma = new PrismaClient();
-        const hotmartService = new HotmartService(prisma);
-        
-        // Registrar rotas para mapeamento de produtos Hotmart
-        app.use(mappingRoutes);
-        
-        console.log("Serviço da Hotmart inicializado com sucesso no modo " + 
-                   (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
-        
-        // NOTA: Não registramos '/webhook' rotas aqui, pois
-        // já temos uma implementação direta acima que deve ter precedência
-      } catch (error) {
-        console.error("Erro ao inicializar serviço da Hotmart:", error);
-      }
-    };
+
+
     
-    // Iniciar serviço de forma assíncrona
-    await initHotmartService();
+    console.log("✅ Configuração das rotas concluída com sucesso!");
     
-    console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
-    
-    // NOVA SOLUÇÃO: Utilizar a rota fixa para webhooks diretamente no servidor principal
-    // Isto elimina a necessidade do servidor standalone e simplifica a arquitetura
-    try {
-      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart', hotmartFixedModule.default);
-      console.log("✅ Rota principal de webhook da Hotmart configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart principal:", error);
-    }
-    
-    // Manter a rota fixa pelo caminho alternativo para compatibilidade
-    try {
-      const hotmartFixedModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart-fixed', hotmartFixedModule.default);
-      console.log("✅ Rota Hotmart fixa (alternativa) configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota Hotmart fixa alternativa:", error);
-    }
+
     
     // Adicionar a rota corrigida para detalhes de webhook
     try {
@@ -322,23 +246,7 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
     }
     
-    // Configurar a nova rota de webhook APRIMORADA para Hotmart
-    try {
-      // Usar o manipulador de webhook aprimorado importado no início do arquivo
-      app.use('/webhook/hotmart-enhanced', enhancedHotmartWebhook);
-      console.log("✅ Rota de webhook Hotmart aprimorada configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota de webhook Hotmart aprimorada:", error);
-    }
-    
-    // Adicionar a rota de DEBUG para capturar qualquer webhook
-    try {
-      const webhookDebugModule = await import('./routes/webhook-debug');
-      app.use('/webhook', webhookDebugModule.default);
-      console.log("✅ Rota de diagnóstico de webhook configurada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao configurar rota de diagnóstico de webhook:", error);
-    }
+
     
     // Manter a rota de status para diagnóstico
     app.get('/webhook/status', (req, res) => {

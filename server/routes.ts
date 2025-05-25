@@ -5916,8 +5916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rota de teste para criar grupos de artes
   app.use(testCreateGroupRouter);
   
-  // Registrar rotas para logs de webhook
-  app.use('/api/webhooks', webhookLogsRouter);
+
   
   // Aplicar middleware de autenticação nas rotas protegidas de videoaulas
   app.use('/api/videoaulas/visualizacao', isAuthenticated);
