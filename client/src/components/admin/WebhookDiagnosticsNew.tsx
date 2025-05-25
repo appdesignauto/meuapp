@@ -237,9 +237,7 @@ export default function WebhookDiagnosticsTab() {
                   <TabsTrigger value="hotmart">
                     Hotmart ({searchResults.logs.filter(r => r.source === 'hotmart').length})
                   </TabsTrigger>
-                  <TabsTrigger value="doppus">
-                    Doppus ({searchResults.logs.filter(r => r.source === 'doppus').length})
-                  </TabsTrigger>
+
                 </TabsList>
                 
                 <TabsContent value="all">
@@ -260,15 +258,7 @@ export default function WebhookDiagnosticsTab() {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="doppus">
-                  <div className="space-y-4">
-                    {searchResults.logs
-                      .filter(r => r.source === 'doppus')
-                      .map((log) => (
-                        <WebhookLogCard key={log.id} log={log} />
-                      ))}
-                  </div>
-                </TabsContent>
+
               </Tabs>
             ) : (
               <div className="py-8 text-center text-gray-500">

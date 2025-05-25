@@ -74,7 +74,7 @@ export default function WebhookDiagnosticsTab() {
           if (log.source === 'hotmart') {
             foundEmail = payload.data?.buyer?.email || null;
             emailLocation = foundEmail ? 'data.buyer.email' : null;
-          } else if (log.source === 'doppus') {
+          } else {
             foundEmail = payload.data?.customer?.email || payload.customer?.email || null;
             emailLocation = foundEmail ? (payload.data?.customer?.email ? 'data.customer.email' : 'customer.email') : null;
           }
@@ -180,9 +180,7 @@ export default function WebhookDiagnosticsTab() {
                   <TabsTrigger value="hotmart">
                     Hotmart ({searchResults.results.filter(r => r.source === 'hotmart').length})
                   </TabsTrigger>
-                  <TabsTrigger value="doppus">
-                    Doppus ({searchResults.results.filter(r => r.source === 'doppus').length})
-                  </TabsTrigger>
+
                 </TabsList>
                 
                 <TabsContent value="all">
@@ -193,9 +191,7 @@ export default function WebhookDiagnosticsTab() {
                   {renderResults(searchResults.results.filter(r => r.source === 'hotmart'))}
                 </TabsContent>
                 
-                <TabsContent value="doppus">
-                  {renderResults(searchResults.results.filter(r => r.source === 'doppus'))}
-                </TabsContent>
+
               </Tabs>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
