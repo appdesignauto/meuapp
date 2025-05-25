@@ -84,7 +84,7 @@ interface UserStats {
   freeUsers: number;
   activeSubscriptions: number;
   expiredSubscriptions: number;
-  doppusCount: number;
+
 }
 
 // Interface para mapeamento de produtos
@@ -165,7 +165,7 @@ export default function SubscriptionManagement() {
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings | null>(null);
 
   // Estados para busca por origem
-  const [originFilter, setOriginFilter] = useState<'all' | 'doppus'>('all');
+  const [originFilter, setOriginFilter] = useState<'all'>('all');
 
   // Função para buscar estatísticas
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -348,9 +348,7 @@ export default function SubscriptionManagement() {
     if (originFilter === 'all') return true;
     
     // Lógica para determinar a origem do usuário
-    const userOrigin = user.email?.includes('@') && user.subscriptionId ? 'doppus' : 'direct';
-    
-    if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
+    // Filtro removido - todas as origens são aceitas
     
     return true;
   };
@@ -393,11 +391,11 @@ export default function SubscriptionManagement() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
-          <TabsTrigger value="doppus">Doppus</TabsTrigger>
+
           <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
