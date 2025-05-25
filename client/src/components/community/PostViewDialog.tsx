@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CommentItem } from "./CommentItem";
-import { getInitials, formatDate } from "@/lib/utils";
+import { getInitials, formatDate, formatTimeAgo } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -365,7 +365,7 @@ export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogPro
               <div className="flex items-center gap-1">
                 <VerifiedUsername user={post.user} />
               </div>
-              <p className="text-xs text-muted-foreground">{post.formattedDate || formatDate(post.createdAt)}</p>
+              <p className="text-xs text-muted-foreground">{formatTimeAgo(post.createdAt)}</p>
             </div>
           </div>
           
