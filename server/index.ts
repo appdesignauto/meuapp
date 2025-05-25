@@ -436,28 +436,6 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
-  // 🏥 ENDPOINT DE HEALTH CHECK PARA DEPLOYMENT
-  app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development'
-    });
-  });
-
-  // 🏥 ENDPOINT ALTERNATIVO DE HEALTH CHECK
-  app.get('/', (req: Request, res: Response) => {
-    // Se não for uma requisição de API, serve a aplicação normalmente
-    if (req.path === '/' && req.method === 'GET') {
-      res.status(200).json({
-        status: 'healthy',
-        message: 'DesignAuto API is running',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -477,9 +455,10 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // 🚀 CONFIGURAÇÃO DE PORTA PARA DEPLOYMENT
-  // Cloud Run espera porta 3000, desenvolvimento usa 5000
-  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
