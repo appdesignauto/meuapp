@@ -17,7 +17,7 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import WebhookList from '@/components/admin/WebhookList';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
-import HotmartProductMapping from '@/components/admin/HotmartProductMapping';
+
 import { 
   Card, 
   CardContent, 
@@ -497,16 +497,7 @@ export default function AssinaturasPage() {
               </div>
             </div>
           </div>
-          
-          {/* Seção de Mapeamento de Produtos Hotmart */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4">Mapeamento de Produtos Hotmart</h3>
-            <p className="text-gray-500 mb-4">Configure quais produtos da Hotmart correspondem a cada tipo de plano no DesignAuto</p>
-            <HotmartProductMapping />
-          </div>
-          
-          {/* Separador visual */}
-          <Separator className="my-8" />
+
           
           {/* Seção de Logs de Webhooks */}
           <div className="mb-4">
