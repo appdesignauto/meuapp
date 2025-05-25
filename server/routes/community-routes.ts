@@ -3022,6 +3022,7 @@ router.get('/api/community/my-posts', async (req, res) => {
       try {
         // Pré-formatar a data para evitar mudanças ao visualizar
         const formattedDate = formatarDataCompleta(row.createdAt || new Date());
+        console.log(`[MEUS POSTS] Post ID ${row.id}: createdAt=${row.createdAt}, formattedDate=${formattedDate}`);
         
         // Garantir que userId seja do tipo correto
         const postAuthorId = row.userId ? Number(row.userId) : Number(row.user_id) || 0;
