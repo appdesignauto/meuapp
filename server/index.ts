@@ -7,50 +7,10 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
-// Importar o novo manipulador de webhook aprimorado
-import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
 import { Pool } from "pg";
 
-// Função para encontrar email em qualquer parte do payload da Hotmart
-function findEmailInPayload(payload: any): string | null {
-  if (!payload) return null;
-  
-  // Função recursiva para buscar emails em objetos aninhados
-  function searchEmail(obj: any): string | null {
-    // Caso base: é uma string e parece um email
-    if (typeof obj === 'string' && obj.includes('@') && obj.includes('.')) {
-      return obj;
-    }
-    
-    // Caso recursivo: objeto
-    if (typeof obj === 'object' && obj !== null) {
-      // Verificar chaves que provavelmente contêm email
-      if (obj.email && typeof obj.email === 'string') return obj.email;
-      if (obj.buyer && obj.buyer.email) return obj.buyer.email;
-      if (obj.customer && obj.customer.email) return obj.customer.email;
-      if (obj.data && obj.data.buyer && obj.data.buyer.email) return obj.data.buyer.email;
-      
-      // Buscar em todas as propriedades
-      for (const key in obj) {
-        const result = searchEmail(obj[key]);
-        if (result) return result;
-      }
-    }
-    
-    // Caso recursivo: array
-    if (Array.isArray(obj)) {
-      for (let i = 0; i < obj.length; i++) {
-        const result = searchEmail(obj[i]);
-        if (result) return result;
-      }
-    }
-    
-    return null;
-  }
-  
-  return searchEmail(payload);
-}
+
 
 // Função para encontrar ID da transação no payload
 function findTransactionId(payload: any): string | null {
@@ -256,8 +216,8 @@ app.use((req, res, next) => {
         // Capturar dados básicos do webhook
         const payload = req.body;
         const event = payload?.event || 'UNKNOWN';
-        const email = findEmailInPayload(payload);
-        const transactionId = findTransactionId(payload);
+        const email = null;
+        const transactionId = null;
         
         // Registrar no banco de dados (log only)
         try {
