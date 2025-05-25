@@ -84,11 +84,7 @@ const MyPostCard: React.FC<{
     }
   };
 
-  // Função para abrir o post em detalhes
-  const handleOpenPost = () => {
-    setSelectedPostId(post.id);
-    setIsPostViewOpen(true);
-  };
+
 
   return (
     <Card className="mb-5 overflow-hidden border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800 shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative">
@@ -140,8 +136,7 @@ const MyPostCard: React.FC<{
           <img 
             src={post.imageUrl} 
             alt={post.title || 'Post image'} 
-            className="w-full h-auto object-cover cursor-pointer"
-            onClick={handleOpenPost}
+            className="w-full h-auto object-cover"
           />
         </div>
       )}
@@ -175,15 +170,10 @@ const MyPostCard: React.FC<{
               <span className="text-sm">{currentLikesCount}</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleOpenPost}
-              className="p-0 h-auto hover:bg-transparent text-zinc-600 dark:text-zinc-400"
-            >
-              <MessageCircle className="h-5 w-5 mr-1" />
+            <div className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400">
+              <MessageCircle className="h-5 w-5" />
               <span className="text-sm">{commentsCount}</span>
-            </Button>
+            </div>
           </div>
 
           {post.editLink && (
