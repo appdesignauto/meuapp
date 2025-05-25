@@ -70,16 +70,12 @@ function formatarDataCompleta(dateString: string | Date): string {
       return minutos === 1 ? "Há 1 minuto" : `Há ${minutos} minutos`;
     } else if (horas < 24) {
       return horas === 1 ? "Há 1 hora" : `Há ${horas} horas`;
-    } else if (dias < 7) {
+    } else if (dias < 30) {
       return dias === 1 ? "Há 1 dia" : `Há ${dias} dias`;
     } else {
-      // Para datas mais antigas, usar formato brasileiro
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        timeZone: 'America/Sao_Paulo'
-      }).format(date);
+      // Para datas muito antigas, manter formato relativo em meses
+      const meses = Math.floor(dias / 30);
+      return meses === 1 ? "Há 1 mês" : `Há ${meses} meses`;
     }
   } catch (error) {
     console.error("Erro ao formatar data:", error, "Data:", dateString);
