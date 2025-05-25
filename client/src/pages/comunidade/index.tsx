@@ -1968,7 +1968,14 @@ const CommunityPage: React.FC = () => {
                   </Card>
                 )}
                 
-                {postsLoading ? (
+                {filterMyPosts ? (
+                  // Renderizar componente "Meus Posts" quando o filtro estiver ativo
+                  <MyPosts 
+                    setSelectedPostId={setSelectedPostId}
+                    setIsPostViewOpen={setIsPostViewOpen}
+                    refetchPopularPosts={refetchPopularPosts}
+                  />
+                ) : postsLoading ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
                       <PostCardSkeleton key={i} />
