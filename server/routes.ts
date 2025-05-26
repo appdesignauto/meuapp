@@ -5637,9 +5637,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(communityRouter);
   
   // Rotas para o sistema de denúncias
-  // Versão original do sistema de denúncias (utiliza ORM/schema)
-  app.use('/api/reports', reportsStatsRouter); // Deve vir antes para capturar /stats
-  app.use('/api/reports', reportsRouter);
+  // IMPORTANTE: A rota mais específica (/stats) deve vir ANTES da genérica
+  app.use('/api/reports', reportsStatsRouter); // Captura /api/reports/stats
+  app.use('/api/reports', reportsRouter);      // Captura outras rotas /api/reports/*
   
   // Versão 2 do sistema de denúncias (utiliza SQL puro)
   // Implementada em reports-v2.ts para resolver problemas de ORM

@@ -83,12 +83,21 @@ const ReportsManagement = () => {
 
   // Consulta dedicada para estatísticas dos reports
   const { 
-    data: statsData,
+    data: statsResponse,
     isLoading: isLoadingStats
   } = useQuery({
     queryKey: ['/api/reports/stats'],
     refetchInterval: 30000 // Atualiza a cada 30 segundos
   });
+
+  // Extrair estatísticas da resposta da API
+  const statsData = statsResponse?.stats || {
+    pending: 0,
+    reviewing: 0,
+    resolved: 0,
+    rejected: 0,
+    total: 0
+  };
 
   // Consulta principal para obter reports
   const statusFilter = activeTab !== 'all' ? activeTab : selectedStatusFilter !== 'all' ? selectedStatusFilter : null;
