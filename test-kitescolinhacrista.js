@@ -3,8 +3,8 @@
  * Este script simula um webhook da Hotmart para criar uma assinatura para este usuário
  */
 
-// Token da Hotmart configurado no sistema
-const HOTMART_TOKEN = "azjZzEUU43jb4zN4NqEUrvRu1MO1XQ1167719";
+// Token da Hotmart deve vir de variável de ambiente
+const HOTMART_TOKEN = process.env.HOTMART_TOKEN || "";
 
 // Configuração do webhook
 const email = 'kitescolinhacrista@gmail.com';

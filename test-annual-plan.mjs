@@ -9,8 +9,8 @@ async function testAnnualPlan() {
     ? `https://${process.env.REPLIT_DOMAIN}`
     : 'http://localhost:5000';
 
-  // Token de exemplo para teste
-  const token = 'afb3c81b-19a6-42f2-93b0-e3cd7def0b0c';
+  // Token deve vir de variável de ambiente
+  const token = process.env.TEST_TOKEN || '';
 
   // Criar payload de teste
   const payload = {
