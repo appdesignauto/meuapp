@@ -91,6 +91,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // ENDPOINT CRÍTICO: Estatísticas de Reports - PRIORIDADE ABSOLUTA
+  app.get('/api/reports/stats', async (req, res) => {
+    try {
+      console.log('📊 [CRITICAL ENDPOINT] Buscando estatísticas dos reports...');
+      
+      const result = await db.execute(sql`
+        SELECT 
+          status,
+          COUNT(*) as count
+        FROM reports 
+        GROUP BY status
+      `);
+      
+      const stats = {
+        pending: 0,
+        reviewing: 0, 
+        resolved: 0,
+        rejected: 0,
+        total: 0
+      };
+      
+      let total = 0;
+      result.forEach((row: any) => {
+        const count = parseInt(row.count);
+        total += count;
+        
+        switch(row.status) {
+          case 'pendente':
+            stats.pending = count;
+            break;
+          case 'em-analise':
+            stats.reviewing = count;
+            break;
+          case 'resolvido':
+            stats.resolved = count;
+            break;
+          case 'rejeitado':
+            stats.rejected = count;
+            break;
+        }
+      });
+      
+      stats.total = total;
+      
+      console.log('✅ [CRITICAL ENDPOINT] Estatísticas calculadas:', stats);
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json({
+        pending: stats.pending,
+        reviewing: stats.reviewing,
+        resolved: stats.resolved,
+        rejected: stats.rejected,
+        total: stats.total
+      });
+    } catch (error) {
+      console.error('❌ [CRITICAL ENDPOINT] Erro:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        error: 'Erro ao buscar estatísticas'
+      });
+    }
+  });
+
   // Rota de debug para testar getUserByUsername
   app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
     try {
@@ -5636,8 +5699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   
-  // Rotas para o sistema de denúncias
-  // Endpoint dedicado para estatísticas (deve vir ANTES das rotas genéricas)
+  // ENDPOINT CRÍTICO: Estatísticas de reports - PRIORIDADE MÁXIMA
   app.get('/api/reports/stats', async (req, res) => {
     try {
       console.log('📊 Endpoint /api/reports/stats chamado - buscando estatísticas...');
@@ -5685,7 +5747,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(200).json({
         success: true,
-        stats
+        pending: stats.pending,
+        reviewing: stats.reviewing,
+        resolved: stats.resolved,
+        rejected: stats.rejected,
+        total: stats.total
       });
     } catch (error) {
       console.error('❌ Erro ao buscar estatísticas:', error);
