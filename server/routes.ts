@@ -104,6 +104,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         GROUP BY status
       `);
       
+      console.log('🔍 [DEBUG] Resultado da consulta SQL:', result);
+      console.log('🔍 [DEBUG] Número de linhas retornadas:', result.length);
+      
       const stats = {
         pending: 0,
         reviewing: 0, 
@@ -113,32 +116,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       let total = 0;
-      result.forEach((row: any) => {
+      result.forEach((row: any, index: number) => {
+        console.log(`🔍 [DEBUG] Linha ${index}:`, row);
         const count = parseInt(row.count);
         total += count;
+        
+        console.log(`🔍 [DEBUG] Status: ${row.status}, Count: ${count}`);
         
         switch(row.status) {
           case 'pendente':
             stats.pending = count;
+            console.log('✅ Encontrado pendente:', count);
             break;
           case 'em-analise':
             stats.reviewing = count;
+            console.log('✅ Encontrado em-analise:', count);
             break;
           case 'resolvido':
             stats.resolved = count;
+            console.log('✅ Encontrado resolvido:', count);
             break;
           case 'rejeitado':
             stats.rejected = count;
+            console.log('✅ Encontrado rejeitado:', count);
             break;
+          default:
+            console.log('⚠️ Status não reconhecido:', row.status);
         }
       });
       
       stats.total = total;
       
-      console.log('✅ [CRITICAL ENDPOINT] Estatísticas calculadas:', stats);
+      console.log('✅ [CRITICAL ENDPOINT] Estatísticas FINAIS calculadas:', stats);
       
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json({
+      const responseData = {
         stats: {
           pending: stats.pending,
           reviewing: stats.reviewing,
@@ -146,7 +157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rejected: stats.rejected,
           total: stats.total
         }
-      });
+      };
+      
+      console.log('📤 [DEBUG] Enviando resposta:', responseData);
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(responseData);
     } catch (error) {
       console.error('❌ [CRITICAL ENDPOINT] Erro:', error);
       res.setHeader('Content-Type', 'application/json');
