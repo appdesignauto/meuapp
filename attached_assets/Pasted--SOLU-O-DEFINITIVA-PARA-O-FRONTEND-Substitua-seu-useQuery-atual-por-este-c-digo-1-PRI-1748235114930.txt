@@ -1,0 +1,218 @@
+// SOLUÇÃO DEFINITIVA PARA O FRONTEND
+// Substitua seu useQuery atual por este código:
+
+// 1. PRIMEIRO: Teste direto no console do navegador
+// Abra o DevTools (F12) e cole isso no Console:
+/*
+fetch('/api/reports/stats')
+  .then(response => response.json())
+  .then(data => {
+    console.log('🧪 [TESTE DIRETO] Resposta da API:', data);
+    if (data.stats) {
+      console.log('✅ [TESTE DIRETO] Stats encontradas:', data.stats);
+    } else {
+      console.log('❌ [TESTE DIRETO] Propriedade stats não encontrada');
+    }
+  })
+  .catch(error => {
+    console.error('❌ [TESTE DIRETO] Erro:', error);
+  });
+*/
+
+// 2. REACT QUERY CORRIGIDO
+const {
+  data: statsResponse,
+  isLoading: isLoadingStats,
+  error: statsError,
+  isError,
+  refetch: refetchStats
+} = useQuery({
+  queryKey: ['reports-stats'], // Chave específica
+  queryFn: async () => {
+    console.log('🔄 [QUERY] Iniciando busca de stats...');
+    
+    try {
+      const response = await fetch('/api/reports/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Evitar cache
+        cache: 'no-store'
+      });
+      
+      console.log('🔄 [QUERY] Status da resposta:', response.status);
+      console.log('🔄 [QUERY] Headers da resposta:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [QUERY] Erro HTTP:', response.status, errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const textResponse = await response.text();
+      console.log('🔄 [QUERY] Resposta bruta:', textResponse);
+      
+      let data;
+      try {
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        console.error('❌ [QUERY] Erro ao fazer parse do JSON:', parseError);
+        throw new Error('Resposta não é um JSON válido');
+      }
+      
+      console.log('✅ [QUERY] Dados parseados:', JSON.stringify(data, null, 2));
+      
+      // Verificar estrutura da resposta
+      if (!data.stats) {
+        console.warn('⚠️ [QUERY] Propriedade stats não encontrada na resposta');
+        console.log('🔍 [QUERY] Propriedades disponíveis:', Object.keys(data));
+      }
+      
+      return data;
+      
+    } catch (error) {
+      console.error('❌ [QUERY] Erro na requisição:', error);
+      throw error;
+    }
+  },
+  refetchInterval: 30000,
+  staleTime: 0, // Sempre considerar dados como stale
+  cacheTime: 0, // Não fazer cache
+  retry: 3,
+  retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  onSuccess: (data) => {
+    console.log('🎉 [QUERY] Sucesso! Dados recebidos:', data);
+  },
+  onError: (error) => {
+    console.error('💥 [QUERY] Erro no useQuery:', error);
+  }
+});
+
+// 3. DEBUG DO ESTADO DO HOOK
+console.log('🔍 [HOOK] Estado atual:', {
+  isLoading: isLoadingStats,
+  isError,
+  error: statsError?.message,
+  hasData: !!statsResponse,
+  rawResponse: statsResponse
+});
+
+// 4. PROCESSAMENTO DOS DADOS COM LOGS
+const statsData = React.useMemo(() => {
+  console.log('🔄 [MEMO] Processando stats...');
+  console.log('🔄 [MEMO] statsResponse:', statsResponse);
+  
+  if (!statsResponse) {
+    console.log('⚠️ [MEMO] Sem dados, retornando zeros');
+    return {
+      pending: 0,
+      reviewing: 0,
+      resolved: 0,
+      rejected: 0,
+      total: 0
+    };
+  }
+  
+  if (!statsResponse.stats) {
+    console.log('⚠️ [MEMO] Sem propriedade stats, tentando estrutura alternativa');
+    console.log('🔍 [MEMO] Propriedades disponíveis:', Object.keys(statsResponse));
+    
+    // Tentar estruturas alternativas
+    if (statsResponse.pending !== undefined) {
+      const altStats = {
+        pending: statsResponse.pending || 0,
+        reviewing: statsResponse.reviewing || 0,
+        resolved: statsResponse.resolved || 0,
+        rejected: statsResponse.rejected || 0,
+        total: statsResponse.total || 0
+      };
+      console.log('✅ [MEMO] Usando estrutura alternativa:', altStats);
+      return altStats;
+    }
+    
+    return {
+      pending: 0,
+      reviewing: 0,
+      resolved: 0,
+      rejected: 0,
+      total: 0
+    };
+  }
+  
+  const processedStats = {
+    pending: parseInt(statsResponse.stats.pending) || 0,
+    reviewing: parseInt(statsResponse.stats.reviewing) || 0,
+    resolved: parseInt(statsResponse.stats.resolved) || 0,
+    rejected: parseInt(statsResponse.stats.rejected) || 0,
+    total: parseInt(statsResponse.stats.total) || 0
+  };
+  
+  console.log('✅ [MEMO] Stats processadas:', processedStats);
+  return processedStats;
+}, [statsResponse]);
+
+// 5. BOTÃO DE DEBUG TEMPORÁRIO (adicione no seu JSX)
+const debugButton = (
+  <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px' }}>
+    <h4>🔧 Debug Stats (remover depois)</h4>
+    <button 
+      onClick={() => refetchStats()}
+      style={{ margin: '5px', padding: '5px 10px' }}
+    >
+      🔄 Forçar Reload
+    </button>
+    <button 
+      onClick={() => {
+        fetch('/api/reports/stats')
+          .then(r => r.json())
+          .then(data => {
+            console.log('🧪 [MANUAL] Teste manual:', data);
+            alert(`Teste manual: ${JSON.stringify(data, null, 2)}`);
+          });
+      }}
+      style={{ margin: '5px', padding: '5px 10px' }}
+    >
+      🧪 Teste Manual
+    </button>
+    <div style={{ marginTop: '10px', fontSize: '12px' }}>
+      <div>Loading: {isLoadingStats ? 'SIM' : 'NÃO'}</div>
+      <div>Error: {isError ? statsError?.message : 'NÃO'}</div>
+      <div>Dados: {JSON.stringify(statsData)}</div>
+    </div>
+  </div>
+);
+
+// 6. NO SEU JSX, use assim:
+return (
+  <div>
+    {/* Adicione temporariamente o botão de debug */}
+    {debugButton}
+    
+    {/* Seus tabs com as contagens */}
+    <div className="tabs">
+      <button>Pendentes ({statsData.pending})</button>
+      <button>Em Análise ({statsData.reviewing})</button>
+      <button>Resolvidos ({statsData.resolved})</button>
+      <button>Rejeitados ({statsData.rejected})</button>
+    </div>
+    
+    {/* Resto do seu componente */}
+  </div>
+);
+
+// 7. VERIFICAÇÃO ADICIONAL NO BACKEND
+// Certifique-se que seu endpoint retorna exatamente isso:
+/*
+{
+  "success": true,
+  "stats": {
+    "pending": 1,
+    "reviewing": 0,
+    "resolved": 6,
+    "rejected": 2,
+    "total": 10
+  },
+  "timestamp": "2025-05-26T..."
+}
+*/

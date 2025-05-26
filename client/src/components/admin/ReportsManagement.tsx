@@ -81,29 +81,138 @@ const ReportsManagement = () => {
     enabled: true
   });
 
-  // Query para buscar estatísticas dos reports
-  const { 
+  // SOLUÇÃO DEFINITIVA PARA O FRONTEND - React Query Corrigido
+  const {
     data: statsResponse,
-    isLoading: isLoadingStats
+    isLoading: isLoadingStats,
+    error: statsError,
+    isError,
+    refetch: refetchStats
   } = useQuery({
-    queryKey: ['/api/reports/stats'],
-    refetchInterval: 30000 // Atualiza a cada 30 segundos
+    queryKey: ['reports-stats'], // Chave específica
+    queryFn: async () => {
+      console.log('🔄 [QUERY] Iniciando busca de stats...');
+      
+      try {
+        const response = await fetch('/api/reports/stats', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Evitar cache
+          cache: 'no-store'
+        });
+        
+        console.log('🔄 [QUERY] Status da resposta:', response.status);
+        console.log('🔄 [QUERY] Headers da resposta:', Object.fromEntries(response.headers.entries()));
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ [QUERY] Erro HTTP:', response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const textResponse = await response.text();
+        console.log('🔄 [QUERY] Resposta bruta:', textResponse);
+        
+        let data;
+        try {
+          data = JSON.parse(textResponse);
+        } catch (parseError) {
+          console.error('❌ [QUERY] Erro ao fazer parse do JSON:', parseError);
+          throw new Error('Resposta não é um JSON válido');
+        }
+        
+        console.log('✅ [QUERY] Dados parseados:', JSON.stringify(data, null, 2));
+        
+        // Verificar estrutura da resposta
+        if (!data.stats) {
+          console.warn('⚠️ [QUERY] Propriedade stats não encontrada na resposta');
+          console.log('🔍 [QUERY] Propriedades disponíveis:', Object.keys(data));
+        }
+        
+        return data;
+        
+      } catch (error) {
+        console.error('❌ [QUERY] Erro na requisição:', error);
+        throw error;
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 0, // Sempre considerar dados como stale
+    cacheTime: 0, // Não fazer cache
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    onSuccess: (data) => {
+      console.log('🎉 [QUERY] Sucesso! Dados recebidos:', data);
+    },
+    onError: (error) => {
+      console.error('💥 [QUERY] Erro no useQuery:', error);
+    }
   });
 
-  // Debug: log da resposta completa
-  console.log('🔍 [FRONTEND DEBUG] statsResponse completa:', statsResponse);
-  console.log('🔍 [FRONTEND DEBUG] statsResponse?.stats:', statsResponse?.stats);
+  // Debug do estado do hook
+  console.log('🔍 [HOOK] Estado atual:', {
+    isLoading: isLoadingStats,
+    isError,
+    error: statsError?.message,
+    hasData: !!statsResponse,
+    rawResponse: statsResponse
+  });
 
-  // Extrair estatísticas da resposta da API
-  const statsData = statsResponse?.stats || {
-    pending: 0,
-    reviewing: 0,
-    resolved: 0,
-    rejected: 0,
-    total: 0
-  };
-
-  console.log('🔍 [FRONTEND DEBUG] statsData final:', statsData);
+  // Processamento dos dados com logs
+  const statsData = React.useMemo(() => {
+    console.log('🔄 [MEMO] Processando stats...');
+    console.log('🔄 [MEMO] statsResponse:', statsResponse);
+    
+    if (!statsResponse) {
+      console.log('⚠️ [MEMO] Sem dados, retornando zeros');
+      return {
+        pending: 0,
+        reviewing: 0,
+        resolved: 0,
+        rejected: 0,
+        total: 0
+      };
+    }
+    
+    if (!statsResponse.stats) {
+      console.log('⚠️ [MEMO] Sem propriedade stats, tentando estrutura alternativa');
+      console.log('🔍 [MEMO] Propriedades disponíveis:', Object.keys(statsResponse));
+      
+      // Tentar estruturas alternativas
+      if (statsResponse.pending !== undefined) {
+        const altStats = {
+          pending: statsResponse.pending || 0,
+          reviewing: statsResponse.reviewing || 0,
+          resolved: statsResponse.resolved || 0,
+          rejected: statsResponse.rejected || 0,
+          total: statsResponse.total || 0
+        };
+        console.log('✅ [MEMO] Usando estrutura alternativa:', altStats);
+        return altStats;
+      }
+      
+      return {
+        pending: 0,
+        reviewing: 0,
+        resolved: 0,
+        rejected: 0,
+        total: 0
+      };
+    }
+    
+    const processedStats = {
+      pending: parseInt(statsResponse.stats.pending) || 0,
+      reviewing: parseInt(statsResponse.stats.reviewing) || 0,
+      resolved: parseInt(statsResponse.stats.resolved) || 0,
+      rejected: parseInt(statsResponse.stats.rejected) || 0,
+      total: parseInt(statsResponse.stats.total) || 0
+    };
+    
+    console.log('✅ [MEMO] Stats processadas:', processedStats);
+    return processedStats;
+  }, [statsResponse]);
 
   // Consulta principal para obter reports
   const statusFilter = activeTab !== 'all' ? activeTab : selectedStatusFilter !== 'all' ? selectedStatusFilter : null;
