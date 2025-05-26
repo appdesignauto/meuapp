@@ -8,6 +8,7 @@ import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
+import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
 import { Pool } from "pg";
 
 
@@ -130,6 +131,10 @@ app.use((req, res, next) => {
     
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
+    
+    // 🚀 REGISTRAR WEBHOOK HOTMART AUTOMÁTICO - SISTEMA COMPLETO
+    app.use('/webhook', webhookHotmartFixedRoutes);
+    console.log('✅ Sistema de webhook Hotmart automático configurado com sucesso!');
     
     // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
     const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
