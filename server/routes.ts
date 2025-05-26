@@ -3482,25 +3482,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar todos os usuários com nivelacesso 'designer', 'designer_adm' ou 'admin'
       // Executar SQL direto para evitar problemas com o TypeScript
-      const sortColumn = sort === 'activity' ? 'updatedat' : '"createdAt"';
-      const designersQuery = `
-        SELECT 
-          id, 
-          name, 
-          username, 
-          bio, 
-          profileimageurl, 
-          nivelacesso, 
-          role, 
-          0 AS followers, 
-          0 AS following, 
-          "createdAt" as createdat,
-          updatedat
-        FROM users 
-        WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
-        ORDER BY ${sortColumn} DESC
-        LIMIT $1 OFFSET $2
-      `;
+      // Criar consultas separadas para evitar SQL injection
+      let designersQuery;
+      if (sort === 'activity') {
+        designersQuery = `
+          SELECT 
+            id, 
+            name, 
+            username, 
+            bio, 
+            profileimageurl, 
+            nivelacesso, 
+            role, 
+            0 AS followers, 
+            0 AS following, 
+            "createdAt" as createdat,
+            updatedat
+          FROM users 
+          WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
+          ORDER BY updatedat DESC
+          LIMIT $1 OFFSET $2
+        `;
+      } else {
+        designersQuery = `
+          SELECT 
+            id, 
+            name, 
+            username, 
+            bio, 
+            profileimageurl, 
+            nivelacesso, 
+            role, 
+            0 AS followers, 
+            0 AS following, 
+            "createdAt" as createdat,
+            updatedat
+          FROM users 
+          WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
+          ORDER BY "createdAt" DESC
+          LIMIT $1 OFFSET $2
+        `;
+      }
       
       const designers = await db.execute(sql.raw(designersQuery), [limit, offset]);
       
