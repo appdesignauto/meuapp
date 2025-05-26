@@ -159,7 +159,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Inicializar cliente Supabase
 const supabaseUrl = 'https://dcodfuzoxmddmpvowhap.supabase.co'; // Substitua com seu URL Supabase real
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Substitua com sua chave anon
+const supabaseKey = process.env.SUPABASE_ANON_KEY || ''; // Use environment variable
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Função para upload de avatar
