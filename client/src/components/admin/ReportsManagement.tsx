@@ -86,7 +86,7 @@ const ReportsManagement = () => {
     data: allReportsData,
     isLoading: isLoadingStats
   } = useQuery({
-    queryKey: ['/api/reports', { page: 1, limit: 1000, status: 'all' }],
+    queryKey: ['/api/reports', { page: 1, limit: 1000 }], // Removido status: 'all'
     refetchInterval: 30000
   });
 
