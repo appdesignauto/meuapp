@@ -72,6 +72,7 @@ import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (versão completamente funcional)
+import reportsStatsRouter from './routes/reports-stats'; // Rotas para estatísticas dos reports
 // Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
 
 import { PrismaClient } from '@prisma/client';
@@ -5637,6 +5638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rotas para o sistema de denúncias
   // Versão original do sistema de denúncias (utiliza ORM/schema)
+  app.use('/api/reports', reportsStatsRouter); // Deve vir antes para capturar /stats
   app.use('/api/reports', reportsRouter);
   
   // Versão 2 do sistema de denúncias (utiliza SQL puro)
