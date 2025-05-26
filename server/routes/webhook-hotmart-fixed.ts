@@ -123,7 +123,7 @@ router.post('/hotmart-fixed', async (req, res) => {
     await pool.query(`
       INSERT INTO subscriptions (
         "userId", "planType", status, "startDate", "endDate",
-        origin, "transactionId", "lastEvent", "webhookData", "createdAt"
+        origin, transactionid, lastevent, "webhookData", "createdAt"
       ) VALUES (
         $1, $2, 'active', $3, $4,
         'hotmart', $5, $6, $7, $8
