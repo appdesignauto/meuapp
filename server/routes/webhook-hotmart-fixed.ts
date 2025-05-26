@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { sql } from 'drizzle-orm';
 import { Pool } from 'pg';
+import bcrypt from 'bcrypt';
 
 const router = Router();
 
@@ -82,31 +83,35 @@ router.post('/hotmart-fixed', async (req, res) => {
       const baseUsername = userData.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
       const username = await generateUniqueUsername(baseUsername);
       
-      const insertResult = await db.execute(sql`
-        INSERT INTO users (
+      // Criptografar senha padrão para usuários criados via webhook
+      const hashedPassword = await bcrypt.hash('auto@123', 10);
+      
+      const newUserResult = await pool.query(
+        `INSERT INTO users (
           username, email, name, password, nivelacesso, 
           origemassinatura, tipoplano, dataassinatura, 
           dataexpiracao, acessovitalicio, isactive, emailconfirmed,
           criadoem, atualizadoem
-        ) VALUES (
-          ${username},
-          ${userData.email},
-          ${userData.name},
-          'temp_password_123',
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+        [
+          username,
+          userData.email,
+          userData.name,
+          hashedPassword,
           'premium',
           'hotmart',
           'anual',
-          ${new Date()},
-          ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)},
+          new Date(),
+          new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
           false,
           true,
           true,
-          ${new Date()},
-          ${new Date()}
-        ) RETURNING id
-      `);
+          new Date(),
+          new Date()
+        ]
+      );
       
-      userId = (insertResult.rows[0] as any).id;
+      userId = newUserResult.rows[0].id;
       console.log(`✅ [WEBHOOK] Novo usuário criado com sucesso! ID: ${userId}, Username: ${username}`);
     }
 
@@ -215,15 +220,21 @@ function extractUserData(payload: any): {
 
 // 🔤 FUNÇÃO AUXILIAR - Gera username único
 async function generateUniqueUsername(baseUsername: string): Promise<string> {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+  
   let username = baseUsername;
   let counter = 1;
   
   while (true) {
-    const result = await db.execute(sql`
-      SELECT id FROM users WHERE username = ${username}
-    `);
+    const result = await pool.query(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
+    );
     
     if (result.rows.length === 0) {
+      await pool.end();
       return username;
     }
     
