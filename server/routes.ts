@@ -72,7 +72,7 @@ import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
-import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
+// Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
 
 import { PrismaClient } from '@prisma/client';
 
@@ -2730,12 +2730,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Usuário admin não encontrado" });
       }
       
-      // Atualizar todas as artes sem designerid usando SQL direto
-      await db.execute(`
-        UPDATE arts 
-        SET designerid = ${admin.id} 
-        WHERE designerid IS NULL
-      `);
+      // Atualizar todas as artes sem designerid usando consulta segura
+      await db.update(arts)
+        .set({ designerid: admin.id })
+        .where(isNull(arts.designerid));
 
       return res.status(200).json({ 
         message: "Designers atualizados com sucesso", 
@@ -2790,25 +2788,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enriquecer com estatísticas
       const usersWithStats = await Promise.all(
         allUsers.map(async (user: any) => {
-          // Contar seguidores (para designers)
-          const followersQuery = `
-            SELECT COUNT(*) as count
-            FROM "userFollows"
-            WHERE "followingId" = ${user.id}
-          `;
+          // Contar seguidores usando consulta segura
+          const followersResult = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(eq(userFollows.followingId, user.id));
+          const followersCount = followersResult[0]?.count || 0;
           
-          const followersResult = await db.execute(sql.raw(followersQuery));
-          const followersCount = parseInt(followersResult.rows[0].count) || 0;
-          
-          // Contar seguindo
-          const followingQuery = `
-            SELECT COUNT(*) as count
-            FROM "userFollows"
-            WHERE "followerId" = ${user.id}
-          `;
-          
-          const followingResult = await db.execute(sql.raw(followingQuery));
-          const followingCount = parseInt(followingResult.rows[0].count) || 0;
+          // Contar seguindo usando consulta segura
+          const followingResult = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(eq(userFollows.followerId, user.id));
+          const followingCount = followingResult[0]?.count || 0;
           
           // Estatísticas para designers
           let totalDownloads = 0;
