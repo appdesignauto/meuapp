@@ -8,7 +8,7 @@ import { setupAuth } from "./auth";
 import { flexibleAuth } from "./auth-flexible";
 import imageUploadRoutes from "./routes/image-upload";
 import { setupFollowRoutes } from "./routes/follows";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray } from "drizzle-orm";
 import { randomBytes, scrypt } from "crypto";
 import { promisify } from "util";
@@ -98,7 +98,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('📊 [REPORTS-FIXED] Buscando estatísticas dos reports...');
       
-      const result = await pool.query(`
+      // Usar Drizzle ORM em vez de pool.query diretamente
+      const result = await db.execute(sql`
         SELECT 
           status,
           COUNT(*) as count
@@ -159,7 +160,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const status = req.query.status as string;
       const search = req.query.search as string;
 
-      let baseQuery = `
+      // Usar Drizzle ORM em vez de pool.query
+      let query = sql`
         SELECT 
           r.*,
           rt.name as "reportTypeName",
@@ -170,53 +172,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
       
       const conditions = [];
-      const values = [];
-      let paramCount = 0;
-
       if (status) {
-        paramCount++;
-        conditions.push(`r.status = $${paramCount}`);
-        values.push(status);
+        conditions.push(sql`r.status = ${status}`);
       }
-
       if (search) {
-        paramCount++;
-        conditions.push(`(r.title ILIKE $${paramCount} OR r.description ILIKE $${paramCount})`);
-        values.push(`%${search}%`);
+        conditions.push(sql`(r.title ILIKE ${`%${search}%`} OR r.description ILIKE ${`%${search}%`})`);
       }
 
       if (conditions.length > 0) {
-        baseQuery += ' WHERE ' + conditions.join(' AND ');
+        query = sql`${query} WHERE ${sql.join(conditions, sql` AND `)}`;
       }
 
-      baseQuery += ` ORDER BY r."createdAt" DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
-      values.push(limit, offset);
+      query = sql`${query} ORDER BY r."createdAt" DESC LIMIT ${limit} OFFSET ${offset}`;
 
-      const result = await pool.query(baseQuery, values);
+      const result = await db.execute(query);
       
       // Buscar total de registros
-      let countQuery = 'SELECT COUNT(*) FROM reports r';
-      const countValues = [];
-      let countParamCount = 0;
-
-      if (status) {
-        countParamCount++;
-        countQuery += ` WHERE r.status = $${countParamCount}`;
-        countValues.push(status);
+      let countQuery = sql`SELECT COUNT(*) FROM reports r`;
+      if (conditions.length > 0) {
+        countQuery = sql`${countQuery} WHERE ${sql.join(conditions, sql` AND `)}`;
       }
 
-      if (search) {
-        countParamCount++;
-        if (countValues.length > 0) {
-          countQuery += ` AND (r.title ILIKE $${countParamCount} OR r.description ILIKE $${countParamCount})`;
-        } else {
-          countQuery += ` WHERE (r.title ILIKE $${countParamCount} OR r.description ILIKE $${countParamCount})`;
-        }
-        countValues.push(`%${search}%`);
-      }
-
-      const countResult = await pool.query(countQuery, countValues);
-      const total = parseInt(countResult.rows[0].count);
+      const countResult = await db.execute(countQuery);
+      const total = parseInt(countResult.rows[0].count as string);
 
       console.log(`✅ [REPORTS-FIXED] ${result.rows.length} reports encontrados (total: ${total})`);
       
@@ -244,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reportId = parseInt(req.params.id);
       console.log(`🔍 [REPORTS-FIXED] Buscando report ID: ${reportId}`);
       
-      const result = await pool.query(`
+      const result = await db.execute(sql`
         SELECT 
           r.*,
           rt.name as "reportTypeName",
@@ -252,8 +230,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM reports r
         LEFT JOIN "reportTypes" rt ON r."reportTypeId" = rt.id
         LEFT JOIN users u ON r."userId" = u.id
-        WHERE r.id = $1
-      `, [reportId]);
+        WHERE r.id = ${reportId}
+      `);
 
       if (result.rows.length === 0) {
         return res.status(404).json({
@@ -281,17 +259,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`📝 [REPORTS-FIXED] Atualizando status do report ${reportId} para: ${status}`);
       
-      const result = await pool.query(`
+      const result = await db.execute(sql`
         UPDATE reports 
         SET 
-          status = $1,
-          "adminResponse" = $2,
-          "respondedBy" = $3,
+          status = ${status},
+          "adminResponse" = ${adminResponse},
+          "respondedBy" = ${respondedBy},
           "respondedAt" = NOW(),
           "updatedAt" = NOW()
-        WHERE id = $4
+        WHERE id = ${reportId}
         RETURNING *
-      `, [status, adminResponse, respondedBy, reportId]);
+      `);
 
       if (result.rows.length === 0) {
         return res.status(404).json({
@@ -319,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('📑 [REPORTS-FIXED] Buscando tipos de reports...');
       
-      const result = await pool.query(`
+      const result = await db.execute(sql`
         SELECT * FROM "reportTypes" 
         WHERE "isActive" = true 
         ORDER BY name
