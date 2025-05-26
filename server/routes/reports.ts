@@ -157,6 +157,39 @@ router.get('/', async (req, res) => {
       })
     );
     
+    // Buscar estatísticas por status
+    const statsResult = await pool.query(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM reports 
+      GROUP BY status
+    `);
+    
+    const stats = {
+      pending: 0,
+      reviewing: 0,
+      resolved: 0,
+      rejected: 0
+    };
+    
+    statsResult.rows.forEach(row => {
+      switch(row.status) {
+        case 'pendente':
+          stats.pending = parseInt(row.count);
+          break;
+        case 'em-analise':
+          stats.reviewing = parseInt(row.count);
+          break;
+        case 'resolvido':
+          stats.resolved = parseInt(row.count);
+          break;
+        case 'rejeitado':
+          stats.rejected = parseInt(row.count);
+          break;
+      }
+    });
+    
     const totalPages = Math.ceil(totalCount / limit);
     
     return res.status(200).json({
@@ -165,7 +198,8 @@ router.get('/', async (req, res) => {
       totalCount,
       totalPages,
       currentPage: page,
-      hasMore: page < totalPages
+      hasMore: page < totalPages,
+      stats
     });
   } catch (error) {
     console.error('Erro ao listar denúncias (versão funcional):', error);
