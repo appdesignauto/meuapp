@@ -730,7 +730,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se não há artes, retornamos com contagem zero e data atual
         if (arts.length === 0) {
           return {
-            ...category,
+            ...categoryId,
             artCount: 0,
             lastUpdate: new Date(),
             formats: []
@@ -739,18 +739,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Ordenar por data de atualização e pegar a mais recente
         const sortedArts = [...arts].sort((a, b) => 
-          new Date(b.atualizadoem).getTime() - new Date(a.atualizadoem).getTime()
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         
         // Data da última atualização é a data da arte mais recente
-        const lastUpdate = sortedArts[0].atualizadoem;
+        const lastUpdate = sortedArts[0].updatedAt;
         
         // Coletar formatos únicos de artes nesta categoria
         const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
         
         // Retornar categoria com informações extras completas
         return {
-          ...category,
+          ...categoryId,
           artCount: totalCount,
           lastUpdate,
           formats: uniqueFormats
@@ -777,7 +777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se não há artes, retornamos com contagem zero e data atual
         if (arts.length === 0) {
           return {
-            ...category,
+            ...categoryId,
             artCount: 0,
             lastUpdate: new Date(),
             formats: []
@@ -786,18 +786,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Ordenar por data de atualização e pegar a mais recente
         const sortedArts = [...arts].sort((a, b) => 
-          new Date(b.atualizadoem).getTime() - new Date(a.atualizadoem).getTime()
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         
         // Data da última atualização é a data da arte mais recente
-        const lastUpdate = sortedArts[0].atualizadoem;
+        const lastUpdate = sortedArts[0].updatedAt;
         
         // Coletar formatos únicos de artes nesta categoria
         const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
         
         // Retornar categoria com informações extras completas
         return {
-          ...category,
+          ...categoryId,
           artCount: totalCount,
           lastUpdate,
           formats: uniqueFormats
@@ -849,7 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Adicionar campos calculados
       const enrichedCategory = {
-        ...category,
+        ...categoryId,
         createdAt: createdDate,
         updatedAt: updatedDate
       };
@@ -912,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Adicionar campos createdAt e updatedAt com base nos dados reais
       const enhancedCategory = {
-        ...category,
+        ...categoryId,
         createdAt: createdDate,
         updatedAt: updatedDate
       };
@@ -1031,16 +1031,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryId) {
+      if (art.categoryIdId) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.categoryId);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryIdId} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.categoryIdId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
           if (category) {
-            art.category = category;
-            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
+            art.categoryId = category;
+            console.log(`[DEBUG] Arte atualizada com categoria:`, art.categoryId);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
@@ -1068,26 +1068,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar informações do designer se existir
-      if (art.designerid) {
+      if (art.designeridid) {
         try {
-          const designer = await storage.getUserById(art.designerid);
+          const designer = await storage.getUserById(art.designeridid);
           if (designer) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeDesigner } = designer;
             
             // Buscar estatísticas do designer
-            const stats = await storage.getDesignerStats(art.designerid);
+            const stats = await storage.getDesignerStats(art.designeridid);
             
             // Buscar status de seguidor para o usuário atual (se autenticado)
             let isFollowing = false;
             if (req.isAuthenticated()) {
-              isFollowing = await storage.isUserFollowing(req.user.id, art.designerid);
+              isFollowing = await storage.isUserFollowing(req.user.id, art.designeridid);
             }
             
             // Buscar artes recentes do designer para exibir junto com o perfil
             let recentArts = [];
             try {
-              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
+              const designerArts = await storage.getArtsByDesignerId(art.designeridid, 5);
               recentArts = designerArts
                 .filter(recentArt => recentArt.id !== art.id)
                 .slice(0, 4)
@@ -1100,7 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.error("Erro ao buscar artes recentes do designer:", artsError);
             }
             
-            art.designer = {
+            art.designerid = {
               ...safeDesigner,
               isFollowing,
               followers: stats?.followers || 0,
@@ -1121,7 +1121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (admin) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeAdmin } = admin;
-            art.designer = {
+            art.designerid = {
               ...safeAdmin,
               isFollowing: false,
               followers: 0,
@@ -1498,8 +1498,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse filters
       const filters: any = {};
       
-      if (req.query.categoryId) {
-        filters.categoryId = parseInt(req.query.categoryId as string);
+      if (req.query.categoryIdId) {
+        filters.categoryIdId = parseInt(req.query.categoryIdId as string);
       }
       
       if (req.query.formatId) {
@@ -1567,8 +1567,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse filters
       const filters: any = {};
       
-      if (req.query.categoryId) {
-        filters.categoryId = parseInt(req.query.categoryId as string);
+      if (req.query.categoryIdId) {
+        filters.categoryIdId = parseInt(req.query.categoryIdId as string);
       }
       
       if (req.query.formatId) {
@@ -1740,18 +1740,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryId) {
+      if (art.categoryIdId) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.categoryId);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryIdId} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.categoryIdId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
           if (category) {
-            art.category = category;
-            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
+            art.categoryId = category;
+            console.log(`[DEBUG] Arte atualizada com categoria:`, art.categoryId);
           } else {
-            console.log(`[DEBUG] Categoria ID ${art.categoryId} não encontrada no banco de dados`);
+            console.log(`[DEBUG] Categoria ID ${art.categoryIdId} não encontrada no banco de dados`);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
@@ -1804,27 +1804,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar informações do designer se existir
-      if (art.designerid) {
+      if (art.designeridid) {
         try {
-          const designer = await storage.getUserById(art.designerid);
+          const designer = await storage.getUserById(art.designeridid);
           if (designer) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeDesigner } = designer;
             
             // Buscar estatísticas do designer
-            const stats = await storage.getDesignerStats(art.designerid);
+            const stats = await storage.getDesignerStats(art.designeridid);
             
             // Buscar status de seguidor para o usuário atual (se autenticado)
             let isFollowing = false;
             if (req.user) {
               const userId = (req.user as any).id;
-              isFollowing = await storage.isFollowing(userId, art.designerid);
+              isFollowing = await storage.isFollowing(userId, art.designeridid);
             }
             
             // Buscar 4 artes recentes do designer, excluindo a arte atual
             let recentArts = [];
             try {
-              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
+              const designerArts = await storage.getArtsByDesignerId(art.designeridid, 5);
               recentArts = designerArts
                 .filter(recentArt => recentArt.id !== art.id)
                 .slice(0, 4)
@@ -1837,7 +1837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.error("Erro ao buscar artes recentes do designer:", artsError);
             }
             
-            art.designer = {
+            art.designerid = {
               ...safeDesigner,
               isFollowing,
               followers: stats?.followers || 0,
@@ -1869,7 +1869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 imageUrl: a.imageUrl || ''
               }));
             
-            art.designer = {
+            art.designerid = {
               ...safeAdmin,
               isFollowing: false,
               followers: Math.floor(Math.random() * 100) + 10, // Valor demonstrativo
@@ -2361,7 +2361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Extrair categoria para organização das pastas
-      const categorySlug = req.body.category;
+      const categorySlug = req.body.categoryId;
       
       // Extrair ID do designer (usuário logado)
       const designerId = req.user ? req.user.id : undefined;
@@ -2498,7 +2498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         settings[0].logoUrl = `${settings[0].logoUrl}${hasQueryParams ? '&' : '?'}t=${timestamp}`;
         
         // Adicionar informação de timestamp para rastreamento no frontend
-        settings[0].logoUpdatedAt = timestamp;
+        settings[0].updatedAt = timestamp;
       }
       
       return res.json(settings[0]);
@@ -2812,7 +2812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               SELECT COUNT(*) as count
               FROM downloads d
               JOIN arts a ON d."artId" = a.id
-              WHERE a.designerid = ${user.id}
+              WHERE a.designeridid = ${user.id}
             `;
             
             const downloadsResult = await db.execute(sql.raw(downloadsQuery));
@@ -2823,7 +2823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               SELECT COUNT(*) as count
               FROM views v
               JOIN arts a ON v."artId" = a.id
-              WHERE a.designerid = ${user.id}
+              WHERE a.designeridid = ${user.id}
             `;
             
             const viewsResult = await db.execute(sql.raw(viewsQuery));
@@ -3395,7 +3395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const artsCount = await db
             .select({ count: count() })
             .from(arts)
-            .where(eq(arts.designerid, userId));
+            .where(eq(arts.designeridid, userId));
             
           if (artsCount[0].count > 0) {
             console.log(`- Usuário possui ${artsCount[0].count} artes como designer. Artes serão mantidas.`);
@@ -3490,7 +3490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
         return {
-          ...designer,
+          ...designerid,
           profileImageUrl: designer.profileimageurl,
           createdAt: designer.createdat,
           nivelAcesso: designer.nivelacesso, // Adicionamos o nivelacesso explicitamente
@@ -3715,7 +3715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mantida para compatibilidade com código frontend legado
   app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {
     try {
-      const designerId = parseInt(req.params.designerId);
+      const designerId = parseInt(req.params.designeridId);
       const followerId = (req.user as any).id;
       
       console.log("Redirecionando chamada de /api/follow para /api/users/follow com action=follow");
@@ -3746,7 +3746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mantida para compatibilidade com código frontend legado
   app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {
     try {
-      const designerId = parseInt(req.params.designerId);
+      const designerId = parseInt(req.params.designeridId);
       const followerId = (req.user as any).id;
       
       console.log("Redirecionando chamada de /api/unfollow para /api/users/follow com action=unfollow");
@@ -4839,7 +4839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tipoplano: users.tipoplano,
         planoexpiracao: users.dataexpiracao,
         criadoem: users.criadoem,
-        atualizadoem: users.atualizadoem,
+        atualizadoem: users.updatedAt,
       })
       .from(users)
       .limit(limit)
