@@ -203,113 +203,75 @@ const ReportsManagement = () => {
 
   // Mutation para atualizar o status de um report
   const updateReportMutation = useMutation({
-    mutationFn: async ({ id, status, adminFeedback, isResolved }: { id: number, status: string, adminFeedback?: string, isResolved?: boolean }) => {
-      const data: any = { 
-        status,
-        isResolved: isResolved || false 
-      };
+    mutationFn: async ({ id, status, adminFeedback }: { id: number, status: string, adminFeedback?: string }) => {
+      const data: any = { status };
       if (adminFeedback) {
-        data.adminResponse = adminFeedback; // Renomeado para corresponder ao esperado pelo backend
+        data.adminResponse = adminFeedback;
       }
       
-      console.log(`Enviando atualização para report #${id}:`, data);
+      const response = await apiRequest('PUT', `/api/reports/${id}`, data);
       
-      try {
-        // Primeiro tentamos a V2 da API
-        console.log(`Tentando atualizar report #${id} com API V2:`, data);
-        const v2Response = await apiRequest('PUT', `/api/reports/${id}`, data);
-        console.log(`Resposta da API V2 ao atualizar report #${id}:`, v2Response);
-        
-        , tentando API V1`);
-        }
-        
-        // Se a V2 falhar, tentamos a versão original
-        const response = await apiRequest('PUT', `/api/reports/${id}`, data);
-        console.log(`Resposta da API V1 ao atualizar report #${id}:`, response);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error(`Erro ao atualizar report #${id}:`, errorData);
-          throw new Error(errorData.message || 'Erro ao atualizar report');
-        }
-        
-        const result = await response.json();
-        console.log(`Atualização V1 concluída para report #${id}:`, result);
-        return result;
-      } catch (error) {
-        console.error(`Erro na atualização do report #${id}:`, error);
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar report');
       }
+      
+      return await response.json();
     },
-    onSuccess: (data) => {
-      // Invalidar o cache das duas versões da API para garantir consistência
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
-      
       setIsDetailsOpen(false);
       setFeedbackInput('');
       
-      console.log('Report atualizado com sucesso:', data);
-      
       toast({
         title: 'Report atualizado',
-        description: data?.message || 'O status do report foi atualizado com sucesso',
+        description: 'O status do report foi atualizado com sucesso',
         variant: 'default'
       });
     },
     onError: (error: Error) => {
+      console.error('Erro ao atualizar report:', error);
       toast({
-        title: 'Erro ao atualizar report',
-        description: error.message,
-        variant: 'destructive',
+        title: 'Erro',
+        description: error.message || 'Não foi possível atualizar o report',
+        variant: 'destructive'
       });
+    }
+  });
     }
   });
 
   // Mutation para excluir um report
   const deleteReportMutation = useMutation({
     mutationFn: async (id: number) => {
-      console.log(`Tentando excluir report #${id} com API V2...`);
-      
-      // Primeiro tentamos a V2 da API
-      const v2Response = await apiRequest('DELETE', `/api/reports/${id}`);
-      console.log(`Resposta da API V2 ao excluir report #${id}:`, v2Response);
-      
-      , tentando API V1`);
-      }
-      
-      // Se a V2 falhar, tentamos a versão original
       const response = await apiRequest('DELETE', `/api/reports/${id}`);
-      console.log(`Resposta da API V1 ao excluir report #${id}:`, response);
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error(`Erro ao excluir report #${id}:`, errorData);
         throw new Error(errorData.message || 'Erro ao excluir report');
       }
       
-      const result = await response.json();
-      console.log(`Exclusão V1 concluída para report #${id}:`, result);
-      return result;
+      return await response.json();
     },
     onSuccess: () => {
-      // Invalidar o cache das duas versões da API para garantir consistência
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
-      
       setIsDetailsOpen(false);
       
       toast({
         title: 'Report excluído',
-        description: 'O report foi removido permanentemente',
+        description: 'O report foi excluído com sucesso',
+        variant: 'default'
       });
     },
     onError: (error: Error) => {
+      console.error('Erro ao excluir report:', error);
       toast({
-        title: 'Erro ao excluir report',
-        description: error.message,
-        variant: 'destructive',
+        title: 'Erro',
+        description: error.message || 'Não foi possível excluir o report',
+        variant: 'destructive'
       });
+    }
+  });
     }
   });
 

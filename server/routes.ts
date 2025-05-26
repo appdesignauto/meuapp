@@ -734,12 +734,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Para cada categoria, realizar uma busca precisa das artes com contagem
       const enhancedCategories = await Promise.all(categories.map(async (category) => {
         // Buscar todas as artes dessa categoria com limites altos para garantir precisão
-        const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+        const { arts, totalCount } = await storage.getArts(1, 1000, { category: category.id });
         
         // Se não há artes, retornamos com contagem zero e data atual
         if (arts.length === 0) {
           return {
-            ...categoryId,
+            ...category,
             artCount: 0,
             lastUpdate: new Date(),
             formats: []
@@ -759,7 +759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Retornar categoria com informações extras completas
         return {
-          ...categoryId,
+          ...category,
           artCount: totalCount,
           lastUpdate,
           formats: uniqueFormats
@@ -781,12 +781,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Para cada categoria, realizar uma busca precisa das artes com contagem
       const enhancedCategories = await Promise.all(categories.map(async (category) => {
         // Buscar todas as artes dessa categoria com limites altos para garantir precisão
-        const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+        const { arts, totalCount } = await storage.getArts(1, 1000, { category: category.id });
         
         // Se não há artes, retornamos com contagem zero e data atual
         if (arts.length === 0) {
           return {
-            ...categoryId,
+            ...category,
             artCount: 0,
             lastUpdate: new Date(),
             formats: []
@@ -806,7 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Retornar categoria com informações extras completas
         return {
-          ...categoryId,
+          ...category,
           artCount: totalCount,
           lastUpdate,
           formats: uniqueFormats
@@ -832,7 +832,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar todas as artes desta categoria para determinar a data de atualização
       // Não usar filtro sortBy para garantir que todas as artes serão retornadas
-      const { arts } = await storage.getArts(1, 1000, { categoryId: category.id });
+      const { arts } = await storage.getArts(1, 1000, { category: category.id });
       
       // Data de criação - usar uma data histórica fixa se não for possível determinar
       // Neste caso, usamos a data de lançamento do sistema no início de 2025
@@ -858,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Adicionar campos calculados
       const enrichedCategory = {
-        ...categoryId,
+        ...category,
         createdAt: createdDate,
         updatedAt: updatedDate
       };
@@ -882,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar todas as artes desta categoria para determinar a data de atualização
       // Não usar filtro sortBy para garantir que todas as artes serão retornadas
-      const { arts } = await storage.getArts(1, 1000, { categoryId: category.id });
+      const { arts } = await storage.getArts(1, 1000, { category: category.id });
       
       // Data de criação - usar uma data histórica fixa se não for possível determinar
       // Neste caso, usamos a data de lançamento do sistema no início de 2025
@@ -921,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Adicionar campos createdAt e updatedAt com base nos dados reais
       const enhancedCategory = {
-        ...categoryId,
+        ...category,
         createdAt: createdDate,
         updatedAt: updatedDate
       };
@@ -1040,16 +1040,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryId) {
+      if (art.category) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.categoryId);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.category} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.category);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
           if (category) {
-            art.categoryId = category;
-            console.log(`[DEBUG] Arte atualizada com categoria:`, art.categoryId);
+            art.category = category;
+            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
@@ -1112,7 +1112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             art.designerid = {
               ...safeDesigner,
               isFollowing,
-              followers: stats?.followers || 0,
+              followers: stats? || 0,
               totalArts: stats?.totalArts || 0,
               recentArts
             };
@@ -1507,8 +1507,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse filters
       const filters: any = {};
       
-      if (req.query.categoryIdId) {
-        filters.categoryIdId = parseInt(req.query.categoryIdId as string);
+      if (req.query.categoryId) {
+        filters.categoryId = parseInt(req.query.categoryId as string);
       }
       
       if (req.query.formatId) {
@@ -1576,8 +1576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse filters
       const filters: any = {};
       
-      if (req.query.categoryIdId) {
-        filters.categoryIdId = parseInt(req.query.categoryIdId as string);
+      if (req.query.categoryId) {
+        filters.categoryId = parseInt(req.query.categoryId as string);
       }
       
       if (req.query.formatId) {
@@ -1749,24 +1749,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryId) {
+      if (art.category) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.categoryId);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.category} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.category);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
           if (category) {
-            art.categoryId = category;
-            console.log(`[DEBUG] Arte atualizada com categoria:`, art.categoryId);
+            art.category = category;
+            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
           } else {
-            console.log(`[DEBUG] Categoria ID ${art.categoryId} não encontrada no banco de dados`);
+            console.log(`[DEBUG] Categoria ID ${art.category} não encontrada no banco de dados`);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
         }
       } else {
-        console.log(`[DEBUG] Arte ID ${art.id} não tem categoryId definido`);
+        console.log(`[DEBUG] Arte ID ${art.id} não tem category definido`);
       }
       
       // Buscar contagem de favoritos para esta arte
@@ -1849,7 +1849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             art.designerid = {
               ...safeDesigner,
               isFollowing,
-              followers: stats?.followers || 0,
+              followers: stats? || 0,
               totalArts: stats?.totalArts || 0,
               recentArts
             };
@@ -2370,7 +2370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Extrair categoria para organização das pastas
-      const categorySlug = req.body.categoryId;
+      const categorySlug = req.body.category;
       
       // Extrair ID do designer (usuário logado)
       const designerId = req.user ? req.user.id : undefined;
@@ -2580,7 +2580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se um arquivo de logo foi enviado, processar e salvar
       if (req.file) {
-        console.log("Arquivo de logo recebido:", req.file.originalname, "tipo:", req.file.mimetype, "tamanho:", req.file.size, "bytes");
+        console.log("Arquivo de logo recebido:", req.file?.originalname, "tipo:", req.file?.mimetype, "tamanho:", req.file?.size, "bytes");
         
         try {
           // Importar o serviço de storage do Supabase
@@ -2622,11 +2622,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Nome de arquivo único com hash adicional para evitar colisões
             const timestamp = Date.now();
             const randomString = Math.random().toString(36).substring(2, 8);
-            const logoFileName = `logo-${timestamp}-${randomString}${path.extname(req.file.originalname)}`;
+            const logoFileName = `logo-${timestamp}-${randomString}${path.extname(req.file?.originalname)}`;
             const logoPath = path.join(publicImagesDir, logoFileName);
             
             // Salvar o arquivo diretamente
-            fs.writeFileSync(logoPath, req.file.buffer);
+            fs.writeFileSync(logoPath, req.file?.buffer);
             
             // Adicionar logoUrl aos dados de atualização
             updateData = {
@@ -3628,9 +3628,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: designer.role,
         website: designer.website || "",
         location: designer.location || "",
-        socialLinks: designer.sociallinks || {},
-        followers: designer.followers || 0,
-        following: designer.following || 0,
+        socialLinks: designer || {},
+        followers: designer || 0,
+        following: designer || 0,
         createdAt: designer.criadoem,
         isFollowing,
         statistics: {
@@ -3797,7 +3797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bio: bio || user.bio,
           website: website || user.website,
           location: location || user.location,
-          sociallinks: socialLinks || user.sociallinks,
+          sociallinks: socialLinks || user,
           atualizadoem: new Date()
         })
         .where(eq(users.id, userId));
@@ -3816,10 +3816,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bio: updatedUser.bio,
         website: updatedUser.website,
         location: updatedUser.location,
-        socialLinks: updatedUser.sociallinks,
+        socialLinks: updatedUser,
         profileImageUrl: updatedUser.profileimageurl,
-        followers: updatedUser.followers,
-        following: updatedUser.following,
+        followers: updatedUser,
+        following: updatedUser,
         createdAt: updatedUser.criadoem
       });
     } catch (error) {
@@ -3843,7 +3843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log detalhado para todos os usuários
       console.log(`[DIAGNÓSTICO DETALHADO] Usuário ${username} (ID: ${userId}) tentando upload de avatar`);
-      console.log(`Detalhes do arquivo: ${req.file.originalname} (${req.file.size} bytes) - Tipo: ${req.file.mimetype}`);
+      console.log(`Detalhes do arquivo: ${req.file?.originalname} (${req.file?.size} bytes) - Tipo: ${req.file?.mimetype}`);
       
       // Log extra para usuário específico com problemas
       const isProblematicUser = username === 'fernandosim20188718';
@@ -3855,11 +3855,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("🔍 Iniciando processo especializado de diagnóstico e upload para este usuário.");
         console.log(`🔍 Username: ${username}`);
         console.log(`🔍 ID: ${userId}`);
-        console.log(`🔍 Arquivo: ${req.file.originalname}`);
-        console.log(`🔍 Tamanho: ${req.file.size} bytes`);
-        console.log(`🔍 Tipo MIME: ${req.file.mimetype}`);
-        console.log(`🔍 Buffer válido: ${!!req.file.buffer}`);
-        console.log(`🔍 Tamanho do buffer: ${req.file.buffer ? req.file.buffer.length : 0} bytes`);
+        console.log(`🔍 Arquivo: ${req.file?.originalname}`);
+        console.log(`🔍 Tamanho: ${req.file?.size} bytes`);
+        console.log(`🔍 Tipo MIME: ${req.file?.mimetype}`);
+        console.log(`🔍 Buffer válido: ${!!req.file?.buffer}`);
+        console.log(`🔍 Tamanho do buffer: ${req.file?.buffer ? req.file?.buffer.length : 0} bytes`);
         console.log("⚠️ ==============================================");
         console.log("");
       }
@@ -3871,20 +3871,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar tamanho e tipo de arquivo
-      console.log(`Arquivo: ${req.file.originalname} (${req.file.size} bytes), MIME: ${req.file.mimetype}`);
+      console.log(`Arquivo: ${req.file?.originalname} (${req.file?.size} bytes), MIME: ${req.file?.mimetype}`);
       
-      if (req.file.size > 5 * 1024 * 1024) { // 5MB
+      if (req.file?.size > 5 * 1024 * 1024) { // 5MB
         console.error("ERRO: Arquivo muito grande para imagem de perfil");
         return res.status(400).json({ message: "A imagem deve ter no máximo 5MB" });
       }
       
-      if (!req.file.mimetype.startsWith('image/')) {
-        console.error(`ERRO: Tipo de arquivo inválido: ${req.file.mimetype}`);
+      if (!req.file?.mimetype.startsWith('image/')) {
+        console.error(`ERRO: Tipo de arquivo inválido: ${req.file?.mimetype}`);
         return res.status(400).json({ message: "O arquivo enviado não é uma imagem válida" });
       }
       
       // Verificar se o buffer tem conteúdo
-      if (!req.file.buffer || req.file.buffer.length === 0) {
+      if (!req.file?.buffer || req.file?.buffer.length === 0) {
         console.error("ERRO: Buffer do arquivo vazio ou inválido");
         return res.status(400).json({ message: "Dados da imagem inválidos ou corrompidos" });
       }
@@ -3927,18 +3927,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("ETAPA 1: Tentando upload para R2 Storage (bucket 'designautoimages')...");
         
         // Verificar se temos o arquivo e se o caminho é válido
-        if (!req.file || !req.file.buffer) {
+        if (!req.file || !req.file?.buffer) {
           console.error("❌ ETAPA 1: Arquivo inválido ou buffer não disponível para R2");
           throw new Error("Arquivo inválido ou buffer não disponível");
         }
         
-        console.log(`Arquivo para R2: ${req.file.originalname}, tamanho: ${req.file.size}, tipo: ${req.file.mimetype}`);
+        console.log(`Arquivo para R2: ${req.file?.originalname}, tamanho: ${req.file?.size}, tipo: ${req.file?.mimetype}`);
         
         // Usar diretamente o buffer do arquivo (multer)
-        const fileBuffer = req.file.buffer;
+        const fileBuffer = req.file?.buffer;
         
         // Fazer upload via serviço R2
-        const r2Result = await r2StorageService.uploadAvatar(user.id, fileBuffer, req.file.mimetype);
+        const r2Result = await r2StorageService.uploadAvatar(user.id, fileBuffer, req.file?.mimetype);
         
         if (r2Result.success && r2Result.url) {
           imageUrl = r2Result.url;
@@ -4139,9 +4139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`Arquivo recebido: ${req.file.originalname} (${req.file.size} bytes)`);
-      console.log(`Tipo MIME: ${req.file.mimetype}`);
-      console.log(`Buffer válido: ${!!req.file.buffer} (${req.file.buffer?.length || 0} bytes)`);
+      console.log(`Arquivo recebido: ${req.file?.originalname} (${req.file?.size} bytes)`);
+      console.log(`Tipo MIME: ${req.file?.mimetype}`);
+      console.log(`Buffer válido: ${!!req.file?.buffer} (${req.file?.buffer?.length || 0} bytes)`);
       
       // Tentar upload direto para o bucket 'designautoimages'
       try {
@@ -4200,15 +4200,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar tamanho e tipo de arquivo
-      console.log(`Arquivo: ${req.file.originalname} (${req.file.size} bytes), MIME: ${req.file.mimetype}`);
+      console.log(`Arquivo: ${req.file?.originalname} (${req.file?.size} bytes), MIME: ${req.file?.mimetype}`);
       
-      if (req.file.size > 5 * 1024 * 1024) { // 5MB
+      if (req.file?.size > 5 * 1024 * 1024) { // 5MB
         console.error("ERRO: Arquivo muito grande para imagem de perfil de designer");
         return res.status(400).json({ message: "A imagem deve ter no máximo 5MB" });
       }
       
-      if (!req.file.mimetype.startsWith('image/')) {
-        console.error(`ERRO: Tipo de arquivo inválido: ${req.file.mimetype}`);
+      if (!req.file?.mimetype.startsWith('image/')) {
+        console.error(`ERRO: Tipo de arquivo inválido: ${req.file?.mimetype}`);
         return res.status(400).json({ message: "O arquivo enviado não é uma imagem válida" });
       }
       
@@ -4229,7 +4229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se o buffer tem conteúdo
-      if (!req.file.buffer || req.file.buffer.length === 0) {
+      if (!req.file?.buffer || req.file?.buffer.length === 0) {
         console.error("ERRO: Buffer do arquivo vazio ou inválido");
         return res.status(400).json({ message: "Dados da imagem inválidos ou corrompidos" });
       }
@@ -4401,9 +4401,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Obter o arquivo enviado
       const imageFile = {
-        buffer: req.file.buffer,
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype
+        buffer: req.file?.buffer,
+        originalname: req.file?.originalname,
+        mimetype: req.file?.mimetype
       };
       
       // Preparar opções de otimização
