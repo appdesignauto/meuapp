@@ -91,30 +91,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // ENDPOINT CRÍTICO: Estatísticas de Reports - PRIORIDADE ABSOLUTA
+  // ENDPOINT CRÍTICO: Estatísticas de Reports - DADOS REAIS DO BANCO
   app.get('/api/reports/stats', async (req, res) => {
     try {
       console.log('📊 [CRITICAL ENDPOINT] Buscando estatísticas dos reports...');
       
-      // Valores fixos baseados nos dados reais do banco
+      // Consulta real ao banco de dados para obter os dados corretos
+      const result = await db.execute(sql`
+        SELECT 
+          COUNT(*) FILTER (WHERE status = 'pendente') as pending,
+          COUNT(*) FILTER (WHERE status = 'em-analise') as reviewing, 
+          COUNT(*) FILTER (WHERE status = 'resolvido') as resolved,
+          COUNT(*) FILTER (WHERE status = 'rejeitado') as rejected,
+          COUNT(*) as total
+        FROM reports
+      `);
+      
+      const row = result.rows[0] as any;
       const stats = {
-        pending: 0,
-        reviewing: 1,
-        resolved: 9,
-        rejected: 3,
-        total: 13
+        pending: parseInt(row.pending) || 0,
+        reviewing: parseInt(row.reviewing) || 0,
+        resolved: parseInt(row.resolved) || 0,
+        rejected: parseInt(row.rejected) || 0,
+        total: parseInt(row.total) || 0
       };
       
-      console.log('✅ [CRITICAL ENDPOINT] Retornando estatísticas corretas:', stats);
+      console.log('✅ [CRITICAL ENDPOINT] Retornando estatísticas corretas do banco:', stats);
       
       const responseData = {
-        stats: {
-          pending: stats.pending,
-          reviewing: stats.reviewing,
-          resolved: stats.resolved,
-          rejected: stats.rejected,
-          total: stats.total
-        }
+        stats: stats
       };
       
       console.log('📤 [DEBUG] Enviando resposta:', responseData);
@@ -125,7 +130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('❌ [CRITICAL ENDPOINT] Erro:', error);
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({
-        error: 'Erro ao buscar estatísticas'
+        error: 'Erro ao buscar estatísticas',
+        message: error instanceof Error ? error.message : String(error)
       });
     }
   });
