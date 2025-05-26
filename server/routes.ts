@@ -378,14 +378,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar acesso aos buckets
       console.log("\n== VERIFICANDO ACESSO AOS BUCKETS ==");
       
-      let bucketResults = {};
+      let bucketResults: Record<string, {
+        accessible: boolean;
+        files?: number;
+        error?: string;
+      }> = {};
       
       try {
         const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
         bucketResults['designautoimages'] = {
           accessible: true,
           files: avatarFiles?.length || 0,
-          error: null
+          error: undefined
         };
         console.log(`✓ Bucket 'designautoimages' acessível! ${avatarFiles?.length || 0} arquivos encontrados.`);
       } catch (avatarError) {
@@ -417,7 +421,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar diretórios locais
       console.log("\n== VERIFICANDO DIRETÓRIOS LOCAIS ==");
       
-      const dirResults = {};
+      const dirResults: Record<string, {
+        exists: boolean;
+        writable?: boolean;
+        files?: number;
+        error?: string;
+      }> = {};
       const dirsToCheck = [
         'public',
         'public/uploads',
