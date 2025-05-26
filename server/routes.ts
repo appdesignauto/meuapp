@@ -91,21 +91,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // ENDPOINT CRÍTICO: Estatísticas de Reports - PRIORIDADE ABSOLUTA
+  // ENDPOINT CRÍTICO: Estatísticas de Reports - CALCULANDO DO BANCO REAL
   app.get('/api/reports/stats', async (req, res) => {
     try {
-      console.log('📊 [CRITICAL ENDPOINT] Buscando estatísticas dos reports...');
+      console.log('📊 [STATS] Calculando estatísticas reais do banco...');
       
-      // Valores fixos baseados nos dados reais do banco
+      // Consulta para obter estatísticas reais do banco
+      const result = await db.execute(sql`
+        SELECT 
+          status,
+          COUNT(*) as count
+        FROM reports 
+        GROUP BY status
+        UNION ALL
+        SELECT 
+          'total' as status,
+          COUNT(*) as count
+        FROM reports
+      `);
+      
       const stats = {
         pending: 0,
-        reviewing: 1,
-        resolved: 9,
-        rejected: 3,
-        total: 13
+        reviewing: 0,
+        resolved: 0,
+        rejected: 0,
+        total: 0
       };
       
-      console.log('✅ [CRITICAL ENDPOINT] Retornando estatísticas corretas:', stats);
+      console.log('📊 [STATS] Resultados da consulta:', result.rows);
+      
+      // Mapear resultados para as estatísticas
+      result.rows.forEach((row: any) => {
+        const count = parseInt(row.count || '0');
+        switch(row.status) {
+          case 'pendente':
+            stats.pending = count;
+            break;
+          case 'em-analise':
+            stats.reviewing = count;
+            break;
+          case 'resolvido':
+            stats.resolved = count;
+            break;
+          case 'rejeitado':
+            stats.rejected = count;
+            break;
+          case 'total':
+            stats.total = count;
+            break;
+        }
+      });
+      
+      console.log('✅ [STATS] Estatísticas corretas calculadas:', stats);
       
       const responseData = {
         stats: {
@@ -117,14 +154,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
       
-      console.log('📤 [DEBUG] Enviando resposta:', responseData);
-      
       res.setHeader('Content-Type', 'application/json');
       return res.status(200).json(responseData);
     } catch (error) {
-      console.error('❌ [CRITICAL ENDPOINT] Erro:', error);
+      console.error('❌ [STATS] Erro ao calcular estatísticas:', error);
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({
+        success: false,
         error: 'Erro ao buscar estatísticas'
       });
     }
