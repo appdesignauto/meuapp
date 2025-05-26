@@ -4412,14 +4412,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       const followers = followersResult.rows;
       
-      // Contar total de seguidores usando SQL direto
-      const totalCountQuery = `
+      // Contar total de seguidores usando query parameterizada
+      const totalCountResult = await db.execute(sql`
         SELECT COUNT(*) as value 
         FROM "userFollows" 
         WHERE "followingId" = ${designerId}
-      `;
-      
-      const totalCountResult = await db.execute(sql.raw(totalCountQuery));
+      `);
       const totalCount = parseInt(totalCountResult.rows[0].value.toString());
       
       res.json({
