@@ -3164,66 +3164,31 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`[DEBUG] updateReport(${id}) - Iniciando atualização da denúncia...`, data);
       
-      // Verificar se a denúncia existe antes de tentar atualizar com consulta parametrizada
-      const result = await db.select().from(reports).where(eq(reports.id, id));
+      // Preparar dados para atualização usando Drizzle query builder (seguro contra SQL injection)
+      const updateData: any = {
+        updatedAt: new Date()
+      };
       
-      console.log(`[DEBUG] updateReport(${id}) - Resultado da verificação direta:`, result);
+      // Adicionar campos condicionalmente
+      if (data.status) updateData.status = data.status;
+      if (data.adminResponse) updateData.adminResponse = data.adminResponse;
+      if (data.respondedBy) updateData.respondedBy = data.respondedBy;
+      if (data.respondedAt) updateData.respondedAt = data.respondedAt;
+      if (data.isResolved !== undefined) updateData.isResolved = data.isResolved;
+      if ('resolvedAt' in data && data.resolvedAt) updateData.resolvedAt = data.resolvedAt;
       
-      if (!result || result.length === 0) {
-        console.log(`[DEBUG] updateReport(${id}) - Denúncia não encontrada para atualização`);
-        return undefined;
-      }
+      console.log(`[DEBUG] updateReport(${id}) - Dados para atualização:`, updateData);
       
-      // Preparar os dados para atualização
-      // Vamos construir a consulta SQL manualmente para ter mais controle
+      // Executar atualização usando Drizzle query builder (parametrizada e segura)
+      const [result] = await db
+        .update(reports)
+        .set(updateData)
+        .where(eq(reports.id, id))
+        .returning();
       
-      let updateFields = [];
+      console.log(`[DEBUG] updateReport(${id}) - Resultado da atualização:`, result);
       
-      // Adicionar campos a serem atualizados
-      if (data.status) updateFields.push(`status = '${data.status}'`);
-      if (data.adminResponse) updateFields.push(`"adminResponse" = '${data.adminResponse}'`);
-      if (data.respondedBy) updateFields.push(`"respondedBy" = ${data.respondedBy}`);
-      if (data.respondedAt) updateFields.push(`"respondedAt" = '${data.respondedAt.toISOString()}'`);
-      if (data.isResolved !== undefined) updateFields.push(`"isResolved" = ${data.isResolved}`);
-      
-      // Tratar o caso especial do campo resolvedAt que no banco é resolvedat
-      if ('resolvedAt' in data && data.resolvedAt) {
-        updateFields.push(`resolvedat = '${data.resolvedAt.toISOString()}'`);
-      }
-      
-      // Sempre atualizar o updatedAt
-      updateFields.push(`"updatedAt" = '${new Date().toISOString()}'`);
-      
-      console.log(`[DEBUG] updateReport(${id}) - Campos a atualizar:`, updateFields);
-      
-      // Se não houver campos para atualizar, retornar a denúncia como está
-      if (updateFields.length === 0) {
-        console.log(`[DEBUG] updateReport(${id}) - Nenhum campo para atualizar, retornando denúncia original`);
-        return result.rows[0] as Report;
-      }
-      
-      // Construir a consulta SQL
-      const updateSQL = `
-        UPDATE reports 
-        SET ${updateFields.join(', ')} 
-        WHERE id = ${id} 
-        RETURNING *
-      `;
-      
-      console.log(`[DEBUG] updateReport(${id}) - SQL de atualização:`, updateSQL);
-      
-      // Executar a atualização
-      const updateResult = await db.execute(sql.raw(updateSQL));
-      
-      console.log(`[DEBUG] updateReport(${id}) - Resultado da atualização:`, updateResult.rows);
-      
-      // Retornar a denúncia atualizada
-      if (updateResult.rows && updateResult.rows.length > 0) {
-        return updateResult.rows[0] as Report;
-      } else {
-        console.error(`[ERROR] updateReport(${id}) - Atualização não retornou dados`);
-        return undefined;
-      }
+      return result;
     } catch (error) {
       console.error(`[ERROR] updateReport(${id}) - Erro ao atualizar denúncia:`, error);
       throw new Error('Erro ao atualizar denúncia');
