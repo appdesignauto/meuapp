@@ -1,59 +1,17 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Eye,
-  ExternalLink,
-  FileIcon,
-  RefreshCw,
-  Search,
-  Trash2,
-  XCircle,
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from '@/components/ui/pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertTriangle, Eye, MessageSquare, Trash2, User, FileText, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Report {
   id: number;
@@ -119,89 +77,40 @@ const ReportsManagement = () => {
     isLoading: isLoadingTypes,
     isError: isTypesError 
   } = useQuery({
-    queryKey: ['/api/reports/types'],
-    queryFn: async () => {
-      try {
-        // Primeiro tentamos carregar do novo endpoint da API V2
-        const response = await fetch('/api/reports/types');
-        if (response.ok) {
-          return await response.json();
-        }
-        
-        // Se a API V2 falhar, tentamos a versão antiga
-        const legacyResponse = await fetch('/api/reports/types');
-        if (legacyResponse.ok) {
-          return await legacyResponse.json();
-        }
-        
-        // Se ambas APIs falharem, carregamos do arquivo estático
-        const staticResponse = await fetch('/data/report-types.json');
-        if (staticResponse.ok) {
-          return await staticResponse.json();
-        }
-        
-        throw new Error('Não foi possível carregar os tipos de report');
-      } catch (error) {
-        console.error('Erro ao carregar tipos de report:', error);
-        throw error;
-      }
-    },
-    refetchOnWindowFocus: false,
+    queryKey: ['/api/report-types'],
+    enabled: true
   });
 
-  // Consulta para obter reports
-  const {
-    data: reportsData = { reports: [], pagination: { total: 0, page: 1, limit: 10, pages: 0 } },
+  // Consulta principal para obter reports
+  const queryString = new URLSearchParams({
+    page: currentPage.toString(),
+    limit: ITEMS_PER_PAGE.toString(),
+    ...(activeTab !== 'all' && { status: activeTab }),
+    ...(selectedStatusFilter !== 'all' && { status: selectedStatusFilter }),
+    ...(selectedTypeFilter !== 'all' && { typeId: selectedTypeFilter }),
+    ...(searchTerm && { search: searchTerm })
+  }).toString();
+
+  const { 
+    data: reportsData,
     isLoading: isLoadingReports,
     isError: isReportsError,
-    refetch: refetchReports
+    error: reportsError
   } = useQuery({
-    queryKey: ['/api/reports', activeTab, selectedStatusFilter],
+    queryKey: ['/api/reports', currentPage, activeTab, selectedStatusFilter, selectedTypeFilter, searchTerm],
     queryFn: async () => {
-      try {
-        // Preparar parâmetros da consulta
-        const statusParam = selectedStatusFilter !== 'all' ? selectedStatusFilter : 
-                          activeTab !== 'all' ? activeTab : null;
-        
-        const queryParams = new URLSearchParams({
-          page: '1',
-          limit: '50'
-        });
-        
-        if (statusParam) {
-          queryParams.append('status', statusParam);
-        }
-        
-        const queryString = queryParams.toString();
-        console.log(`Consultando reports com filtros: ${queryString}`);
-        
-        // Primeiro tentamos a versão V2 da API com SQL puro
-        const v2Response = await apiRequest('GET', `/api/reports?${queryString}`);
-        console.log('Resposta da API V2 de reports:', v2Response);
-        
-        
-        
-        // Se a V2 falhar, tentamos a versão original
-        const response = await apiRequest('GET', `/api/reports?${queryString}`);
-        console.log('Resposta da API V1 de reports:', response);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao carregar reports');
-        }
-        
-        const data = await response.json();
-        console.log('Dados recebidos dos reports (API V1):', data);
-        return data;
-      } catch (error) {
-        console.error('Erro ao buscar reports:', error);
-        throw error;
+      const response = await apiRequest('GET', `/api/reports?${queryString}`);
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar reports');
       }
-    },
-    refetchOnWindowFocus: false
+      
+      const data = await response.json();
+      return data;
+    }
   });
 
-  // Mutation para atualizar o status de um report
+  // Mutation para atualizar um report
   const updateReportMutation = useMutation({
     mutationFn: async ({ id, status, adminFeedback }: { id: number, status: string, adminFeedback?: string }) => {
       const data: any = { status };
@@ -270,612 +179,352 @@ const ReportsManagement = () => {
       });
     }
   });
-    }
-  });
 
-  useEffect(() => {
-    console.log('Reports data:', reportsData);
-  }, [reportsData]);
-
-  // Filtra reports com base nos critérios de pesquisa e filtros
-  const filteredReports = reportsData.reports
-    ? reportsData.reports.filter((report: Report) => {
-        // Filtro por termo de pesquisa
-        const matchesSearch = 
-          searchTerm === '' || 
-          report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (report.user?.username || '').toLowerCase().includes(searchTerm.toLowerCase());
-          
-        // Filtro por tipo
-        const matchesType = 
-          selectedTypeFilter === 'all' || 
-          report.reportTypeId === parseInt(selectedTypeFilter);
-          
-        // Filtro por status
-        const matchesStatus = 
-          selectedStatusFilter === 'all' || 
-          report.status === selectedStatusFilter;
-          
-        return matchesSearch && matchesType && matchesStatus;
-      })
-    : [];
-
-  // Paginação
-  const totalPages = Math.ceil(filteredReports.length / ITEMS_PER_PAGE);
-  const paginatedReports = filteredReports.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  // Atualiza a página atual quando mudamos de aba ou filtros
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, selectedStatusFilter, selectedTypeFilter, searchTerm]);
-
-  // Função para abrir o modal de detalhes
+  // Funções auxiliares
   const handleViewDetails = (report: Report) => {
     setCurrentReport(report);
-    setFeedbackInput(report.adminFeedback || '');
+    setFeedbackInput('');
     setIsDetailsOpen(true);
   };
 
-  // Função para atualizar o status
   const handleUpdateStatus = (status: string) => {
     if (!currentReport) return;
-    
-    console.log(`Atualizando status do report para: ${status}`);
-    
-    // Se o status for "resolvido", definimos isResolved como true
-    const isResolved = status === 'resolvido';
     
     updateReportMutation.mutate({
       id: currentReport.id,
       status,
-      adminFeedback: feedbackInput,
-      isResolved
+      adminFeedback: feedbackInput || undefined
     });
   };
 
-  // Função para excluir report
-  const handleDeleteReport = () => {
-    if (!currentReport) return;
-    
-    if (window.confirm('Tem certeza que deseja excluir este report? Esta ação não pode ser desfeita.')) {
-      deleteReportMutation.mutate(currentReport.id);
+  const handleDeleteReport = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir este report?')) {
+      deleteReportMutation.mutate(id);
     }
   };
 
-  // Renderiza o conteúdo adequado baseado no estado de carregamento e erros
-  const renderContent = () => {
-    if (isLoadingReports) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <RefreshCw className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      );
-    }
-
-    if (isReportsError) {
-      return (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro</AlertTitle>
-          <AlertDescription>Não foi possível carregar os reports. Tente novamente mais tarde.</AlertDescription>
-        </Alert>
-      );
-    }
-
-    if (paginatedReports.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-            <Search className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium">Nenhum report encontrado</h3>
-          <p className="text-muted-foreground mt-2">
-            {searchTerm || selectedTypeFilter !== 'all' || selectedStatusFilter !== 'all'
-              ? 'Tente ajustar os filtros ou critérios de pesquisa'
-              : 'Não há reports nesta categoria no momento'}
-          </p>
-        </div>
-      );
-    }
-
+  // Estados de carregamento e erro
+  if (isLoadingReports) {
     return (
-      <>
-        <Table>
-          <TableCaption>
-            Mostrando {paginatedReports.length} de {filteredReports.length} reports
-          </TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Título</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Usuário</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedReports.map((report: Report) => (
-              <TableRow key={report.id}>
-                <TableCell className="font-medium">{report.id}</TableCell>
-                <TableCell className="max-w-xs truncate" title={report.title}>
-                  {report.title}
-                </TableCell>
-                <TableCell>
-                  {report.reportType?.name || 
-                   reportTypes.find((type: ReportType) => type.id === report.reportTypeId)?.name || 
-                   'Desconhecido'}
-                </TableCell>
-                <TableCell>
-                  {report.user?.username || 'Anônimo'}
-                </TableCell>
-                <TableCell>
-                  {new Date(report.createdAt).toLocaleDateString('pt-BR')}
-                </TableCell>
-                <TableCell>
-                  <Badge className={statusLabels[report.status].color}>
-                    {statusLabels[report.status].label}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => handleViewDetails(report)}
-                    title="Ver detalhes"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
-        {totalPages > 1 && (
-          <Pagination className="mt-4">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink 
-                    isActive={currentPage === page}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
-      </>
-    );
-  };
-
-  // Consulta para obter todos os reports (para estatísticas)
-  const {
-    data: allReportsData = { reports: [] },
-    isLoading: isLoadingAllReports,
-  } = useQuery({
-    queryKey: ['/api/reports/all'],
-    queryFn: async () => {
-      try {
-        // Fazemos uma consulta sem filtros para obter todos os reports para estatísticas
-        const response = await apiRequest('GET', `/api/reports?limit=1000`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          return data;
-        }
-        
-        // Fallback para a API V1 se necessário
-        const fallbackResponse = await apiRequest('GET', `/api/reports?limit=1000`);
-        if (fallbackResponse.ok) {
-          const data = await fallbackResponse.json();
-          return data;
-        }
-        
-        throw new Error('Não foi possível carregar todos os reports');
-      } catch (error) {
-        console.error('Erro ao carregar todos os reports:', error);
-        return { reports: [] };
-      }
-    },
-    refetchOnWindowFocus: false,
-    refetchInterval: 60000, // Atualiza a cada minuto
-  });
-
-  // Renderiza as estatísticas dos reports
-  const renderStats = () => {
-    if (isLoadingAllReports) return null;
-    
-    // Conta reports por status usando todos os reports (sem filtros)
-    const reportStats = {
-      total: allReportsData.reports?.length || 0,
-      pending: allReportsData.reports?.filter((r: Report) => r.status === 'pendente').length || 0,
-      reviewing: allReportsData.reports?.filter((r: Report) => r.status === 'em-analise').length || 0,
-      resolved: allReportsData.reports?.filter((r: Report) => r.status === 'resolvido').length || 0,
-      rejected: allReportsData.reports?.filter((r: Report) => r.status === 'rejeitado').length || 0,
-    };
-    
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{reportStats.total}</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-yellow-700">Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-2xl font-bold">{reportStats.pending}</p>
-            <p className="text-xs text-muted-foreground">
-              {Math.round((reportStats.pending / reportStats.total) * 100) || 0}% do total
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-blue-700">Em análise</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-2xl font-bold">{reportStats.reviewing}</p>
-            <p className="text-xs text-muted-foreground">
-              {Math.round((reportStats.reviewing / reportStats.total) * 100) || 0}% do total
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-green-700">Resolvidas</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-2xl font-bold">{reportStats.resolved}</p>
-            <p className="text-xs text-muted-foreground">
-              {Math.round((reportStats.resolved / reportStats.total) * 100) || 0}% do total
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-red-700">Rejeitadas</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-2xl font-bold">{reportStats.rejected}</p>
-            <p className="text-xs text-muted-foreground">
-              {Math.round((reportStats.rejected / reportStats.total) * 100) || 0}% do total
-            </p>
-          </CardContent>
-        </Card>
+      <div className="p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando reports...</p>
+        </div>
       </div>
     );
-  };
+  }
+
+  if (isReportsError) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-600">
+          <AlertTriangle className="h-16 w-16 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Erro ao carregar reports</h3>
+          <p>Ocorreu um erro ao carregar os reports. Tente novamente.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const reports = reportsData?.reports || [];
+  const totalReports = reportsData?.total || 0;
+  const totalPages = Math.ceil(totalReports / ITEMS_PER_PAGE);
+
+  // Filtrar reports com base nos filtros aplicados
+  const filteredReports = reports.filter((report: Report) => {
+    const matchesSearch = !searchTerm || 
+      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.user?.username.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesTypeFilter = selectedTypeFilter === 'all' || 
+      report.reportTypeId.toString() === selectedTypeFilter;
+    
+    return matchesSearch && matchesTypeFilter;
+  });
+
+  // Paginação
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedReports = filteredReports.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Gerenciamento de Reports</h2>
-        <Button 
-          onClick={() => refetchReports()} 
-          variant="outline" 
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Reports</h1>
+          <p className="text-muted-foreground">
+            Gerencie denúncias e reports da comunidade
+          </p>
+        </div>
       </div>
-      
-      {renderStats()}
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+      {/* Filtros */}
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Pesquisar reports..."
+            placeholder="Buscar por título, descrição ou usuário..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full"
           />
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Select 
-            value={selectedTypeFilter} 
-            onValueChange={setSelectedTypeFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              {reportTypes.map((type: ReportType) => (
-                <SelectItem key={type.id} value={type.id.toString()}>
-                  {type.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select 
-            value={selectedStatusFilter} 
-            onValueChange={setSelectedStatusFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="pendente">Pendentes</SelectItem>
-              <SelectItem value="em-analise">Em análise</SelectItem>
-              <SelectItem value="resolvido">Resolvidos</SelectItem>
-              <SelectItem value="rejeitado">Rejeitados</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrar por tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os tipos</SelectItem>
+            {reportTypes.map((type: ReportType) => (
+              <SelectItem key={type.id} value={type.id.toString()}>
+                {type.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => {
-        setActiveTab(value as any);
-        setSelectedStatusFilter(value);
-      }}>
-        <TabsList className="mb-4 border-b w-full justify-start rounded-none gap-4 bg-transparent p-0">
-          <TabsTrigger 
-            value="pendente" 
-            className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
-          >
-            <div className="flex gap-2 items-center">
-              <span>Pendentes</span>
-              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'pendente').length || 0}</Badge>
-            </div>
+      {/* Tabs de status */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="pendente">
+            Pendentes ({reportsData?.stats?.pending || 0})
           </TabsTrigger>
-          <TabsTrigger 
-            value="em-analise" 
-            className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
-          >
-            <div className="flex gap-2 items-center">
-              <span>Em análise</span>
-              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'em-analise').length || 0}</Badge>
-            </div>
+          <TabsTrigger value="em-analise">
+            Em Análise ({reportsData?.stats?.reviewing || 0})
           </TabsTrigger>
-          <TabsTrigger 
-            value="resolvido" 
-            className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
-          >
-            <div className="flex gap-2 items-center">
-              <span>Resolvidas</span>
-              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'resolvido').length || 0}</Badge>
-            </div>
+          <TabsTrigger value="resolvido">
+            Resolvidos ({reportsData?.stats?.resolved || 0})
           </TabsTrigger>
-          <TabsTrigger 
-            value="rejeitado" 
-            className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
-          >
-            <div className="flex gap-2 items-center">
-              <span>Rejeitadas</span>
-              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'rejeitado').length || 0}</Badge>
-            </div>
+          <TabsTrigger value="rejeitado">
+            Rejeitados ({reportsData?.stats?.rejected || 0})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pendente" className="mt-0">
-          {renderContent()}
-        </TabsContent>
-        
-        <TabsContent value="em-analise" className="mt-0">
-          {renderContent()}
-        </TabsContent>
-        
-        <TabsContent value="resolvido" className="mt-0">
-          {renderContent()}
-        </TabsContent>
-        
-        <TabsContent value="rejeitado" className="mt-0">
-          {renderContent()}
+        <TabsContent value={activeTab} className="space-y-4">
+          {paginatedReports.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2">Nenhum report encontrado</h3>
+                <p className="text-gray-600">
+                  Não há reports para exibir com os filtros aplicados.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {paginatedReports.map((report: Report) => (
+                <Card key={report.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <CardTitle className="text-lg">{report.title}</CardTitle>
+                        <CardDescription>
+                          Tipo: {reportTypes.find((type: ReportType) => type.id === report.reportTypeId)?.name || 
+                            'Tipo não encontrado'} • 
+                          Por: {report.user?.username || 'Usuário desconhecido'}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={statusLabels[report.status]?.color}>
+                          {statusLabels[report.status]?.label || report.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                      {report.description}
+                    </p>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center text-sm text-gray-500 gap-4">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(report.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          {report.user?.email || 'Email não disponível'}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(report)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Detalhes
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteReport(report.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          )}
         </TabsContent>
       </Tabs>
 
-      {/* Modal de Detalhes */}
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Anterior
+          </Button>
+          
+          <span className="flex items-center px-4 text-sm">
+            Página {currentPage} de {totalPages}
+          </span>
+          
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
+
+      {/* Dialog de detalhes */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes do Report #{currentReport?.id}</DialogTitle>
+            <DialogTitle>Detalhes do Report</DialogTitle>
             <DialogDescription>
-              Criada em {currentReport && new Date(currentReport.createdAt).toLocaleString('pt-BR')}
+              Analise e responda ao report abaixo
             </DialogDescription>
           </DialogHeader>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div>
-                <Label className="font-semibold">Tipo de Report</Label>
-                <p>
-                  {currentReport?.type?.name || 
-                   reportTypes.find((type: ReportType) => type.id === currentReport?.reportTypeId)?.name || 
-                   'Desconhecido'}
-                </p>
-              </div>
-              
-              <div>
-                <Label className="font-semibold">Título</Label>
-                <p>{currentReport?.title}</p>
-              </div>
-              
-              <div>
-                <Label className="font-semibold">Descrição</Label>
-                <div className="max-h-36 overflow-y-auto bg-muted p-2 rounded text-sm">
-                  {currentReport?.description}
-                </div>
-              </div>
-              
-              {currentReport?.url && (
+          
+          {currentReport && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">URL Reportada</Label>
-                  <div className="flex items-center gap-2 text-blue-600 hover:text-blue-800">
-                    <a href={currentReport.url} target="_blank" rel="noopener noreferrer">
-                      {currentReport.url.substring(0, 40)}
-                      {currentReport.url.length > 40 ? '...' : ''}
-                    </a>
-                    <ExternalLink className="h-4 w-4" />
-                  </div>
+                  <Label className="text-sm font-medium">Usuário</Label>
+                  <p className="text-sm">{currentReport.user?.username || 'Desconhecido'}</p>
                 </div>
-              )}
-              
-              {currentReport?.evidence && (
                 <div>
-                  <Label className="font-semibold">Evidência</Label>
-                  <div className="mt-1">
-                    <div className="rounded-md overflow-hidden border border-gray-200 mb-2">
-                      <img 
-                        src={currentReport.evidence} 
-                        alt="Evidência enviada" 
-                        className="w-full max-h-[300px] object-contain"
-                      />
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <a 
-                        href={currentReport.evidence} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FileIcon className="h-4 w-4" />
-                        Ver em tamanho original
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </Button>
-                  </div>
+                  <Label className="text-sm font-medium">Email</Label>
+                  <p className="text-sm">{currentReport.user?.email || 'Não disponível'}</p>
                 </div>
-              )}
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <Label className="font-semibold">Status Atual</Label>
-                <div className="mt-1">
-                  <Badge className={`${statusLabels[currentReport?.status || 'pending'].color} text-xs`}>
-                    {statusLabels[currentReport?.status || 'pending'].label}
+                <div>
+                  <Label className="text-sm font-medium">Tipo</Label>
+                  <p className="text-sm">
+                    {reportTypes.find((type: ReportType) => type.id === currentReport.reportTypeId)?.name || 
+                      'Tipo não encontrado'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Badge className={statusLabels[currentReport.status]?.color}>
+                    {statusLabels[currentReport.status]?.label || currentReport.status}
                   </Badge>
                 </div>
-                {currentReport?.resolvedat && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Resolvido em: {new Date(currentReport.resolvedat).toLocaleString('pt-BR')}
-                  </p>
-                )}
-                {currentReport?.respondedBy && currentReport?.admin?.username && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Por: {currentReport.admin.username}
-                  </p>
-                )}
               </div>
-              
+
               <div>
-                <Label className="font-semibold">Usuário</Label>
-                <p>{currentReport?.user?.username || 'Anônimo'}</p>
-                {currentReport?.user?.email && (
-                  <p className="text-sm text-muted-foreground">{currentReport.user.email}</p>
-                )}
+                <Label className="text-sm font-medium">Título</Label>
+                <p className="text-sm mt-1">{currentReport.title}</p>
               </div>
-              
+
               <div>
-                <Label htmlFor="adminFeedback" className="font-semibold">
+                <Label className="text-sm font-medium">Descrição</Label>
+                <p className="text-sm mt-1 bg-gray-50 p-3 rounded-md">
+                  {currentReport.description}
+                </p>
+              </div>
+
+              {currentReport.evidence && (
+                <div>
+                  <Label className="text-sm font-medium">Evidência</Label>
+                  <p className="text-sm mt-1 bg-gray-50 p-3 rounded-md">
+                    {currentReport.evidence}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <Label className="text-sm font-medium">Data de Criação</Label>
+                <p className="text-sm">
+                  {new Date(currentReport.createdAt).toLocaleString('pt-BR')}
+                </p>
+              </div>
+
+              {currentReport.adminResponse && (
+                <div>
+                  <Label className="text-sm font-medium">Resposta do Administrador</Label>
+                  <p className="text-sm mt-1 bg-blue-50 p-3 rounded-md">
+                    {currentReport.adminResponse}
+                  </p>
+                  {currentReport.respondedAt && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Respondido em: {new Date(currentReport.respondedAt).toLocaleString('pt-BR')}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="feedback" className="text-sm font-medium">
                   Feedback do Administrador
                 </Label>
                 <Textarea
-                  id="adminFeedback"
+                  id="feedback"
+                  placeholder="Digite sua resposta ou feedback..."
                   value={feedbackInput}
                   onChange={(e) => setFeedbackInput(e.target.value)}
-                  placeholder="Adicione observações ou feedbacks sobre este report"
-                  rows={3}
                   className="mt-1"
+                  rows={4}
                 />
               </div>
-              
-              <div>
-                <Label className="font-semibold">Último Administrador</Label>
-                <p>{currentReport?.admin?.username || 'Nenhum'}</p>
+
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  onClick={() => handleUpdateStatus('em-analise')}
+                  disabled={updateReportMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Clock className="h-4 w-4 mr-1" />
+                  Colocar em Análise
+                </Button>
+                
+                <Button
+                  onClick={() => handleUpdateStatus('resolvido')}
+                  disabled={updateReportMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Marcar como Resolvido
+                </Button>
+                
+                <Button
+                  onClick={() => handleUpdateStatus('rejeitado')}
+                  disabled={updateReportMutation.isPending}
+                  variant="destructive"
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Rejeitar
+                </Button>
               </div>
             </div>
-          </div>
-          
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteReport}
-              className="sm:order-first flex items-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Excluir
-            </Button>
-            
-            <div className="flex gap-2 flex-wrap sm:ml-auto">
-              <Button
-                variant="outline"
-                onClick={() => handleUpdateStatus('pendente')}
-                className="flex items-center gap-2"
-                disabled={currentReport?.status === 'pendente'}
-              >
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                Pendente
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => handleUpdateStatus('em-analise')}
-                className="flex items-center gap-2"
-                disabled={currentReport?.status === 'em-analise'}
-              >
-                <Search className="h-4 w-4 text-blue-600" />
-                Em análise
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => handleUpdateStatus('rejeitado')}
-                className="flex items-center gap-2"
-                disabled={currentReport?.status === 'rejeitado'}
-              >
-                <XCircle className="h-4 w-4 text-red-600" />
-                Rejeitar
-              </Button>
-              
-              <Button
-                variant="default"
-                onClick={() => handleUpdateStatus('resolvido')}
-                className="flex items-center gap-2"
-                disabled={currentReport?.status === 'resolvido'}
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                Resolver
-              </Button>
-            </div>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>
