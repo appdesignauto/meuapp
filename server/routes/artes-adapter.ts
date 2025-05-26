@@ -503,37 +503,37 @@ router.delete('/api/admin/artes/:id', isAdmin, async (req: Request, res: Respons
   try {
     const id = parseInt(req.params.id);
     
-    console.log(`[DELETE] Iniciando exclusão da arte ID: ${id}`);
+    console.log('[DELETE] Iniciando exclusão da arte ID:', id);
     
     // Verificar se a arte existe
     const art = await storage.getArtById(id);
     
     if (!art) {
-      console.log(`[DELETE] Arte ID ${id} não encontrada`);
+      console.log('[DELETE] Arte ID não encontrada:', id);
       return res.status(404).json({ message: "Arte não encontrada" });
     }
     
     // Primeiro excluir todas as referências à arte
-    console.log(`[DELETE] Removendo registros relacionados à arte ID: ${id}`);
+    console.log('[DELETE] Removendo registros relacionados à arte ID:', id);
     
     try {
       // Usar transação para garantir que todas as exclusões ocorram ou nenhuma
       await db.transaction(async (tx) => {
         // 1. Remover visualizações
         await tx.execute(sql`DELETE FROM views WHERE "artId" = ${id}`);
-        console.log(`[DELETE] Visualizações removidas para arte ID: ${id}`);
+        console.log('[DELETE] Visualizações removidas para arte ID:', id);
         
         // 2. Remover downloads
         await tx.execute(sql`DELETE FROM downloads WHERE "artId" = ${id}`);
-        console.log(`[DELETE] Downloads removidos para arte ID: ${id}`);
+        console.log('[DELETE] Downloads removidos para arte ID:', id);
         
         // 3. Remover favoritos
         await tx.execute(sql`DELETE FROM favorites WHERE "artId" = ${id}`);
-        console.log(`[DELETE] Favoritos removidos para arte ID: ${id}`);
+        console.log('[DELETE] Favoritos removidos para arte ID:', id);
         
         // 4. Remover a própria arte
         await tx.execute(sql`DELETE FROM arts WHERE id = ${id}`);
-        console.log(`[DELETE] Arte ID ${id} removida com sucesso`);
+        console.log('[DELETE] Arte ID removida com sucesso:', id);
       });
       
       // Desativar cache para esta resposta
