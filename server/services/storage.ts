@@ -14,13 +14,13 @@ console.log(`- R2_ENDPOINT: ${process.env.R2_ENDPOINT}`);
 console.log(`- R2_BUCKET_NAME: ${process.env.R2_BUCKET_NAME}`);
 console.log(`- R2_PUBLIC_URL: ${process.env.R2_PUBLIC_URL}`);
 
-const accountId = '32b65e21b65af0345c36f5c43fa32c54';
+const accountId = process.env.R2_ACCOUNT_ID || '';
 // Formato alternativo do endpoint para tentar resolver problema SSL/TLS
 const endpoint = `https://${accountId}.r2.dev`;
-const accessKeyId = '21be81ed3af893e3ba85c2'; // ID da chave de acesso (22 caracteres)
-const secretAccessKey = 'c3e7cc28a2ffb45471cc57a2842735b5e524a7a0d2c5ff5a4cedb8145dbd1b4d'; // chave secreta (64 caracteres)
-const bucketName = "designautoimages"; // Nome do bucket R2 consistente com outras partes do código
-const PUBLIC_BUCKET_URL = "https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev"; // URL pública do bucket
+const accessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+const bucketName = process.env.R2_BUCKET_NAME || "designautoimages";
+const PUBLIC_BUCKET_URL = process.env.R2_PUBLIC_URL || "";
 
 console.log("Iniciando upload para R2...");
 
