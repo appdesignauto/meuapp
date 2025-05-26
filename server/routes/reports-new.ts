@@ -1,13 +1,11 @@
 /**
- * NOVO SISTEMA DE REPORTS - VERSÃO LIMPA
+ * SISTEMA DE REPORTS FUNCIONAL - VERSÃO DEFINITIVA
  * 
- * Este arquivo substitui completamente todos os endpoints de reports anteriores
- * com uma implementação limpa e funcional.
+ * Conecta diretamente ao banco PostgreSQL para buscar dados reais
  */
 
 import { Router } from 'express';
-import { z } from 'zod';
-import { db } from '../db';
+import { pool } from '../db';
 
 const router = Router();
 
@@ -17,22 +15,19 @@ const router = Router();
  */
 router.get('/stats', async (req, res) => {
   try {
-    console.log('📊 GET /api/reports/stats - Buscando estatísticas REAIS');
+    console.log('📊 [REPORTS-NEW] Buscando estatísticas dos reports...');
     
-    const result = await db.execute({
-      sql: `
-        SELECT 
-          status,
-          COUNT(*) as count
-        FROM reports 
-        GROUP BY status
-      `,
-      args: []
-    });
+    const result = await pool.query(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM reports 
+      GROUP BY status
+    `);
     
     const stats = {
       pending: 0,
-      reviewing: 0, 
+      reviewing: 0,
       resolved: 0,
       rejected: 0,
       total: 0
@@ -61,11 +56,10 @@ router.get('/stats', async (req, res) => {
     
     stats.total = total;
     
-    console.log('✅ Estatísticas CORRETAS do banco:', stats);
-    
+    console.log('✅ [REPORTS-NEW] Estatísticas encontradas:', stats);
     return res.json({ stats });
   } catch (error) {
-    console.error('❌ Erro ao buscar estatísticas:', error);
+    console.error('❌ [REPORTS-NEW] Erro ao buscar estatísticas:', error);
     return res.status(500).json({
       success: false,
       error: 'Erro ao buscar estatísticas'
@@ -74,279 +68,201 @@ router.get('/stats', async (req, res) => {
 });
 
 /**
- * Buscar tipos de reports
- * GET /api/reports/types
- */
-router.get('/types', async (req, res) => {
-  try {
-    console.log('📋 GET /api/reports/types - Buscando tipos');
-    
-    const result = await db.execute({
-      sql: `
-        SELECT id, name, description, "isActive" 
-        FROM "reportTypes" 
-        WHERE "isActive" = true 
-        ORDER BY name
-      `,
-      args: []
-    });
-    
-    console.log(`✅ ${result.rows.length} tipos encontrados`);
-    
-    return res.json(result.rows);
-  } catch (error) {
-    console.error('❌ Erro ao buscar tipos:', error);
-    return res.status(500).json({ 
-      message: 'Erro ao buscar tipos de denúncias' 
-    });
-  }
-});
-
-/**
- * Listar reports
+ * Buscar lista de reports
  * GET /api/reports
  */
 router.get('/', async (req, res) => {
   try {
-    console.log('📋 GET /api/reports - Listando reports');
+    console.log('📋 [REPORTS-NEW] Buscando lista de reports...');
     
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
-    const status = req.query.status as string || null;
-    
-    console.log(`Parâmetros: page=${page}, limit=${limit}, status=${status}`);
-    
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
-    
-    // Query para buscar reports
+    const status = req.query.status as string;
+    const search = req.query.search as string;
+
     let baseQuery = `
       SELECT 
-        r.id,
-        r.title,
-        r.description,
-        r.evidence,
-        r.status,
-        r."isResolved",
-        r."adminResponse",
-        r."userId",
-        r."reportTypeId",
-        r."respondedBy",
-        r."respondedAt",
-        r."createdAt",
-        r."updatedAt"
+        r.*,
+        rt.name as reportTypeName,
+        u.username as reporterUsername
       FROM reports r
+      LEFT JOIN "reportTypes" rt ON r."reportTypeId" = rt.id
+      LEFT JOIN users u ON r."userId" = u.id
     `;
     
-    let countQuery = 'SELECT COUNT(*) as total FROM reports r';
-    let queryParams = [];
-    let paramIndex = 1;
-    
+    const conditions = [];
+    const values = [];
+    let paramCount = 0;
+
     if (status) {
-      baseQuery += ` WHERE r.status = $${paramIndex}`;
-      countQuery += ` WHERE r.status = $${paramIndex}`;
-      queryParams.push(status);
-      paramIndex++;
+      paramCount++;
+      conditions.push(`r.status = $${paramCount}`);
+      values.push(status);
     }
+
+    if (search) {
+      paramCount++;
+      conditions.push(`(r.title ILIKE $${paramCount} OR r.description ILIKE $${paramCount})`);
+      values.push(`%${search}%`);
+    }
+
+    if (conditions.length > 0) {
+      baseQuery += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    baseQuery += ` ORDER BY r."createdAt" DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    values.push(limit, offset);
+
+    const result = await pool.query(baseQuery, values);
     
-    baseQuery += ` ORDER BY r."createdAt" DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    queryParams.push(limit, offset);
-    
-    // Executar consultas
-    const [reportsResult, countResult] = await Promise.all([
-      db.execute({ sql: baseQuery, args: queryParams }),
-      db.execute({ sql: countQuery, args: status ? [status] : [] })
-    ]);
-    
-    const reports = reportsResult.rows as any[];
-    const totalCount = (countResult.rows[0] as any)?.total || 0;
-    
-    console.log(`✅ ${reports.length} reports encontrados de ${totalCount} total`);
-    
-    // Buscar informações relacionadas para cada report
-    const enhancedReports = await Promise.all(
-      reports.map(async (report) => {
-        // Buscar tipo do report
-        let reportType = null;
-        if (report.reportTypeId) {
-          try {
-            const typeResult = await db.execute({
-              sql: 'SELECT name FROM "reportTypes" WHERE id = $1',
-              args: [report.reportTypeId]
-            });
-            reportType = typeResult.rows[0] as any;
-          } catch (error) {
-            console.error(`Erro ao buscar tipo do report ${report.id}:`, error);
-          }
-        }
-        
-        // Buscar usuário que fez o report
-        let user = null;
-        if (report.userId) {
-          try {
-            const userResult = await db.execute({
-              sql: 'SELECT email FROM users WHERE id = $1',
-              args: [report.userId]
-            });
-            user = userResult.rows[0] as any;
-          } catch (error) {
-            console.error(`Erro ao buscar usuário do report ${report.id}:`, error);
-          }
-        }
-        
-        return {
-          ...report,
-          reportType: reportType?.name || 'Tipo não encontrado',
-          userEmail: user?.email || 'Email não encontrado'
-        };
-      })
-    );
+    // Buscar total de registros
+    let countQuery = 'SELECT COUNT(*) FROM reports r';
+    const countValues = [];
+    let countParamCount = 0;
+
+    if (status) {
+      countParamCount++;
+      countQuery += ` WHERE r.status = $${countParamCount}`;
+      countValues.push(status);
+    }
+
+    if (search) {
+      countParamCount++;
+      if (countValues.length > 0) {
+        countQuery += ` AND (r.title ILIKE $${countParamCount} OR r.description ILIKE $${countParamCount})`;
+      } else {
+        countQuery += ` WHERE (r.title ILIKE $${countParamCount} OR r.description ILIKE $${countParamCount})`;
+      }
+      countValues.push(`%${search}%`);
+    }
+
+    const countResult = await pool.query(countQuery, countValues);
+    const total = parseInt(countResult.rows[0].count);
+
+    console.log(`✅ [REPORTS-NEW] ${result.rows.length} reports encontrados (total: ${total})`);
     
     return res.json({
-      success: true,
-      reports: enhancedReports,
-      totalCount: parseInt(totalCount),
-      totalPages: Math.ceil(totalCount / limit),
-      currentPage: page
+      reports: result.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
-    console.error('❌ Erro ao listar reports:', error);
-    return res.status(500).json({ 
-      message: 'Erro ao listar denúncias' 
+    console.error('❌ [REPORTS-NEW] Erro ao buscar reports:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao buscar reports'
     });
   }
 });
 
 /**
- * Criar novo report
- * POST /api/reports
+ * Buscar report por ID
+ * GET /api/reports/:id
  */
-router.post('/', async (req, res) => {
-  try {
-    console.log('📝 POST /api/reports - Criando novo report');
-    
-    const createReportSchema = z.object({
-      title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
-      description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
-      reportTypeId: z.number().int().positive("Tipo de denúncia é obrigatório"),
-      evidence: z.string().optional(),
-      userId: z.number().int().positive("ID do usuário é obrigatório")
-    });
-    
-    const validatedData = createReportSchema.parse(req.body);
-    
-    const result = await db.execute({
-      sql: `
-        INSERT INTO reports (
-          title, description, "reportTypeId", evidence, "userId", 
-          status, "isResolved", "createdAt", "updatedAt"
-        ) 
-        VALUES ($1, $2, $3, $4, $5, 'pendente', false, NOW(), NOW())
-        RETURNING id
-      `,
-      args: [
-        validatedData.title,
-        validatedData.description,
-        validatedData.reportTypeId,
-        validatedData.evidence || null,
-        validatedData.userId
-      ]
-    });
-    
-    const reportId = (result.rows[0] as any)?.id;
-    
-    console.log(`✅ Novo report criado com ID: ${reportId}`);
-    
-    return res.status(201).json({
-      success: true,
-      message: 'Denúncia criada com sucesso',
-      reportId
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        message: 'Dados inválidos',
-        errors: error.errors
-      });
-    }
-    
-    console.error('❌ Erro ao criar report:', error);
-    return res.status(500).json({ 
-      message: 'Erro ao criar denúncia' 
-    });
-  }
-});
-
-/**
- * Atualizar status de report
- * PUT /api/reports/:id/respond
- */
-router.put('/:id/respond', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
-    console.log(`🔄 PUT /api/reports/${reportId}/respond - Atualizando report`);
+    console.log(`🔍 [REPORTS-NEW] Buscando report ID: ${reportId}`);
     
-    const userId = (req as any).user?.id;
-    const userLevel = (req as any).user?.nivelacesso;
-    
-    if (!userId || !['admin', 'suporte'].includes(userLevel)) {
-      return res.status(403).json({ 
-        message: 'Acesso negado. Apenas administradores podem responder denúncias.' 
+    const result = await pool.query(`
+      SELECT 
+        r.*,
+        rt.name as reportTypeName,
+        u.username as reporterUsername
+      FROM reports r
+      LEFT JOIN "reportTypes" rt ON r."reportTypeId" = rt.id
+      LEFT JOIN users u ON r."userId" = u.id
+      WHERE r.id = $1
+    `, [reportId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Report não encontrado'
       });
     }
-    
-    const updateSchema = z.object({
-      status: z.enum(['pendente', 'em-analise', 'resolvido', 'rejeitado']),
-      adminResponse: z.string().min(5, "A resposta deve ter pelo menos 5 caracteres").optional(),
-      isResolved: z.boolean().optional()
+
+    console.log('✅ [REPORTS-NEW] Report encontrado');
+    return res.json({ report: result.rows[0] });
+  } catch (error) {
+    console.error('❌ [REPORTS-NEW] Erro ao buscar report:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao buscar report'
     });
+  }
+});
+
+/**
+ * Atualizar status do report
+ * PUT /api/reports/:id/status
+ */
+router.put('/:id/status', async (req, res) => {
+  try {
+    const reportId = parseInt(req.params.id);
+    const { status, adminResponse, respondedBy } = req.body;
     
-    const validatedData = updateSchema.parse(req.body);
+    console.log(`📝 [REPORTS-NEW] Atualizando status do report ${reportId} para: ${status}`);
     
-    const result = await db.execute({
-      sql: `
-        UPDATE reports 
-        SET 
-          status = $1,
-          "adminResponse" = $2,
-          "isResolved" = $3,
-          "respondedBy" = $4,
-          "respondedAt" = NOW(),
-          "updatedAt" = NOW()
-        WHERE id = $5
-        RETURNING id
-      `,
-      args: [
-        validatedData.status,
-        validatedData.adminResponse || null,
-        validatedData.isResolved || false,
-        userId,
-        reportId
-      ]
-    });
-    
-    if (!result.rows.length) {
-      return res.status(404).json({ 
-        message: 'Denúncia não encontrada' 
+    const result = await pool.query(`
+      UPDATE reports 
+      SET 
+        status = $1,
+        "adminResponse" = $2,
+        "respondedBy" = $3,
+        "respondedAt" = NOW(),
+        "updatedAt" = NOW()
+      WHERE id = $4
+      RETURNING *
+    `, [status, adminResponse, respondedBy, reportId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Report não encontrado'
       });
     }
-    
-    console.log(`✅ Report ${reportId} atualizado com sucesso`);
-    
+
+    console.log('✅ [REPORTS-NEW] Status atualizado com sucesso');
     return res.json({
       success: true,
-      message: 'Denúncia atualizada com sucesso'
+      report: result.rows[0]
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        message: 'Dados inválidos',
-        errors: error.errors
-      });
-    }
+    console.error('❌ [REPORTS-NEW] Erro ao atualizar status:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao atualizar status'
+    });
+  }
+});
+
+/**
+ * Buscar tipos de report
+ * GET /api/reports/types
+ */
+router.get('/types/list', async (req, res) => {
+  try {
+    console.log('📑 [REPORTS-NEW] Buscando tipos de reports...');
     
-    console.error('❌ Erro ao atualizar report:', error);
-    return res.status(500).json({ 
-      message: 'Erro ao atualizar denúncia' 
+    const result = await pool.query(`
+      SELECT * FROM "reportTypes" 
+      WHERE "isActive" = true 
+      ORDER BY name
+    `);
+    
+    console.log(`✅ [REPORTS-NEW] ${result.rows.length} tipos encontrados`);
+    return res.json({ reportTypes: result.rows });
+  } catch (error) {
+    console.error('❌ [REPORTS-NEW] Erro ao buscar tipos:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao buscar tipos de reports'
     });
   }
 });
