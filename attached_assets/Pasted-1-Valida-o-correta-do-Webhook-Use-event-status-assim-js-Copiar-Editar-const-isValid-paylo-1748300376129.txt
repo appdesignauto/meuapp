@@ -1,0 +1,93 @@
+1. Validação correta do Webhook
+Use event + status, assim:
+
+js
+Copiar
+Editar
+const isValid =
+  payload?.event === 'PURCHASE_APPROVED' &&
+  payload?.data?.purchase?.status === 'APPROVED';
+✅ 2. Extração correta dos dados do webhook da Hotmart
+Aqui está como extrair os dados exatamente como a Hotmart manda, mapeando para o seu banco:
+
+js
+Copiar
+Editar
+const buyer = payload.data.buyer;
+const purchase = payload.data.purchase;
+const subscription = payload.data.subscription;
+
+const full_name = buyer?.name;
+const email = buyer?.email?.toLowerCase().trim();
+const phone = buyer?.document;
+
+const planType = subscription?.plan?.name?.toLowerCase(); // "plano anual" → transforma para "anual"
+const startDate = new Date(purchase?.order_date);
+const endDate = new Date(purchase?.date_next_charge);
+
+const transactionId = purchase?.transaction;
+const event = payload.event;
+const origin = "hotmart";
+✅ 3. Inserção no banco com os nomes certos da sua tabela
+Tua tabela users já espera:
+
+Campo do banco	Valor vindo do webhook
+name	buyer.name
+email	buyer.email
+phone	buyer.document
+nivelacesso	"premium"
+origemassinatura	"hotmart"
+tipoplano	"mensal" ou "anual" (via subscription.plan.name)
+dataassinatura	purchase.order_date
+dataexpiracao	purchase.date_next_charge
+acessovitalicio	false
+
+🧱 Código completo da criação do usuário (corrigido):
+js
+Copiar
+Editar
+const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+let userId;
+
+if (existingUser.rowCount === 0) {
+  const insertUser = await pool.query(`
+    INSERT INTO users (
+      name, email, phone, nivelacesso, origemassinatura,
+      tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive
+    ) VALUES (
+      $1, $2, $3, 'premium', $4,
+      $5, $6, $7, false, true
+    ) RETURNING id
+  `, [full_name, email, phone, origin, planType, startDate, endDate]);
+
+  userId = insertUser.rows[0].id;
+} else {
+  userId = existingUser.rows[0].id;
+
+  await pool.query(`
+    UPDATE users SET
+      nivelacesso = 'premium',
+      origemassinatura = $1,
+      tipoplano = $2,
+      dataassinatura = $3,
+      dataexpiracao = $4,
+      acessovitalicio = false
+    WHERE id = $5
+  `, [origin, planType, startDate, endDate, userId]);
+}
+✅ 4. Criação da assinatura na tabela subscriptions
+js
+Copiar
+Editar
+await pool.query(`
+  INSERT INTO subscriptions (
+    userId, planType, status, startDate, endDate,
+    origin, transactionid, lastevent, webhookData
+  ) VALUES (
+    $1, $2, 'active', $3, $4,
+    'hotmart', $5, $6, $7
+  )
+`, [
+  userId, planType, startDate, endDate,
+  transactionId, event, payload
+]);
