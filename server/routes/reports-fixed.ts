@@ -7,7 +7,7 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
-import { db } from '../storage';
+import { db } from '../db';
 
 const router = Router();
 
