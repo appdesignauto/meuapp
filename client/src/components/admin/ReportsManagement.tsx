@@ -92,10 +92,6 @@ interface ReportType {
 }
 
 const statusLabels: Record<string, { label: string, color: string }> = {
-  pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
-  reviewing: { label: 'Em análise', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
-  resolved: { label: 'Resolvido', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
-  rejected: { label: 'Rejeitado', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
   pendente: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
   'em-analise': { label: 'Em análise', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
   resolvido: { label: 'Resolvido', color: 'bg-green-100 text-green-800 hover:bg-green-200' },

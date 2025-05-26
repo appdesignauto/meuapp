@@ -16,10 +16,7 @@ import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-// Importar o router de diagnóstico de webhooks
-// Remover importação de diagnóstico que está causando erro
-// Comentado até resolver problemas de compatibilidade entre módulos
-// import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.cjs";
+
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
