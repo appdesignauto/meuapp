@@ -57,7 +57,7 @@ Response samples
     "return_type": "OK",
     "message": "Access token successfully generated.",
     "data": {
-        "token": "=Q=M.a7267ef8b2423afff9.vHJcjHVZvGld=g=b.p3JduGld=w=Z.wTcM5jgN2DYM=A=M",
+        "token": "[EXEMPLO_TOKEN_DOCUMENTACAO]",
         "token_type": "Bearer",
         "expire_in": "2024:02:02 13:17:40"
     }
