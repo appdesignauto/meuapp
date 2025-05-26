@@ -238,8 +238,6 @@ const ReportsManagement = () => {
       });
     }
   });
-    }
-  });
 
   // Mutation para excluir um report
   const deleteReportMutation = useMutation({

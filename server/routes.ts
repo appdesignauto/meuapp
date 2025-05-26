@@ -1112,7 +1112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             art.designerid = {
               ...safeDesigner,
               isFollowing,
-              followers: stats? || 0,
+              followers: 0,
               totalArts: stats?.totalArts || 0,
               recentArts
             };
@@ -1849,7 +1849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             art.designerid = {
               ...safeDesigner,
               isFollowing,
-              followers: stats? || 0,
+              followers: 0,
               totalArts: stats?.totalArts || 0,
               recentArts
             };
