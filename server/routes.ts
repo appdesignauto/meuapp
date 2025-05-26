@@ -5675,66 +5675,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   
-  // ENDPOINT CRÍTICO: Estatísticas de reports - PRIORIDADE MÁXIMA
+  // SOLUÇÃO DEFINITIVA PARA O ENDPOINT DE ESTATÍSTICAS
   app.get('/api/reports/stats', async (req, res) => {
     try {
-      console.log('📊 Endpoint /api/reports/stats chamado - buscando estatísticas...');
+      console.log('📊 [STATS] Buscando estatísticas dos reports...');
       
-      const result = await db.execute(sql`
+      // Query para buscar todas as estatísticas de uma vez
+      const statsQuery = await db.execute(sql`
         SELECT 
           status,
           COUNT(*) as count
         FROM reports 
         GROUP BY status
+        ORDER BY status
       `);
-      
+
+      console.log('📊 [STATS] Resultado da query:', JSON.stringify(statsQuery, null, 2));
+
+      // Inicializar contadores zerados
       const stats = {
         pending: 0,
-        reviewing: 0,
+        reviewing: 0, 
         resolved: 0,
         rejected: 0,
         total: 0
       };
-      
-      let total = 0;
-      result.forEach((row: any) => {
-        const count = parseInt(row.count);
-        total += count;
+
+      let totalCount = 0;
+
+      // Processar cada linha do resultado
+      statsQuery.forEach((row: any) => {
+        const count = parseInt(row.count) || 0;
+        const status = String(row.status || '').toLowerCase().trim();
         
-        switch(row.status) {
+        console.log(`📊 [STATS] Processando: "${status}" = ${count}`);
+        
+        totalCount += count;
+
+        // Mapear status para os contadores corretos
+        switch(status) {
           case 'pendente':
             stats.pending = count;
             break;
           case 'em-analise':
+          case 'em análise':
+          case 'analyzing':
             stats.reviewing = count;
             break;
           case 'resolvido':
+          case 'resolved':
             stats.resolved = count;
             break;
           case 'rejeitado':
+          case 'rejected':
             stats.rejected = count;
             break;
+          default:
+            console.log(`⚠️ [STATS] Status desconhecido: "${status}"`);
         }
       });
-      
-      stats.total = total;
-      
-      console.log('✅ Estatísticas calculadas:', stats);
-      
-      return res.status(200).json({
-        success: true,
+
+      stats.total = totalCount;
+
+      console.log('📊 [STATS] Estatísticas calculadas:', {
         pending: stats.pending,
         reviewing: stats.reviewing,
         resolved: stats.resolved,
         rejected: stats.rejected,
         total: stats.total
       });
+
+      // Verificar se os números batem com o esperado
+      if (stats.total !== (stats.pending + stats.reviewing + stats.resolved + stats.rejected)) {
+        console.warn('⚠️ [STATS] ATENÇÃO: Total não bate com a soma dos status individuais');
+      }
+
+      return res.status(200).json({
+        success: true,
+        stats: stats,
+        timestamp: new Date().toISOString()
+      });
+
     } catch (error) {
-      console.error('❌ Erro ao buscar estatísticas:', error);
+      console.error('❌ [STATS] Erro ao buscar estatísticas:', error);
       return res.status(500).json({
         success: false,
-        message: 'Erro ao buscar estatísticas'
+        error: 'Erro ao buscar estatísticas',
+        message: error.message
       });
+    }
+  });
+
+  // ENDPOINT PARA VERIFICAR OS STATUS EXATOS DO SEU BANCO
+  app.get('/api/reports/check-statuses', async (req, res) => {
+    try {
+      console.log('🔍 [CHECK] Verificando status exatos no banco...');
+      
+      // Buscar todos os status únicos
+      const statusCheck = await db.execute(sql`
+        SELECT 
+          status,
+          COUNT(*) as count,
+          MIN("createdAt") as oldest,
+          MAX("createdAt") as newest
+        FROM reports 
+        GROUP BY status
+        ORDER BY count DESC
+      `);
+
+      // Buscar alguns exemplos de cada status
+      const examples = await db.execute(sql`
+        SELECT 
+          id,
+          title,
+          status,
+          "createdAt"
+        FROM reports 
+        ORDER BY "createdAt" DESC 
+        LIMIT 10
+      `);
+
+      console.log('🔍 [CHECK] Status encontrados:', JSON.stringify(statusCheck, null, 2));
+
+      return res.json({
+        message: 'Verificação de status - use para debug',
+        statusBreakdown: statusCheck,
+        recentExamples: examples,
+        totalFound: statusCheck.reduce((sum, item) => sum + parseInt(item.count), 0)
+      });
+
+    } catch (error) {
+      console.error('❌ [CHECK] Erro:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  // VERSÃO SIMPLIFICADA GARANTIDA (se a de cima não funcionar)
+  app.get('/api/reports/stats-simple', async (req, res) => {
+    try {
+      console.log('📊 [SIMPLE] Versão simplificada das stats...');
+      
+      // Contar cada status individualmente
+      const pendingResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM reports WHERE status = 'pendente'
+      `);
+      
+      const reviewingResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM reports WHERE status IN ('em-analise', 'em análise')
+      `);
+      
+      const resolvedResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM reports WHERE status = 'resolvido'
+      `);
+      
+      const rejectedResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM reports WHERE status = 'rejeitado'
+      `);
+      
+      const totalResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM reports
+      `);
+
+      const stats = {
+        pending: parseInt(pendingResult[0]?.count || 0),
+        reviewing: parseInt(reviewingResult[0]?.count || 0),
+        resolved: parseInt(resolvedResult[0]?.count || 0),
+        rejected: parseInt(rejectedResult[0]?.count || 0),
+        total: parseInt(totalResult[0]?.count || 0)
+      };
+
+      console.log('📊 [SIMPLE] Stats calculadas:', stats);
+
+      return res.json({ 
+        success: true, 
+        stats: stats,
+        method: 'simple_count'
+      });
+
+    } catch (error) {
+      console.error('❌ [SIMPLE] Erro:', error);
+      return res.status(500).json({ error: error.message });
     }
   });
   
