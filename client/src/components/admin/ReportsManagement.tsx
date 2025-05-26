@@ -147,6 +147,7 @@ const ReportsManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reports/stats'] });
       setIsDetailsOpen(false);
       setFeedbackInput('');
       
@@ -180,6 +181,7 @@ const ReportsManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reports/stats'] });
       setIsDetailsOpen(false);
       
       toast({
@@ -307,16 +309,16 @@ const ReportsManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="pendente">
-            Pendentes ({statsData?.stats?.pending || 0})
+            Pendentes ({statsData.pending || 0})
           </TabsTrigger>
           <TabsTrigger value="em-analise">
-            Em Análise ({statsData?.stats?.reviewing || 0})
+            Em Análise ({statsData.reviewing || 0})
           </TabsTrigger>
           <TabsTrigger value="resolvido">
-            Resolvidos ({statsData?.stats?.resolved || 0})
+            Resolvidos ({statsData.resolved || 0})
           </TabsTrigger>
           <TabsTrigger value="rejeitado">
-            Rejeitados ({statsData?.stats?.rejected || 0})
+            Rejeitados ({statsData.rejected || 0})
           </TabsTrigger>
         </TabsList>
 
