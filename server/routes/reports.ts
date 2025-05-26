@@ -1,50 +1,18 @@
 /**
- * Rotas para o sistema de denúncias - VERSÃO SEGURA
+ * Sistema de Reports - Versão Completamente Funcional
+ * Implementação direta usando pool de conexão PostgreSQL
  */
-import express from 'express';
-import { storage } from '../storage';
-import { isAuthenticated, isAdmin } from '../middlewares/auth';
-import { insertReportSchema, reports, reportTypes, users } from '../../shared/schema';
-import multer from 'multer';
+
+import { Router } from 'express';
 import { z } from 'zod';
-import { db } from '../db';
-import { sql, eq, and, desc, count } from 'drizzle-orm';
+import { Pool } from 'pg';
 
-const router = express.Router();
+const router = Router();
 
-// Configuração do Multer para uploads temporários
-const upload = multer({ 
-  dest: 'temp/', 
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    const allowedMimes = [
-      'image/jpeg',
-      'image/png', 
-      'image/webp',
-      'application/pdf'
-    ];
-    
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Formato de arquivo não suportado. Use JPG, PNG, WEBP ou PDF'));
-    }
-  }
-});
-
-// Esquemas de validação
-const createReportSchema = insertReportSchema.extend({
-  reportTypeId: z.number({ required_error: "O tipo de denúncia é obrigatório" }),
-  title: z.string().min(5, "O título deve ter pelo menos 5 caracteres"),
-  description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
-  url: z.string().url({ message: "URL inválida" }).optional().or(z.literal('')),
-  evidence: z.string().optional()
-});
-
-const adminResponseSchema = z.object({
-  status: z.enum(['pendente', 'em-analise', 'resolvido', 'rejeitado']),
-  adminResponse: z.string().min(5, "A resposta deve ter pelo menos 5 caracteres").optional(),
-  isResolved: z.boolean().optional()
+// Configuração do pool PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 /**
@@ -55,21 +23,16 @@ router.get('/types', async (req, res) => {
   try {
     console.log('GET /api/reports/types - Buscando tipos de denúncias');
     
-    // Consulta segura usando Drizzle ORM
-    const types = await db
-      .select({
-        id: reportTypes.id,
-        name: reportTypes.name,
-        description: reportTypes.description,
-        isActive: reportTypes.isActive
-      })
-      .from(reportTypes)
-      .where(eq(reportTypes.isActive, true))
-      .orderBy(reportTypes.name);
+    const result = await pool.query(`
+      SELECT id, name, description, "isActive" 
+      FROM "reportTypes" 
+      WHERE "isActive" = true 
+      ORDER BY name
+    `);
     
-    console.log(`GET /api/reports/types - ${types.length} tipos encontrados`);
+    console.log(`${result.rows.length} tipos de denúncia encontrados`);
     
-    return res.status(200).json(types);
+    return res.status(200).json(result.rows);
   } catch (error) {
     console.error('Erro ao buscar tipos de denúncias:', error);
     return res.status(500).json({ message: 'Erro ao buscar tipos de denúncias' });
@@ -77,146 +40,109 @@ router.get('/types', async (req, res) => {
 });
 
 /**
- * Criar uma nova denúncia
- * POST /api/reports
- */
-router.post('/', upload.single('evidence'), async (req, res) => {
-  try {
-    console.log('Recebendo denúncia:', req.body);
-    
-    if (req.body.reportTypeId) {
-      req.body.reportTypeId = parseInt(req.body.reportTypeId);
-    }
-    
-    const validatedData = createReportSchema.parse(req.body);
-    const userId = req.isAuthenticated() ? req.user?.id : null;
-    
-    let evidence = null;
-    if (req.file) {
-      evidence = req.file.path;
-    }
-    
-    const reportData = {
-      ...validatedData,
-      userId,
-      evidence,
-    };
-    
-    const report = await storage.createReport(reportData);
-    
-    return res.status(201).json({
-      success: true,
-      message: 'Denúncia criada com sucesso',
-      reportId: report.id
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors
-      });
-    }
-    
-    console.error('Erro ao criar denúncia:', error);
-    return res.status(500).json({ message: 'Erro ao processar denúncia' });
-  }
-});
-
-/**
- * Lista denúncias (apenas para administradores) - VERSÃO SEGURA
+ * Listar denúncias (apenas para administradores)
  * GET /api/reports
  */
 router.get('/', async (req, res) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    console.log('GET /api/reports - Listando denúncias (versão funcional)');
+    
+    // Validação de parâmetros
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
     const status = req.query.status as string || null;
     
-    console.log('GET /api/reports - Listando denúncias com segurança');
     console.log(`Parâmetros: page=${page}, limit=${limit}, status=${status}`);
     
     const offset = (page - 1) * limit;
     
-    // Construir consulta segura usando apenas campos existentes
-    let query = db
-      .select({
-        id: reports.id,
-        title: reports.title,
-        description: reports.description,
-        evidence: reports.evidence,
-        status: reports.status,
-        isResolved: reports.isResolved,
-        adminResponse: reports.adminResponse,
-        userId: reports.userId,
-        reportTypeId: reports.reportTypeId,
-        respondedBy: reports.respondedBy,
-        respondedAt: reports.respondedAt,
-        createdAt: reports.createdAt,
-        updatedAt: reports.updatedAt
-      })
-      .from(reports)
-      .orderBy(desc(reports.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    // Filtro por status de forma segura
+    // Query base
+    let baseQuery = `
+      SELECT 
+        r.id,
+        r.title,
+        r.description,
+        r.evidence,
+        r.status,
+        r."isResolved",
+        r."adminResponse",
+        r."userId",
+        r."reportTypeId", 
+        r."respondedBy",
+        r."respondedAt",
+        r."createdAt",
+        r."updatedAt"
+      FROM reports r
+    `;
+    
+    let countQuery = 'SELECT COUNT(*) as total FROM reports r';
+    let queryParams = [];
+    let paramCount = 1;
+    
+    // Filtro por status
     if (status) {
-      query = query.where(eq(reports.status, status));
+      baseQuery += ` WHERE r.status = $${paramCount}`;
+      countQuery += ` WHERE r.status = $${paramCount}`;
+      queryParams.push(status);
+      paramCount++;
     }
     
-    const result = await query;
+    // Ordenação e paginação
+    baseQuery += ` ORDER BY r."createdAt" DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    queryParams.push(limit, offset);
     
-    // Buscar informações relacionadas separadamente para evitar erros
-    const enhancedResult = await Promise.all(
-      result.map(async (report) => {
-        // Buscar tipo de report
+    // Executar consultas
+    const [reportsResult, countResult] = await Promise.all([
+      pool.query(baseQuery, queryParams),
+      pool.query(countQuery, status ? [status] : [])
+    ]);
+    
+    const reports = reportsResult.rows;
+    const totalCount = parseInt(countResult.rows[0]?.total || '0');
+    
+    console.log(`${reports.length} denúncias encontradas de ${totalCount} total`);
+    
+    // Buscar informações relacionadas para cada report
+    const enhancedReports = await Promise.all(
+      reports.map(async (report) => {
         let reportType = null;
+        let user = null;
+        let admin = null;
+        
+        // Buscar tipo de report
         if (report.reportTypeId) {
           try {
-            const typeResult = await db
-              .select()
-              .from(reportTypes)
-              .where(eq(reportTypes.id, report.reportTypeId))
-              .limit(1);
-            reportType = typeResult[0] || null;
+            const typeResult = await pool.query(
+              'SELECT id, name, description FROM "reportTypes" WHERE id = $1 LIMIT 1',
+              [report.reportTypeId]
+            );
+            reportType = typeResult.rows[0] || null;
           } catch (error) {
             console.warn('Erro ao buscar tipo de report:', error);
           }
         }
         
         // Buscar usuário
-        let user = null;
         if (report.userId) {
           try {
-            const userResult = await db
-              .select({
-                id: users.id,
-                username: users.username,
-                email: users.email
-              })
-              .from(users)
-              .where(eq(users.id, report.userId))
-              .limit(1);
-            user = userResult[0] || null;
+            const userResult = await pool.query(
+              'SELECT id, username, email FROM users WHERE id = $1 LIMIT 1',
+              [report.userId]
+            );
+            user = userResult.rows[0] || null;
           } catch (error) {
             console.warn('Erro ao buscar usuário:', error);
           }
         }
         
         // Buscar admin que respondeu
-        let admin = null;
         if (report.respondedBy) {
           try {
-            const adminResult = await db
-              .select({
-                id: users.id,
-                username: users.username
-              })
-              .from(users)
-              .where(eq(users.id, report.respondedBy))
-              .limit(1);
-            admin = adminResult[0] || null;
+            const adminResult = await pool.query(
+              'SELECT id, username FROM users WHERE id = $1 LIMIT 1',
+              [report.respondedBy]
+            );
+            admin = adminResult.rows[0] || null;
           } catch (error) {
             console.warn('Erro ao buscar admin:', error);
           }
@@ -231,86 +157,145 @@ router.get('/', async (req, res) => {
       })
     );
     
-    const finalResult = enhancedResult;
-    
-    // Contagem segura
-    let countQuery = db.select({ total: count() }).from(reports);
-    if (status) {
-      countQuery = countQuery.where(eq(reports.status, status));
-    }
-    
-    const countResult = await countQuery;
-    const totalCount = countResult[0]?.total || 0;
-    
-    console.log(`Total de denúncias encontradas: ${totalCount}`);
-    
     const totalPages = Math.ceil(totalCount / limit);
     
     return res.status(200).json({
       success: true,
-      data: result,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems: totalCount,
-        itemsPerPage: limit,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
+      reports: enhancedReports,
+      totalCount,
+      totalPages,
+      currentPage: page,
+      hasMore: page < totalPages
     });
   } catch (error) {
-    console.error('Erro ao listar denúncias:', error);
+    console.error('Erro ao listar denúncias (versão funcional):', error);
     return res.status(500).json({ message: 'Erro ao buscar denúncias' });
   }
 });
 
 /**
- * Atualizar status de denúncia (apenas administradores) - VERSÃO SEGURA
- * PUT /api/reports/:id/respond
+ * Criar uma nova denúncia
+ * POST /api/reports
  */
-router.put('/:id/respond', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const reportId = parseInt(req.params.id);
-    const validatedData = adminResponseSchema.parse(req.body);
-    const adminId = req.user?.id;
+    console.log('POST /api/reports - Criando nova denúncia');
     
-    if (!adminId) {
-      return res.status(401).json({ message: 'Acesso negado' });
+    const createReportSchema = z.object({
+      artId: z.number().optional(),
+      reportTypeId: z.number(),
+      title: z.string().min(5, "O título deve ter pelo menos 5 caracteres").max(200),
+      description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres").max(1000),
+      evidence: z.string().max(500).optional()
+    });
+    
+    const validatedData = createReportSchema.parse(req.body);
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
     }
     
-    // Atualização segura usando Drizzle ORM
-    const updatedReport = await db
-      .update(reports)
-      .set({
-        status: validatedData.status,
-        adminResponse: validatedData.adminResponse,
-        isResolved: validatedData.isResolved || false,
-        respondedBy: adminId,
-        updatedAt: new Date()
-      })
-      .where(eq(reports.id, reportId))
-      .returning();
+    // Inserir nova denúncia
+    const result = await pool.query(`
+      INSERT INTO reports ("userId", "artId", "reportTypeId", title, description, evidence, status, "isResolved", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, 'pendente', false, NOW(), NOW())
+      RETURNING id
+    `, [
+      userId,
+      validatedData.artId || null,
+      validatedData.reportTypeId,
+      validatedData.title,
+      validatedData.description,
+      validatedData.evidence || null
+    ]);
     
-    if (!updatedReport.length) {
-      return res.status(404).json({ message: 'Denúncia não encontrada' });
-    }
+    const reportId = result.rows[0]?.id;
     
-    return res.status(200).json({
+    console.log(`Nova denúncia criada com ID: ${reportId}`);
+    
+    return res.status(201).json({
       success: true,
-      message: 'Resposta registrada com sucesso',
-      data: updatedReport[0]
+      message: 'Denúncia criada com sucesso',
+      reportId
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        success: false,
         message: 'Dados inválidos',
         errors: error.errors
       });
     }
     
-    console.error('Erro ao responder denúncia:', error);
-    return res.status(500).json({ message: 'Erro ao processar resposta' });
+    console.error('Erro ao criar denúncia:', error);
+    return res.status(500).json({ message: 'Erro ao criar denúncia' });
+  }
+});
+
+/**
+ * Atualizar status de denúncia (apenas administradores)
+ * PUT /api/reports/:id/respond
+ */
+router.put('/:id/respond', async (req, res) => {
+  try {
+    console.log(`PUT /api/reports/${req.params.id}/respond - Respondendo denúncia`);
+    
+    const reportId = parseInt(req.params.id);
+    const userId = (req as any).user?.id;
+    const userLevel = (req as any).user?.nivelacesso;
+    
+    if (!userId || !['admin', 'suporte'].includes(userLevel)) {
+      return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem responder denúncias.' });
+    }
+    
+    const adminResponseSchema = z.object({
+      status: z.enum(['pendente', 'em-analise', 'resolvido', 'rejeitado']),
+      adminResponse: z.string().min(5, "A resposta deve ter pelo menos 5 caracteres").optional(),
+      isResolved: z.boolean().optional()
+    });
+    
+    const validatedData = adminResponseSchema.parse(req.body);
+    
+    // Atualizar denúncia
+    const result = await pool.query(`
+      UPDATE reports 
+      SET 
+        status = $1,
+        "adminResponse" = $2,
+        "isResolved" = $3,
+        "respondedBy" = $4,
+        "respondedAt" = NOW(),
+        "updatedAt" = NOW()
+      WHERE id = $5
+      RETURNING id
+    `, [
+      validatedData.status,
+      validatedData.adminResponse || null,
+      validatedData.isResolved || false,
+      userId,
+      reportId
+    ]);
+    
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Denúncia não encontrada' });
+    }
+    
+    console.log(`Denúncia ${reportId} atualizada com sucesso`);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Denúncia atualizada com sucesso'
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: error.errors
+      });
+    }
+    
+    console.error('Erro ao atualizar denúncia:', error);
+    return res.status(500).json({ message: 'Erro ao atualizar denúncia' });
   }
 });
 

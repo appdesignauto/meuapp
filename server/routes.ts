@@ -71,7 +71,7 @@ import analyticsRouter from './routes/analytics'; // Rotas para gerenciamento de
 import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
-import reportsRouter from './routes/reports-new'; // Rotas para o sistema de denúncias (versão nova e funcional)
+import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (versão completamente funcional)
 // Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
 
 import { PrismaClient } from '@prisma/client';
