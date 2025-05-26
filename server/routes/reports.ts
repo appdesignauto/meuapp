@@ -138,13 +138,12 @@ router.get('/', async (req, res) => {
     
     const offset = (page - 1) * limit;
     
-    // Construir consulta segura usando Drizzle ORM
+    // Construir consulta segura usando apenas campos existentes
     let query = db
       .select({
         id: reports.id,
         title: reports.title,
         description: reports.description,
-        url: reports.url,
         evidence: reports.evidence,
         status: reports.status,
         isResolved: reports.isResolved,
@@ -152,18 +151,11 @@ router.get('/', async (req, res) => {
         userId: reports.userId,
         reportTypeId: reports.reportTypeId,
         respondedBy: reports.respondedBy,
+        respondedAt: reports.respondedAt,
         createdAt: reports.createdAt,
-        updatedAt: reports.updatedAt,
-        email: reports.email,
-        whatsapp: reports.whatsapp,
-        reportTypeName: reportTypes.name,
-        reportTypeDescription: reportTypes.description,
-        username: users.username,
-        userEmail: users.email
+        updatedAt: reports.updatedAt
       })
       .from(reports)
-      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
-      .leftJoin(users, eq(reports.userId, users.id))
       .orderBy(desc(reports.createdAt))
       .limit(limit)
       .offset(offset);
@@ -174,6 +166,72 @@ router.get('/', async (req, res) => {
     }
     
     const result = await query;
+    
+    // Buscar informações relacionadas separadamente para evitar erros
+    const enhancedResult = await Promise.all(
+      result.map(async (report) => {
+        // Buscar tipo de report
+        let reportType = null;
+        if (report.reportTypeId) {
+          try {
+            const typeResult = await db
+              .select()
+              .from(reportTypes)
+              .where(eq(reportTypes.id, report.reportTypeId))
+              .limit(1);
+            reportType = typeResult[0] || null;
+          } catch (error) {
+            console.warn('Erro ao buscar tipo de report:', error);
+          }
+        }
+        
+        // Buscar usuário
+        let user = null;
+        if (report.userId) {
+          try {
+            const userResult = await db
+              .select({
+                id: users.id,
+                username: users.username,
+                email: users.email
+              })
+              .from(users)
+              .where(eq(users.id, report.userId))
+              .limit(1);
+            user = userResult[0] || null;
+          } catch (error) {
+            console.warn('Erro ao buscar usuário:', error);
+          }
+        }
+        
+        // Buscar admin que respondeu
+        let admin = null;
+        if (report.respondedBy) {
+          try {
+            const adminResult = await db
+              .select({
+                id: users.id,
+                username: users.username
+              })
+              .from(users)
+              .where(eq(users.id, report.respondedBy))
+              .limit(1);
+            admin = adminResult[0] || null;
+          } catch (error) {
+            console.warn('Erro ao buscar admin:', error);
+          }
+        }
+        
+        return {
+          ...report,
+          reportType,
+          user,
+          admin
+        };
+      })
+    );
+    
+    const finalResult = enhancedResult;
     
     // Contagem segura
     let countQuery = db.select({ total: count() }).from(reports);
