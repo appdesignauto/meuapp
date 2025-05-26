@@ -118,7 +118,7 @@ const ReportsManagement = () => {
         data.adminResponse = adminFeedback;
       }
       
-      const response = await apiRequest('PUT', `/api/reports/${id}`, data);
+      const response = await apiRequest('PUT', `/api/reports/${id}/respond`, data);
       
       if (!response.ok) {
         const errorData = await response.json();
