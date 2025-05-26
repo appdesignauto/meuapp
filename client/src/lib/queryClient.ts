@@ -78,7 +78,10 @@ export async function apiRequest(
     }
   }
 
-  console.log(`[API] Fazendo requisição para ${finalUrl} com anti-cache`);
+  // Log de API apenas em desenvolvimento
+  if (import.meta.env.DEV) {
+    console.log(`[API] Fazendo requisição para ${finalUrl} com anti-cache`);
+  }
   
   try {
     // Usar a URL com parâmetros anti-cache

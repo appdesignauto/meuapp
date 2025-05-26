@@ -3423,17 +3423,19 @@ export class DatabaseStorage implements IStorage {
         .limit(limit)
         .offset((page - 1) * limit);
       
-      // Log para depuração - resultados
-      console.log('DEBUG getWebhookLogs - Resultados simplificados:', {
-        totalCount: Number(totalCount[0]?.count || 0),
-        logCount: logs.length,
-        primeiroLog: logs[0] ? { 
-          id: logs[0].id, 
-          tipo: logs[0].eventType,
-          status: logs[0].status,
-          data: typeof logs[0].createdAt
-        } : 'Nenhum log encontrado'
-      });
+      // Log de debug apenas em desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        console.log('DEBUG getWebhookLogs - Resultados simplificados:', {
+          totalCount: Number(totalCount[0]?.count || 0),
+          logCount: logs.length,
+          primeiroLog: logs[0] ? { 
+            id: logs[0].id, 
+            tipo: logs[0].eventType,
+            status: logs[0].status,
+            data: typeof logs[0].createdAt
+          } : 'Nenhum log encontrado'
+        });
+      }
       
       // Verificar se há dados deseriáveis e deserializá-los se necessário
       const processedLogs = logs.map(log => {
