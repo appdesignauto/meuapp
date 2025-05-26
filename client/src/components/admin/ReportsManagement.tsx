@@ -81,23 +81,50 @@ const ReportsManagement = () => {
     enabled: true
   });
 
-  // Consulta dedicada para estatísticas dos reports
+  // Query para buscar TODOS os reports para calcular estatísticas corretas
   const { 
-    data: statsResponse,
+    data: allReportsData,
     isLoading: isLoadingStats
   } = useQuery({
-    queryKey: ['/api/reports/stats'],
-    refetchInterval: 30000 // Atualiza a cada 30 segundos
+    queryKey: ['/api/reports', { page: 1, limit: 1000, status: 'all' }],
+    refetchInterval: 30000
   });
 
-  // Extrair estatísticas da resposta da API
-  const statsData = statsResponse?.stats || {
-    pending: 0,
-    reviewing: 0,
-    resolved: 0,
-    rejected: 0,
-    total: 0
-  };
+  // Calcular estatísticas reais diretamente dos dados
+  const statsData = useMemo(() => {
+    if (!allReportsData?.reports) {
+      return { pending: 0, reviewing: 0, resolved: 0, rejected: 0, total: 0 };
+    }
+
+    const stats = {
+      pending: 0,
+      reviewing: 0,
+      resolved: 0,
+      rejected: 0,
+      total: 0
+    };
+
+    allReportsData.reports.forEach((report: any) => {
+      stats.total++;
+      switch(report.status) {
+        case 'pendente':
+          stats.pending++;
+          break;
+        case 'em-analise':
+          stats.reviewing++;
+          break;
+        case 'resolvido':
+          stats.resolved++;
+          break;
+        case 'rejeitado':
+          stats.rejected++;
+          break;
+      }
+    });
+
+    console.log('📊 Estatísticas calculadas no frontend:', stats);
+    return stats;
+  }, [allReportsData]);
 
   // Consulta principal para obter reports
   const statusFilter = activeTab !== 'all' ? activeTab : selectedStatusFilter !== 'all' ? selectedStatusFilter : null;
