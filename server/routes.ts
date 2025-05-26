@@ -1040,10 +1040,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryIdId) {
+      if (art.categoryId) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryIdId} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.categoryIdId);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.categoryId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
@@ -1077,26 +1077,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar informações do designer se existir
-      if (art.designeridid) {
+      if (art.designerid) {
         try {
-          const designer = await storage.getUserById(art.designeridid);
+          const designer = await storage.getUserById(art.designerid);
           if (designer) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeDesigner } = designer;
             
             // Buscar estatísticas do designer
-            const stats = await storage.getDesignerStats(art.designeridid);
+            const stats = await storage.getDesignerStats(art.designerid);
             
             // Buscar status de seguidor para o usuário atual (se autenticado)
             let isFollowing = false;
             if (req.isAuthenticated()) {
-              isFollowing = await storage.isUserFollowing(req.user.id, art.designeridid);
+              isFollowing = await storage.isUserFollowing(req.user.id, art.designerid);
             }
             
             // Buscar artes recentes do designer para exibir junto com o perfil
             let recentArts = [];
             try {
-              const designerArts = await storage.getArtsByDesignerId(art.designeridid, 5);
+              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
               recentArts = designerArts
                 .filter(recentArt => recentArt.id !== art.id)
                 .slice(0, 4)
@@ -1749,10 +1749,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.categoryIdId) {
+      if (art.categoryId) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryIdId} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.categoryIdId);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.categoryId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
@@ -1760,7 +1760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             art.categoryId = category;
             console.log(`[DEBUG] Arte atualizada com categoria:`, art.categoryId);
           } else {
-            console.log(`[DEBUG] Categoria ID ${art.categoryIdId} não encontrada no banco de dados`);
+            console.log(`[DEBUG] Categoria ID ${art.categoryId} não encontrada no banco de dados`);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
@@ -1813,27 +1813,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar informações do designer se existir
-      if (art.designeridid) {
+      if (art.designerid) {
         try {
-          const designer = await storage.getUserById(art.designeridid);
+          const designer = await storage.getUserById(art.designerid);
           if (designer) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeDesigner } = designer;
             
             // Buscar estatísticas do designer
-            const stats = await storage.getDesignerStats(art.designeridid);
+            const stats = await storage.getDesignerStats(art.designerid);
             
             // Buscar status de seguidor para o usuário atual (se autenticado)
             let isFollowing = false;
             if (req.user) {
               const userId = (req.user as any).id;
-              isFollowing = await storage.isFollowing(userId, art.designeridid);
+              isFollowing = await storage.isFollowing(userId, art.designerid);
             }
             
             // Buscar 4 artes recentes do designer, excluindo a arte atual
             let recentArts = [];
             try {
-              const designerArts = await storage.getArtsByDesignerId(art.designeridid, 5);
+              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
               recentArts = designerArts
                 .filter(recentArt => recentArt.id !== art.id)
                 .slice(0, 4)
