@@ -117,21 +117,40 @@ router.post('/hotmart-fixed', async (req, res) => {
       console.log(`✅ [WEBHOOK] Usuário atualizado para premium!`);
     }
 
-    // ✅ 4. CRIAÇÃO DA ASSINATURA NA TABELA SUBSCRIPTIONS
-    console.log('📝 [WEBHOOK] Criando registro de assinatura...');
+    // ✅ 4. CRIAÇÃO/ATUALIZAÇÃO DA ASSINATURA NA TABELA SUBSCRIPTIONS
+    console.log('📝 [WEBHOOK] Verificando assinatura existente...');
     
-    await pool.query(`
-      INSERT INTO subscriptions (
-        "userId", "planType", status, "startDate", "endDate",
-        origin, transactionid, lastevent, "webhookData", "createdAt"
-      ) VALUES (
-        $1, $2, 'active', $3, $4,
-        'hotmart', $5, $6, $7, $8
-      )
-    `, [
-      userId, planType, startDate, endDate,
-      transactionId, event, JSON.stringify(payload), new Date()
-    ]);
+    const existingSubscription = await pool.query(`
+      SELECT id FROM subscriptions WHERE "userId" = $1
+    `, [userId]);
+
+    if (existingSubscription.rows.length > 0) {
+      console.log('📝 [WEBHOOK] Atualizando assinatura existente...');
+      await pool.query(`
+        UPDATE subscriptions SET
+          "planType" = $2, status = 'active', "startDate" = $3, "endDate" = $4,
+          origin = 'hotmart', transactionid = $5, lastevent = $6, 
+          "webhookData" = $7, "updatedAt" = $8
+        WHERE "userId" = $1
+      `, [
+        userId, planType, startDate, endDate,
+        transactionId, event, JSON.stringify(payload), new Date()
+      ]);
+    } else {
+      console.log('📝 [WEBHOOK] Criando nova assinatura...');
+      await pool.query(`
+        INSERT INTO subscriptions (
+          "userId", "planType", status, "startDate", "endDate",
+          origin, transactionid, lastevent, "webhookData", "createdAt"
+        ) VALUES (
+          $1, $2, 'active', $3, $4,
+          'hotmart', $5, $6, $7, $8
+        )
+      `, [
+        userId, planType, startDate, endDate,
+        transactionId, event, JSON.stringify(payload), new Date()
+      ]);
+    }
 
     console.log('✅ [WEBHOOK] Assinatura criada com sucesso!');
 
