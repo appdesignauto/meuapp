@@ -1,269 +1,301 @@
 /**
- * SISTEMA DE REPORTS FUNCIONAL - VERSÃO DEFINITIVA
- * 
- * Conecta diretamente ao banco PostgreSQL para buscar dados reais
+ * Sistema de Reports - Versão Completamente Nova e Segura
+ * Implementação direta usando pool de conexão PostgreSQL
  */
 
 import { Router } from 'express';
-import { pool } from '../db';
+import { z } from 'zod';
+import { Pool } from 'pg';
 
 const router = Router();
 
+// Configuração do pool PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
 /**
- * Buscar estatísticas de reports
- * GET /api/reports/stats
+ * Buscar tipos de denúncias disponíveis
+ * GET /api/reports/types
  */
-router.get('/stats', async (req, res) => {
+router.get('/types', async (req, res) => {
   try {
-    console.log('📊 [REPORTS-NEW] Buscando estatísticas dos reports...');
+    console.log('GET /api/reports/types - Buscando tipos de denúncias');
     
     const result = await pool.query(`
-      SELECT 
-        status,
-        COUNT(*) as count
-      FROM reports 
-      GROUP BY status
+      SELECT id, name, description, "isActive" 
+      FROM "reportTypes" 
+      WHERE "isActive" = true 
+      ORDER BY name
     `);
     
-    const stats = {
-      pending: 0,
-      reviewing: 0,
-      resolved: 0,
-      rejected: 0,
-      total: 0
-    };
+    console.log(`${result.rows.length} tipos de denúncia encontrados`);
     
-    let total = 0;
-    result.rows.forEach((row: any) => {
-      const count = parseInt(row.count || '0');
-      total += count;
-      
-      switch(row.status) {
-        case 'pendente':
-          stats.pending = count;
-          break;
-        case 'em-analise':
-          stats.reviewing = count;
-          break;
-        case 'resolvido':
-          stats.resolved = count;
-          break;
-        case 'rejeitado':
-          stats.rejected = count;
-          break;
-      }
-    });
-    
-    stats.total = total;
-    
-    console.log('✅ [REPORTS-NEW] Estatísticas encontradas:', stats);
-    return res.json({ stats });
+    return res.status(200).json(result.rows);
   } catch (error) {
-    console.error('❌ [REPORTS-NEW] Erro ao buscar estatísticas:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Erro ao buscar estatísticas'
-    });
+    console.error('Erro ao buscar tipos de denúncias:', error);
+    return res.status(500).json({ message: 'Erro ao buscar tipos de denúncias' });
   }
 });
 
 /**
- * Buscar lista de reports
+ * Listar denúncias (apenas para administradores)
  * GET /api/reports
  */
 router.get('/', async (req, res) => {
   try {
-    console.log('📋 [REPORTS-NEW] Buscando lista de reports...');
+    console.log('GET /api/reports/new - Listando denúncias (versão nova)');
     
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    // Validação de parâmetros
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
+    const status = req.query.status as string || null;
+    
+    console.log(`Parâmetros: page=${page}, limit=${limit}, status=${status}`);
+    
     const offset = (page - 1) * limit;
-    const status = req.query.status as string;
-    const search = req.query.search as string;
-
+    
+    // Query base
     let baseQuery = `
       SELECT 
-        r.*,
-        rt.name as reportTypeName,
-        u.username as reporterUsername
+        r.id,
+        r.title,
+        r.description,
+        r.evidence,
+        r.status,
+        r."isResolved",
+        r."adminResponse",
+        r."userId",
+        r."reportTypeId", 
+        r."respondedBy",
+        r."respondedAt",
+        r."createdAt",
+        r."updatedAt"
       FROM reports r
-      LEFT JOIN "reportTypes" rt ON r."reportTypeId" = rt.id
-      LEFT JOIN users u ON r."userId" = u.id
     `;
     
-    const conditions = [];
-    const values = [];
-    let paramCount = 0;
-
-    if (status) {
-      paramCount++;
-      conditions.push(`r.status = $${paramCount}`);
-      values.push(status);
-    }
-
-    if (search) {
-      paramCount++;
-      conditions.push(`(r.title ILIKE $${paramCount} OR r.description ILIKE $${paramCount})`);
-      values.push(`%${search}%`);
-    }
-
-    if (conditions.length > 0) {
-      baseQuery += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    baseQuery += ` ORDER BY r."createdAt" DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
-    values.push(limit, offset);
-
-    const result = await pool.query(baseQuery, values);
+    let countQuery = 'SELECT COUNT(*) as total FROM reports r';
+    let queryParams = [];
+    let paramCount = 1;
     
-    // Buscar total de registros
-    let countQuery = 'SELECT COUNT(*) FROM reports r';
-    const countValues = [];
-    let countParamCount = 0;
-
+    // Filtro por status
     if (status) {
-      countParamCount++;
-      countQuery += ` WHERE r.status = $${countParamCount}`;
-      countValues.push(status);
+      baseQuery += ` WHERE r.status = $${paramCount}`;
+      countQuery += ` WHERE r.status = $${paramCount}`;
+      queryParams.push(status);
+      paramCount++;
     }
-
-    if (search) {
-      countParamCount++;
-      if (countValues.length > 0) {
-        countQuery += ` AND (r.title ILIKE $${countParamCount} OR r.description ILIKE $${countParamCount})`;
-      } else {
-        countQuery += ` WHERE (r.title ILIKE $${countParamCount} OR r.description ILIKE $${countParamCount})`;
-      }
-      countValues.push(`%${search}%`);
-    }
-
-    const countResult = await pool.query(countQuery, countValues);
-    const total = parseInt(countResult.rows[0].count);
-
-    console.log(`✅ [REPORTS-NEW] ${result.rows.length} reports encontrados (total: ${total})`);
     
-    return res.json({
-      reports: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+    // Ordenação e paginação
+    baseQuery += ` ORDER BY r."createdAt" DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    queryParams.push(limit, offset);
+    
+    // Executar consultas
+    const [reportsResult, countResult] = await Promise.all([
+      pool.query(baseQuery, queryParams),
+      pool.query(countQuery, status ? [status] : [])
+    ]);
+    
+    const reports = reportsResult.rows;
+    const totalCount = parseInt(countResult.rows[0]?.total || '0');
+    
+    console.log(`${reports.length} denúncias encontradas de ${totalCount} total`);
+    
+    // Buscar informações relacionadas para cada report
+    const enhancedReports = await Promise.all(
+      reports.map(async (report) => {
+        let reportType = null;
+        let user = null;
+        let admin = null;
+        
+        // Buscar tipo de report
+        if (report.reportTypeId) {
+          try {
+            const typeResult = await pool.query(
+              'SELECT id, name, description FROM "reportTypes" WHERE id = $1 LIMIT 1',
+              [report.reportTypeId]
+            );
+            reportType = typeResult.rows[0] || null;
+          } catch (error) {
+            console.warn('Erro ao buscar tipo de report:', error);
+          }
+        }
+        
+        // Buscar usuário
+        if (report.userId) {
+          try {
+            const userResult = await pool.query(
+              'SELECT id, username, email FROM users WHERE id = $1 LIMIT 1',
+              [report.userId]
+            );
+            user = userResult.rows[0] || null;
+          } catch (error) {
+            console.warn('Erro ao buscar usuário:', error);
+          }
+        }
+        
+        // Buscar admin que respondeu
+        if (report.respondedBy) {
+          try {
+            const adminResult = await pool.query(
+              'SELECT id, username FROM users WHERE id = $1 LIMIT 1',
+              [report.respondedBy]
+            );
+            admin = adminResult.rows[0] || null;
+          } catch (error) {
+            console.warn('Erro ao buscar admin:', error);
+          }
+        }
+        
+        return {
+          ...report,
+          reportType,
+          user,
+          admin
+        };
+      })
+    );
+    
+    const totalPages = Math.ceil(totalCount / limit);
+    
+    return res.status(200).json({
+      success: true,
+      reports: enhancedReports,
+      totalCount,
+      totalPages,
+      currentPage: page,
+      hasMore: page < totalPages
     });
   } catch (error) {
-    console.error('❌ [REPORTS-NEW] Erro ao buscar reports:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Erro ao buscar reports'
-    });
+    console.error('Erro ao listar denúncias (versão nova):', error);
+    return res.status(500).json({ message: 'Erro ao buscar denúncias' });
   }
 });
 
 /**
- * Buscar report por ID
- * GET /api/reports/:id
+ * Criar uma nova denúncia
+ * POST /api/reports
  */
-router.get('/:id', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const reportId = parseInt(req.params.id);
-    console.log(`🔍 [REPORTS-NEW] Buscando report ID: ${reportId}`);
+    console.log('POST /api/reports/new - Criando nova denúncia');
     
+    const createReportSchema = z.object({
+      artId: z.number().optional(),
+      reportTypeId: z.number(),
+      title: z.string().min(5, "O título deve ter pelo menos 5 caracteres").max(200),
+      description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres").max(1000),
+      evidence: z.string().max(500).optional()
+    });
+    
+    const validatedData = createReportSchema.parse(req.body);
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
+    
+    // Inserir nova denúncia
     const result = await pool.query(`
-      SELECT 
-        r.*,
-        rt.name as reportTypeName,
-        u.username as reporterUsername
-      FROM reports r
-      LEFT JOIN "reportTypes" rt ON r."reportTypeId" = rt.id
-      LEFT JOIN users u ON r."userId" = u.id
-      WHERE r.id = $1
-    `, [reportId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Report não encontrado'
+      INSERT INTO reports ("userId", "artId", "reportTypeId", title, description, evidence, status, "isResolved", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, 'pendente', false, NOW(), NOW())
+      RETURNING id
+    `, [
+      userId,
+      validatedData.artId || null,
+      validatedData.reportTypeId,
+      validatedData.title,
+      validatedData.description,
+      validatedData.evidence || null
+    ]);
+    
+    const reportId = result.rows[0]?.id;
+    
+    console.log(`Nova denúncia criada com ID: ${reportId}`);
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Denúncia criada com sucesso',
+      reportId
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: error.errors
       });
     }
-
-    console.log('✅ [REPORTS-NEW] Report encontrado');
-    return res.json({ report: result.rows[0] });
-  } catch (error) {
-    console.error('❌ [REPORTS-NEW] Erro ao buscar report:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Erro ao buscar report'
-    });
+    
+    console.error('Erro ao criar denúncia (versão nova):', error);
+    return res.status(500).json({ message: 'Erro ao criar denúncia' });
   }
 });
 
 /**
- * Atualizar status do report
- * PUT /api/reports/:id/status
+ * Atualizar status de denúncia (apenas administradores)
+ * PUT /api/reports/:id/respond
  */
-router.put('/:id/status', async (req, res) => {
+router.put('/:id/respond', async (req, res) => {
   try {
+    console.log(`PUT /api/reports/${req.params.id}/respond/new - Respondendo denúncia`);
+    
     const reportId = parseInt(req.params.id);
-    const { status, adminResponse, respondedBy } = req.body;
+    const userId = (req as any).user?.id;
+    const userLevel = (req as any).user?.nivelacesso;
     
-    console.log(`📝 [REPORTS-NEW] Atualizando status do report ${reportId} para: ${status}`);
+    if (!userId || !['admin', 'suporte'].includes(userLevel)) {
+      return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem responder denúncias.' });
+    }
     
+    const adminResponseSchema = z.object({
+      status: z.enum(['pendente', 'em-analise', 'resolvido', 'rejeitado']),
+      adminResponse: z.string().min(5, "A resposta deve ter pelo menos 5 caracteres").optional(),
+      isResolved: z.boolean().optional()
+    });
+    
+    const validatedData = adminResponseSchema.parse(req.body);
+    
+    // Atualizar denúncia
     const result = await pool.query(`
       UPDATE reports 
       SET 
         status = $1,
         "adminResponse" = $2,
-        "respondedBy" = $3,
+        "isResolved" = $3,
+        "respondedBy" = $4,
         "respondedAt" = NOW(),
         "updatedAt" = NOW()
-      WHERE id = $4
-      RETURNING *
-    `, [status, adminResponse, respondedBy, reportId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Report não encontrado'
+      WHERE id = $5
+      RETURNING id
+    `, [
+      validatedData.status,
+      validatedData.adminResponse || null,
+      validatedData.isResolved || false,
+      userId,
+      reportId
+    ]);
+    
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Denúncia não encontrada' });
+    }
+    
+    console.log(`Denúncia ${reportId} atualizada com sucesso (versão nova)`);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Denúncia atualizada com sucesso'
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: error.errors
       });
     }
-
-    console.log('✅ [REPORTS-NEW] Status atualizado com sucesso');
-    return res.json({
-      success: true,
-      report: result.rows[0]
-    });
-  } catch (error) {
-    console.error('❌ [REPORTS-NEW] Erro ao atualizar status:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Erro ao atualizar status'
-    });
-  }
-});
-
-/**
- * Buscar tipos de report
- * GET /api/reports/types
- */
-router.get('/types/list', async (req, res) => {
-  try {
-    console.log('📑 [REPORTS-NEW] Buscando tipos de reports...');
     
-    const result = await pool.query(`
-      SELECT * FROM "reportTypes" 
-      WHERE "isActive" = true 
-      ORDER BY name
-    `);
-    
-    console.log(`✅ [REPORTS-NEW] ${result.rows.length} tipos encontrados`);
-    return res.json({ reportTypes: result.rows });
-  } catch (error) {
-    console.error('❌ [REPORTS-NEW] Erro ao buscar tipos:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Erro ao buscar tipos de reports'
-    });
+    console.error('Erro ao atualizar denúncia (versão nova):', error);
+    return res.status(500).json({ message: 'Erro ao atualizar denúncia' });
   }
 });
 
