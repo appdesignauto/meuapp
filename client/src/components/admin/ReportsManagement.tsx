@@ -119,11 +119,11 @@ const ReportsManagement = () => {
     isLoading: isLoadingTypes,
     isError: isTypesError 
   } = useQuery({
-    queryKey: ['/api/reports-v2/types'],
+    queryKey: ['/api/reports/types'],
     queryFn: async () => {
       try {
         // Primeiro tentamos carregar do novo endpoint da API V2
-        const response = await fetch('/api/reports-v2/types');
+        const response = await fetch('/api/reports/types');
         if (response.ok) {
           return await response.json();
         }
@@ -156,7 +156,7 @@ const ReportsManagement = () => {
     isError: isReportsError,
     refetch: refetchReports
   } = useQuery({
-    queryKey: ['/api/reports-v2', activeTab, selectedStatusFilter],
+    queryKey: ['/api/reports', activeTab, selectedStatusFilter],
     queryFn: async () => {
       try {
         // Preparar parâmetros da consulta
@@ -176,17 +176,10 @@ const ReportsManagement = () => {
         console.log(`Consultando reports com filtros: ${queryString}`);
         
         // Primeiro tentamos a versão V2 da API com SQL puro
-        console.log('Tentando API v2 para reports...');
-        const v2Response = await apiRequest('GET', `/api/reports-v2?${queryString}`);
+        const v2Response = await apiRequest('GET', `/api/reports?${queryString}`);
         console.log('Resposta da API V2 de reports:', v2Response);
         
-        if (v2Response.ok) {
-          const data = await v2Response.json();
-          console.log('Dados recebidos da API V2:', data);
-          return data;
-        } else {
-          console.warn('API V2 falhou, voltando para API V1');
-        }
+        
         
         // Se a V2 falhar, tentamos a versão original
         const response = await apiRequest('GET', `/api/reports?${queryString}`);
@@ -224,15 +217,10 @@ const ReportsManagement = () => {
       try {
         // Primeiro tentamos a V2 da API
         console.log(`Tentando atualizar report #${id} com API V2:`, data);
-        const v2Response = await apiRequest('PUT', `/api/reports-v2/${id}`, data);
+        const v2Response = await apiRequest('PUT', `/api/reports/${id}`, data);
         console.log(`Resposta da API V2 ao atualizar report #${id}:`, v2Response);
         
-        if (v2Response.ok) {
-          const result = await v2Response.json();
-          console.log(`Atualização V2 concluída para report #${id}:`, result);
-          return result;
-        } else {
-          console.warn(`API V2 falhou para atualização do report #${id}, tentando API V1`);
+        , tentando API V1`);
         }
         
         // Se a V2 falhar, tentamos a versão original
@@ -255,7 +243,7 @@ const ReportsManagement = () => {
     },
     onSuccess: (data) => {
       // Invalidar o cache das duas versões da API para garantir consistência
-      queryClient.invalidateQueries({ queryKey: ['/api/reports-v2'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       
       setIsDetailsOpen(false);
@@ -284,15 +272,10 @@ const ReportsManagement = () => {
       console.log(`Tentando excluir report #${id} com API V2...`);
       
       // Primeiro tentamos a V2 da API
-      const v2Response = await apiRequest('DELETE', `/api/reports-v2/${id}`);
+      const v2Response = await apiRequest('DELETE', `/api/reports/${id}`);
       console.log(`Resposta da API V2 ao excluir report #${id}:`, v2Response);
       
-      if (v2Response.ok) {
-        const result = await v2Response.json();
-        console.log(`Exclusão V2 concluída para report #${id}:`, result);
-        return result;
-      } else {
-        console.warn(`API V2 falhou para exclusão do report #${id}, tentando API V1`);
+      , tentando API V1`);
       }
       
       // Se a V2 falhar, tentamos a versão original
@@ -311,7 +294,7 @@ const ReportsManagement = () => {
     },
     onSuccess: () => {
       // Invalidar o cache das duas versões da API para garantir consistência
-      queryClient.invalidateQueries({ queryKey: ['/api/reports-v2'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       
       setIsDetailsOpen(false);
@@ -533,11 +516,11 @@ const ReportsManagement = () => {
     data: allReportsData = { reports: [] },
     isLoading: isLoadingAllReports,
   } = useQuery({
-    queryKey: ['/api/reports-v2/all'],
+    queryKey: ['/api/reports/all'],
     queryFn: async () => {
       try {
         // Fazemos uma consulta sem filtros para obter todos os reports para estatísticas
-        const response = await apiRequest('GET', `/api/reports-v2?limit=1000`);
+        const response = await apiRequest('GET', `/api/reports?limit=1000`);
         
         if (response.ok) {
           const data = await response.json();

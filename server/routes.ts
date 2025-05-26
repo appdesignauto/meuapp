@@ -5641,9 +5641,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Versão 2 do sistema de denúncias (utiliza SQL puro)
   // Implementada em reports-v2.ts para resolver problemas de ORM
-  app.use('/api/reports-v2', reportsV2Router);
-  
-
   // Removendo código duplicado para evitar conflitos de rotas
   
 
@@ -6138,5 +6135,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
+  
+// Redirecionamento seguro para manter compatibilidade
+app.use('/api/reports-v2', (req, res, next) => {
+  // Redirecionar todas as chamadas para a API segura
+  const newUrl = req.originalUrl.replace('/api/reports-v2', '/api/reports');
+  res.redirect(307, newUrl);
+});
+
   return httpServer;
 }
