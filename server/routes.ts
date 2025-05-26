@@ -71,7 +71,7 @@ import analyticsRouter from './routes/analytics'; // Rotas para gerenciamento de
 import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
-import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (versão completamente funcional)
+import reportsRouter from './routes/reports-new'; // NOVO SISTEMA DE REPORTS - VERSÃO LIMPA
  // Rotas para estatísticas dos reports
 // Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
 
@@ -91,56 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Endpoint para estatísticas de reports
-  app.get('/api/reports/stats', async (req, res) => {
-    try {
-      // Consulta simples e eficiente para obter estatísticas
-      const result = await db.execute(sql`
-        SELECT 
-          status,
-          COUNT(*) as count
-        FROM reports 
-        GROUP BY status
-      `);
-      
-      const stats = {
-        pending: 0,
-        reviewing: 0,
-        resolved: 0,
-        rejected: 0,
-        total: 0
-      };
-      
-      // Mapear resultados
-      result.rows.forEach((row: any) => {
-        const count = parseInt(row.count || '0');
-        stats.total += count;
-        
-        switch(row.status) {
-          case 'pendente':
-            stats.pending = count;
-            break;
-          case 'em-analise':
-            stats.reviewing = count;
-            break;
-          case 'resolvido':
-            stats.resolved = count;
-            break;
-          case 'rejeitado':
-            stats.rejected = count;
-            break;
-        }
-      });
-      
-      return res.json({ stats });
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao buscar estatísticas'
-      });
-    }
-  });
+  // Endpoint removido - substituído pelo novo sistema reports-new.ts
 
   // Rota de debug para testar getUserByUsername
   app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
