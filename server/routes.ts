@@ -4682,11 +4682,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Obter contagem por origem de assinatura
       
-      const [doppusResult] = await db
-        .select({ count: count() })
-        .from(users)
-        .where(eq(users.origemassinatura, 'doppus'));
-      
       const [manualResult] = await db
         .select({ count: count() })
         .from(users)
@@ -4754,7 +4749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiringIn7Days: expiringIn7DaysResult.count,
         expiringIn30Days: expiringIn30DaysResult.count,
 
-        doppusCount: doppusResult.count,
+
         manualCount: manualResult.count,
         subscriptionsByPlan,
         subscriptionsByOrigin,
@@ -5080,32 +5075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
       
-      if (!formattedSettings.doppus) {
-        formattedSettings.doppus = {};
-      }
-      
-      // Garantir que todas as chaves esperadas existam
-      const requiredDoppusKeys = ['secretKey', 'clientId', 'clientSecret'];
-      
 
-      
-      for (const key of requiredDoppusKeys) {
-        if (!formattedSettings.doppus[key]) {
-          formattedSettings.doppus[key] = {
-            isDefined: false,
-            value: '',
-            realValue: '',
-            lastChars: '',
-            isActive: true,
-            description: '',
-            updatedAt: null
-          };
-        }
-      }
-      
-      console.log("Enviando configurações de integração formatadas com chaves Doppus:", 
-        Object.keys(formattedSettings.doppus).join(', ')
-      );
       
       return res.status(200).json(formattedSettings);
     } catch (error) {
@@ -6055,10 +6025,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? JSON.parse(log.payloadData) 
             : log.payloadData;
           
-          // Buscar o email em diferentes locais dependendo da origem
-          if (log.source === 'doppus') {
-            foundEmail = payload.customer?.email || null;
-            emailLocation = foundEmail ? 'customer.email' : null;
+          // Buscar o email em diferentes locais do payload
+          foundEmail = payload.subscriber?.email || payload.customer?.email || payload.buyer?.email || null;
+          if (foundEmail) {
+            emailLocation = payload.subscriber?.email ? 'subscriber.email' : 
+                           payload.customer?.email ? 'customer.email' : 'buyer.email';
           }
           
           // Se ainda não encontrou o email, verificar no texto serializado
@@ -6133,10 +6104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? JSON.parse(log.payloadData) 
           : log.payloadData;
         
-        // Tentar encontrar o email dependendo da origem
-        if (log.source === 'doppus') {
-          payloadEmail = parsedPayload.customer?.email;
-        }
+        // Buscar email no payload para análise
+        payloadEmail = parsedPayload.subscriber?.email || parsedPayload.customer?.email || parsedPayload.buyer?.email;
         
         // Se encontrou o email, destacar
         if (payloadEmail) {
