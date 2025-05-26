@@ -91,23 +91,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // ENDPOINT CRÍTICO: Estatísticas de Reports - CALCULANDO DO BANCO REAL
+  // Endpoint para estatísticas de reports
   app.get('/api/reports/stats', async (req, res) => {
     try {
-      console.log('📊 [STATS] Calculando estatísticas reais do banco...');
-      
-      // Consulta para obter estatísticas reais do banco
+      // Consulta simples e eficiente para obter estatísticas
       const result = await db.execute(sql`
         SELECT 
           status,
           COUNT(*) as count
         FROM reports 
         GROUP BY status
-        UNION ALL
-        SELECT 
-          'total' as status,
-          COUNT(*) as count
-        FROM reports
       `);
       
       const stats = {
@@ -118,11 +111,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         total: 0
       };
       
-      console.log('📊 [STATS] Resultados da consulta:', result.rows);
-      
-      // Mapear resultados para as estatísticas
+      // Mapear resultados
       result.rows.forEach((row: any) => {
         const count = parseInt(row.count || '0');
+        stats.total += count;
+        
         switch(row.status) {
           case 'pendente':
             stats.pending = count;
@@ -136,29 +129,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'rejeitado':
             stats.rejected = count;
             break;
-          case 'total':
-            stats.total = count;
-            break;
         }
       });
       
-      console.log('✅ [STATS] Estatísticas corretas calculadas:', stats);
-      
-      const responseData = {
-        stats: {
-          pending: stats.pending,
-          reviewing: stats.reviewing,
-          resolved: stats.resolved,
-          rejected: stats.rejected,
-          total: stats.total
-        }
-      };
-      
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json(responseData);
+      return res.json({ stats });
     } catch (error) {
-      console.error('❌ [STATS] Erro ao calcular estatísticas:', error);
-      res.setHeader('Content-Type', 'application/json');
+      console.error('Erro ao buscar estatísticas:', error);
       return res.status(500).json({
         success: false,
         error: 'Erro ao buscar estatísticas'
