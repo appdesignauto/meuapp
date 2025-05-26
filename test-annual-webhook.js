@@ -4,8 +4,8 @@
 
 import fetch from 'node-fetch';
 
-const baseUrl = "https://e1b8508c-921c-4d22-af73-1cb8fd7145e2-00-121uwb868mg4j.spock.replit.dev";
-const token = "afb3c81b-19a6-42f2-93b0-e3cd7def0b0c";
+const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+const token = process.env.TEST_TOKEN || ""; // Use environment variable for test token
 
 // Payload específico para testar plano anual
 const payload = {
