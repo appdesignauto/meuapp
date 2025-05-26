@@ -157,22 +157,47 @@ router.get('/', async (req, res) => {
       })
     );
     
-    // Buscar estatísticas por status - usando consultas diretas para garantir precisão
-    const [pendingResult, reviewingResult, resolvedResult, rejectedResult] = await Promise.all([
-      pool.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['pendente']),
-      pool.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['em-analise']),
-      pool.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['resolvido']),
-      pool.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['rejeitado'])
-    ]);
+    // Buscar todas as estatísticas de uma vez para garantir consistência
+    const statsQuery = await pool.query(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM reports 
+      GROUP BY status
+      UNION ALL
+      SELECT 'total' as status, COUNT(*) as count FROM reports
+    `);
     
     const stats = {
-      pending: parseInt(pendingResult.rows[0]?.count || '0'),
-      reviewing: parseInt(reviewingResult.rows[0]?.count || '0'),
-      resolved: parseInt(resolvedResult.rows[0]?.count || '0'),
-      rejected: parseInt(rejectedResult.rows[0]?.count || '0')
+      pending: 0,
+      reviewing: 0,
+      resolved: 0,
+      rejected: 0,
+      total: 0
     };
     
-    console.log('Estatísticas de reports:', stats);
+    statsQuery.rows.forEach(row => {
+      const count = parseInt(row.count);
+      switch(row.status) {
+        case 'pendente':
+          stats.pending = count;
+          break;
+        case 'em-analise':
+          stats.reviewing = count;
+          break;
+        case 'resolvido':
+          stats.resolved = count;
+          break;
+        case 'rejeitado':
+          stats.rejected = count;
+          break;
+        case 'total':
+          stats.total = count;
+          break;
+      }
+    });
+    
+    console.log('📊 Estatísticas definitivas de reports:', stats);
     
     const totalPages = Math.ceil(totalCount / limit);
     

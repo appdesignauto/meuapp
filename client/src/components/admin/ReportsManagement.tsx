@@ -81,6 +81,15 @@ const ReportsManagement = () => {
     enabled: true
   });
 
+  // Consulta dedicada para estatísticas dos reports
+  const { 
+    data: statsData,
+    isLoading: isLoadingStats
+  } = useQuery({
+    queryKey: ['/api/reports/stats'],
+    refetchInterval: 30000 // Atualiza a cada 30 segundos
+  });
+
   // Consulta principal para obter reports
   const statusFilter = activeTab !== 'all' ? activeTab : selectedStatusFilter !== 'all' ? selectedStatusFilter : null;
   const queryString = new URLSearchParams({
@@ -289,16 +298,16 @@ const ReportsManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="pendente">
-            Pendentes ({reportsData?.stats?.pending || 0})
+            Pendentes ({statsData?.stats?.pending || 0})
           </TabsTrigger>
           <TabsTrigger value="em-analise">
-            Em Análise ({reportsData?.stats?.reviewing || 0})
+            Em Análise ({statsData?.stats?.reviewing || 0})
           </TabsTrigger>
           <TabsTrigger value="resolvido">
-            Resolvidos ({reportsData?.stats?.resolved || 0})
+            Resolvidos ({statsData?.stats?.resolved || 0})
           </TabsTrigger>
           <TabsTrigger value="rejeitado">
-            Rejeitados ({reportsData?.stats?.rejected || 0})
+            Rejeitados ({statsData?.stats?.rejected || 0})
           </TabsTrigger>
         </TabsList>
 
