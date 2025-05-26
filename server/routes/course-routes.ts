@@ -830,7 +830,7 @@ router.delete('/:id', async (req, res) => {
       return res.status(400).json({ message: 'ID de curso inválido' });
     }
     
-    console.log(`[DELETE /course/${courseId}] Verificando dependências antes de excluir`);
+    console.log('[DELETE /course] Verificando dependências antes de excluir para ID:', courseId);
     
     // Verificar se existem módulos relacionados usando Drizzle ORM (seguro)
     const relatedModules = await db.query.courseModules.findMany({
@@ -851,11 +851,11 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Curso não encontrado' });
     }
     
-    console.log(`[DELETE /course/${courseId}] Curso excluído com sucesso`);
+    console.log('[DELETE /course] Curso excluído com sucesso para ID:', courseId);
     
     return res.json({ message: 'Curso excluído com sucesso', id: courseId });
   } catch (error) {
-    console.error(`[DELETE /course/${req.params.id}] Erro ao excluir curso:`, error);
+    console.error('[DELETE /course] Erro ao excluir curso para ID:', req.params.id, error);
     return res.status(500).json({ message: 'Erro ao excluir curso', error: String(error) });
   }
 });
