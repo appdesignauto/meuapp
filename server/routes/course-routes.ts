@@ -669,12 +669,12 @@ router.put('/:id', async (req, res) => {
     
     console.log(`[PUT /course/${courseId}] Atualizando curso com dados:`, req.body);
     
-    // Verificar se o curso existe - usando string interpolation
-    const checkQuery = `SELECT id FROM courses WHERE id = ${courseId}`;
-    console.log(`[PUT /course/${courseId}] Verificando existência do curso:`, checkQuery);
-    const checkResult = await db.execute(checkQuery);
+    // Verificar se o curso existe - usando consulta segura com Drizzle ORM
+    const existingCourse = await db.query.courses.findFirst({
+      where: eq(courses.id, courseId)
+    });
     
-    if (checkResult.rows.length === 0) {
+    if (!existingCourse) {
       return res.status(404).json({ message: 'Curso não encontrado' });
     }
     
