@@ -138,7 +138,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar acesso aos buckets
       console.log("\n== VERIFICANDO ACESSO AOS BUCKETS ==");
-      const bucketResults: Record<string, any> = {};
+      const bucketResults: Record<string, {
+        accessible: boolean;
+        files?: number;
+        error?: string;
+      }> = {};
       
       // Bucket de avatares
       try {
@@ -176,7 +180,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar estado dos diretórios
       console.log("\n== VERIFICANDO DIRETÓRIOS LOCAIS ==");
-      const dirResults = {};
+      const dirResults: Record<string, {
+        exists: boolean;
+        writable?: boolean;
+        files?: number;
+        error?: string;
+      }> = {};
       const dirsToCheck = [
         'public',
         'public/uploads',
