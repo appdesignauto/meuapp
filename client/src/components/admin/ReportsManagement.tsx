@@ -90,6 +90,10 @@ const ReportsManagement = () => {
     refetchInterval: 30000 // Atualiza a cada 30 segundos
   });
 
+  // Debug: log da resposta completa
+  console.log('🔍 [FRONTEND DEBUG] statsResponse completa:', statsResponse);
+  console.log('🔍 [FRONTEND DEBUG] statsResponse?.stats:', statsResponse?.stats);
+
   // Extrair estatísticas da resposta da API
   const statsData = statsResponse?.stats || {
     pending: 0,
@@ -98,6 +102,8 @@ const ReportsManagement = () => {
     rejected: 0,
     total: 0
   };
+
+  console.log('🔍 [FRONTEND DEBUG] statsData final:', statsData);
 
   // Consulta principal para obter reports
   const statusFilter = activeTab !== 'all' ? activeTab : selectedStatusFilter !== 'all' ? selectedStatusFilter : null;
