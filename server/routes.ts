@@ -3363,8 +3363,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await db.execute(sql.raw(`
             DELETE FROM "emailVerificationCodes" 
-            WHERE "userId" = ${userId}
-          `));
+            WHERE "userId" = $1
+          `), [userId]);
           console.log("- Códigos de verificação de e-mail removidos");
         } catch (error) {
           console.log("- Não foi possível remover códigos de verificação de e-mail:", error);
@@ -3423,9 +3423,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Remover relações de seguidores/seguindo
           await db.execute(sql.raw(`
             DELETE FROM "userFollows" 
-            WHERE "followerId" = ${userId} 
-            OR "followingId" = ${userId}
-          `));
+            WHERE "followerId" = $1 
+            OR "followingId" = $2
+          `), [userId, userId]);
           console.log("- Relações de seguidores removidas");
         } catch (error) {
           console.log("- Não foi possível remover relações de seguidores:", error);
