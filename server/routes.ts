@@ -3538,7 +3538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Para cada designer, buscar algumas artes para exibir
       const designersWithArts = await Promise.all(designers.rows.map(async (designer: any) => {
-        const artsQuery = `
+        const recentArts = await db.execute(sql`
           SELECT 
             id, 
             title, 
@@ -3548,9 +3548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           WHERE designerid = ${designer.id}
           ORDER BY "createdAt" DESC
           LIMIT 4
-        `;
-        
-        const recentArts = await db.execute(sql.raw(artsQuery));
+        `);
         
         // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
         return {
