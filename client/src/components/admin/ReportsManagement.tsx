@@ -84,24 +84,34 @@ const ReportsManagement = () => {
   // Query para buscar estatísticas dos reports
   const { 
     data: statsResponse,
-    isLoading: isLoadingStats
+    isLoading: isLoadingStats,
+    refetch: refetchStats
   } = useQuery({
-    queryKey: ['/api/reports/stats'],
-    refetchInterval: 30000 // Atualiza a cada 30 segundos
+    queryKey: ['/api/reports/stats', Date.now()], // Força nova busca sempre
+    refetchInterval: 3000,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   // Debug: log da resposta completa
   console.log('🔍 [FRONTEND DEBUG] statsResponse completa:', statsResponse);
   console.log('🔍 [FRONTEND DEBUG] statsResponse?.stats:', statsResponse?.stats);
 
-  // Extrair estatísticas da resposta da API
-  const statsData = statsResponse?.stats || {
+  // Extrair estatísticas da resposta da API - formato atualizado
+  const statsData = statsResponse?.stats || statsResponse || {
     pending: 0,
     reviewing: 0,
     resolved: 0,
     rejected: 0,
     total: 0
   };
+
+  // Forçar atualização quando mudamos de aba
+  React.useEffect(() => {
+    refetchStats();
+  }, [activeTab, refetchStats]);
 
   console.log('🔍 [FRONTEND DEBUG] statsData final:', statsData);
 

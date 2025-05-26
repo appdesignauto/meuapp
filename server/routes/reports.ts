@@ -19,6 +19,61 @@ const pool = new Pool({
  * Buscar tipos de denúncias disponíveis
  * GET /api/reports/types
  */
+/**
+ * Endpoint único para estatísticas dos reports
+ * GET /api/reports/stats
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM reports 
+      GROUP BY status
+    `);
+    
+    const stats = {
+      pending: 0,
+      reviewing: 0,
+      resolved: 0,
+      rejected: 0,
+      total: 0
+    };
+    
+    let total = 0;
+    result.rows.forEach((row: any) => {
+      const count = parseInt(row.count || '0');
+      total += count;
+      
+      switch(row.status) {
+        case 'pendente':
+          stats.pending = count;
+          break;
+        case 'em-analise':
+          stats.reviewing = count;
+          break;
+        case 'resolvido':
+          stats.resolved = count;
+          break;
+        case 'rejeitado':
+          stats.rejected = count;
+          break;
+      }
+    });
+    
+    stats.total = total;
+    
+    return res.json({ stats });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao buscar estatísticas'
+    });
+  }
+});
+
 router.get('/types', async (req, res) => {
   try {
     console.log('GET /api/reports/types - Buscando tipos de denúncias');
