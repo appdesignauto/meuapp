@@ -3,8 +3,8 @@
  * Este script usa o token personalizado fornecido
  */
 
-// Token personalizado fornecido pelo usuário
-const HOTMART_TOKEN = "azjZzEUU43jb4zN4NqEUrvRu1MO1XQ1167719";
+// Token deve vir de variável de ambiente
+const HOTMART_TOKEN = process.env.HOTMART_TOKEN || "";
 
 // Configuração do webhook
 const email = 'teste-anual@example.com';
