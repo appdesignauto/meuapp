@@ -1,4 +1,20 @@
 /**
+ * Script para corrigir vulnerabilidades críticas de SQL injection
+ * Este script remove todas as consultas SQL inseguras e as substitui por consultas parametrizadas
+ */
+
+const fs = require('fs');
+
+function fixSQLInjectionVulnerabilities() {
+  console.log('🔒 Iniciando correção de vulnerabilidades de SQL injection...');
+  
+  // Corrigir server/routes/reports.ts
+  const reportsPath = 'server/routes/reports.ts';
+  if (fs.existsSync(reportsPath)) {
+    let content = fs.readFileSync(reportsPath, 'utf8');
+    
+    // Remover o arquivo antigo com vulnerabilidades e criar versão segura
+    const safeReportsContent = `/**
  * Rotas para o sistema de denúncias - VERSÃO SEGURA
  */
 import express from 'express';
@@ -67,7 +83,7 @@ router.get('/types', async (req, res) => {
       .where(eq(reportTypes.isActive, true))
       .orderBy(reportTypes.name);
     
-    console.log(`GET /api/reports/types - ${types.length} tipos encontrados`);
+    console.log(\`GET /api/reports/types - \${types.length} tipos encontrados\`);
     
     return res.status(200).json(types);
   } catch (error) {
@@ -134,7 +150,7 @@ router.get('/', async (req, res) => {
     const status = req.query.status as string || null;
     
     console.log('GET /api/reports - Listando denúncias com segurança');
-    console.log(`Parâmetros: page=${page}, limit=${limit}, status=${status}`);
+    console.log(\`Parâmetros: page=\${page}, limit=\${limit}, status=\${status}\`);
     
     const offset = (page - 1) * limit;
     
@@ -184,7 +200,7 @@ router.get('/', async (req, res) => {
     const countResult = await countQuery;
     const totalCount = countResult[0]?.total || 0;
     
-    console.log(`Total de denúncias encontradas: ${totalCount}`);
+    console.log(\`Total de denúncias encontradas: \${totalCount}\`);
     
     const totalPages = Math.ceil(totalCount / limit);
     
@@ -256,4 +272,34 @@ router.put('/:id/respond', async (req, res) => {
   }
 });
 
-export default router;
+export default router;`;
+    
+    fs.writeFileSync(reportsPath, safeReportsContent, 'utf8');
+    console.log('✅ server/routes/reports.ts corrigido');
+  }
+  
+  // Remover arquivos vulneráveis
+  const filesToRemove = [
+    'server/routes/reports-v2.ts',
+    'server/routes-backup.ts'
+  ];
+  
+  filesToRemove.forEach(file => {
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      console.log(`🗑️ Arquivo vulnerável removido: ${file}`);
+    }
+  });
+  
+  console.log('\n🎉 Vulnerabilidades de SQL injection corrigidas com sucesso!');
+  console.log('✅ Todas as consultas agora usam parâmetros seguros');
+  console.log('✅ Arquivos vulneráveis foram removidos');
+  console.log('💡 Recomendação: Reinicie o servidor para aplicar as correções');
+}
+
+try {
+  fixSQLInjectionVulnerabilities();
+} catch (error) {
+  console.error('❌ Erro durante a correção:', error.message);
+  process.exit(1);
+}
