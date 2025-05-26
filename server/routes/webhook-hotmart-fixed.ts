@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../storage';
 import { sql } from 'drizzle-orm';
+import { Pool } from 'pg';
 
 const router = Router();
 
@@ -39,9 +39,15 @@ router.post('/hotmart-fixed', async (req, res) => {
 
     // ✅ 3. VERIFICAÇÃO SE USUÁRIO JÁ EXISTE
     console.log(`🔍 [WEBHOOK] Verificando se usuário ${userData.email} já existe...`);
-    const existingUserResult = await db.execute(sql`
-      SELECT id, nivelacesso FROM users WHERE email = ${userData.email}
-    `);
+    
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+    
+    const existingUserResult = await pool.query(
+      'SELECT id, nivelacesso FROM users WHERE email = $1',
+      [userData.email]
+    );
 
     let userId: number;
     
