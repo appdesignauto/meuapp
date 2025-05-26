@@ -5687,68 +5687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   
-  // ENDPOINT CRÍTICO: Estatísticas de reports - PRIORIDADE MÁXIMA
-  app.get('/api/reports/stats', async (req, res) => {
-    try {
-      console.log('📊 Endpoint /api/reports/stats chamado - buscando estatísticas...');
-      
-      const result = await db.execute(sql`
-        SELECT 
-          status,
-          COUNT(*) as count
-        FROM reports 
-        GROUP BY status
-      `);
-      
-      const stats = {
-        pending: 0,
-        reviewing: 0,
-        resolved: 0,
-        rejected: 0,
-        total: 0
-      };
-      
-      let total = 0;
-      result.forEach((row: any) => {
-        const count = parseInt(row.count);
-        total += count;
-        
-        switch(row.status) {
-          case 'pendente':
-            stats.pending = count;
-            break;
-          case 'em-analise':
-            stats.reviewing = count;
-            break;
-          case 'resolvido':
-            stats.resolved = count;
-            break;
-          case 'rejeitado':
-            stats.rejected = count;
-            break;
-        }
-      });
-      
-      stats.total = total;
-      
-      console.log('✅ Estatísticas calculadas:', stats);
-      
-      return res.status(200).json({
-        success: true,
-        pending: stats.pending,
-        reviewing: stats.reviewing,
-        resolved: stats.resolved,
-        rejected: stats.rejected,
-        total: stats.total
-      });
-    } catch (error) {
-      console.error('❌ Erro ao buscar estatísticas:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao buscar estatísticas'
-      });
-    }
-  });
+
   
   app.use('/api/reports', reportsRouter);      // Captura outras rotas /api/reports/*
   
