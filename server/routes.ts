@@ -72,7 +72,7 @@ import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (versão completamente funcional)
-import reportsStatsRouter from './routes/reports-stats'; // Rotas para estatísticas dos reports
+ // Rotas para estatísticas dos reports
 // Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
 
 import { PrismaClient } from '@prisma/client';
@@ -5637,8 +5637,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(communityRouter);
   
   // Rotas para o sistema de denúncias
-  // IMPORTANTE: A rota mais específica (/stats) deve vir ANTES da genérica
-  app.use('/api/reports', reportsStatsRouter); // Captura /api/reports/stats
+  // Endpoint dedicado para estatísticas (deve vir ANTES das rotas genéricas)
+  app.get('/api/reports/stats', async (req, res) => {
+    try {
+      console.log('📊 Endpoint /api/reports/stats chamado - buscando estatísticas...');
+      
+      const result = await db.execute(sql`
+        SELECT 
+          status,
+          COUNT(*) as count
+        FROM reports 
+        GROUP BY status
+      `);
+      
+      const stats = {
+        pending: 0,
+        reviewing: 0,
+        resolved: 0,
+        rejected: 0,
+        total: 0
+      };
+      
+      let total = 0;
+      result.forEach((row: any) => {
+        const count = parseInt(row.count);
+        total += count;
+        
+        switch(row.status) {
+          case 'pendente':
+            stats.pending = count;
+            break;
+          case 'em-analise':
+            stats.reviewing = count;
+            break;
+          case 'resolvido':
+            stats.resolved = count;
+            break;
+          case 'rejeitado':
+            stats.rejected = count;
+            break;
+        }
+      });
+      
+      stats.total = total;
+      
+      console.log('✅ Estatísticas calculadas:', stats);
+      
+      return res.status(200).json({
+        success: true,
+        stats
+      });
+    } catch (error) {
+      console.error('❌ Erro ao buscar estatísticas:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar estatísticas'
+      });
+    }
+  });
+  
   app.use('/api/reports', reportsRouter);      // Captura outras rotas /api/reports/*
   
   // Versão 2 do sistema de denúncias (utiliza SQL puro)
