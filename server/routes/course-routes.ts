@@ -832,23 +832,20 @@ router.delete('/:id', async (req, res) => {
     
     console.log(`[DELETE /course/${courseId}] Verificando dependências antes de excluir`);
     
-    // Verificar se existem módulos relacionados - usando string interpolation
-    const checkModulesQuery = `SELECT COUNT(*) as count FROM "courseModules" WHERE "courseId" = ${courseId}`;
-    console.log(`[DELETE /course/${courseId}] Query para verificar módulos:`, checkModulesQuery);
-    const modulesResult = await db.execute(checkModulesQuery);
-    const moduleCount = parseInt(modulesResult.rows[0].count || '0');
+    // Verificar se existem módulos relacionados usando Drizzle ORM (seguro)
+    const relatedModules = await db.query.courseModules.findMany({
+      where: eq(courseModules.courseId, courseId)
+    });
     
-    if (moduleCount > 0) {
+    if (relatedModules.length > 0) {
       return res.status(400).json({ 
         message: 'Não é possível excluir este curso pois existem módulos associados a ele. Exclua os módulos primeiro.',
-        moduleCount
+        moduleCount: relatedModules.length
       });
     }
     
-    // Excluir o curso - usando string interpolation
-    const deleteQuery = `DELETE FROM courses WHERE id = ${courseId} RETURNING id`;
-    console.log(`[DELETE /course/${courseId}] Query de exclusão:`, deleteQuery);
-    const result = await db.execute(deleteQuery);
+    // Excluir o curso usando Drizzle ORM (seguro)
+    const result = await db.delete(courses).where(eq(courses.id, courseId)).returning({ id: courses.id });
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Curso não encontrado' });
