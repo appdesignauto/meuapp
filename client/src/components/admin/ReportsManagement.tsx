@@ -82,11 +82,11 @@ const ReportsManagement = () => {
   });
 
   // Consulta principal para obter reports
+  const statusFilter = activeTab !== 'all' ? activeTab : selectedStatusFilter !== 'all' ? selectedStatusFilter : null;
   const queryString = new URLSearchParams({
     page: currentPage.toString(),
     limit: ITEMS_PER_PAGE.toString(),
-    ...(activeTab !== 'all' && { status: activeTab }),
-    ...(selectedStatusFilter !== 'all' && { status: selectedStatusFilter }),
+    ...(statusFilter && { status: statusFilter }),
     ...(selectedTypeFilter !== 'all' && { typeId: selectedTypeFilter }),
     ...(searchTerm && { search: searchTerm })
   }).toString();
