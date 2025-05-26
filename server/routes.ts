@@ -5153,9 +5153,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   
-  // Rota para testar rebaixamento de usuário específico
-  // Temporariamente removida restrição isAdmin para testes
-  app.post("/api/test/downgradeUser/:userId", async (req, res) => {
+  // User downgrade route secured for admin-only access
+  app.post("/api/admin/downgradeUser/:userId", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
       const forceDowngrade = req.body.force === true;
@@ -5177,8 +5176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Rota para testar verificação de assinaturas expiradas
-  app.post("/api/test/expireSubscriptions", async (req, res) => {
+  // Subscription check route secured for admin-only access
+  app.post("/api/admin/checkExpiredSubscriptions", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const result = await SubscriptionService.checkExpiredSubscriptions();
       res.status(200).json(result);
@@ -5422,16 +5421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar router de adaptador para rotas em português da API de artes
   app.use(artesAdapterRouter);
   
-  // Rota de diagnóstico para testes (sem middleware)
-  app.get('/api/course-debug', (req, res) => {
-    console.log('[GET /api/course-debug] TESTANDO ACESSO - Rota de diagnóstico independente');
-    return res.json({
-      message: 'Rota de debug funcionando corretamente',
-      timestamp: new Date().toISOString(),
-      route: '/api/course-debug',
-      appUrl: req.protocol + '://' + req.get('host')
-    });
-  });
+  // Debug route removed for production security
   
   // Rota de diagnóstico específica para configurações de cursos
   app.get('/api/course-settings-debug', async (req, res) => {
