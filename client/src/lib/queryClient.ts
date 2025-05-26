@@ -80,10 +80,26 @@ export async function apiRequest(
 
   console.log(`[API] Fazendo requisição para ${finalUrl} com anti-cache`);
   
-  // Usar a URL com parâmetros anti-cache
-  const res = await fetch(finalUrl, fetchOptions);
-  await throwIfResNotOk(res);
-  return res;
+  try {
+    // Usar a URL com parâmetros anti-cache
+    const res = await fetch(finalUrl, fetchOptions);
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    // Tratamento robusto de erros de conectividade
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error(`[API] Erro de conectividade para ${finalUrl}:`, error.message);
+      throw new Error(`Falha na conexão. Verifique sua conexão com a internet e tente novamente.`);
+    }
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`[API] Requisição cancelada para ${finalUrl}`);
+      throw new Error(`Requisição cancelada. Tente novamente.`);
+    }
+    
+    // Re-throw outros erros sem modificação
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
