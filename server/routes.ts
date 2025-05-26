@@ -5689,57 +5689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
-  // Endpoint único e definitivo para estatísticas de reports
-  app.get('/api/reports/stats', async (req, res) => {
-    try {
-      const result = await db.execute(sql`
-        SELECT 
-          status,
-          COUNT(*) as count
-        FROM reports 
-        GROUP BY status
-      `);
-      
-      const stats = {
-        pending: 0,
-        reviewing: 0,
-        resolved: 0,
-        rejected: 0,
-        total: 0
-      };
-      
-      let total = 0;
-      result.forEach((row: any) => {
-        const count = parseInt(row.count || '0');
-        total += count;
-        
-        switch(row.status) {
-          case 'pendente':
-            stats.pending = count;
-            break;
-          case 'em-analise':
-            stats.reviewing = count;
-            break;
-          case 'resolvido':
-            stats.resolved = count;
-            break;
-          case 'rejeitado':
-            stats.rejected = count;
-            break;
-        }
-      });
-      
-      stats.total = total;
-      
-      return res.json({ stats });
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao buscar estatísticas'
-      });
-    }
-  });
+
 
   app.use('/api/reports', reportsRouter);      // Captura outras rotas /api/reports/*
   

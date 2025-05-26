@@ -20,11 +20,13 @@ const pool = new Pool({
  * GET /api/reports/types
  */
 /**
- * Endpoint único para estatísticas dos reports
+ * Endpoint ÚNICO E DEFINITIVO para estatísticas dos reports
  * GET /api/reports/stats
  */
 router.get('/stats', async (req, res) => {
   try {
+    console.log('📊 [ENDPOINT ÚNICO] Buscando estatísticas reais do banco de dados...');
+    
     const result = await pool.query(`
       SELECT 
         status,
