@@ -3482,6 +3482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar todos os usuários com nivelacesso 'designer', 'designer_adm' ou 'admin'
       // Executar SQL direto para evitar problemas com o TypeScript
+      const sortColumn = sort === 'activity' ? 'updatedat' : '"createdAt"';
       const designersQuery = `
         SELECT 
           id, 
@@ -3497,11 +3498,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedat
         FROM users 
         WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
-        ORDER BY ${sort === 'activity' ? 'updatedat' : '"createdAt"'} DESC
-        LIMIT ${limit} OFFSET ${offset}
+        ORDER BY ${sortColumn} DESC
+        LIMIT $1 OFFSET $2
       `;
       
-      const designers = await db.execute(sql.raw(designersQuery));
+      const designers = await db.execute(sql.raw(designersQuery), [limit, offset]);
       
       // Obter contagem total
       const totalCountQuery = `
