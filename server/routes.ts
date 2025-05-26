@@ -139,11 +139,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.setHeader('Content-Type', 'application/json');
       return res.status(200).json({
-        pending: stats.pending,
-        reviewing: stats.reviewing,
-        resolved: stats.resolved,
-        rejected: stats.rejected,
-        total: stats.total
+        stats: {
+          pending: stats.pending,
+          reviewing: stats.reviewing,
+          resolved: stats.resolved,
+          rejected: stats.rejected,
+          total: stats.total
+        }
       });
     } catch (error) {
       console.error('❌ [CRITICAL ENDPOINT] Erro:', error);
