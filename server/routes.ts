@@ -4392,8 +4392,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calcular offset para paginação
       const offset = (page - 1) * limit;
       
-      // Buscar seguidores - usando SQL direto para evitar problemas de case
-      const followersQuery = `
+      // Buscar seguidores - usando query parameterizada para segurança
+      const followersResult = await db.execute(sql`
         SELECT 
           u.id, 
           u.name, 
@@ -4409,9 +4409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE uf."followingId" = ${designerId}
         ORDER BY uf.createdat DESC
         LIMIT ${limit} OFFSET ${offset}
-      `;
-      
-      const followersResult = await db.execute(sql.raw(followersQuery));
+      `);
       const followers = followersResult.rows;
       
       // Contar total de seguidores usando SQL direto
