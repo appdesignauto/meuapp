@@ -3062,19 +3062,19 @@ export class DatabaseStorage implements IStorage {
 
   async getReportById(id: number): Promise<Report | undefined> {
     try {
-      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca com SQL bruto...`);
+      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca com consulta parametrizada...`);
       
-      // Consulta SQL direta, sem ORM
-      const result = await db.execute(sql.raw(`SELECT * FROM reports WHERE id = ${id}`));
+      // Consulta SQL segura usando Drizzle query builder
+      const result = await db.select().from(reports).where(eq(reports.id, id));
       
-      console.log(`[DEBUG] getReportById(${id}) - Resultado da consulta SQL:`, result.rows);
+      console.log(`[DEBUG] getReportById(${id}) - Resultado da consulta SQL:`, result);
       
-      if (!result.rows || result.rows.length === 0) {
+      if (!result || result.length === 0) {
         console.log(`[DEBUG] getReportById(${id}) - Denúncia não encontrada`);
         return undefined;
       }
       
-      const report = result.rows[0];
+      const report = result[0];
       console.log(`[DEBUG] getReportById(${id}) - Denúncia encontrada:`, report);
       
       return report as Report;
@@ -3164,12 +3164,12 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`[DEBUG] updateReport(${id}) - Iniciando atualização da denúncia...`, data);
       
-      // Verificar se a denúncia existe antes de tentar atualizar com SQL bruto
-      const result = await db.execute(sql.raw(`SELECT * FROM reports WHERE id = ${id}`));
+      // Verificar se a denúncia existe antes de tentar atualizar com consulta parametrizada
+      const result = await db.select().from(reports).where(eq(reports.id, id));
       
-      console.log(`[DEBUG] updateReport(${id}) - Resultado da verificação direta:`, result.rows);
+      console.log(`[DEBUG] updateReport(${id}) - Resultado da verificação direta:`, result);
       
-      if (!result.rows || result.rows.length === 0) {
+      if (!result || result.length === 0) {
         console.log(`[DEBUG] updateReport(${id}) - Denúncia não encontrada para atualização`);
         return undefined;
       }
