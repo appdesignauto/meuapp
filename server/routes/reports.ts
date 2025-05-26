@@ -256,6 +256,9 @@ router.put('/:id/respond', async (req, res) => {
     
     const validatedData = adminResponseSchema.parse(req.body);
     
+    // Definir isResolved baseado no status
+    const isResolved = validatedData.status === 'resolvido';
+    
     // Atualizar denúncia
     const result = await pool.query(`
       UPDATE reports 
@@ -271,7 +274,7 @@ router.put('/:id/respond', async (req, res) => {
     `, [
       validatedData.status,
       validatedData.adminResponse || null,
-      validatedData.isResolved || false,
+      isResolved,
       userId,
       reportId
     ]);
@@ -296,6 +299,42 @@ router.put('/:id/respond', async (req, res) => {
     
     console.error('Erro ao atualizar denúncia:', error);
     return res.status(500).json({ message: 'Erro ao atualizar denúncia' });
+  }
+});
+
+// Excluir denúncia
+router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const reportId = parseInt(req.params.id);
+    const user = req.user as any;
+    
+    // Verificar se o usuário é admin
+    if (user.nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado' });
+    }
+    
+    console.log(`[DELETE] Excluindo denúncia ID: ${reportId}`);
+    
+    // Excluir denúncia
+    const result = await pool.query(`
+      DELETE FROM reports 
+      WHERE id = $1
+      RETURNING id
+    `, [reportId]);
+    
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Denúncia não encontrada' });
+    }
+    
+    console.log(`Denúncia ${reportId} excluída com sucesso`);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Denúncia excluída com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao excluir denúncia:', error);
+    return res.status(500).json({ message: 'Erro ao excluir denúncia' });
   }
 });
 
