@@ -1075,18 +1075,14 @@ router.put('/settings', async (req, res) => {
     console.log(`[PUT /course/settings] courseId recebido: ${courseId}`);
     
     // Se tiver courseId, verificar se já existem configurações para este curso
-    let checkQuery = '';
-    if (courseId) {
-      checkQuery = `SELECT id FROM "courseSettings" WHERE "courseId" = ${courseId}`;
-    } else {
-      // Sem courseId, usar as configurações do Tutoriais Design Auto por padrão
-      checkQuery = `SELECT id FROM "courseSettings" WHERE "courseId" = 2`;
-    }
+    const targetCourseId = courseId || 2; // Sem courseId, usar as configurações do Tutoriais Design Auto por padrão
     
-    console.log(`[PUT /course/settings] Verificando configurações existentes com query: ${checkQuery}`);
-    const checkResult = await db.execute(checkQuery);
+    console.log(`[PUT /course/settings] Verificando configurações existentes para courseId: ${targetCourseId}`);
+    const checkResult = await db.select({ id: courseSettings.id })
+      .from(courseSettings)
+      .where(eq(courseSettings.courseId, targetCourseId));
     
-    if (checkResult.rows.length === 0) {
+    if (checkResult.length === 0) {
       console.log('[PUT /course/settings] Configurações não encontradas, criando...');
       
       // Criar configurações se não existirem - usando abordagem mais segura com string interpolation
