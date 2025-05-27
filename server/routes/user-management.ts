@@ -109,36 +109,116 @@ export function setupUserManagementRoutes(app: Express) {
       }
 
       const userId = parseInt(req.params.id);
-      const updates = req.body;
+      const { nivelacesso, isactive, tipoplano, acessovitalicio, dataexpiracao, observacaoadmin } = req.body;
 
-      // Campos permitidos para atualização
-      const allowedFields = [
-        'nivelacesso', 'isactive', 'tipoplano', 'acessovitalicio',
-        'dataexpiracao', 'observacaoadmin'
-      ];
+      // Construir query de atualização dinamicamente
+      const updates: string[] = [];
+      const params: any[] = [];
+      let paramIndex = 1;
 
-      const updateData: any = {};
-      for (const field of allowedFields) {
-        if (field in updates) {
-          updateData[field] = updates[field];
-        }
+      if (nivelacesso !== undefined) {
+        updates.push(`nivelacesso = $${paramIndex}`);
+        params.push(nivelacesso);
+        paramIndex++;
       }
 
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({ message: "Nenhum campo válido para atualização" });
+      if (isactive !== undefined) {
+        updates.push(`isactive = $${paramIndex}`);
+        params.push(isactive);
+        paramIndex++;
       }
 
-      updateData.atualizadoem = new Date();
+      if (tipoplano !== undefined) {
+        updates.push(`tipoplano = $${paramIndex}`);
+        params.push(tipoplano || null);
+        paramIndex++;
+      }
 
-      await db
-        .update(users)
-        .set(updateData)
-        .where(eq(users.id, userId));
+      if (acessovitalicio !== undefined) {
+        updates.push(`acessovitalicio = $${paramIndex}`);
+        params.push(acessovitalicio);
+        paramIndex++;
+      }
 
-      res.json({ message: "Usuário atualizado com sucesso" });
+      if (dataexpiracao !== undefined) {
+        updates.push(`dataexpiracao = $${paramIndex}`);
+        params.push(dataexpiracao || null);
+        paramIndex++;
+      }
+
+      if (observacaoadmin !== undefined) {
+        updates.push(`observacaoadmin = $${paramIndex}`);
+        params.push(observacaoadmin || null);
+        paramIndex++;
+      }
+
+      // Sempre atualizar atualizadoem
+      updates.push(`atualizadoem = $${paramIndex}`);
+      params.push(new Date());
+      paramIndex++;
+
+      if (updates.length === 1) { // Apenas atualizadoem
+        return res.status(400).json({ message: "Nenhum campo para atualizar" });
+      }
+
+      // Adicionar userId no final
+      params.push(userId);
+
+      const updateQuery = `
+        UPDATE users 
+        SET ${updates.join(', ')}
+        WHERE id = $${paramIndex}
+        RETURNING id, username, email, name, nivelacesso, isactive, atualizadoem
+      `;
+
+      const result = await sql(updateQuery, params);
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.json({ 
+        message: "Usuário atualizado com sucesso",
+        user: result[0]
+      });
 
     } catch (error) {
       console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // API para deletar usuário
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      if (!req.user || req.user.nivelacesso !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const userId = parseInt(req.params.id);
+
+      // Não permitir deletar o próprio usuário
+      if (req.user.id === userId) {
+        return res.status(400).json({ message: "Não é possível deletar seu próprio usuário" });
+      }
+
+      const deleteQuery = `DELETE FROM users WHERE id = $1 RETURNING username`;
+      const result = await sql(deleteQuery, [userId]);
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.json({ 
+        message: `Usuário ${result[0].username} foi deletado com sucesso`
+      });
+
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+}
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
