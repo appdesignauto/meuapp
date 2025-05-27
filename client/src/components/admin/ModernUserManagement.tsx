@@ -373,13 +373,21 @@ const ModernUserManagement = () => {
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
+    
+    // Preencher o formulário com os dados atuais do usuário
     editForm.reset({
       username: user.username,
       email: user.email,
       name: user.name || "",
       nivelacesso: user.nivelacesso,
       isactive: user.isactive,
+      origemassinatura: user.origemassinatura || undefined,
+      tipoplano: user.tipoplano || undefined,
+      dataassinatura: user.dataassinatura ? new Date(user.dataassinatura).toISOString().split('T')[0] : "",
+      dataexpiracao: user.dataexpiracao ? new Date(user.dataexpiracao).toISOString().split('T')[0] : "",
+      acessovitalicio: user.acessovitalicio || false,
     });
+    
     setIsEditDialogOpen(true);
   };
 
@@ -1231,11 +1239,12 @@ const ModernUserManagement = () => {
               Editar Usuário
             </DialogTitle>
             <DialogDescription>
-              Atualize as informações do usuário
+              Atualize as informações do usuário selecionado
             </DialogDescription>
           </DialogHeader>
+          
           <form onSubmit={editForm.handleSubmit(handleUpdateUser)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="edit-name">Nome Completo</Label>
                 <Input
@@ -1244,6 +1253,7 @@ const ModernUserManagement = () => {
                   placeholder="Digite o nome completo"
                 />
               </div>
+              
               <div>
                 <Label htmlFor="edit-username">Nome de Usuário</Label>
                 <Input
@@ -1261,12 +1271,26 @@ const ModernUserManagement = () => {
                 type="email"
                 {...editForm.register("email")}
                 placeholder="Digite o email"
+                disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
+                className={
+                  selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                    ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                    : ""
+                }
               />
+              {(selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus") && (
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ E-mail bloqueado - Usuário criado via webhook ({selectedUser.origemassinatura})
+                </p>
+              )}
             </div>
 
             <div>
               <Label htmlFor="edit-nivelacesso">Função</Label>
-              <Select onValueChange={(value) => editForm.setValue("nivelacesso", value as NivelAcesso)}>
+              <Select 
+                defaultValue={selectedUser?.nivelacesso}
+                onValueChange={(value) => editForm.setValue("nivelacesso", value as NivelAcesso)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a função" />
                 </SelectTrigger>
@@ -1283,6 +1307,82 @@ const ModernUserManagement = () => {
               </Select>
             </div>
 
+            {/* Campos de Assinatura para usuários Premium */}
+            {selectedUser?.nivelacesso === "premium" && (
+              <div className="space-y-4 p-4 border rounded-lg bg-yellow-50">
+                <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
+                  <Crown className="w-4 h-4" />
+                  Configurações Premium
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-origemassinatura">Origem</Label>
+                    <Select 
+                      defaultValue={selectedUser?.origemassinatura || ""}
+                      onValueChange={(value) => editForm.setValue("origemassinatura", value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">👤 Manual</SelectItem>
+                        <SelectItem value="hotmart">🛒 Hotmart</SelectItem>
+                        <SelectItem value="doppus">💳 Doppus</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-tipoplano">Tipo do Plano</Label>
+                    <Select 
+                      defaultValue={selectedUser?.tipoplano || ""}
+                      onValueChange={(value) => editForm.setValue("tipoplano", value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="trimestral">Trimestral</SelectItem>
+                        <SelectItem value="semestral">Semestral</SelectItem>
+                        <SelectItem value="anual">Anual</SelectItem>
+                        <SelectItem value="vitalicio">Vitalício</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-dataassinatura">Data Assinatura</Label>
+                    <Input
+                      id="edit-dataassinatura"
+                      type="date"
+                      {...editForm.register("dataassinatura")}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="edit-dataexpiracao">Data Expiração</Label>
+                    <Input
+                      id="edit-dataexpiracao"
+                      type="date"
+                      {...editForm.register("dataexpiracao")}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-acessovitalicio"
+                    {...editForm.register("acessovitalicio")}
+                  />
+                  <Label htmlFor="edit-acessovitalicio">Acesso Vitalício</Label>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="edit-isactive"
@@ -1291,7 +1391,7 @@ const ModernUserManagement = () => {
               <Label htmlFor="edit-isactive">Usuário ativo</Label>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancelar
               </Button>
