@@ -5088,8 +5088,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT DEFINITIVO - Lista de usuários com assinaturas (VERSÃO LIMPA)
-  app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
+  // ENDPOINT NOVO E FUNCIONAL - Lista de usuários com assinaturas
+  app.get("/api/admin/users-subscriptions", isAdmin, async (req, res) => {
     try {
       console.log("📋 Listando usuários com assinaturas - versão corrigida...");
       
@@ -5097,7 +5097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
       
-      // Usar conexão PostgreSQL direta
+      // Conexão PostgreSQL robusta
       const { Client } = require('pg');
       const client = new Client({
         connectionString: process.env.DATABASE_URL
@@ -5105,7 +5105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await client.connect();
       
-      // Query simples e robusta
+      // Queries otimizadas
       const usersQuery = `
         SELECT 
           id, username, email, name, profileimageurl, nivelacesso, 
@@ -5119,18 +5119,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
       
-      // Executar queries sequencialmente para evitar problemas
+      // Executar queries
       const usersResult = await client.query(usersQuery, [limit, offset]);
       const countResult = await client.query(countQuery);
       
       await client.end();
       
-      // Processar dados com validação robusta
+      // Processar usuários de forma robusta
       const users = [];
-      if (usersResult && usersResult.rows && Array.isArray(usersResult.rows)) {
-        for (const user of usersResult.rows) {
-          const isLifetime = user.acessovitalicio === true;
-          const isPremium = user.nivelacesso === 'premium' || user.nivelacesso === 'designer' || user.nivelacesso === 'designer_adm';
+      
+      if (usersResult?.rows) {
+        usersResult.rows.forEach((user: any) => {
+          const isLifetime = Boolean(user.acessovitalicio);
+          const isPremium = ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso);
           
           users.push({
             id: user.id,
@@ -5152,10 +5153,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               Math.max(0, Math.ceil((new Date(user.dataexpiracao).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
               null
           });
-        }
+        });
       }
       
-      const total = parseInt((countResult.rows?.[0]?.total || 0) as string);
+      const total = parseInt(countResult?.rows?.[0]?.total || '0');
       const totalPages = Math.ceil(total / limit);
       
       console.log(`✅ Usuários processados: ${users.length} de ${total} total`);
