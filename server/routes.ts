@@ -3745,6 +3745,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: art.createdAt
         }))
       };
+
+      // Buscar posts da comunidade se o usuário tiver posts
+      try {
+        const communityPosts = await db.query(`
+          SELECT 
+            id, title, content, "imageUrl", "createdAt", "viewCount",
+            "isApproved", "isPinned", "featuredUntil"
+          FROM "communityPosts" 
+          WHERE "userId" = $1 
+          ORDER BY "createdAt" DESC 
+          LIMIT 20
+        `, [designerId]);
+
+        response.posts = communityPosts.rows.map(post => ({
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          imageUrl: post.imageUrl,
+          createdAt: post.createdAt,
+          viewCount: post.viewCount || 0,
+          isApproved: post.isApproved,
+          isPinned: post.isPinned,
+          featuredUntil: post.featuredUntil
+        }));
+      } catch (postsError) {
+        console.error("Erro ao buscar posts da comunidade:", postsError);
+        response.posts = [];
+      }
       
       // Retornar dados do designer com estatísticas
       res.json(response);

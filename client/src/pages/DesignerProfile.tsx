@@ -22,6 +22,7 @@ type Designer = {
   bio: string | null;
   profileImageUrl: string | null;
   role: string;
+  nivelAcesso?: string;
   followers: number;
   following: number;
   createdAt: string;
@@ -40,6 +41,17 @@ type Designer = {
     format: string;
     isPremium: boolean;
     createdAt: string;
+  }[];
+  posts?: {
+    id: number;
+    title: string;
+    content: string;
+    imageUrl: string | null;
+    createdAt: string;
+    viewCount: number;
+    isApproved: boolean;
+    isPinned: boolean;
+    featuredUntil: string | null;
   }[];
 };
 
@@ -538,61 +550,174 @@ export default function DesignerProfile() {
         </div>
       </div>
       
-      {/* Seção das Artes com layout centralizado e responsivo */}
+      {/* Seção com Abas Inteligentes baseadas no nível de acesso */}
       <div className="max-w-6xl mx-auto">
-        {/* Título e Filtros Inteligentes */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white/60 p-4 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-2xl font-bold flex items-center text-blue-800">
-            Artes do Designer
-            <span className="ml-2 text-blue-400 font-normal text-base">
-              ({data.statistics.totalArts})
-            </span>
-          </h2>
-          
-          {/* Filtros sem o título "Filtros:" no mobile - apenas botões funcionais */}
-          <div className="mt-4 md:mt-0 px-2 md:px-0 pb-2">
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
-              {/* Label "Filtros:" aparece apenas em telas maiores */}
-              <div className="hidden sm:flex sm:flex-none sm:items-center sm:bg-white sm:rounded-full sm:px-3 sm:h-8 sm:shadow-sm sm:mr-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-gray-500"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
-                <span className="text-xs text-gray-500">Filtros:</span>
+        {/* Verificar se é designer ou apenas premium */}
+        {data.nivelAcesso === 'designer' || data.nivelAcesso === 'designer_adm' || data.role === 'designer' || data.role === 'designer_adm' ? (
+          // Para designers: mostrar duas abas (Artes e Posts)
+          <Tabs defaultValue="artes" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="artes" className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.25a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.712 0l-9.75-5.25a.75.75 0 010-1.32l9.75-5.25z" />
+                </svg>
+                Artes ({data.statistics.totalArts})
+              </TabsTrigger>
+              <TabsTrigger value="posts" className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                Posts ({data.posts?.length || 0})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="artes">
+              {/* Conteúdo da aba Artes */}
+              <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white/60 p-4 rounded-xl shadow-sm border border-gray-100">
+                <h2 className="text-2xl font-bold flex items-center text-blue-800">
+                  Artes da Vitrine
+                  <span className="ml-2 text-blue-400 font-normal text-base">
+                    ({data.statistics.totalArts})
+                  </span>
+                </h2>
+                
+                {/* Filtros para artes */}
+                <div className="mt-4 md:mt-0 px-2 md:px-0 pb-2">
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+                    <div className="hidden sm:flex sm:flex-none sm:items-center sm:bg-white sm:rounded-full sm:px-3 sm:h-8 sm:shadow-sm sm:mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-gray-500"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
+                      <span className="text-xs text-gray-500">Filtros:</span>
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
+                        activeFilter === 'todos' 
+                          ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
+                          : 'hover:border-blue-200 hover:scale-105'
+                      }`}
+                      onClick={() => {
+                        setActiveFilter('todos');
+                        setArtsPage(1); 
+                      }}
+                    >
+                      Todos
+                      {activeFilter === 'todos' && <span className="ml-1 text-xs">({data.arts.length})</span>}
+                    </Button>
+                  </div>
+                </div>
               </div>
               
-              {/* Botão Todos */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
-                  activeFilter === 'todos' 
-                    ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
-                    : 'hover:border-blue-200 hover:scale-105'
-                }`}
-                onClick={() => {
-                  setActiveFilter('todos');
-                  setArtsPage(1); 
-                }}
-              >
-                Todos
-                {activeFilter === 'todos' && <span className="ml-1 text-xs">({data.arts.length})</span>}
-              </Button>
-              
-              {/* Botão Favoritas */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
-                  activeFilter === 'favoritas' 
-                    ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
-                    : 'hover:border-blue-200 hover:scale-105'
-                }`}
-                onClick={() => {
-                  setActiveFilter('favoritas');
-                  setArtsPage(1);
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                <span>Favoritas</span>
-              </Button>
+              {/* Grid de artes */}
+              {data.arts.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                    {displayedArts(data).map((art) => (
+                      <ArtCard key={art.id} art={art} />
+                    ))}
+                  </div>
+                  
+                  {totalArtsPages(data) > 1 && (
+                    <div className="flex justify-center">
+                      <Pagination
+                        currentPage={artsPage}
+                        totalPages={totalArtsPages(data)}
+                        onPageChange={handlePageChange}
+                        className="mt-6"
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Nenhuma arte encontrada</p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="posts">
+              {/* Conteúdo da aba Posts */}
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-blue-800 mb-6">Posts da Comunidade</h2>
+                
+                {data.posts && data.posts.length > 0 ? (
+                  <div className="grid gap-6">
+                    {data.posts.map((post) => (
+                      <div key={post.id} className="bg-white/60 p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-lg font-semibold mb-2">{post.title}</h3>
+                        <p className="text-gray-600 mb-4">{post.content}</p>
+                        {post.imageUrl && (
+                          <img 
+                            src={post.imageUrl} 
+                            alt={post.title}
+                            className="w-full h-48 object-cover rounded-lg mb-4"
+                          />
+                        )}
+                        <div className="flex items-center text-sm text-gray-500">
+                          <span>{new Date(post.createdAt).toLocaleDateString('pt-BR')}</span>
+                          <span className="mx-2">•</span>
+                          <span>{post.viewCount} visualizações</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">Nenhum post encontrado</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          // Para usuários premium (não designers): mostrar apenas Posts
+          <div>
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white/60 p-4 rounded-xl shadow-sm border border-gray-100">
+              <h2 className="text-2xl font-bold flex items-center text-blue-800">
+                Posts do Designer
+                <span className="ml-2 text-blue-400 font-normal text-base">
+                  ({data.posts?.length || 0})
+                </span>
+              </h2>
+            </div>
+            
+            {data.posts && data.posts.length > 0 ? (
+              <div className="grid gap-6">
+                {data.posts.map((post) => (
+                  <div key={post.id} className="bg-white/60 p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-2">{post.title}</h3>
+                    <p className="text-gray-600 mb-4">{post.content}</p>
+                    {post.imageUrl && (
+                      <img 
+                        src={post.imageUrl} 
+                        alt={post.title}
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                      />
+                    )}
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span>{new Date(post.createdAt).toLocaleDateString('pt-BR')}</span>
+                      <span className="mx-2">•</span>
+                      <span>{post.viewCount} visualizações</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Nenhum post encontrado</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
               
               {/* Botão Recentes */}
               <Button 
