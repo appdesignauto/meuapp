@@ -174,6 +174,8 @@ const ModernUserManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedNivelAcesso, setSelectedNivelAcesso] = useState<string>("usuario");
+  const [selectedOrigemAssinatura, setSelectedOrigemAssinatura] = useState<string>("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -186,6 +188,26 @@ const ModernUserManagement = () => {
       return await res.json();
     },
   });
+
+  // Function to calculate expiration date based on plan type
+  const calculateExpirationDate = (subscriptionDate: string, planType: string): string => {
+    const date = new Date(subscriptionDate);
+    switch (planType) {
+      case "mensal":
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case "anual":
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+      case "vitalicio":
+        // For lifetime, set a far future date
+        date.setFullYear(date.getFullYear() + 100);
+        break;
+      default:
+        date.setMonth(date.getMonth() + 1);
+    }
+    return date.toISOString().split('T')[0];
+  };
 
   // Create user form
   const createForm = useForm<UserFormData>({
@@ -304,8 +326,32 @@ const ModernUserManagement = () => {
   const premiumUsers = users.filter(u => u.nivelacesso === "premium").length;
   const designerUsers = users.filter(u => u.nivelacesso === "designer" || u.nivelacesso === "designer_adm").length;
 
+  // Generate username from email
+  const generateUsernameFromEmail = (email: string): string => {
+    const emailPrefix = email.split('@')[0];
+    // Remove special characters and make lowercase
+    return emailPrefix.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  };
+
   const handleCreateUser = (data: UserFormData) => {
-    createUserMutation.mutate(data);
+    // Generate username from email if not provided
+    const username = data.username || generateUsernameFromEmail(data.email);
+    
+    // Prepare the final data
+    const finalData = {
+      ...data,
+      username,
+      // Only include premium fields if the user is premium
+      ...(data.nivelacesso === "premium" && {
+        origemassinatura: data.origemassinatura,
+        tipoplano: data.tipoplano,
+        dataassinatura: data.dataassinatura,
+        dataexpiracao: data.dataexpiracao,
+        acessovitalicio: data.tipoplano === "vitalicio"
+      })
+    };
+    
+    createUserMutation.mutate(finalData);
   };
 
   const handleEditUser = (user: User) => {
@@ -606,32 +652,24 @@ const ModernUserManagement = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  {...createForm.register("name", { required: "Nome é obrigatório" })}
-                  placeholder="Digite o nome completo"
-                />
-              </div>
-              <div>
-                <Label htmlFor="username">Nome de Usuário</Label>
-                <Input
-                  id="username"
-                  {...createForm.register("username", { required: "Username é obrigatório" })}
-                  placeholder="Digite o username"
-                />
-              </div>
-            </div>
-
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
                 {...createForm.register("email", { required: "Email é obrigatório" })}
-                placeholder="Digite o email"
+                placeholder="Digite o email (identificação principal)"
+                className="text-base"
+              />
+              <p className="text-sm text-muted-foreground mt-1">O email será usado como identificação principal do usuário</p>
+            </div>
+
+            <div>
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input
+                id="name"
+                {...createForm.register("name", { required: "Nome é obrigatório" })}
+                placeholder="Digite o nome completo"
               />
             </div>
 
@@ -657,10 +695,13 @@ const ModernUserManagement = () => {
             </div>
 
             <div>
-              <Label htmlFor="nivelacesso">Função</Label>
-              <Select onValueChange={(value) => createForm.setValue("nivelacesso", value as NivelAcesso)}>
+              <Label htmlFor="nivelacesso">Nível de Acesso</Label>
+              <Select onValueChange={(value) => {
+                createForm.setValue("nivelacesso", value as NivelAcesso);
+                setSelectedNivelAcesso(value);
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a função" />
+                  <SelectValue placeholder="Selecione o nível de acesso" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(roleConfig).map(([key, config]) => (
@@ -674,6 +715,93 @@ const ModernUserManagement = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Campos condicionais para usuários premium */}
+            {selectedNivelAcesso === "premium" && (
+              <div className="space-y-4 p-4 border rounded-lg bg-purple-50">
+                <h4 className="font-medium text-purple-800 flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  Configurações Premium
+                </h4>
+                
+                <div>
+                  <Label htmlFor="origemassinatura">Origem da Assinatura</Label>
+                  <Select onValueChange={(value) => {
+                    createForm.setValue("origemassinatura", value as OrigemAssinatura);
+                    setSelectedOrigemAssinatura(value);
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="hotmart">Hotmart</SelectItem>
+                      <SelectItem value="doppus">Doppus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Campos específicos para assinatura manual */}
+                {selectedOrigemAssinatura === "manual" && (
+                  <div className="space-y-4 p-3 border rounded bg-blue-50">
+                    <h5 className="font-medium text-blue-800">Detalhes da Assinatura Manual</h5>
+                    
+                    <div>
+                      <Label htmlFor="tipoplano">Tipo de Plano</Label>
+                      <Select onValueChange={(value) => {
+                        createForm.setValue("tipoplano", value as TipoPlano);
+                        // Auto-calcular expiração quando os dois campos estão preenchidos
+                        const dataAssinatura = createForm.getValues("dataassinatura");
+                        if (dataAssinatura) {
+                          const expirationDate = calculateExpirationDate(dataAssinatura, value);
+                          createForm.setValue("dataexpiracao", expirationDate);
+                        }
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de plano" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mensal">Mensal</SelectItem>
+                          <SelectItem value="anual">Anual</SelectItem>
+                          <SelectItem value="vitalicio">Vitalício</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="dataassinatura">Data da Assinatura</Label>
+                      <Input
+                        id="dataassinatura"
+                        type="date"
+                        {...createForm.register("dataassinatura")}
+                        onChange={(e) => {
+                          createForm.setValue("dataassinatura", e.target.value);
+                          const tipoplano = createForm.getValues("tipoplano");
+                          if (tipoplano) {
+                            const expirationDate = calculateExpirationDate(e.target.value, tipoplano);
+                            createForm.setValue("dataexpiracao", expirationDate);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="dataexpiracao">Data de Expiração (calculada automaticamente)</Label>
+                      <Input
+                        id="dataexpiracao"
+                        type="date"
+                        {...createForm.register("dataexpiracao")}
+                        readOnly
+                        className="bg-gray-100"
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Esta data é calculada automaticamente com base no tipo de plano e data de assinatura
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center space-x-2">
               <Checkbox
