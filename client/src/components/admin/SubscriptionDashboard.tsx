@@ -101,6 +101,65 @@ export default function SubscriptionDashboard() {
     refetchUsers();
   };
 
+  const handleExportCSV = () => {
+    if (!usersData?.users || usersData.users.length === 0) {
+      alert('Não há dados para exportar');
+      return;
+    }
+
+    // Criar CSV com dados dos usuários
+    const headers = [
+      'ID',
+      'Nome',
+      'Email',
+      'Username',
+      'Nível de Acesso',
+      'Status da Assinatura',
+      'Origem',
+      'Tipo de Plano',
+      'Data de Assinatura',
+      'Data de Expiração',
+      'Dias Restantes',
+      'Acesso Vitalício',
+      'Ativo',
+      'Data de Criação',
+      'Último Login'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...usersData.users.map(user => [
+        user.id,
+        `"${user.name || ''}"`,
+        `"${user.email}"`,
+        `"${user.username}"`,
+        `"${user.nivelacesso}"`,
+        `"${user.subscriptionStatus}"`,
+        `"${user.origemassinatura || 'manual'}"`,
+        `"${user.tipoplano || 'indefinido'}"`,
+        user.dataassinatura ? new Date(user.dataassinatura).toLocaleDateString('pt-BR') : '',
+        user.dataexpiracao ? new Date(user.dataexpiracao).toLocaleDateString('pt-BR') : '',
+        user.daysRemaining || '',
+        user.acessovitalicio ? 'Sim' : 'Não',
+        user.isactive ? 'Sim' : 'Não',
+        new Date(user.criadoem).toLocaleDateString('pt-BR'),
+        user.ultimologin ? new Date(user.ultimologin).toLocaleDateString('pt-BR') : ''
+      ].join(','))
+    ].join('\n');
+
+    // Criar e baixar arquivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `usuarios_assinaturas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    refetchUsers();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -184,7 +243,7 @@ export default function SubscriptionDashboard() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Atualizar
           </Button>
-          <Button variant="outline" size="sm">
+          <Button onClick={handleExportCSV} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>
