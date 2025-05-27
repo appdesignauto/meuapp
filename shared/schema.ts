@@ -35,8 +35,7 @@ export const users = pgTable("users", {
   location: text("location"),
   phone: text("phone"), // Novo campo para número de telefone
   
-  // Campo para compatibilidade com o código existente - será descontinuado gradualmente
-  role: text("role"),
+
   
   // ID do usuário no Supabase Auth
   supabaseId: text("supabaseId").unique(),
