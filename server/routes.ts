@@ -1230,7 +1230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/formats", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem criar formatos
-      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para criar formatos" });
       }
       
@@ -1265,7 +1265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/formats/:id", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem atualizar formatos
-      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para atualizar formatos" });
       }
       
@@ -1307,7 +1307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/formats/:id", async (req, res) => {
     try {
       // Apenas usuários admin podem excluir formatos
-      if (req.user?.nivelacesso !== 'admin') {
+      if (req.user?.role !== 'admin') {
         return res.status(403).json({ message: "Sem permissão para excluir formatos" });
       }
       
@@ -1381,7 +1381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/fileTypes", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem criar tipos de arquivo
-      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para criar tipos de arquivo" });
       }
       
@@ -1416,7 +1416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/fileTypes/:id", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem atualizar tipos de arquivo
-      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para atualizar tipos de arquivo" });
       }
       
@@ -1458,7 +1458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/fileTypes/:id", async (req, res) => {
     try {
       // Apenas usuários admin podem excluir tipos de arquivo
-      if (req.user?.nivelacesso !== 'admin') {
+      if (req.user?.role !== 'admin') {
         return res.status(403).json({ message: "Sem permissão para excluir tipos de arquivo" });
       }
       
@@ -2793,7 +2793,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // =============================================
   // GERENCIAMENTO DE USUÁRIOS
-  // Todas as rotas foram movidas para user-management-fixed.ts
+
+  // Rota para listar todos os usuários (apenas para administradores)
+  app.get("/api/users", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as User;
+      
+      // Verificar se o usuário tem permissão de administrador
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "support") {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      // Utilizando SQL para evitar problemas de coluna e garantir valores corretos
+      const usersQuery = `
+        SELECT 
+          id, 
+          username, 
+          email, 
+          name, 
+          profileimageurl, 
+          bio, 
+          role,
+          nivelacesso,
+          tipoplano,
+          origemassinatura,
+          dataassinatura,
+          dataexpiracao,
+          acessovitalicio, 
+          isactive, 
+          ultimologin, 
+          criadoem, 
+          atualizadoem
+        FROM users
+        ORDER BY criadoem DESC
+      `;
+      
+      const result = await db.execute(sql.raw(usersQuery));
+      const allUsers = result.rows;
+      
+      // Enriquecer com estatísticas
+      const usersWithStats = await Promise.all(
+        allUsers.map(async (user: any) => {
+          // Contar seguidores usando consulta segura
+          const followersResult = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(eq(userFollows.followingId, user.id));
+          const followersCount = followersResult[0]?.count || 0;
+          
+          // Contar seguindo usando consulta segura
+          const followingResult = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(eq(userFollows.followerId, user.id));
+          const followingCount = followingResult[0]?.count || 0;
+          
+          // Estatísticas para designers
+          let totalDownloads = 0;
+          let totalViews = 0;
+          let lastLogin = user.lastlogin;
+          
+          if (user.role === "designer" || user.role === "designer_adm") {
+            // Contar downloads de artes deste designer
+            const downloadsQuery = `
+              SELECT COUNT(*) as count
+              FROM downloads d
+              JOIN arts a ON d."artId" = a.id
+              WHERE a.designeridid = $1
+            `;
+            
+            const downloadsResult = await db.execute(sql.raw(downloadsQuery), [user.id]);
+            totalDownloads = parseInt(downloadsResult.rows[0].count) || 0;
+            
+            // Contar visualizações de artes deste designer
+            const viewsQuery = `
+              SELECT COUNT(*) as count
+              FROM views v
+              JOIN arts a ON v."artId" = a.id
+              WHERE a.designeridid = $1
+            `;
+            
+            const viewsResult = await db.execute(sql.raw(viewsQuery), [user.id]);
+            totalViews = parseInt(viewsResult.rows[0].count) || 0;
+          }
+          
+          // Converter para formato CamelCase para o frontend mas preservar campos originais
+          return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            name: user.name,
+            profileimageurl: user.profileimageurl, // Mantido o nome original
+            profileImageUrl: user.profileimageurl, // Adicionado formato camelCase
+            bio: user.bio,
+            role: user.role,
+            nivelacesso: user.nivelacesso,
+            tipoplano: user.tipoplano,
+            origemassinatura: user.origemassinatura,
+            dataassinatura: user.dataassinatura,
+            dataexpiracao: user.dataexpiracao,
+            acessovitalicio: user.acessovitalicio,
+            isactive: user.isactive,
+            ultimologin: user.ultimologin, // Mantido o nome original
+            lastLogin: user.ultimologin, // Adicionado formato camelCase
+            criadoem: user.criadoem, // Mantido o nome original
+            createdAt: user.criadoem, // Adicionado formato camelCase
+            followersCount,
+            followingCount,
+            totalDownloads,
+            totalViews
+          };
+        })
+      );
+      
+      res.json(usersWithStats);
+    } catch (error: any) {
+      console.error("Erro ao buscar usuários:", error);
+      res.status(500).json({ message: "Erro ao buscar usuários" });
+    }
+  });
 
   // Rota para criar um novo usuário (apenas para administradores)
   app.post("/api/users", isAuthenticated, async (req, res) => {
@@ -3320,7 +3438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Verificar artes criadas pelo usuário e decidir se serão excluídas
-        if (userToDelete[0].nivelacesso === 'designer' || userToDelete[0].nivelacesso === 'designer_adm') {
+        if (userToDelete[0].role === 'designer' || userToDelete[0].role === 'designer_adm') {
           const artsCount = await db
             .select({ count: count() })
             .from(arts)
@@ -4709,9 +4827,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
-  // Endpoint para listar usuários - REMOVIDO - agora usando nova API em user-management.ts
+  // Endpoint para listar usuários com assinaturas com filtros e paginação
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string;
+      const origin = req.query.origin as string;
+      const search = req.query.search as string;
+      
+      const offset = (page - 1) * limit;
+      
+      // Construir condições de filtro
+      let whereConditions: SQL[] = [];
+      
+      // Filtro por status
+      if (status) {
+        if (status === 'active') {
+          whereConditions.push(
+            or(
+              isNull(users.dataexpiracao),
+              sql`${users.dataexpiracao} > NOW()`,
+              eq(users.acessovitalicio, true)
+            )
+          );
+        } else if (status === 'expired') {
+          whereConditions.push(
+            and(
+              not(eq(users.acessovitalicio, true)),
+              not(isNull(users.dataexpiracao)),
+              sql`${users.dataexpiracao} <= NOW()`
+            )
+          );
+        } else if (status === 'trial') {
+          whereConditions.push(eq(users.tipoplano, 'trial'));
+        }
+      }
+      
+      // Filtro por origem
+      if (origin && origin !== 'all') {
+        whereConditions.push(eq(users.origemassinatura, origin));
+      }
+      
+      // Filtro por termo de busca
+      if (search) {
+        whereConditions.push(
+          or(
+            sql`${users.username} ILIKE ${`%${search}%`}`,
+            sql`${users.email} ILIKE ${`%${search}%`}`,
+            sql`${users.name} ILIKE ${`%${search}%`}`
+          )
+        );
+      }
+      
+      // Combinar condições
+      let query = db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        nivelacesso: users.nivelacesso,
+        planstatus: sql`
+          CASE
+            WHEN ${users.acessovitalicio} = true THEN 'lifetime'
+            WHEN ${users.dataexpiracao} IS NULL THEN 'active'
+            WHEN ${users.dataexpiracao} > NOW() THEN 'active'
+            ELSE 'expired'
+          END
+        `,
+        origemassinatura: users.origemassinatura,
+        tipoplano: users.tipoplano,
+        planoexpiracao: users.dataexpiracao,
+        criadoem: users.criadoem,
+        atualizadoem: users.updatedAt,
+      })
+      .from(users)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(desc(users.criadoem));
+      
+      if (whereConditions.length > 0) {
+        const finalCondition = whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions);
+        
+        query = query.where(finalCondition);
+      }
+      
+      // Executar consulta
+      const userList = await query;
+      
+      // Obter contagem total para paginação
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(users);
+      
+      res.status(200).json({
+        users: userList,
+        pagination: {
+          total: totalResult.count,
+          page,
+          limit,
+          pages: Math.ceil(totalResult.count / limit),
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao listar usuários:", error);
+      res.status(500).json({ message: "Erro ao listar usuários" });
+    }
+  });
   
-  // Endpoint para obter usuário específico - REMOVIDO - agora usando nova API em user-management.ts
+  // Endpoint para obter detalhes de um usuário específico
+  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Formatar o status do plano para exibição
+      let planStatus = 'free';
+      if (user.acessovitalicio) {
+        planStatus = 'lifetime';
+      } else if (user.dataexpiracao) {
+        if (new Date(user.dataexpiracao) > new Date()) {
+          planStatus = 'active';
+        } else {
+          planStatus = 'expired';
+        }
+      } else if (user.nivelacesso !== 'free') {
+        planStatus = 'active';
+      }
+      
+      res.status(200).json({
+        ...user,
+        planstatus: planStatus
+      });
+    } catch (error) {
+      console.error("Erro ao obter detalhes do usuário:", error);
+      res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
+    }
+  });
   
   // Endpoint para atualizar a assinatura de um usuário
   app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {

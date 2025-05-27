@@ -9,7 +9,6 @@ import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
 import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
-import { setupUserManagementRoutes } from "./routes/user-management-fixed";
 
 import { Pool } from "pg";
 
@@ -133,10 +132,6 @@ app.use((req, res, next) => {
     
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
-    
-    // Registrar rotas de gerenciamento de usuários moderno
-    setupUserManagementRoutes(app);
-    console.log('✅ Sistema moderno de gerenciamento de usuários configurado!');
     
     // 🚀 REGISTRAR WEBHOOK HOTMART AUTOMÁTICO - SISTEMA COMPLETO
     app.use('/webhook', webhookHotmartFixedRoutes);

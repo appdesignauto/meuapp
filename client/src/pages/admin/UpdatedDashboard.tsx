@@ -104,7 +104,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
-import ModernUserManagement from '@/components/admin/ModernUserManagement';
+import UserManagement from '@/components/admin/UserManagement';
 import CommunityManagement from './community/CommunityManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
 import CommentsManagement from '@/components/admin/CommentsManagement';
@@ -3069,7 +3069,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="users">
-              <ModernUserManagement />
+              <UserManagement />
             </TabsContent>
             
             <TabsContent value="community">
