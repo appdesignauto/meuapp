@@ -197,6 +197,12 @@ const ModernUserManagement = () => {
       case "mensal":
         date.setMonth(date.getMonth() + 1);
         break;
+      case "trimestral":
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case "semestral":
+        date.setMonth(date.getMonth() + 6);
+        break;
       case "anual":
         date.setFullYear(date.getFullYear() + 1);
         break;
@@ -913,21 +919,7 @@ const ModernUserManagement = () => {
                       </div>
                     )}
 
-                    {/* Integration Info for Hotmart/Doppus */}
-                    {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
-                      <div className="p-3 border rounded bg-green-50">
-                        <div className="flex items-center gap-2 text-green-800 mb-2">
-                          <CheckCircle className="w-4 h-4" />
-                          <span className="font-medium">Integração Automática</span>
-                        </div>
-                        <p className="text-sm text-green-700">
-                          {selectedOrigemAssinatura === "hotmart" 
-                            ? "Os dados da assinatura serão gerenciados automaticamente via webhook da Hotmart."
-                            : "Os dados da assinatura serão gerenciados automaticamente via integração Doppus."
-                          }
-                        </p>
-                      </div>
-                    )}
+
                   </div>
                 </div>
               </div>
