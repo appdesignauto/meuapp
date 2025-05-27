@@ -203,7 +203,7 @@ export default function PainelSeguindo() {
             )}
           </Button>
           
-          <Link href={`/designer/${designer.username}`} className="w-full">
+          <Link href={`/designers/${designer.username}`} className="w-full">
             <Button size="sm" variant="outline" className="w-full">
               Ver Perfil
             </Button>
