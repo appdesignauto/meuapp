@@ -4982,9 +4982,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
-  // Endpoint para listar usuários com assinaturas com filtros e paginação
+  // Endpoint para listar usuários com assinaturas com filtros e paginação  
   app.get("/api/admin/users", isAdmin, async (req, res) => {
     try {
+      console.log("Iniciando busca de usuários...");
+      
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const status = req.query.status as string;
@@ -4993,8 +4995,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const offset = (page - 1) * limit;
       
-      // Usar SQL direto para obter dados dos usuários
-      const result = await db.execute(sql`
+      // Usar consulta SQL básica com a conexão existente
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      const queryResult = await client.query(`
         SELECT 
           id, username, email, name, nivelacesso, origemassinatura, 
           tipoplano, dataexpiracao, acessovitalicio, criadoem, atualizadoem,
@@ -5003,12 +5012,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY criadoem DESC
       `);
       
-      // Extrair dados do resultado corretamente
-      const allUsers = Array.isArray(result) ? result : (result.rows || []);
+      await client.end();
       
-      // Aplicar filtros no JavaScript
-      let filteredUsers = allUsers;
+      console.log(`Encontrados ${queryResult.rows.length} usuários no banco`);
       
+      // Usar os dados das rows do PostgreSQL
+      let filteredUsers = queryResult.rows;
+        
       // Filtro por status
       if (status && status !== 'all') {
         filteredUsers = filteredUsers.filter((user: any) => {
@@ -5064,6 +5074,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         atualizadoem: user.atualizadoem,
       }));
       
+      console.log(`Retornando ${userList.length} usuários processados`);
+      
       res.status(200).json({
         users: userList,
         pagination: {
@@ -5073,6 +5085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pages: Math.ceil(totalCount / limit),
         }
       });
+      
     } catch (error) {
       console.error("Erro ao listar usuários:", error);
       res.status(500).json({ message: "Erro ao listar usuários" });
