@@ -168,6 +168,14 @@ const roleConfig = {
     bgColor: "bg-blue-50",
     icon: User,
     description: "Usuário básico"
+  },
+  free: {
+    label: "Free",
+    color: "bg-gradient-to-r from-gray-400 to-gray-500",
+    textColor: "text-gray-700",
+    bgColor: "bg-gray-50",
+    icon: User,
+    description: "Usuário gratuito"
   }
 };
 
