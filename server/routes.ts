@@ -5144,12 +5144,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para listar usuários com assinaturas
   app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
     try {
+      console.log("📋 Listando usuários com assinaturas...");
+      
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const status = req.query.status as string || 'all';
-      const origin = req.query.origin as string || 'all';
-      const search = req.query.search as string || '';
-      
       const offset = (page - 1) * limit;
       
       const { Client } = require('pg');
@@ -5159,75 +5157,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await client.connect();
       
-      // Construir filtros SQL
-      let whereConditions = ['isactive = true'];
-      let params = [];
-      let paramIndex = 1;
-      
-      if (search) {
-        whereConditions.push(`(name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR username ILIKE $${paramIndex})`);
-        params.push(`%${search}%`);
-        paramIndex++;
-      }
-      
-      if (origin !== 'all') {
-        if (origin === 'manual') {
-          whereConditions.push(`(origemassinatura IS NULL OR origemassinatura = 'manual')`);
-        } else {
-          whereConditions.push(`origemassinatura = $${paramIndex}`);
-          params.push(origin);
-          paramIndex++;
-        }
-      }
-      
-      // Filtro por status será aplicado após a query
-      const whereClause = whereConditions.join(' AND ');
-      
+      // Query simplificada para evitar erros
       const usersQuery = `
         SELECT 
-          id, username, email, name, nivelacesso, origemassinatura,
-          tipoplano, dataexpiracao, acessovitalicio, criadoem, atualizadoem,
-          profileimageurl, isactive,
-          CASE 
-            WHEN acessovitalicio = true THEN 'lifetime'
-            WHEN dataexpiracao IS NOT NULL AND dataexpiracao > NOW() THEN 'active'
-            WHEN dataexpiracao IS NOT NULL AND dataexpiracao <= NOW() THEN 'expired'
-            WHEN nivelacesso = 'premium' THEN 'active'
-            ELSE 'free'
-          END as status
+          id, username, email, name, profileimageurl,
+          nivelacesso, origemassinatura, tipoplano, 
+          dataassinatura, dataexpiracao, acessovitalicio,
+          isactive, criadoem, ultimologin
         FROM users 
-        WHERE ${whereClause}
+        WHERE isactive = true
         ORDER BY criadoem DESC
-        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        LIMIT $1 OFFSET $2
       `;
       
-      params.push(limit, offset);
-      
-      const countQuery = `
-        SELECT COUNT(*) as total
-        FROM users 
-        WHERE ${whereClause}
-      `;
-      const countParams = params.slice(0, -2);
+      const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
       
       const [usersResult, countResult] = await Promise.all([
-        client.query(usersQuery, params),
-        client.query(countQuery, countParams)
+        client.query(usersQuery, [limit, offset]),
+        client.query(countQuery)
       ]);
       
       await client.end();
       
-      // Aplicar filtro de status se necessário
-      let filteredUsers = usersResult.rows;
-      if (status !== 'all') {
-        filteredUsers = filteredUsers.filter(user => user.status === status);
-      }
+      const users = usersResult.rows.map((user: any) => ({
+        ...user,
+        subscriptionStatus: user.acessovitalicio ? 'lifetime' : 
+          (user.nivelacesso === 'premium' || user.nivelacesso === 'designer') ? 'premium' : 'free',
+        daysRemaining: user.dataexpiracao ? 
+          Math.max(0, Math.ceil((new Date(user.dataexpiracao).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+          null
+      }));
       
-      const totalUsers = parseInt(countResult.rows[0].total);
+      console.log(`✅ Encontrados ${users.length} usuários`);
       
       res.status(200).json({
-        users: filteredUsers,
+        users,
         pagination: {
+          total: parseInt(countResult.rows[0].total),
+          page,
+          limit,
+          totalPages: Math.ceil(countResult.rows[0].total / limit)
+        }
+      
+    } catch (error) {
+      console.error("❌ Erro ao listar usuários:", error);
+      res.status(500).json({ message: "Erro ao listar usuários" });
+    }
+  });
           page,
           limit,
           total: totalUsers,
