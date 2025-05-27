@@ -5088,16 +5088,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT CORRIGIDO - Lista de usuários com assinaturas
+  // ENDPOINT DEFINITIVO - Lista de usuários com assinaturas (VERSÃO LIMPA)
   app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
     try {
-      console.log("📋 Buscando usuários com assinaturas...");
+      console.log("📋 Listando usuários com assinaturas - versão corrigida...");
       
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
       
-      // Usar PostgreSQL direto para máxima compatibilidade
+      // Usar conexão PostgreSQL direta
       const { Client } = require('pg');
       const client = new Client({
         connectionString: process.env.DATABASE_URL
@@ -5105,10 +5105,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await client.connect();
       
+      // Query simples e robusta
       const usersQuery = `
-        SELECT id, username, email, name, profileimageurl, nivelacesso, 
-               origemassinatura, tipoplano, dataassinatura, dataexpiracao, 
-               acessovitalicio, isactive, criadoem, ultimologin
+        SELECT 
+          id, username, email, name, profileimageurl, nivelacesso, 
+          origemassinatura, tipoplano, dataassinatura, dataexpiracao, 
+          acessovitalicio, isactive, criadoem, ultimologin
         FROM users 
         WHERE isactive = true
         ORDER BY criadoem DESC
@@ -5117,33 +5119,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
       
-      const [usersResult, countResult] = await Promise.all([
-        client.query(usersQuery, [limit, offset]),
-        client.query(countQuery)
-      ]);
+      // Executar queries sequencialmente para evitar problemas
+      const usersResult = await client.query(usersQuery, [limit, offset]);
+      const countResult = await client.query(countQuery);
       
       await client.end();
       
-      const processedUsers = usersResult.rows.map((user: any) => ({
-        ...user,
-        subscriptionStatus: user.acessovitalicio ? 'lifetime' : 
-          (user.nivelacesso === 'premium' || user.nivelacesso === 'designer') ? 'premium' : 'free',
-        daysRemaining: user.dataexpiracao ? 
-          Math.max(0, Math.ceil((new Date(user.dataexpiracao).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
-          null
-      }));
+      // Processar dados com validação robusta
+      const users = [];
+      if (usersResult && usersResult.rows && Array.isArray(usersResult.rows)) {
+        for (const user of usersResult.rows) {
+          const isLifetime = user.acessovitalicio === true;
+          const isPremium = user.nivelacesso === 'premium' || user.nivelacesso === 'designer' || user.nivelacesso === 'designer_adm';
+          
+          users.push({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            name: user.name || user.username,
+            profileimageurl: user.profileimageurl,
+            nivelacesso: user.nivelacesso,
+            origemassinatura: user.origemassinatura,
+            tipoplano: user.tipoplano,
+            dataassinatura: user.dataassinatura,
+            dataexpiracao: user.dataexpiracao,
+            acessovitalicio: user.acessovitalicio,
+            isactive: user.isactive,
+            criadoem: user.criadoem,
+            ultimologin: user.ultimologin,
+            subscriptionStatus: isLifetime ? 'lifetime' : (isPremium ? 'premium' : 'free'),
+            daysRemaining: user.dataexpiracao && !isLifetime ? 
+              Math.max(0, Math.ceil((new Date(user.dataexpiracao).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+              null
+          });
+        }
+      }
       
-      const totalUsers = parseInt(countResult.rows[0].total as string);
+      const total = parseInt((countResult.rows?.[0]?.total || 0) as string);
+      const totalPages = Math.ceil(total / limit);
       
-      console.log(`✅ Usuários encontrados: ${processedUsers.length} de ${totalUsers} total`);
+      console.log(`✅ Usuários processados: ${users.length} de ${total} total`);
       
       res.status(200).json({
-        users: processedUsers,
+        users,
         pagination: {
-          total: totalUsers,
           page,
           limit,
-          totalPages: Math.ceil(totalUsers / limit)
+          total,
+          totalPages
         }
       });
       
