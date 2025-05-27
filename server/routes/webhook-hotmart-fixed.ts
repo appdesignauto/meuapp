@@ -80,11 +80,11 @@ router.post('/hotmart-fixed', async (req, res) => {
       
       const insertUser = await pool.query(`
         INSERT INTO users (
-          username, name, email, phone, password, nivelacesso, role, origemassinatura,
+          username, name, email, phone, password, nivelacesso, origemassinatura,
           tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed,
           criadoem, atualizadoem
         ) VALUES (
-          $1, $2, $3, $4, $5, 'premium', 'premium', $6,
+          $1, $2, $3, $4, $5, 'premium', $6,
           $7, $8, $9, false, true, true,
           $10, $11
         ) RETURNING id

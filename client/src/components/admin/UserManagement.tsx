@@ -766,7 +766,7 @@ const UserManagement = () => {
           (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()));
         
         // Filtro por papel
-        const matchesRole = roleFilter === "all" || user.role === roleFilter;
+        const matchesRole = roleFilter === "all" || user.nivelacesso === roleFilter;
         
         // Filtro por status
         const matchesStatus = 
@@ -779,7 +779,7 @@ const UserManagement = () => {
           activeTab === "all" || 
           (activeTab === "active" && user.isactive) || 
           (activeTab === "inactive" && !user.isactive) ||
-          (activeTab === "designers" && (user.role === "designer" || user.role === "designer_adm"));
+          (activeTab === "designers" && (user.nivelacesso === "designer" || user.nivelacesso === "designer_adm"));
         
         // Filtro por data
         let matchesDate = true;
@@ -1545,13 +1545,13 @@ const UserManagement = () => {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Designers</span>
                 <span className="font-semibold">
-                  {users?.filter(u => u.role === "designer" || u.role === "designer_adm").length || 0}
+                  {users?.filter(u => u.nivelacesso === "designer" || u.nivelacesso === "designer_adm").length || 0}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Usuários premium</span>
                 <span className="font-semibold">
-                  {users?.filter(u => u.role === "premium").length || 0}
+                  {users?.filter(u => u.nivelacesso === "premium").length || 0}
                 </span>
               </div>
             </div>
