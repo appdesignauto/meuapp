@@ -4982,94 +4982,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
-  // Endpoint principal para métricas de assinaturas do dashboard
+  // ENDPOINT CORRIGIDO - Métricas de assinaturas usando Drizzle ORM
   app.get("/api/admin/subscription-metrics", isAdmin, async (req, res) => {
     try {
-      console.log("📊 Calculando métricas completas de assinaturas...");
+      console.log("📊 Calculando métricas de assinaturas...");
       
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
+      // Usar Drizzle ORM que está funcionando
+      const allUsers = await db.select().from(users);
       
-      await client.connect();
+      // Calcular métricas manualmente
+      const totalUsers = allUsers.length;
+      const activeUsers = allUsers.filter(u => u.isactive).length;
+      const premiumUsers = allUsers.filter(u => 
+        u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
+      ).length;
+      const freeUsers = allUsers.filter(u => 
+        u.isactive && u.nivelacesso === 'free' && !u.acessovitalicio
+      ).length;
+      const lifetimeUsers = allUsers.filter(u => 
+        u.isactive && u.acessovitalicio
+      ).length;
       
-      // Métricas básicas simplificadas
-      const basicMetrics = await client.query(`
-        SELECT 
-          COUNT(*) as total_users,
-          COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-          COUNT(CASE WHEN (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm')) AND isactive = true THEN 1 END) as premium_users,
-          COUNT(CASE WHEN nivelacesso = 'free' AND isactive = true THEN 1 END) as free_users,
-          COUNT(CASE WHEN acessovitalicio = true AND isactive = true THEN 1 END) as lifetime_users,
-          COUNT(CASE WHEN criadoem >= NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
-          COUNT(CASE WHEN criadoem >= NOW() - INTERVAL '7 days' THEN 1 END) as new_users_7d
-        FROM users
-      `);
+      // Novos usuários (últimos 30 e 7 dias)
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+      const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      
+      const newUsers30d = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= thirtyDaysAgo
+      ).length;
+      const newUsers7d = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= sevenDaysAgo
+      ).length;
       
       // Estatísticas por origem
-      const originStats = await client.query(`
-        SELECT 
-          COALESCE(origemassinatura, 'manual') as origin,
-          COUNT(*) as count
-        FROM users 
-        WHERE isactive = true AND (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm'))
-        GROUP BY origemassinatura
-      `);
+      const premiumActiveUsers = allUsers.filter(u => 
+        u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
+      );
+      
+      const byOrigin = {};
+      premiumActiveUsers.forEach(user => {
+        const origin = user.origemassinatura || 'manual';
+        byOrigin[origin] = (byOrigin[origin] || 0) + 1;
+      });
       
       // Estatísticas por plano
-      const planStats = await client.query(`
-        SELECT 
-          COALESCE(tipoplano, 'indefinido') as plan,
-          COUNT(*) as count
-        FROM users 
-        WHERE isactive = true AND (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm'))
-        GROUP BY tipoplano
-      `);
-      
-      await client.end();
-      
-      const metrics = basicMetrics.rows[0];
+      const byPlan = {};
+      premiumActiveUsers.forEach(user => {
+        const plan = user.tipoplano || 'indefinido';
+        byPlan[plan] = (byPlan[plan] || 0) + 1;
+      });
       
       // Calcular taxa de conversão
-      const conversionRate = metrics.total_users > 0 
-        ? ((parseInt(metrics.premium_users) / parseInt(metrics.total_users)) * 100).toFixed(1)
+      const conversionRate = totalUsers > 0 
+        ? ((premiumUsers / totalUsers) * 100).toFixed(1)
         : '0.0';
       
       const response = {
         overview: {
-          totalUsers: parseInt(metrics.total_users) || 0,
-          activeUsers: parseInt(metrics.active_users) || 0,
-          premiumUsers: parseInt(metrics.premium_users) || 0,
-          freeUsers: parseInt(metrics.free_users) || 0,
-          lifetimeUsers: parseInt(metrics.lifetime_users) || 0,
+          totalUsers,
+          activeUsers,
+          premiumUsers,
+          freeUsers,
+          lifetimeUsers,
           expiredUsers: 0,
           expiringSoon: 0,
-          newUsers30d: parseInt(metrics.new_users_30d) || 0,
-          newUsers7d: parseInt(metrics.new_users_7d) || 0,
+          newUsers30d,
+          newUsers7d,
           conversionRate: parseFloat(conversionRate),
           churnRate: 0
         },
         distribution: {
-          byOrigin: originStats.rows.map(row => ({
-            origin: row.origin,
-            count: parseInt(row.count),
-            percentage: metrics.premium_users > 0 
-              ? ((parseInt(row.count) / parseInt(metrics.premium_users)) * 100).toFixed(1)
+          byOrigin: Object.entries(byOrigin).map(([origin, count]) => ({
+            origin,
+            count,
+            percentage: premiumUsers > 0 
+              ? ((count / premiumUsers) * 100).toFixed(1)
               : '0.0'
           })),
-          byPlan: planStats.rows.map(row => ({
-            plan: row.plan,
-            count: parseInt(row.count),
-            percentage: metrics.premium_users > 0 
-              ? ((parseInt(row.count) / parseInt(metrics.premium_users)) * 100).toFixed(1)
+          byPlan: Object.entries(byPlan).map(([plan, count]) => ({
+            plan,
+            count,
+            percentage: premiumUsers > 0 
+              ? ((count / premiumUsers) * 100).toFixed(1)
               : '0.0'
           }))
         },
         growth: []
       };
       
-      console.log("📈 Métricas calculadas:", {
+      console.log("✅ Métricas calculadas com sucesso:", {
         total: response.overview.totalUsers,
         premium: response.overview.premiumUsers,
         conversion: response.overview.conversionRate + '%'
@@ -5079,11 +5081,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error("❌ Erro ao calcular métricas:", error);
-      res.status(500).json({ message: "Erro ao calcular métricas de assinaturas" });
+      res.status(500).json({ 
+        message: "Erro ao calcular métricas de assinaturas",
+        error: error.message 
+      });
     }
   });
 
-  // Endpoint para listar usuários com assinaturas
+  // Endpoint para listar usuários com assinaturas - VERSÃO CORRIGIDA
   app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
     try {
       console.log("📋 Listando usuários com assinaturas...");
@@ -5092,36 +5097,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
       
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
-      
-      await client.connect();
-      
-      // Query simplificada para evitar erros
-      const usersQuery = `
-        SELECT 
-          id, username, email, name, profileimageurl,
-          nivelacesso, origemassinatura, tipoplano, 
-          dataassinatura, dataexpiracao, acessovitalicio,
-          isactive, criadoem, ultimologin
-        FROM users 
-        WHERE isactive = true
-        ORDER BY criadoem DESC
-        LIMIT $1 OFFSET $2
-      `;
-      
-      const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
-      
-      const [usersResult, countResult] = await Promise.all([
-        client.query(usersQuery, [limit, offset]),
-        client.query(countQuery)
-      ]);
-      
-      await client.end();
-      
-      const users = usersResult.rows.map((user: any) => ({
+      // Usar Drizzle ORM que já está funcionando
+      const usersResults = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          name: users.name,
+          profileimageurl: users.profileimageurl,
+          nivelacesso: users.nivelacesso,
+          origemassinatura: users.origemassinatura,
+          tipoplano: users.tipoplano,
+          dataassinatura: users.dataassinatura,
+          dataexpiracao: users.dataexpiracao,
+          acessovitalicio: users.acessovitalicio,
+          isactive: users.isactive,
+          criadoem: users.criadoem,
+          ultimologin: users.ultimologin
+        })
+        .from(users)
+        .where(eq(users.isactive, true))
+        .orderBy(desc(users.criadoem))
+        .limit(limit)
+        .offset(offset);
+
+      const [countResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(eq(users.isactive, true));
+
+      const processedUsers = usersResults.map((user) => ({
         ...user,
         subscriptionStatus: user.acessovitalicio ? 'lifetime' : 
           (user.nivelacesso === 'premium' || user.nivelacesso === 'designer') ? 'premium' : 'free',
@@ -5130,21 +5135,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           null
       }));
       
-      console.log(`✅ Encontrados ${users.length} usuários`);
+      console.log(`✅ Encontrados ${processedUsers.length} usuários`);
       
       res.status(200).json({
-        users,
+        users: processedUsers,
         pagination: {
-          total: parseInt(countResult.rows[0].total),
+          total: countResult.count,
           page,
           limit,
-          totalPages: Math.ceil(countResult.rows[0].total / limit)
+          totalPages: Math.ceil(countResult.count / limit)
         }
       });
       
     } catch (error) {
       console.error("❌ Erro ao listar usuários:", error);
-      res.status(500).json({ message: "Erro ao listar usuários" });
+      res.status(500).json({ message: "Erro ao listar usuários", error: error.message });
     }
   });
   
