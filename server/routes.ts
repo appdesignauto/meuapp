@@ -3557,17 +3557,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("- Não foi possível remover posts:", error);
         }
         
-        // Verificar se a tabela userFollows existe antes de tentar usar
+        // Verificar se a tabela userfollows existe antes de tentar usar
         try {
-          // Remover relações de seguidores/seguindo
+          // Remover relações de seguidores/seguindo (usando o nome correto da tabela)
           await db.execute(sql`
-            DELETE FROM "userFollows" 
-            WHERE "followerId" = ${userId} 
-            OR "followingId" = ${userId}
+            DELETE FROM "userfollows" 
+            WHERE "followerid" = ${userId} 
+            OR "followingid" = ${userId}
           `);
           console.log("- Relações de seguidores removidas");
         } catch (error) {
           console.log("- Não foi possível remover relações de seguidores:", error);
+          console.log("- Erro detalhado:", error);
         }
         
         // Verificar artes criadas pelo usuário e decidir se serão excluídas
