@@ -5144,6 +5144,252 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ENDPOINT CRÍTICO: Lista paginada de usuários para gestão de assinaturas
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      console.log("📋 Listando usuários com paginação...");
+      
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+      const planType = req.query.planType as string;
+      const status = req.query.status as string;
+      const origin = req.query.origin as string;
+      
+      const offset = (page - 1) * limit;
+      
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      // Construir WHERE clause dinamicamente
+      let whereConditions = ['isactive = true'];
+      let queryParams = [];
+      let paramIndex = 1;
+      
+      if (search) {
+        whereConditions.push(`(email ILIKE $${paramIndex} OR name ILIKE $${paramIndex} OR username ILIKE $${paramIndex})`);
+        queryParams.push(`%${search}%`);
+        paramIndex++;
+      }
+      
+      if (planType && planType !== 'all') {
+        if (planType === 'premium') {
+          whereConditions.push(`(nivelacesso IN ('premium', 'designer', 'designer_adm') OR acessovitalicio = true)`);
+        } else if (planType === 'free') {
+          whereConditions.push(`(nivelacesso IN ('free', 'admin') AND NOT acessovitalicio)`);
+        }
+      }
+      
+      if (status && status !== 'all') {
+        if (status === 'active') {
+          whereConditions.push(`(dataexpiracao IS NULL OR dataexpiracao > NOW() OR acessovitalicio = true)`);
+        } else if (status === 'expired') {
+          whereConditions.push(`(dataexpiracao IS NOT NULL AND dataexpiracao <= NOW() AND NOT acessovitalicio)`);
+        }
+      }
+      
+      if (origin && origin !== 'all') {
+        whereConditions.push(`origemassinatura = $${paramIndex}`);
+        queryParams.push(origin);
+        paramIndex++;
+      }
+      
+      const whereClause = whereConditions.join(' AND ');
+      
+      // Query para buscar usuários
+      const usersQuery = `
+        SELECT 
+          id, username, email, name, profileimageurl,
+          nivelacesso, origemassinatura, tipoplano, 
+          dataassinatura, dataexpiracao, acessovitalicio,
+          isactive, criadoem, ultimologin, atualizadoem
+        FROM users 
+        WHERE ${whereClause}
+        ORDER BY criadoem DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+      
+      queryParams.push(limit, offset);
+      
+      // Query para contar total
+      const countQuery = `SELECT COUNT(*) as total FROM users WHERE ${whereClause}`;
+      const countParams = queryParams.slice(0, -2); // Remove limit e offset
+      
+      const [usersResult, countResult] = await Promise.all([
+        client.query(usersQuery, queryParams),
+        client.query(countQuery, countParams)
+      ]);
+      
+      await client.end();
+      
+      const users = usersResult.rows.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: user.name || user.username,
+        accountType: (user.nivelacesso === 'premium' || user.nivelacesso === 'designer' || user.nivelacesso === 'designer_adm' || user.acessovitalicio) ? 'premium' : 'free',
+        isActive: user.isactive,
+        createdAt: user.criadoem,
+        updatedAt: user.atualizadoem,
+        lastLoginAt: user.ultimologin,
+        subscriptionEndDate: user.dataexpiracao,
+        subscriptionStartDate: user.dataassinatura
+      }));
+      
+      const total = parseInt(countResult.rows[0].total);
+      const totalPages = Math.ceil(total / limit);
+      
+      console.log(`✅ Retornando ${users.length} usuários de ${total} total`);
+      
+      res.json({
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages
+        }
+      });
+      
+    } catch (error) {
+      console.error("❌ Erro ao listar usuários:", error);
+      res.status(500).json({ 
+        message: "Erro ao listar usuários", 
+        error: error.message 
+      });
+    }
+  });
+
+  // ENDPOINT CRÍTICO: Lista paginada de assinaturas
+  app.get("/api/admin/subscriptions", isAdmin, async (req, res) => {
+    try {
+      console.log("📋 Listando assinaturas com paginação...");
+      
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const planType = req.query.planType as string;
+      const status = req.query.status as string;
+      
+      const offset = (page - 1) * limit;
+      
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      // Construir WHERE clause para assinaturas
+      let whereConditions = ['u.isactive = true'];
+      let queryParams = [];
+      let paramIndex = 1;
+      
+      if (planType && planType !== 'all') {
+        if (planType === 'premium') {
+          whereConditions.push(`(u.nivelacesso IN ('premium', 'designer', 'designer_adm') OR u.acessovitalicio = true)`);
+        } else if (planType === 'free') {
+          whereConditions.push(`(u.nivelacesso IN ('free', 'admin') AND NOT u.acessovitalicio)`);
+        }
+      }
+      
+      if (status && status !== 'all') {
+        if (status === 'active') {
+          whereConditions.push(`(u.dataexpiracao IS NULL OR u.dataexpiracao > NOW() OR u.acessovitalicio = true)`);
+        } else if (status === 'expired') {
+          whereConditions.push(`(u.dataexpiracao IS NOT NULL AND u.dataexpiracao <= NOW() AND NOT u.acessovitalicio)`);
+        }
+      }
+      
+      const whereClause = whereConditions.join(' AND ');
+      
+      // Query para buscar "assinaturas" (dados dos usuários formatados como assinaturas)
+      const subscriptionsQuery = `
+        SELECT 
+          u.id,
+          u.id as userId,
+          u.username, 
+          u.email, 
+          u.name, 
+          u.nivelacesso, 
+          u.origemassinatura, 
+          u.tipoplano, 
+          u.dataassinatura, 
+          u.dataexpiracao, 
+          u.acessovitalicio,
+          u.isactive, 
+          u.criadoem, 
+          u.atualizadoem
+        FROM users u
+        WHERE ${whereClause}
+        ORDER BY u.criadoem DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+      
+      queryParams.push(limit, offset);
+      
+      // Query para contar total
+      const countQuery = `SELECT COUNT(*) as total FROM users u WHERE ${whereClause}`;
+      
+      const [subscriptionsResult, countResult] = await Promise.all([
+        client.query(subscriptionsQuery, queryParams),
+        client.query(countQuery, queryParams.slice(0, -2))
+      ]);
+      
+      await client.end();
+      
+      const subscriptions = subscriptionsResult.rows.map(user => {
+        const isActive = user.acessovitalicio || !user.dataexpiracao || new Date(user.dataexpiracao) > new Date();
+        const isPremium = user.nivelacesso === 'premium' || user.nivelacesso === 'designer' || user.nivelacesso === 'designer_adm' || user.acessovitalicio;
+        
+        return {
+          id: user.id,
+          userId: user.id,
+          planType: isPremium ? 'premium' : 'free',
+          startDate: user.dataassinatura || user.criadoem,
+          endDate: user.acessovitalicio ? null : user.dataexpiracao,
+          isActive: isActive,
+          paymentStatus: isActive ? 'completed' : 'expired',
+          createdAt: user.criadoem,
+          updatedAt: user.atualizadoem,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name || user.username,
+            accountType: isPremium ? 'premium' : 'free',
+            isActive: user.isactive,
+            createdAt: user.criadoem,
+            updatedAt: user.atualizadoem
+          }
+        };
+      });
+      
+      const total = parseInt(countResult.rows[0].total);
+      const totalPages = Math.ceil(total / limit);
+      
+      console.log(`✅ Retornando ${subscriptions.length} assinaturas de ${total} total`);
+      
+      res.json({
+        subscriptions,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages
+        }
+      });
+      
+    } catch (error) {
+      console.error("❌ Erro ao listar assinaturas:", error);
+      res.status(500).json({ 
+        message: "Erro ao listar assinaturas", 
+        error: error.message 
+      });
+    }
+  });
+
   // Endpoint para estatísticas de usuários - usado no painel de assinaturas
   app.get("/api/admin/users/stats", isAdmin, async (req, res) => {
     try {
