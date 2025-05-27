@@ -184,12 +184,6 @@ const ModernUserManagement = () => {
   const [selectedOrigemAssinatura, setSelectedOrigemAssinatura] = useState<string>("");
   const [createUserStep, setCreateUserStep] = useState<1 | 2>(1);
   
-  // Estados para modais das novas funcionalidades
-  const [showUserDetails, setShowUserDetails] = useState(false);
-  const [selectedUserForDetails, setSelectedUserForDetails] = useState<User | null>(null);
-  const [showUserHistory, setShowUserHistory] = useState(false);
-  const [selectedUserForHistory, setSelectedUserForHistory] = useState<User | null>(null);
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
