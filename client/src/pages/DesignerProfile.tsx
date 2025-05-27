@@ -651,23 +651,34 @@ export default function DesignerProfile() {
           </div>
         ) : (
           <>
-            {/* Vitrine organizada - Grid responsivo compacto */}
-            <div className="w-full max-w-7xl mx-auto px-3">
+            {/* Vitrine Pinterest - Layout Masonry UX/UI Profissional */}
+            <div className="w-full max-w-6xl mx-auto px-4">
               <div 
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4"
+                className="columns-2 sm:columns-3 md:columns-4 lg:columns-4 gap-4 space-y-0"
                 key={activeFilter}
+                style={{
+                  columnFill: 'balance',
+                  columnRule: 'none'
+                }}
               >
                 {displayedArts(data).map((art, index) => (
                   <div 
                     key={art.id} 
-                    className="relative group"
+                    className="break-inside-avoid mb-4 group animate-fadeIn"
                     style={{
-                      animationDelay: `${index * 40}ms`,
+                      animationDelay: `${index * 50}ms`,
+                      pageBreakInside: 'avoid',
+                      breakInside: 'avoid'
                     }}
                   >
-                    {/* Container da arte compacto */}
-                    <div className="relative transition-all duration-200 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden">
-                      <ArtCard art={art} />
+                    {/* Container Pinterest Style com aspect ratio consistente */}
+                    <div className="relative transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/10 rounded-2xl overflow-hidden bg-white border border-gray-100/50 shadow-sm">
+                      <div className="relative overflow-hidden">
+                        <ArtCard art={art} />
+                      </div>
+                      
+                      {/* Overlay sutil no hover para melhor UX */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-300 rounded-2xl pointer-events-none" />
                     </div>
                   </div>
                 ))}
