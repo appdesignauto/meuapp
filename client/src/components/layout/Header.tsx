@@ -365,7 +365,7 @@ const Header = () => {
               </Button>
             )}
 
-            {user && user.role !== 'premium' && (
+            {user && user.nivelacesso !== 'premium' && (
               <Link href="/planos">
                 <Button 
                   variant="ghost" 
@@ -378,7 +378,7 @@ const Header = () => {
             )}
             
             {/* Link para painel administrativo - mostrado apenas para admin */}
-            {user && (user.role === 'admin' || user.role === 'designer_adm') && (
+            {user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm') && (
               <Link href="/admin">
                 <Button 
                   variant="ghost" 

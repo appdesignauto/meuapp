@@ -936,7 +936,7 @@ const AdminDashboard = () => {
   };
   
   // Verifica se o usuário é admin ou designer_adm
-  const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
+  const isAuthorized = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm';
 
   if (!isAuthorized) {
     // Redireciona para home se não for autorizado
@@ -1366,7 +1366,7 @@ const AdminDashboard = () => {
                   {sidebarOpen && <span className="truncate">Configurações do Site</span>}
                 </button>
 
-                {user?.role === 'admin' && (
+                {user?.nivelacesso === 'admin' && (
                   <>
                     <Link 
                       href="/admin/logo-upload"
