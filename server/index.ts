@@ -137,24 +137,29 @@ app.use((req, res, next) => {
     app.use('/webhook', webhookHotmartFixedRoutes);
     console.log('✅ Sistema de webhook Hotmart automático configurado com sucesso!');
     
-    // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
-    const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
+    // Configurar verificação diária de assinaturas expiradas (executar a cada 24 horas)
+    const VERIFICAR_ASSINATURAS_INTERVALO = 24 * 60 * 60 * 1000; // 24 horas em milissegundos
     
     // Iniciar verificador de assinaturas expiradas
     setInterval(async () => {
       try {
-        console.log("Verificando assinaturas expiradas...");
+        const agora = new Date().toLocaleString('pt-BR');
+        console.log(`🔄 [${agora}] Iniciando verificação automática de assinaturas expiradas (24h)...`);
         const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
-        console.log(`Verificação concluída: ${downgradedCount} usuários rebaixados para free`);
+        console.log(`✅ [${agora}] Verificação automática concluída: ${downgradedCount} usuários rebaixados para free`);
       } catch (error) {
-        console.error("Erro ao verificar assinaturas expiradas:", error);
+        console.error(`❌ [${new Date().toLocaleString('pt-BR')}] Erro na verificação automática:`, error);
       }
     }, VERIFICAR_ASSINATURAS_INTERVALO);
     
     // Executar verificação inicial na inicialização do servidor
-    console.log("Executando verificação inicial de assinaturas expiradas...");
+    console.log("🔄 Executando verificação inicial de assinaturas expiradas...");
     const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
-    console.log(`Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
+    console.log(`✅ Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
+    
+    // Informar quando será a próxima verificação
+    const proximaVerificacao = new Date(Date.now() + VERIFICAR_ASSINATURAS_INTERVALO);
+    console.log(`⏰ Próxima verificação automática: ${proximaVerificacao.toLocaleString('pt-BR')} (em 24 horas)`);
     
     // IMPORTANTE: Configurar rotas de webhook ANTES de qualquer fallback para o SPA
     // Isso garante que webhooks da Hotmart e Doppus sejam processados corretamente

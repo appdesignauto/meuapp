@@ -802,13 +802,35 @@ const ModernUserManagement = () => {
                       </Select>
                     </div>
 
-                    {/* Manual Subscription Details */}
-                    {selectedOrigemAssinatura === "manual" && (
+                    {/* Manual, Hotmart, and Doppus Subscription Details */}
+                    {(selectedOrigemAssinatura === "manual" || selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
                       <div className="space-y-4 p-3 border rounded bg-blue-50">
                         <h5 className="font-medium text-blue-800 flex items-center gap-2">
                           <Settings className="w-4 h-4" />
-                          Detalhes da Assinatura Manual
+                          {selectedOrigemAssinatura === "manual" ? "Detalhes da Assinatura Manual" : 
+                           selectedOrigemAssinatura === "hotmart" ? "Assinatura Hotmart (Processo Manual)" :
+                           "Assinatura Doppus (Processo Manual)"}
                         </h5>
+                        {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
+                          <p className="text-sm text-blue-700 bg-blue-100 p-2 rounded">
+                            ℹ️ Use esta opção quando o webhook automático falhar ou para processar compras manualmente
+                          </p>
+                        )}
+                        
+                        {/* Transaction ID for Hotmart/Doppus manual entries */}
+                        {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
+                          <div>
+                            <Label htmlFor="observacaoadmin">ID da Transação / Observações</Label>
+                            <Input
+                              placeholder={`ID da transação ${selectedOrigemAssinatura === "hotmart" ? "Hotmart" : "Doppus"} ou observações sobre a compra`}
+                              value={createForm.watch("observacaoadmin") || ""}
+                              onChange={(e) => createForm.setValue("observacaoadmin", e.target.value)}
+                            />
+                            <p className="text-sm text-muted-foreground mt-1">
+                              💡 Útil para rastrear a compra caso o webhook tenha falhado
+                            </p>
+                          </div>
+                        )}
                         
                         <div>
                           <Label htmlFor="tipoplano">Tipo de Plano *</Label>
