@@ -5020,14 +5020,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
       );
       
-      const byOrigin = {};
+      const byOrigin: Record<string, number> = {};
       premiumActiveUsers.forEach(user => {
         const origin = user.origemassinatura || 'manual';
         byOrigin[origin] = (byOrigin[origin] || 0) + 1;
       });
       
       // Estatísticas por plano
-      const byPlan = {};
+      const byPlan: Record<string, number> = {};
       premiumActiveUsers.forEach(user => {
         const plan = user.tipoplano || 'indefinido';
         byPlan[plan] = (byPlan[plan] || 0) + 1;
@@ -5088,45 +5088,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint para listar usuários com assinaturas - VERSÃO CORRIGIDA
+  // ENDPOINT SIMPLIFICADO E FUNCIONAL - Lista de usuários com assinaturas
   app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
     try {
-      console.log("📋 Listando usuários com assinaturas...");
+      console.log("📋 Iniciando busca de usuários...");
       
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
       
-      // Usar Drizzle ORM que já está funcionando
-      const usersResults = await db
-        .select({
-          id: users.id,
-          username: users.username,
-          email: users.email,
-          name: users.name,
-          profileimageurl: users.profileimageurl,
-          nivelacesso: users.nivelacesso,
-          origemassinatura: users.origemassinatura,
-          tipoplano: users.tipoplano,
-          dataassinatura: users.dataassinatura,
-          dataexpiracao: users.dataexpiracao,
-          acessovitalicio: users.acessovitalicio,
-          isactive: users.isactive,
-          criadoem: users.criadoem,
-          ultimologin: users.ultimologin
-        })
-        .from(users)
-        .where(eq(users.isactive, true))
-        .orderBy(desc(users.criadoem))
-        .limit(limit)
-        .offset(offset);
-
-      const [countResult] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(users)
-        .where(eq(users.isactive, true));
-
-      const processedUsers = usersResults.map((user) => ({
+      // Query direta no PostgreSQL - método que sempre funciona
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      const usersQuery = `
+        SELECT id, username, email, name, profileimageurl, nivelacesso, 
+               origemassinatura, tipoplano, dataassinatura, dataexpiracao, 
+               acessovitalicio, isactive, criadoem, ultimologin
+        FROM users 
+        WHERE isactive = true
+        ORDER BY criadoem DESC
+        LIMIT $1 OFFSET $2
+      `;
+      
+      const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
+      
+      const usersResult = await client.query(usersQuery, [limit, offset]);
+      const countResult = await client.query(countQuery);
+      
+      await client.end();
+      
+      const processedUsers = usersResult.rows.map((user: any) => ({
         ...user,
         subscriptionStatus: user.acessovitalicio ? 'lifetime' : 
           (user.nivelacesso === 'premium' || user.nivelacesso === 'designer') ? 'premium' : 'free',
@@ -5135,21 +5131,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           null
       }));
       
-      console.log(`✅ Encontrados ${processedUsers.length} usuários`);
+      const totalUsers = parseInt(countResult.rows[0].total);
+      
+      console.log(`✅ SUCESSO: ${processedUsers.length} usuários encontrados de ${totalUsers} total`);
       
       res.status(200).json({
         users: processedUsers,
         pagination: {
-          total: countResult.count,
+          total: totalUsers,
           page,
           limit,
-          totalPages: Math.ceil(countResult.count / limit)
+          totalPages: Math.ceil(totalUsers / limit)
         }
       });
       
-    } catch (error) {
-      console.error("❌ Erro ao listar usuários:", error);
-      res.status(500).json({ message: "Erro ao listar usuários", error: error.message });
+    } catch (error: any) {
+      console.error("❌ Erro crítico ao listar usuários:", error);
+      res.status(500).json({ 
+        message: "Erro ao listar usuários", 
+        error: error.message 
+      });
     }
   });
   
