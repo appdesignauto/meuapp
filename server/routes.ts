@@ -1231,7 +1231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/formats", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem criar formatos
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para criar formatos" });
       }
       
@@ -1266,7 +1266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/formats/:id", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem atualizar formatos
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para atualizar formatos" });
       }
       
@@ -1308,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/formats/:id", async (req, res) => {
     try {
       // Apenas usuários admin podem excluir formatos
-      if (req.user?.role !== 'admin') {
+      if (req.user?.nivelacesso !== 'admin') {
         return res.status(403).json({ message: "Sem permissão para excluir formatos" });
       }
       
@@ -3626,7 +3626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const username = req.params.username;
       
       // Verificar se o usuário é admin
-      const isAdmin = req.user && (req.user as any).role === 'admin';
+      const isAdmin = req.user && (req.user as any).nivelacesso === 'admin';
       
       // Buscamos dados do designer diretamente
       const userQuery = await db.execute(
@@ -3638,7 +3638,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bio,
           profileimageurl,
           nivelacesso,
-          role,
           website,
           location,
           criadoem,
@@ -3728,7 +3727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bio: designer.bio,
         profileImageUrl: designer.profileimageurl,
         nivelAcesso: designer.nivelacesso,
-        role: designer.role,
+        role: designer.nivelacesso,
         website: designer.website || "",
         location: designer.location || "",
         socialLinks: designer || {},
