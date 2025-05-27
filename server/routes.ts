@@ -2854,25 +2854,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (user.nivelacesso === "designer" || user.nivelacesso === "designer_adm") {
             // Contar downloads de artes deste designer
-            const downloadsQuery = `
-              SELECT COUNT(*) as count
-              FROM downloads d
-              JOIN arts a ON d."artId" = a.id
-              WHERE a.designerid = $1
-            `;
-            
-            const downloadsResult = await db.execute(sql.raw(downloadsQuery), [user.id]);
+            const downloadsResult = await db.execute(
+              sql`SELECT COUNT(*) as count
+                  FROM downloads d
+                  JOIN arts a ON d."artId" = a.id
+                  WHERE a.designerid = ${user.id}`
+            );
             totalDownloads = parseInt(downloadsResult.rows[0].count) || 0;
             
             // Contar visualizações de artes deste designer
-            const viewsQuery = `
-              SELECT COUNT(*) as count
-              FROM views v
-              JOIN arts a ON v."artId" = a.id
-              WHERE a.designerid = $1
-            `;
-            
-            const viewsResult = await db.execute(sql.raw(viewsQuery), [user.id]);
+            const viewsResult = await db.execute(
+              sql`SELECT COUNT(*) as count
+                  FROM views v
+                  JOIN arts a ON v."artId" = a.id
+                  WHERE a.designerid = ${user.id}`
+            );
             totalViews = parseInt(viewsResult.rows[0].count) || 0;
           }
           
