@@ -1,0 +1,102 @@
+ Check rápido (verifique agora):
+1. A API de assinaturas está criada e funcionando?
+No Cursor ou terminal, rode:
+
+sql
+Copiar
+Editar
+SELECT * FROM subscriptions ORDER BY createdAt DESC;
+E:
+
+sql
+Copiar
+Editar
+SELECT * FROM users WHERE nivelacesso = 'premium';
+Se tiver dados → backend está populado ✅
+Se estiver vazio → o webhook pode não estar criando corretamente ainda
+
+2. A rota da API usada no frontend está correta?
+Exemplo esperado:
+
+js
+Copiar
+Editar
+GET /api/admin/subscriptions
+Confirme no console do navegador (F12 > Network > Fetch/XHR) se a rota existe e retorna 200 OK.
+
+Se der 404 Not Found → rota não existe no backend
+
+Se der 200 mas com [] → rota existe mas não está lendo os dados certos
+
+Se der erro 500 → backend falhou
+
+3. Backend responde JSON corretamente?
+Teste no navegador ou Postman:
+
+ruby
+Copiar
+Editar
+https://designauto.replit.dev/api/admin/subscriptions
+Se vier [], a resposta está vazia.
+Se vier HTML com <!DOCTYPE>, a rota está errada ou quebrada.
+
+✅ Solução sugerida: criar rota /api/admin/subscriptions
+Aqui está um exemplo de rota pronta (Node/Express):
+
+ts
+Copiar
+Editar
+router.get('/subscriptions', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        u.name AS usuario,
+        s.status,
+        s.planType AS plano,
+        s.origin AS origem,
+        s.endDate AS expiracao,
+        s.startDate AS criado_em,
+        CURRENT_DATE AS hoje,
+        DATE_PART('day', s.endDate - CURRENT_DATE) AS dias_restantes
+      FROM subscriptions s
+      INNER JOIN users u ON u.id = s.userId
+      WHERE s.status = 'active'
+      ORDER BY s.startDate DESC
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao carregar assinaturas:', err);
+    res.status(500).json({ error: 'Erro ao buscar assinaturas' });
+  }
+});
+4. O frontend está esperando esses campos?
+Confirme se o seu frontend espera:
+
+Campo esperado	Deve vir do backend como...
+usuario	u.name
+status	s.status
+plano	s.planType
+origem	s.origin
+expiracao	s.endDate
+dias_restantes	cálculo em SQL
+criado_em	s.startDate
+
+✅ Resumo do que você deve fazer agora:
+✅ Testar se há dados reais no banco (users, subscriptions)
+
+✅ Ver se o frontend está realmente chamando a rota (/api/admin/subscriptions)
+
+✅ Se a rota não existir: crie ela com base no modelo acima
+
+✅ Certifique-se que o backend responde JSON no formato esperado
+
+🔁 Após ajustes, clique no botão "Atualizar" no dashboard
+
+Se quiser, posso te gerar:
+
+✅ O backend completo da rota /subscriptions
+
+✅ Mock de retorno para testar no frontend antes de conectar de fato
+
+✅ Query SQL otimizada para exibir métricas no topo (total, ativos, expirando etc)
