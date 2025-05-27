@@ -2813,7 +2813,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name, 
           profileimageurl, 
           bio, 
-          role,
           nivelacesso,
           tipoplano,
           origemassinatura,
@@ -2853,7 +2852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let totalViews = 0;
           let lastLogin = user.lastlogin;
           
-          if (user.role === "designer" || user.role === "designer_adm") {
+          if (user.nivelacesso === "designer" || user.nivelacesso === "designer_adm") {
             // Contar downloads de artes deste designer
             const downloadsQuery = `
               SELECT COUNT(*) as count
@@ -2886,7 +2885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             profileimageurl: user.profileimageurl, // Mantido o nome original
             profileImageUrl: user.profileimageurl, // Adicionado formato camelCase
             bio: user.bio,
-            role: user.role,
+            role: user.nivelacesso,
             nivelacesso: user.nivelacesso,
             tipoplano: user.tipoplano,
             origemassinatura: user.origemassinatura,
