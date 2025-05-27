@@ -4982,20 +4982,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
-  // Endpoint para listar usuários com assinaturas com filtros e paginação  
-  app.get("/api/admin/users", isAdmin, async (req, res) => {
+  // Endpoint principal para métricas de assinaturas do dashboard
+  app.get("/api/admin/subscription-metrics", isAdmin, async (req, res) => {
     try {
-      console.log("Iniciando busca de usuários...");
+      console.log("📊 Calculando métricas completas de assinaturas...");
       
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const status = req.query.status as string;
-      const origin = req.query.origin as string;
-      const search = req.query.search as string;
-      
-      const offset = (page - 1) * limit;
-      
-      // Usar consulta SQL básica com a conexão existente
       const { Client } = require('pg');
       const client = new Client({
         connectionString: process.env.DATABASE_URL
@@ -5003,86 +4994,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await client.connect();
       
-      const queryResult = await client.query(`
+      // Métricas principais
+      const metricsQuery = `
+        WITH subscription_stats AS (
+          SELECT 
+            COUNT(*) as total_users,
+            COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
+            COUNT(CASE WHEN (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') AND isactive = true THEN 1 END) as premium_users,
+            COUNT(CASE WHEN NOT (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') AND isactive = true THEN 1 END) as free_users,
+            COUNT(CASE WHEN dataexpiracao IS NOT NULL AND dataexpiracao <= NOW() AND NOT acessovitalicio AND isactive = true THEN 1 END) as expired_users,
+            COUNT(CASE WHEN acessovitalicio = true AND isactive = true THEN 1 END) as lifetime_users,
+            COUNT(CASE WHEN criadoem >= NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
+            COUNT(CASE WHEN criadoem >= NOW() - INTERVAL '7 days' THEN 1 END) as new_users_7d
+          FROM users
+        ),
+        origin_stats AS (
+          SELECT 
+            origemassinatura,
+            COUNT(*) as count
+          FROM users 
+          WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+          GROUP BY origemassinatura
+        ),
+        plan_stats AS (
+          SELECT 
+            tipoplano,
+            COUNT(*) as count
+          FROM users 
+          WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+          GROUP BY tipoplano
+        ),
+        expiring_soon AS (
+          SELECT COUNT(*) as count
+          FROM users
+          WHERE dataexpiracao IS NOT NULL 
+          AND dataexpiracao > NOW() 
+          AND dataexpiracao <= NOW() + INTERVAL '7 days'
+          AND NOT acessovitalicio
+          AND isactive = true
+        )
         SELECT 
-          id, username, email, name, nivelacesso, origemassinatura, 
-          tipoplano, dataexpiracao, acessovitalicio, criadoem, atualizadoem,
-          profileimageurl, bio, isactive
+          s.*,
+          es.count as expiring_soon_count
+        FROM subscription_stats s, expiring_soon es;
+      `;
+      
+      const metricsResult = await client.query(metricsQuery);
+      const metrics = metricsResult.rows[0];
+      
+      // Estatísticas por origem
+      const originStatsResult = await client.query(`
+        SELECT 
+          COALESCE(origemassinatura, 'manual') as origin,
+          COUNT(*) as count
         FROM users 
-        ORDER BY criadoem DESC
+        WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+        GROUP BY origemassinatura
       `);
+      
+      // Estatísticas por plano
+      const planStatsResult = await client.query(`
+        SELECT 
+          COALESCE(tipoplano, 'indefinido') as plan,
+          COUNT(*) as count
+        FROM users 
+        WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+        GROUP BY tipoplano
+      `);
+      
+      // Crescimento mensal (últimos 12 meses)
+      const growthQuery = `
+        SELECT 
+          DATE_TRUNC('month', criadoem) as month,
+          COUNT(*) as new_users,
+          COUNT(CASE WHEN (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > criadoem) OR nivelacesso = 'premium') THEN 1 END) as new_premium
+        FROM users
+        WHERE criadoem >= NOW() - INTERVAL '12 months'
+        GROUP BY DATE_TRUNC('month', criadoem)
+        ORDER BY month DESC
+      `;
+      
+      const growthResult = await client.query(growthQuery);
       
       await client.end();
       
-      console.log(`Encontrados ${queryResult.rows.length} usuários no banco`);
+      // Calcular taxa de conversão
+      const conversionRate = metrics.total_users > 0 
+        ? ((parseInt(metrics.premium_users) / parseInt(metrics.total_users)) * 100).toFixed(1)
+        : '0.0';
       
-      // Usar os dados das rows do PostgreSQL
-      let filteredUsers = queryResult.rows;
-        
-      // Filtro por status
-      if (status && status !== 'all') {
-        filteredUsers = filteredUsers.filter((user: any) => {
-          const isLifetime = user.acessovitalicio;
-          const hasExpiration = user.dataexpiracao;
-          const isExpired = hasExpiration && new Date(user.dataexpiracao) <= new Date();
-          
-          if (status === 'active') {
-            return isLifetime || !hasExpiration || !isExpired;
-          } else if (status === 'expired') {
-            return !isLifetime && hasExpiration && isExpired;
-          } else if (status === 'trial') {
-            return user.tipoplano === 'trial';
-          }
-          return true;
-        });
-      }
+      // Calcular churn rate (usuários que expiraram nos últimos 30 dias)
+      const churnRate = metrics.premium_users > 0 
+        ? ((parseInt(metrics.expired_users) / parseInt(metrics.premium_users)) * 100).toFixed(1)
+        : '0.0';
       
-      // Filtro por origem
-      if (origin && origin !== 'all') {
-        filteredUsers = filteredUsers.filter((user: any) => user.origemassinatura === origin);
-      }
+      const response = {
+        overview: {
+          totalUsers: parseInt(metrics.total_users) || 0,
+          activeUsers: parseInt(metrics.active_users) || 0,
+          premiumUsers: parseInt(metrics.premium_users) || 0,
+          freeUsers: parseInt(metrics.free_users) || 0,
+          lifetimeUsers: parseInt(metrics.lifetime_users) || 0,
+          expiredUsers: parseInt(metrics.expired_users) || 0,
+          expiringSoon: parseInt(metrics.expiring_soon_count) || 0,
+          newUsers30d: parseInt(metrics.new_users_30d) || 0,
+          newUsers7d: parseInt(metrics.new_users_7d) || 0,
+          conversionRate: parseFloat(conversionRate),
+          churnRate: parseFloat(churnRate)
+        },
+        distribution: {
+          byOrigin: originStatsResult.rows.map(row => ({
+            origin: row.origin,
+            count: parseInt(row.count),
+            percentage: metrics.premium_users > 0 
+              ? ((parseInt(row.count) / parseInt(metrics.premium_users)) * 100).toFixed(1)
+              : '0.0'
+          })),
+          byPlan: planStatsResult.rows.map(row => ({
+            plan: row.plan,
+            count: parseInt(row.count),
+            percentage: metrics.premium_users > 0 
+              ? ((parseInt(row.count) / parseInt(metrics.premium_users)) * 100).toFixed(1)
+              : '0.0'
+          }))
+        },
+        growth: growthResult.rows.map(row => ({
+          month: row.month,
+          newUsers: parseInt(row.new_users),
+          newPremium: parseInt(row.new_premium)
+        }))
+      };
       
-      // Filtro por termo de busca
+      console.log("📈 Métricas calculadas:", {
+        total: response.overview.totalUsers,
+        premium: response.overview.premiumUsers,
+        conversion: response.overview.conversionRate + '%'
+      });
+      
+      res.status(200).json(response);
+      
+    } catch (error) {
+      console.error("❌ Erro ao calcular métricas:", error);
+      res.status(500).json({ message: "Erro ao calcular métricas de assinaturas" });
+    }
+  });
+
+  // Endpoint para listar usuários com assinaturas
+  app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const status = req.query.status as string || 'all';
+      const origin = req.query.origin as string || 'all';
+      const search = req.query.search as string || '';
+      
+      const offset = (page - 1) * limit;
+      
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      // Construir filtros SQL
+      let whereConditions = ['isactive = true'];
+      let params = [];
+      let paramIndex = 1;
+      
       if (search) {
-        const searchLower = search.toLowerCase();
-        filteredUsers = filteredUsers.filter((user: any) => 
-          user.username?.toLowerCase().includes(searchLower) ||
-          user.email?.toLowerCase().includes(searchLower) ||
-          user.name?.toLowerCase().includes(searchLower)
-        );
+        whereConditions.push(`(name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR username ILIKE $${paramIndex})`);
+        params.push(`%${search}%`);
+        paramIndex++;
       }
       
-      // Aplicar paginação
-      const totalCount = filteredUsers.length;
-      const paginatedUsers = filteredUsers.slice(offset, offset + limit);
+      if (origin !== 'all') {
+        if (origin === 'manual') {
+          whereConditions.push(`(origemassinatura IS NULL OR origemassinatura = 'manual')`);
+        } else {
+          whereConditions.push(`origemassinatura = $${paramIndex}`);
+          params.push(origin);
+          paramIndex++;
+        }
+      }
       
-      // Processar resultados para incluir status do plano
-      const userList = paginatedUsers.map((user: any) => ({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        nivelacesso: user.nivelacesso,
-        planstatus: user.acessovitalicio 
-          ? 'lifetime' 
-          : (!user.dataexpiracao || new Date(user.dataexpiracao) > new Date())
-          ? 'active'
-          : 'expired',
-        origemassinatura: user.origemassinatura,
-        tipoplano: user.tipoplano,
-        planoexpiracao: user.dataexpiracao,
-        criadoem: user.criadoem,
-        atualizadoem: user.atualizadoem,
-      }));
+      // Filtro por status será aplicado após a query
+      const whereClause = whereConditions.join(' AND ');
       
-      console.log(`Retornando ${userList.length} usuários processados`);
+      const usersQuery = `
+        SELECT 
+          id, username, email, name, nivelacesso, origemassinatura,
+          tipoplano, dataexpiracao, acessovitalicio, criadoem, atualizadoem,
+          profileimageurl, isactive,
+          CASE 
+            WHEN acessovitalicio = true THEN 'lifetime'
+            WHEN dataexpiracao IS NOT NULL AND dataexpiracao > NOW() THEN 'active'
+            WHEN dataexpiracao IS NOT NULL AND dataexpiracao <= NOW() THEN 'expired'
+            WHEN nivelacesso = 'premium' THEN 'active'
+            ELSE 'free'
+          END as status
+        FROM users 
+        WHERE ${whereClause}
+        ORDER BY criadoem DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+      
+      params.push(limit, offset);
+      
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM users 
+        WHERE ${whereClause}
+      `;
+      const countParams = params.slice(0, -2);
+      
+      const [usersResult, countResult] = await Promise.all([
+        client.query(usersQuery, params),
+        client.query(countQuery, countParams)
+      ]);
+      
+      await client.end();
+      
+      // Aplicar filtro de status se necessário
+      let filteredUsers = usersResult.rows;
+      if (status !== 'all') {
+        filteredUsers = filteredUsers.filter(user => user.status === status);
+      }
+      
+      const totalUsers = parseInt(countResult.rows[0].total);
       
       res.status(200).json({
-        users: userList,
+        users: filteredUsers,
         pagination: {
-          total: totalCount,
           page,
           limit,
-          pages: Math.ceil(totalCount / limit),
+          total: totalUsers,
+          pages: Math.ceil(totalUsers / limit)
         }
       });
       
