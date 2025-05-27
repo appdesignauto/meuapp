@@ -1287,11 +1287,7 @@ const ModernUserManagement = () => {
                     : ""
                 }
               />
-              {(selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus") && (
-                <p className="text-xs text-orange-600 mt-1">
-                  ⚠️ E-mail bloqueado - Usuário criado via webhook ({selectedUser.origemassinatura})
-                </p>
-              )}
+
             </div>
 
             <div>
@@ -1319,11 +1315,7 @@ const ModernUserManagement = () => {
                   ))}
                 </SelectContent>
               </Select>
-              {(selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus") && (
-                <p className="text-xs text-orange-600 mt-1">
-                  ⚠️ Função bloqueada - Gerenciada automaticamente via webhook ({selectedUser.origemassinatura})
-                </p>
-              )}
+
             </div>
 
             {/* Campos de Assinatura para usuários Premium - SOMENTE LEITURA para webhook */}
