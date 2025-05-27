@@ -5088,41 +5088,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT SIMPLIFICADO E FUNCIONAL - Lista de usuários com assinaturas
+  // ENDPOINT CORRIGIDO - Lista de usuários com assinaturas
   app.get("/api/admin/subscription-users", isAdmin, async (req, res) => {
     try {
-      console.log("📋 Iniciando busca de usuários...");
+      console.log("📋 Buscando usuários com assinaturas...");
       
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
       
-      // Query direta no PostgreSQL - método que sempre funciona
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
-      
-      await client.connect();
-      
-      const usersQuery = `
+      // Usar SQL direto através do db.execute
+      const usersResult = await db.execute(sql`
         SELECT id, username, email, name, profileimageurl, nivelacesso, 
                origemassinatura, tipoplano, dataassinatura, dataexpiracao, 
                acessovitalicio, isactive, criadoem, ultimologin
         FROM users 
         WHERE isactive = true
         ORDER BY criadoem DESC
-        LIMIT $1 OFFSET $2
-      `;
+        LIMIT ${limit} OFFSET ${offset}
+      `);
       
-      const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
+      const countResult = await db.execute(sql`
+        SELECT COUNT(*) as total FROM users WHERE isactive = true
+      `);
       
-      const usersResult = await client.query(usersQuery, [limit, offset]);
-      const countResult = await client.query(countQuery);
-      
-      await client.end();
-      
-      const processedUsers = usersResult.rows.map((user: any) => ({
+      const processedUsers = usersResult.map((user: any) => ({
         ...user,
         subscriptionStatus: user.acessovitalicio ? 'lifetime' : 
           (user.nivelacesso === 'premium' || user.nivelacesso === 'designer') ? 'premium' : 'free',
@@ -5131,9 +5121,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           null
       }));
       
-      const totalUsers = parseInt(countResult.rows[0].total);
+      const totalUsers = parseInt(countResult[0].total as string);
       
-      console.log(`✅ SUCESSO: ${processedUsers.length} usuários encontrados de ${totalUsers} total`);
+      console.log(`✅ Usuários encontrados: ${processedUsers.length} de ${totalUsers} total`);
       
       res.status(200).json({
         users: processedUsers,
@@ -5146,7 +5136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
     } catch (error: any) {
-      console.error("❌ Erro crítico ao listar usuários:", error);
+      console.error("❌ Erro ao listar usuários:", error);
       res.status(500).json({ 
         message: "Erro ao listar usuários", 
         error: error.message 
