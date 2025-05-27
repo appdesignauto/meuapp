@@ -3348,6 +3348,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para exportar dados do usuário
+  app.get("/api/users/:id/export", async (req, res) => {
+    try {
+      const user = req.user as User;
+      const userId = parseInt(req.params.id);
+      
+      // Verificar se o usuário tem permissão (admin ou o próprio usuário)
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.id !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      // Buscar dados do usuário
+      const [userData] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      if (!userData) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Buscar estatísticas do usuário
+      const [downloadsCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(downloads)
+        .where(eq(downloads.userId, userId));
+
+      const [viewsCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(views)
+        .where(eq(views.userId, userId));
+
+      const [favoritesCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(favorites)
+        .where(eq(favorites.userId, userId));
+
+      const [followersCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(sql`(SELECT * FROM "userFollows" WHERE "followingId" = ${userId}) as followers`);
+
+      const [followingCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(sql`(SELECT * FROM "userFollows" WHERE "followerId" = ${userId}) as following`);
+
+      const [artsCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(arts)
+        .where(eq(arts.designerid, userId));
+
+      // Buscar artes criadas pelo usuário
+      const userArts = await db
+        .select()
+        .from(arts)
+        .where(eq(arts.designerid, userId))
+        .limit(50); // Limitar para não sobrecarregar
+
+      // Buscar favorites do usuário
+      const userFavorites = await db
+        .select({
+          artId: favorites.artId,
+          createdAt: favorites.createdAt,
+          art: {
+            id: arts.id,
+            title: arts.title,
+            imageUrl: arts.imageUrl
+          }
+        })
+        .from(favorites)
+        .innerJoin(arts, eq(arts.id, favorites.artId))
+        .where(eq(favorites.userId, userId))
+        .limit(50);
+
+      // Preparar dados para exportação
+      const exportData = {
+        usuario: {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          name: userData.name,
+          bio: userData.bio,
+          nivelacesso: userData.nivelacesso,
+          origemassinatura: userData.origemassinatura,
+          tipoplano: userData.tipoplano,
+          dataassinatura: userData.dataassinatura,
+          dataexpiracao: userData.dataexpiracao,
+          acessovitalicio: userData.acessovitalicio,
+          isactive: userData.isactive,
+          criadoem: userData.criadoem,
+          ultimologin: userData.ultimologin,
+          website: userData.website,
+          location: userData.location
+        },
+        estatisticas: {
+          totalDownloads: downloadsCount?.count || 0,
+          totalVisualizacoes: viewsCount?.count || 0,
+          totalFavoritos: favoritesCount?.count || 0,
+          totalSeguidores: followersCount?.count || 0,
+          totalSeguindo: followingCount?.count || 0,
+          totalArtes: artsCount?.count || 0
+        },
+        artes: userArts.map(art => ({
+          id: art.id,
+          title: art.title,
+          imageUrl: art.imageUrl,
+          isPremium: art.isPremium,
+          criadoem: art.createdAt
+        })),
+        favoritos: userFavorites.map(fav => ({
+          artId: fav.artId,
+          titulo: fav.art.title,
+          imageUrl: fav.art.imageUrl,
+          favoritadoEm: fav.createdAt
+        })),
+        dataExportacao: new Date().toISOString()
+      };
+
+      res.json(exportData);
+    } catch (error) {
+      console.error("Erro ao exportar dados do usuário:", error);
+      res.status(500).json({ message: "Erro ao exportar dados do usuário" });
+    }
+  });
+
   // Rota para excluir um usuário (apenas para administradores)
   app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
     try {

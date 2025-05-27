@@ -406,8 +406,39 @@ const ModernUserManagement = () => {
   };
 
   // Função para ver detalhes do usuário
-  const handleViewUserDetails = (user: User) => {
-    setSelectedUserForDetails(user);
+  const handleViewUserDetails = async (user: User) => {
+    try {
+      // Buscar estatísticas do usuário
+      const response = await fetch(`/api/users/${user.id}/export`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Adicionar as estatísticas ao objeto do usuário
+        const userWithStats = {
+          ...user,
+          totalDownloads: userData.estatisticas.totalDownloads,
+          totalViews: userData.estatisticas.totalVisualizacoes,
+          followersCount: userData.estatisticas.totalSeguidores,
+          followingCount: userData.estatisticas.totalSeguindo,
+          totalArts: userData.estatisticas.totalArtes
+        };
+        
+        setSelectedUserForDetails(userWithStats);
+      } else {
+        // Se falhar, usar os dados básicos do usuário
+        setSelectedUserForDetails(user);
+      }
+    } catch (error) {
+      // Se houver erro, usar os dados básicos do usuário
+      setSelectedUserForDetails(user);
+    }
+    
     setShowUserDetails(true);
   };
 
