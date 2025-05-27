@@ -3756,7 +3756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           WHERE "userId" = $1 
           ORDER BY "createdAt" DESC 
           LIMIT 20
-        `, [designerId]);
+        `, [designer.id]);
 
         response.posts = communityPosts.rows.map(post => ({
           id: post.id,
