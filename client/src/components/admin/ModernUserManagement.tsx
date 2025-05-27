@@ -42,8 +42,7 @@ import {
   LogIn,
   ShoppingCart,
   CreditCard,
-  AlertTriangle,
-  Loader2
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,9 +188,6 @@ const ModernUserManagement = () => {
   const [selectedNivelAcesso, setSelectedNivelAcesso] = useState<string>("usuario");
   const [selectedOrigemAssinatura, setSelectedOrigemAssinatura] = useState<string>("");
   const [createUserStep, setCreateUserStep] = useState<1 | 2>(1);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -476,30 +472,10 @@ const ModernUserManagement = () => {
     setShowUserHistory(true);
   };
 
-  const handleDeleteUser = (user: User) => {
-    setUserToDelete(user);
-    setDeleteConfirmationText("");
-    setShowDeleteConfirmation(true);
-  };
-
-  const confirmDeleteUser = () => {
-    if (!userToDelete) return;
-    
-    const expectedText = `EXCLUIR ${userToDelete.username.toUpperCase()}`;
-    
-    if (deleteConfirmationText !== expectedText) {
-      toast({
-        title: "Texto de confirmação incorreto",
-        description: `Digite exatamente: ${expectedText}`,
-        variant: "destructive",
-      });
-      return;
+  const handleDeleteUser = (userId: number) => {
+    if (confirm("Tem certeza que deseja excluir este usuário?")) {
+      deleteUserMutation.mutate(userId);
     }
-    
-    deleteUserMutation.mutate(userToDelete.id);
-    setShowDeleteConfirmation(false);
-    setUserToDelete(null);
-    setDeleteConfirmationText("");
   };
 
   // Função para bloquear/desbloquear usuário
@@ -846,7 +822,7 @@ const ModernUserManagement = () => {
                               
                               {/* Ação perigosa */}
                               <DropdownMenuItem 
-                                onClick={() => handleDeleteUser(user)}
+                                onClick={() => handleDeleteUser(user.id)}
                                 className="text-red-600 focus:text-red-600"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
@@ -1841,91 +1817,6 @@ const ModernUserManagement = () => {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de confirmação de exclusão */}
-      <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-600 flex items-center gap-2">
-              <Trash2 className="w-5 h-5" />
-              Confirmar Exclusão de Usuário
-            </DialogTitle>
-            <DialogDescription>
-              Esta ação é <strong className="text-red-600">irreversível</strong> e removerá permanentemente o usuário e todos os seus dados.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {userToDelete && (
-            <div className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={userToDelete.profileimageurl || ""} />
-                    <AvatarFallback>
-                      {userToDelete.name?.charAt(0) || userToDelete.username.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {userToDelete.name || userToDelete.username}
-                    </p>
-                    <p className="text-sm text-gray-600">{userToDelete.email}</p>
-                    <p className="text-xs text-gray-500">
-                      {roleConfig[userToDelete.nivelacesso]?.label || userToDelete.nivelacesso}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="deleteConfirmation" className="text-sm font-medium">
-                  Para confirmar, digite: <code className="bg-gray-100 px-2 py-1 rounded text-red-600 font-mono">
-                    EXCLUIR {userToDelete.username.toUpperCase()}
-                  </code>
-                </Label>
-                <Input
-                  id="deleteConfirmation"
-                  value={deleteConfirmationText}
-                  onChange={(e) => setDeleteConfirmationText(e.target.value)}
-                  placeholder={`EXCLUIR ${userToDelete.username.toUpperCase()}`}
-                  className="font-mono"
-                />
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowDeleteConfirmation(false);
-                setUserToDelete(null);
-                setDeleteConfirmationText("");
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDeleteUser}
-              disabled={deleteUserMutation.isPending || !userToDelete || 
-                       deleteConfirmationText !== `EXCLUIR ${userToDelete?.username.toUpperCase()}`}
-            >
-              {deleteUserMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Excluindo...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Excluir Usuário
-                </>
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

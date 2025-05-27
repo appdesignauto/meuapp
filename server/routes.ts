@@ -3498,73 +3498,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Removendo referências em outras tabelas...");
       
       try {
-        console.log(`🚀 EXCLUSÃO DEFINITIVA: Iniciando remoção completa do usuário ID ${userId}...`);
+        // Remover códigos de verificação de e-mail
+        try {
+          await db.execute(sql`
+            DELETE FROM "emailVerificationCodes" 
+            WHERE "userId" = ${userId}
+          `);
+          console.log("- Códigos de verificação de e-mail removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover códigos de verificação de e-mail:", error);
+        }
         
-        // ETAPA 1: Desabilitar verificação de chaves estrangeiras temporariamente
-        await db.execute(sql`SET session_replication_role = replica;`);
-        console.log("✅ Constraints de chave estrangeira desabilitadas");
+        // Remover assinaturas
+        try {
+          await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+          console.log("- Assinaturas removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover assinaturas:", error);
+        }
         
-        // ETAPA 2: Lista completa de todas as tabelas que referenciam users
-        const cleanupOperations = [
-          // Tabelas principais
-          'DELETE FROM downloads WHERE "userId" = ' + userId,
-          'DELETE FROM favorites WHERE "userId" = ' + userId,
-          'DELETE FROM views WHERE "userId" = ' + userId,
-          'DELETE FROM subscriptions WHERE "userId" = ' + userId,
-          'DELETE FROM "communityPosts" WHERE "userId" = ' + userId,
-          'DELETE FROM "communityComments" WHERE "userId" = ' + userId,
-          'DELETE FROM "designerStats" WHERE "userId" = ' + userId,
-          'DELETE FROM "userPreferences" WHERE "userId" = ' + userId,
-          'DELETE FROM "userStats" WHERE "userId" = ' + userId,
-          'DELETE FROM "userPermissions" WHERE "userId" = ' + userId + ' OR "grantedBy" = ' + userId,
-          'DELETE FROM arts WHERE designerid = ' + userId,
-          'DELETE FROM shares WHERE "userId" = ' + userId,
-          'DELETE FROM "artGroups" WHERE designerid = ' + userId,
-          'DELETE FROM "courseProgress" WHERE "userId" = ' + userId,
-          'DELETE FROM "courseRatings" WHERE "userId" = ' + userId,
-          'DELETE FROM "videoComments" WHERE "userId" = ' + userId,
-          'DELETE FROM "lessonViews" WHERE "userId" = ' + userId,
-          'DELETE FROM "lessonNotes" WHERE "userId" = ' + userId,
-          'DELETE FROM "popupViews" WHERE "userId" = ' + userId,
-          'DELETE FROM "communityLikes" WHERE "userId" = ' + userId,
-          'DELETE FROM "communitySaves" WHERE "userId" = ' + userId,
-          'DELETE FROM "communityPoints" WHERE "userId" = ' + userId,
-          'DELETE FROM "communityLeaderboard" WHERE "userId" = ' + userId,
-          'DELETE FROM "communityCommentLikes" WHERE "userId" = ' + userId,
-          'DELETE FROM reports WHERE "userId" = ' + userId + ' OR "respondedBy" = ' + userId,
-          'DELETE FROM "emailVerificationCodes" WHERE "userId" = ' + userId,
-          
-          // Tabelas de seguidores - TODAS AS VARIAÇÕES
-          'DELETE FROM "userFollows" WHERE "followerId" = ' + userId + ' OR "followingId" = ' + userId,
-          'DELETE FROM userfollows WHERE followerid = ' + userId + ' OR followingid = ' + userId,
-          'DELETE FROM user_follows WHERE follower_id = ' + userId + ' OR following_id = ' + userId,
-        ];
+        // Remover favoritos
+        try {
+          await db.delete(favorites).where(eq(favorites.userId, userId));
+          console.log("- Favoritos removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover favoritos:", error);
+        }
         
-        // ETAPA 3: Executar limpeza sequencial
-        for (let i = 0; i < cleanupOperations.length; i++) {
-          try {
-            await db.execute(sql.raw(cleanupOperations[i]));
-            console.log(`✅ Operação ${i + 1}/${cleanupOperations.length} concluída`);
-          } catch (error) {
-            console.log(`⚠️ Operação ${i + 1} falhou (normal se tabela não existir):`, error.message);
+        // Remover visualizações
+        try {
+          await db.delete(views).where(eq(views.userId, userId));
+          console.log("- Visualizações removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover visualizações:", error);
+        }
+        
+        // Remover downloads
+        try {
+          await db.delete(downloads).where(eq(downloads.userId, userId));
+          console.log("- Downloads removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover downloads:", error);
+        }
+        
+        // Remover comentários na comunidade
+        try {
+          await db.delete(communityComments).where(eq(communityComments.userId, userId));
+          console.log("- Comentários removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover comentários:", error);
+        }
+        
+        // Remover posts na comunidade
+        try {
+          await db.delete(communityPosts).where(eq(communityPosts.userId, userId));
+          console.log("- Posts removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover posts:", error);
+        }
+        
+        // Verificar se a tabela userFollows existe antes de tentar usar
+        try {
+          // Remover relações de seguidores/seguindo
+          await db.execute(sql`
+            DELETE FROM "userFollows" 
+            WHERE "followerId" = ${userId} 
+            OR "followingId" = ${userId}
+          `);
+          console.log("- Relações de seguidores removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover relações de seguidores:", error);
+        }
+        
+        // Verificar artes criadas pelo usuário e decidir se serão excluídas
+        if (userToDelete[0].nivelacesso === 'designer' || userToDelete[0].nivelacesso === 'designer_adm') {
+          const artsCount = await db
+            .select({ count: count() })
+            .from(arts)
+            .where(eq(arts.designerid, userId));
+            
+          if (artsCount[0].count > 0) {
+            console.log(`- Usuário possui ${artsCount[0].count} artes como designer. Artes serão mantidas.`);
           }
         }
         
-        // ETAPA 4: Reabilitar constraints e excluir o usuário
-        await db.execute(sql`SET session_replication_role = DEFAULT;`);
-        console.log("✅ Constraints reabilitadas");
-        
-        // ETAPA 5: Excluir o usuário final
+        // Finalmente, excluir o usuário
         const result = await db
           .delete(users)
           .where(eq(users.id, userId));
           
         if (!result || result.rowCount === 0) {
-          return res.status(500).json({ message: "Erro ao excluir usuário do banco" });
+          return res.status(500).json({ message: "Erro ao excluir usuário" });
         }
         
-        console.log(`🎉 SUCESSO: Usuário ${userId} excluído completamente!`);
-        res.json({ message: "Usuário excluído com sucesso" });
+        console.log(`Usuário ${userId} excluído com sucesso`);
+        
+        res.json({ 
+          success: true, 
+          message: "Usuário excluído com sucesso" 
+        });
       } catch (deleteError) {
         console.error("Erro ao excluir referências do usuário:", deleteError);
         throw deleteError; // Propaga o erro para o tratamento geral
