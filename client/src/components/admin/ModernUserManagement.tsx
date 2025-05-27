@@ -33,6 +33,7 @@ import {
   UserCheck,
   MessageSquare,
   History,
+  RefreshCw,
   BarChart3,
   Globe,
   Smartphone,
