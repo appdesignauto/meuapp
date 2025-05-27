@@ -9,7 +9,7 @@ import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
 import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
-import { setupUserManagementRoutes } from "./routes/user-management";
+import { setupUserManagementRoutes } from "./routes/user-management-fixed";
 
 import { Pool } from "pg";
 
