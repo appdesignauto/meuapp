@@ -651,26 +651,27 @@ export default function DesignerProfile() {
           </div>
         ) : (
           <>
-            {/* Layout com Masonry adaptativo para estilo Pinterest - Responsivo */}
-            <div 
-              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-2 md:px-0 transition-opacity duration-300 ease-in-out opacity-100"
-              key={activeFilter} // Força a remontagem do grid ao trocar de filtro
-            >
-              {displayedArts(data).map((art, index) => (
-                <div 
-                  key={art.id} 
-                  className={`
-                    mb-3 md:mb-4 lg:mb-6 transition-all duration-200 hover:translate-y-[-5px]
-                    animate-fadeIn
-                    ${index % 3 === 0 ? 'row-span-1' : index % 5 === 0 ? 'row-span-1' : ''}
-                  `}
-                  style={{
-                    animationDelay: `${index * 50}ms`, // Cria um efeito de "cascata" na aparição
-                  }}
-                >
-                  <ArtCard art={art} />
-                </div>
-              ))}
+            {/* Vitrine de artes organizada - Grid responsivo otimizado */}
+            <div className="w-full max-w-7xl mx-auto px-2">
+              <div 
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 transition-all duration-500 ease-in-out"
+                key={activeFilter}
+              >
+                {displayedArts(data).map((art, index) => (
+                  <div 
+                    key={art.id} 
+                    className="group relative overflow-hidden"
+                    style={{
+                      animationDelay: `${index * 80}ms`,
+                    }}
+                  >
+                    {/* Container da arte com hover suave */}
+                    <div className="relative transition-all duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden">
+                      <ArtCard art={art} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* Paginação centralizada - Responsiva */}
