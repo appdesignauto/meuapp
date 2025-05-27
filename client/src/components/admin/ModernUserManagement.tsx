@@ -41,7 +41,8 @@ import {
   FileText,
   LogIn,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1290,8 +1291,13 @@ const ModernUserManagement = () => {
               <Select 
                 defaultValue={selectedUser?.nivelacesso}
                 onValueChange={(value) => editForm.setValue("nivelacesso", value as NivelAcesso)}
+                disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
               >
-                <SelectTrigger>
+                <SelectTrigger className={
+                  selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                    ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                    : ""
+                }>
                   <SelectValue placeholder="Selecione a função" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1305,15 +1311,38 @@ const ModernUserManagement = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {(selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus") && (
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ Função bloqueada - Gerenciada automaticamente via webhook ({selectedUser.origemassinatura})
+                </p>
+              )}
             </div>
 
-            {/* Campos de Assinatura para usuários Premium */}
+            {/* Campos de Assinatura para usuários Premium - SOMENTE LEITURA para webhook */}
             {selectedUser?.nivelacesso === "premium" && (
-              <div className="space-y-4 p-4 border rounded-lg bg-yellow-50">
-                <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
+              <div className={`space-y-4 p-4 border rounded-lg ${
+                selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                  ? "bg-gray-50" 
+                  : "bg-yellow-50"
+              }`}>
+                <h4 className={`font-semibold flex items-center gap-2 ${
+                  selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                    ? "text-gray-600" 
+                    : "text-yellow-800"
+                }`}>
                   <Crown className="w-4 h-4" />
-                  Configurações Premium
+                  Configurações Premium {(selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus") && "(Somente Leitura)"}
                 </h4>
+                
+                {(selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus") && (
+                  <div className="bg-orange-100 border border-orange-200 rounded p-3 mb-4">
+                    <p className="text-orange-800 text-sm flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      <strong>Configurações protegidas:</strong> Este usuário foi criado via {selectedUser.origemassinatura}. 
+                      As configurações premium são gerenciadas automaticamente e não podem ser alteradas para manter a integridade da integração.
+                    </p>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -1321,8 +1350,13 @@ const ModernUserManagement = () => {
                     <Select 
                       defaultValue={selectedUser?.origemassinatura || ""}
                       onValueChange={(value) => editForm.setValue("origemassinatura", value as any)}
+                      disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={
+                        selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                          : ""
+                      }>
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1338,8 +1372,13 @@ const ModernUserManagement = () => {
                     <Select 
                       defaultValue={selectedUser?.tipoplano || ""}
                       onValueChange={(value) => editForm.setValue("tipoplano", value as any)}
+                      disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={
+                        selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                          : ""
+                      }>
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1360,6 +1399,12 @@ const ModernUserManagement = () => {
                       id="edit-dataassinatura"
                       type="date"
                       {...editForm.register("dataassinatura")}
+                      disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
+                      className={
+                        selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                          : ""
+                      }
                     />
                   </div>
                   
@@ -1369,6 +1414,12 @@ const ModernUserManagement = () => {
                       id="edit-dataexpiracao"
                       type="date"
                       {...editForm.register("dataexpiracao")}
+                      disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
+                      className={
+                        selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -1377,8 +1428,20 @@ const ModernUserManagement = () => {
                   <Checkbox
                     id="edit-acessovitalicio"
                     {...editForm.register("acessovitalicio")}
+                    disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
+                    className={
+                      selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                        ? "cursor-not-allowed" 
+                        : ""
+                    }
                   />
-                  <Label htmlFor="edit-acessovitalicio">Acesso Vitalício</Label>
+                  <Label htmlFor="edit-acessovitalicio" className={
+                    selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
+                      ? "text-gray-500" 
+                      : ""
+                  }>
+                    Acesso Vitalício
+                  </Label>
                 </div>
               </div>
             )}
