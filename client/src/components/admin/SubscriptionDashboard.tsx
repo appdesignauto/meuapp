@@ -52,63 +52,6 @@ import {
   Download
 } from 'lucide-react';
 
-interface SubscriptionMetrics {
-  overview: {
-    totalUsers: number;
-    activeUsers: number;
-    premiumUsers: number;
-    freeUsers: number;
-    lifetimeUsers: number;
-    expiredUsers: number;
-    expiringSoon: number;
-    newUsers30d: number;
-    newUsers7d: number;
-    conversionRate: number;
-    churnRate: number;
-  };
-  distribution: {
-    byOrigin: Array<{
-      origin: string;
-      count: number;
-      percentage: string;
-    }>;
-    byPlan: Array<{
-      plan: string;
-      count: number;
-      percentage: string;
-    }>;
-  };
-  growth: Array<{
-    month: string;
-    newUsers: number;
-    newPremium: number;
-  }>;
-}
-
-interface SubscriptionUser {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  nivelacesso: string;
-  origemassinatura: string;
-  tipoplano: string;
-  dataexpiracao: string;
-  acessovitalicio: boolean;
-  criadoem: string;
-  status: 'active' | 'expired' | 'lifetime' | 'free';
-}
-
-interface UsersResponse {
-  users: SubscriptionUser[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
 export default function SubscriptionDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -116,24 +59,40 @@ export default function SubscriptionDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Buscar métricas principais
-  const { data: metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useQuery<SubscriptionMetrics>({
+  const { data: metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useQuery({
     queryKey: ['/api/admin/subscription-metrics'],
-    queryFn: () => apiRequest('GET', '/api/admin/subscription-metrics'),
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', '/api/admin/subscription-metrics');
+        console.log('📊 Dados recebidos da API:', response);
+        return response;
+      } catch (error) {
+        console.error('Erro ao buscar métricas:', error);
+        return null;
+      }
+    },
+    refetchInterval: 30000,
   });
 
   // Buscar usuários
-  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery<UsersResponse>({
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
     queryKey: ['/api/admin/subscription-users', currentPage, statusFilter, originFilter, searchTerm],
-    queryFn: () => {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20',
-        status: statusFilter,
-        origin: originFilter,
-        search: searchTerm,
-      });
-      return apiRequest('GET', `/api/admin/subscription-users?${params}`);
+    queryFn: async () => {
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: '20',
+          status: statusFilter,
+          origin: originFilter,
+          search: searchTerm,
+        });
+        const response = await apiRequest('GET', `/api/admin/subscription-users?${params}`);
+        console.log('👥 Dados de usuários recebidos:', response);
+        return response;
+      } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+        return null;
+      }
     },
   });
 
@@ -185,6 +144,18 @@ export default function SubscriptionDashboard() {
     return diffDays;
   };
 
+  // Funções auxiliares para acessar dados de forma segura
+  const getMetricValue = (path: string, defaultValue: any = 0) => {
+    if (!metrics) return defaultValue;
+    const keys = path.split('.');
+    let value = metrics;
+    for (const key of keys) {
+      value = value?.[key];
+      if (value === undefined) return defaultValue;
+    }
+    return value;
+  };
+
   if (metricsLoading) {
     return (
       <div className="p-6">
@@ -227,9 +198,9 @@ export default function SubscriptionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Total de Usuários</p>
-                <p className="text-2xl font-bold">{metrics?.overview.totalUsers || 0}</p>
+                <p className="text-2xl font-bold">{getMetricValue('overview.totalUsers')}</p>
                 <p className="text-blue-200 text-xs">
-                  +{metrics?.overview.newUsers30d || 0} nos últimos 30 dias
+                  +{getMetricValue('overview.newUsers30d')} nos últimos 30 dias
                 </p>
               </div>
               <Users className="w-8 h-8 text-blue-200" />
@@ -242,9 +213,9 @@ export default function SubscriptionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Usuários Premium</p>
-                <p className="text-2xl font-bold">{metrics?.overview.premiumUsers || 0}</p>
+                <p className="text-2xl font-bold">{getMetricValue('overview.premiumUsers')}</p>
                 <p className="text-green-200 text-xs">
-                  {metrics?.overview.conversionRate || 0}% taxa de conversão
+                  {getMetricValue('overview.conversionRate')}% taxa de conversão
                 </p>
               </div>
               <Crown className="w-8 h-8 text-green-200" />
@@ -257,7 +228,7 @@ export default function SubscriptionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Usuários Vitalícios</p>
-                <p className="text-2xl font-bold">{metrics?.overview.lifetimeUsers || 0}</p>
+                <p className="text-2xl font-bold">{getMetricValue('overview.lifetimeUsers')}</p>
                 <p className="text-purple-200 text-xs">
                   Receita recorrente garantida
                 </p>
@@ -272,7 +243,7 @@ export default function SubscriptionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Expirando em 7 dias</p>
-                <p className="text-2xl font-bold">{metrics?.overview.expiringSoon || 0}</p>
+                <p className="text-2xl font-bold">{getMetricValue('overview.expiringSoon')}</p>
                 <p className="text-orange-200 text-xs">
                   Requer atenção imediata
                 </p>
@@ -291,8 +262,8 @@ export default function SubscriptionDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">{metrics?.overview.churnRate || 0}%</span>
-              {(metrics?.overview.churnRate || 0) < 5 ? (
+              <span className="text-2xl font-bold">{getMetricValue('overview.churnRate')}%</span>
+              {getMetricValue('overview.churnRate') < 5 ? (
                 <TrendingDown className="w-4 h-4 text-green-500" />
               ) : (
                 <TrendingUp className="w-4 h-4 text-red-500" />
@@ -308,7 +279,7 @@ export default function SubscriptionDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">+{metrics?.overview.newUsers7d || 0}</span>
+              <span className="text-2xl font-bold">+{getMetricValue('overview.newUsers7d')}</span>
               <TrendingUp className="w-4 h-4 text-green-500" />
             </div>
             <p className="text-xs text-gray-500 mt-1">Novos usuários esta semana</p>
@@ -321,11 +292,11 @@ export default function SubscriptionDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">{metrics?.overview.activeUsers || 0}</span>
+              <span className="text-2xl font-bold">{getMetricValue('overview.activeUsers')}</span>
               <UserCheck className="w-4 h-4 text-blue-500" />
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {metrics?.overview.expiredUsers || 0} inativos
+              {getMetricValue('overview.expiredUsers')} inativos
             </p>
           </CardContent>
         </Card>
@@ -386,7 +357,7 @@ export default function SubscriptionDashboard() {
             <CardHeader>
               <CardTitle>Usuários com Assinatura</CardTitle>
               <CardDescription>
-                Mostrando {usersData?.users.length || 0} de {usersData?.pagination.total || 0} usuários
+                Mostrando {usersData?.users?.length || 0} de {usersData?.pagination?.total || 0} usuários
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -410,7 +381,7 @@ export default function SubscriptionDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersData?.users.map((user) => {
+                    {usersData?.users?.map((user: any) => {
                       const daysUntilExpiration = calculateDaysUntilExpiration(user.dataexpiracao);
                       return (
                         <TableRow key={user.id}>
@@ -462,7 +433,7 @@ export default function SubscriptionDashboard() {
               )}
 
               {/* Paginação */}
-              {usersData && usersData.pagination.pages > 1 && (
+              {usersData && usersData.pagination?.pages > 1 && (
                 <div className="flex justify-center space-x-2 mt-4">
                   <Button
                     variant="outline"
@@ -498,7 +469,7 @@ export default function SubscriptionDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {metrics?.growth.slice(0, 6).map((month, index) => (
+                  {(getMetricValue('growth', []) as any[]).slice(0, 6).map((month: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                       <span className="font-medium">
                         {new Date(month.month).toLocaleDateString('pt-BR', { 
@@ -527,7 +498,7 @@ export default function SubscriptionDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {metrics?.distribution.byOrigin.map((origin, index) => (
+                  {(getMetricValue('distribution.byOrigin', []) as any[]).map((origin: any, index: number) => (
                     <div key={index} className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
                         {getOriginBadge(origin.origin)}
@@ -553,7 +524,7 @@ export default function SubscriptionDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {metrics?.distribution.byPlan.map((plan, index) => (
+                  {(getMetricValue('distribution.byPlan', []) as any[]).map((plan: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 border rounded">
                       <span className="font-medium">{plan.plan}</span>
                       <div className="flex items-center space-x-2">
@@ -576,19 +547,19 @@ export default function SubscriptionDashboard() {
                   <div className="flex justify-between items-center p-3 bg-green-50 rounded">
                     <span className="font-medium text-green-800">Taxa de Conversão</span>
                     <span className="text-xl font-bold text-green-600">
-                      {metrics?.overview.conversionRate || 0}%
+                      {getMetricValue('overview.conversionRate')}%
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-red-50 rounded">
                     <span className="font-medium text-red-800">Taxa de Churn</span>
                     <span className="text-xl font-bold text-red-600">
-                      {metrics?.overview.churnRate || 0}%
+                      {getMetricValue('overview.churnRate')}%
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
                     <span className="font-medium text-blue-800">Retenção</span>
                     <span className="text-xl font-bold text-blue-600">
-                      {100 - (metrics?.overview.churnRate || 0)}%
+                      {100 - getMetricValue('overview.churnRate')}%
                     </span>
                   </div>
                 </div>
