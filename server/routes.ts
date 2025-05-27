@@ -5000,8 +5000,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           SELECT 
             COUNT(*) as total_users,
             COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-            COUNT(CASE WHEN (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') AND isactive = true THEN 1 END) as premium_users,
-            COUNT(CASE WHEN NOT (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') AND isactive = true THEN 1 END) as free_users,
+            COUNT(CASE WHEN (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm')) AND isactive = true THEN 1 END) as premium_users,
+            COUNT(CASE WHEN nivelacesso IN ('free', 'admin') AND NOT acessovitalicio AND isactive = true THEN 1 END) as free_users,
             COUNT(CASE WHEN dataexpiracao IS NOT NULL AND dataexpiracao <= NOW() AND NOT acessovitalicio AND isactive = true THEN 1 END) as expired_users,
             COUNT(CASE WHEN acessovitalicio = true AND isactive = true THEN 1 END) as lifetime_users,
             COUNT(CASE WHEN criadoem >= NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30d,
@@ -5013,7 +5013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             origemassinatura,
             COUNT(*) as count
           FROM users 
-          WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+          WHERE isactive = true AND (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm'))
           GROUP BY origemassinatura
         ),
         plan_stats AS (
@@ -5021,7 +5021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tipoplano,
             COUNT(*) as count
           FROM users 
-          WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+          WHERE isactive = true AND (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm'))
           GROUP BY tipoplano
         ),
         expiring_soon AS (
@@ -5048,7 +5048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COALESCE(origemassinatura, 'manual') as origin,
           COUNT(*) as count
         FROM users 
-        WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+        WHERE isactive = true AND (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm'))
         GROUP BY origemassinatura
       `);
       
@@ -5058,7 +5058,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COALESCE(tipoplano, 'indefinido') as plan,
           COUNT(*) as count
         FROM users 
-        WHERE isactive = true AND (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium')
+        WHERE isactive = true AND (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm'))
         GROUP BY tipoplano
       `);
       
@@ -5067,7 +5067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT 
           DATE_TRUNC('month', criadoem) as month,
           COUNT(*) as new_users,
-          COUNT(CASE WHEN (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > criadoem) OR nivelacesso = 'premium') THEN 1 END) as new_premium
+          COUNT(CASE WHEN (acessovitalicio = true OR nivelacesso IN ('premium', 'designer', 'designer_adm')) THEN 1 END) as new_premium
         FROM users
         WHERE criadoem >= NOW() - INTERVAL '12 months'
         GROUP BY DATE_TRUNC('month', criadoem)
