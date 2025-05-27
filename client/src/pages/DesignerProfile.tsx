@@ -651,22 +651,25 @@ export default function DesignerProfile() {
           </div>
         ) : (
           <>
-            {/* Vitrine de artes organizada - Grid responsivo otimizado */}
-            <div className="w-full max-w-7xl mx-auto px-2">
+            {/* Vitrine estilo Pinterest - Layout em cascata */}
+            <div className="w-full max-w-6xl mx-auto px-3">
               <div 
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 transition-all duration-500 ease-in-out"
+                className="columns-2 sm:columns-3 md:columns-4 lg:columns-4 gap-3 md:gap-4 space-y-0"
                 key={activeFilter}
+                style={{
+                  columnFill: 'balance'
+                }}
               >
                 {displayedArts(data).map((art, index) => (
                   <div 
                     key={art.id} 
-                    className="group relative overflow-hidden"
+                    className="break-inside-avoid mb-3 md:mb-4 group"
                     style={{
-                      animationDelay: `${index * 80}ms`,
+                      animationDelay: `${index * 60}ms`,
                     }}
                   >
-                    {/* Container da arte com hover suave */}
-                    <div className="relative transition-all duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden">
+                    {/* Container da arte com hover suave estilo Pinterest */}
+                    <div className="relative transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl overflow-hidden bg-white border border-gray-100">
                       <ArtCard art={art} />
                     </div>
                   </div>
