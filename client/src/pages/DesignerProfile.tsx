@@ -114,44 +114,24 @@ export default function DesignerProfile() {
     },
   });
   
-  // Mutação para seguir designer
-  const followMutation = useMutation({
-    mutationFn: async (designerId: number) => {
-      const res = await apiRequest("POST", `/api/follow/${designerId}`);
+  // Mutação unificada para seguir/deixar de seguir designer
+  const toggleFollowMutation = useMutation({
+    mutationFn: async ({ designerId, action }: { designerId: number; action: 'follow' | 'unfollow' }) => {
+      const res = await apiRequest("POST", `/api/users/follow/${designerId}`, { action });
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/designers", username] });
       toast({
-        title: "Designer seguido com sucesso",
-        description: "Você agora está seguindo este designer",
+        title: variables.action === 'follow' ? "Designer seguido com sucesso" : "Deixou de seguir com sucesso",
+        description: variables.action === 'follow' 
+          ? "Você agora está seguindo este designer" 
+          : "Você não está mais seguindo este designer",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
       toast({
-        title: "Erro ao seguir designer",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Mutação para deixar de seguir
-  const unfollowMutation = useMutation({
-    mutationFn: async (designerId: number) => {
-      const res = await apiRequest("DELETE", `/api/unfollow/${designerId}`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/designers", username] });
-      toast({
-        title: "Deixou de seguir com sucesso",
-        description: "Você não está mais seguindo este designer",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao deixar de seguir",
+        title: variables.action === 'follow' ? "Erro ao seguir designer" : "Erro ao deixar de seguir",
         description: error.message,
         variant: "destructive",
       });
@@ -170,11 +150,8 @@ export default function DesignerProfile() {
     
     if (!data) return;
     
-    if (data.isFollowing) {
-      unfollowMutation.mutate(data.id);
-    } else {
-      followMutation.mutate(data.id);
-    }
+    const action = data.isFollowing ? 'unfollow' : 'follow';
+    toggleFollowMutation.mutate({ designerId: data.id, action });
   };
   
   const handlePageChange = (page: number) => {
@@ -473,9 +450,9 @@ export default function DesignerProfile() {
                   onClick={handleFollowToggle}
                   variant={data.isFollowing ? "outline" : "default"}
                   className={`px-5 py-1 h-9 text-sm rounded-full ${data.isFollowing ? 'border-blue-200 text-blue-600 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  disabled={toggleFollowMutation.isPending}
                 >
-                  {followMutation.isPending || unfollowMutation.isPending ? (
+                  {toggleFollowMutation.isPending ? (
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   ) : (
                     data.isFollowing ? (
