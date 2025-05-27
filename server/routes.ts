@@ -4993,68 +4993,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const offset = (page - 1) * limit;
       
-      // Construir condições de filtro
-      let whereConditions: SQL[] = [];
+      // Usar SQL direto para obter dados dos usuários
+      const result = await db.execute(sql`
+        SELECT 
+          id, username, email, name, nivelacesso, origemassinatura, 
+          tipoplano, dataexpiracao, acessovitalicio, criadoem, atualizadoem,
+          profileimageurl, bio, isactive
+        FROM users 
+        ORDER BY criadoem DESC
+      `);
+      
+      // Extrair dados do resultado corretamente
+      const allUsers = Array.isArray(result) ? result : (result.rows || []);
+      
+      // Aplicar filtros no JavaScript
+      let filteredUsers = allUsers;
       
       // Filtro por status
-      if (status) {
-        if (status === 'active') {
-          whereConditions.push(
-            or(
-              isNull(users.dataexpiracao),
-              sql`${users.dataexpiracao} > NOW()`,
-              eq(users.acessovitalicio, true)
-            )
-          );
-        } else if (status === 'expired') {
-          whereConditions.push(
-            and(
-              not(eq(users.acessovitalicio, true)),
-              not(isNull(users.dataexpiracao)),
-              sql`${users.dataexpiracao} <= NOW()`
-            )
-          );
-        } else if (status === 'trial') {
-          whereConditions.push(eq(users.tipoplano, 'trial'));
-        }
+      if (status && status !== 'all') {
+        filteredUsers = filteredUsers.filter((user: any) => {
+          const isLifetime = user.acessovitalicio;
+          const hasExpiration = user.dataexpiracao;
+          const isExpired = hasExpiration && new Date(user.dataexpiracao) <= new Date();
+          
+          if (status === 'active') {
+            return isLifetime || !hasExpiration || !isExpired;
+          } else if (status === 'expired') {
+            return !isLifetime && hasExpiration && isExpired;
+          } else if (status === 'trial') {
+            return user.tipoplano === 'trial';
+          }
+          return true;
+        });
       }
       
       // Filtro por origem
       if (origin && origin !== 'all') {
-        whereConditions.push(eq(users.origemassinatura, origin));
+        filteredUsers = filteredUsers.filter((user: any) => user.origemassinatura === origin);
       }
       
       // Filtro por termo de busca
       if (search) {
-        whereConditions.push(
-          or(
-            sql`${users.username} ILIKE ${`%${search}%`}`,
-            sql`${users.email} ILIKE ${`%${search}%`}`,
-            sql`${users.name} ILIKE ${`%${search}%`}`
-          )
+        const searchLower = search.toLowerCase();
+        filteredUsers = filteredUsers.filter((user: any) => 
+          user.username?.toLowerCase().includes(searchLower) ||
+          user.email?.toLowerCase().includes(searchLower) ||
+          user.name?.toLowerCase().includes(searchLower)
         );
       }
       
-      // Construir query base
-      let query = db.select()
-        .from(users)
-        .limit(limit)
-        .offset(offset)
-        .orderBy(desc(users.criadoem));
-      
-      if (whereConditions.length > 0) {
-        const finalCondition = whereConditions.length === 1
-          ? whereConditions[0]
-          : and(...whereConditions);
-        
-        query = query.where(finalCondition);
-      }
-      
-      // Executar consulta
-      const rawUserList = await query;
+      // Aplicar paginação
+      const totalCount = filteredUsers.length;
+      const paginatedUsers = filteredUsers.slice(offset, offset + limit);
       
       // Processar resultados para incluir status do plano
-      const userList = rawUserList.map(user => ({
+      const userList = paginatedUsers.map((user: any) => ({
         id: user.id,
         username: user.username,
         email: user.email,
@@ -5071,18 +5064,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         atualizadoem: user.atualizadoem,
       }));
       
-      // Obter contagem total para paginação
-      const [totalResult] = await db
-        .select({ count: count() })
-        .from(users);
-      
       res.status(200).json({
         users: userList,
         pagination: {
-          total: totalResult.count,
+          total: totalCount,
           page,
           limit,
-          pages: Math.ceil(totalResult.count / limit),
+          pages: Math.ceil(totalCount / limit),
         }
       });
     } catch (error) {
