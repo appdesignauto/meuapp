@@ -3074,27 +3074,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
+        // Verificar se é usuário de webhook para limitar campos editáveis
+        const isWebhookUser = existingUser.origemassinatura === 'hotmart' || existingUser.origemassinatura === 'doppus';
+        
         // Preparar objeto de atualização
         const updateData: Record<string, any> = {
           atualizadoem: new Date()
         };
         
-        if (username) updateData.username = username;
-        if (email) updateData.email = email;
-        if (name !== undefined) updateData.name = name || null;
-        if (bio !== undefined) updateData.bio = bio || null;
-        if (nivelacesso) {
-          updateData.nivelacesso = nivelacesso;
-          // Também atualizamos o role para compatibilidade
-          updateData.role = nivelacesso;
+        if (isWebhookUser) {
+          // Para usuários webhook, permitir apenas edição de campos seguros
+          console.log(`[UserUpdate] Usuário ${userId} é de webhook (${existingUser.origemassinatura}), limitando campos editáveis`);
+          
+          if (username) updateData.username = username;
+          if (name !== undefined) updateData.name = name || null;
+          // Para webhook, manter status ativo/inativo editável para controle administrativo
+          if (isactive !== undefined) updateData.isactive = isactive;
+          
+          // Bloquear todos os outros campos para manter integridade da integração
+          console.log(`[UserUpdate] Campos permitidos para webhook:`, { username, name, isactive });
+        } else {
+          // Para usuários não-webhook, permitir edição completa
+          if (username) updateData.username = username;
+          if (email) updateData.email = email;
+          if (name !== undefined) updateData.name = name || null;
+          if (bio !== undefined) updateData.bio = bio || null;
+          if (nivelacesso) {
+            updateData.nivelacesso = nivelacesso;
+            // Também atualizamos o role para compatibilidade
+            updateData.role = nivelacesso;
+          }
+          if (isactive !== undefined) updateData.isactive = isactive;
+          if (origemassinatura !== undefined) updateData.origemassinatura = origemassinatura || null;
+          if (tipoplano !== undefined) updateData.tipoplano = tipoplano || null;
+          if (dataassinatura !== undefined) updateData.dataassinatura = dataassinatura ? new Date(dataassinatura) : null;
+          if (dataexpiracao !== undefined) updateData.dataexpiracao = dataexpiracao ? new Date(dataexpiracao) : null;
+          if (acessovitalicio !== undefined) updateData.acessovitalicio = acessovitalicio;
+          if (observacaoadmin !== undefined) updateData.observacaoadmin = observacaoadmin || null;
         }
-        if (isactive !== undefined) updateData.isactive = isactive;
-        if (origemassinatura !== undefined) updateData.origemassinatura = origemassinatura || null;
-        if (tipoplano !== undefined) updateData.tipoplano = tipoplano || null;
-        if (dataassinatura !== undefined) updateData.dataassinatura = dataassinatura ? new Date(dataassinatura) : null;
-        if (dataexpiracao !== undefined) updateData.dataexpiracao = dataexpiracao ? new Date(dataexpiracao) : null;
-        if (acessovitalicio !== undefined) updateData.acessovitalicio = acessovitalicio;
-        if (observacaoadmin !== undefined) updateData.observacaoadmin = observacaoadmin || null;
         
         // Criptografar a nova senha se fornecida
         if (password) {
