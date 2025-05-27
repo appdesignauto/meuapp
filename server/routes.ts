@@ -5095,9 +5095,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para estatísticas de usuários - usado no painel de assinaturas
   app.get("/api/admin/users/stats", isAdmin, async (req, res) => {
     try {
-      console.log("Buscando estatísticas de usuários...");
+      console.log("📊 Buscando estatísticas de usuários para dashboard...");
       
-      // Usar PostgreSQL direto para obter estatísticas
+      // Usar PostgreSQL direto para máxima compatibilidade
       const { Client } = require('pg');
       const client = new Client({
         connectionString: process.env.DATABASE_URL
@@ -5105,34 +5105,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await client.connect();
       
-      // Buscar total de usuários
-      const totalResult = await client.query('SELECT COUNT(*) as total FROM users');
-      const totalUsers = parseInt(totalResult.rows[0].total);
+      // Query para obter todas as estatísticas de uma vez
+      const statsQuery = `
+        SELECT 
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') THEN 1 END) as premium_users,
+          COUNT(CASE WHEN NOT (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') THEN 1 END) as free_users
+        FROM users 
+        WHERE isactive = true;
+      `;
       
-      // Buscar usuários premium (com acesso vitalício ou data de expiração no futuro)
-      const premiumResult = await client.query(`
-        SELECT COUNT(*) as premium FROM users 
-        WHERE acessovitalicio = true 
-        OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW())
-      `);
-      const premiumUsers = parseInt(premiumResult.rows[0].premium);
-      
-      // Calcular usuários free
-      const freeUsers = totalUsers - premiumUsers;
+      const result = await client.query(statsQuery);
+      const stats = result.rows[0];
       
       await client.end();
       
-      console.log(`Estatísticas: Total: ${totalUsers}, Premium: ${premiumUsers}, Free: ${freeUsers}`);
+      const response = {
+        totalUsers: parseInt(stats.total_users) || 0,
+        premiumUsers: parseInt(stats.premium_users) || 0,
+        freeUsers: parseInt(stats.free_users) || 0
+      };
       
-      res.status(200).json({
-        totalUsers,
-        premiumUsers,
-        freeUsers
-      });
+      console.log("📈 Estatísticas calculadas:", response);
+      
+      res.status(200).json(response);
       
     } catch (error) {
-      console.error("Erro ao obter estatísticas de usuários:", error);
-      res.status(500).json({ message: "Erro ao obter estatísticas de usuários" });
+      console.error("❌ Erro ao obter estatísticas:", error);
+      res.status(500).json({ 
+        message: "Erro ao obter estatísticas de usuários",
+        totalUsers: 0,
+        premiumUsers: 0,
+        freeUsers: 0
+      });
     }
   });
   
