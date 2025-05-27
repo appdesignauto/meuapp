@@ -3131,8 +3131,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(eq(users.id, userId));
           
         // Verificar se está atualizando para usuário premium ou se o usuário já era premium
-        // Consultar status atual do usuário para verificar se já era premium
-        if (nivelacesso === 'premium' || existingUser.nivelacesso === 'premium') {
+        // IMPORTANTE: Para usuários vindos de webhook (hotmart/doppus), não atualizar o serviço de assinatura
+        const isWebhookUser = existingUser.origemassinatura === 'hotmart' || existingUser.origemassinatura === 'doppus';
+        
+        if (!isWebhookUser && (nivelacesso === 'premium' || existingUser.nivelacesso === 'premium')) {
           // Definir o nível de acesso efetivo para o usuário (o novo valor ou o existente)
           const effectiveNivelAcesso = nivelacesso || existingUser.nivelacesso;
           
@@ -3170,14 +3172,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               expiracao: endDate
             });
             
-            // Criar ou atualizar registro de assinatura
-            await SubscriptionService.createOrUpdateSubscription(
-              userId, 
-              effectiveTipoPlano, 
-              new Date(), // Data de início (atual)
-              endDate
-            );
+            try {
+              // Criar ou atualizar registro de assinatura
+              await SubscriptionService.createOrUpdateSubscription(
+                userId, 
+                effectiveTipoPlano, 
+                new Date(), // Data de início (atual)
+                endDate
+              );
+            } catch (error) {
+              console.log(`[UserUpdate] Erro ao atualizar serviço de assinatura, mas usuário foi atualizado:`, error);
+            }
           }
+        } else if (isWebhookUser) {
+          console.log(`[UserUpdate] Usuário ${userId} é de webhook (${existingUser.origemassinatura}), pulando atualização do serviço de assinatura`);
         }
       }
       
