@@ -176,6 +176,7 @@ const ModernUserManagement = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedNivelAcesso, setSelectedNivelAcesso] = useState<string>("usuario");
   const [selectedOrigemAssinatura, setSelectedOrigemAssinatura] = useState<string>("");
+  const [createUserStep, setCreateUserStep] = useState<1 | 2>(1);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -639,196 +640,341 @@ const ModernUserManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Create User Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* Create User Dialog with Steps */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
+        if (!open) {
+          setCreateUserStep(1);
+          setSelectedNivelAcesso("usuario");
+          setSelectedOrigemAssinatura("");
+          createForm.reset();
+        }
+      }}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5" />
               Criar Novo Usuário
+              <span className="text-sm font-normal text-muted-foreground ml-auto">
+                Etapa {createUserStep} de {selectedNivelAcesso === "premium" ? "2" : "1"}
+              </span>
             </DialogTitle>
             <DialogDescription>
-              Preencha as informações abaixo para criar um novo usuário
+              {createUserStep === 1 
+                ? "Preencha os dados principais de acesso"
+                : "Configure os detalhes da assinatura premium"
+              }
             </DialogDescription>
           </DialogHeader>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+              style={{ 
+                width: selectedNivelAcesso === "premium" 
+                  ? `${(createUserStep / 2) * 100}%` 
+                  : "100%" 
+              }}
+            />
+          </div>
+
           <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                {...createForm.register("email", { required: "Email é obrigatório" })}
-                placeholder="Digite o email (identificação principal)"
-                className="text-base"
-              />
-              <p className="text-sm text-muted-foreground mt-1">O email será usado como identificação principal do usuário</p>
-            </div>
-
-            <div>
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input
-                id="name"
-                {...createForm.register("name", { required: "Nome é obrigatório" })}
-                placeholder="Digite o nome completo"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...createForm.register("password", { required: "Senha é obrigatória" })}
-                  placeholder="Digite a senha"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="nivelacesso">Nível de Acesso</Label>
-              <Select onValueChange={(value) => {
-                createForm.setValue("nivelacesso", value as NivelAcesso);
-                setSelectedNivelAcesso(value);
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o nível de acesso" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(roleConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
-                      <div className="flex items-center gap-2">
-                        <config.icon className="w-4 h-4" />
-                        {config.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Campos condicionais para usuários premium */}
-            {selectedNivelAcesso === "premium" && (
-              <div className="space-y-4 p-4 border rounded-lg bg-purple-50">
-                <h4 className="font-medium text-purple-800 flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Configurações Premium
-                </h4>
-                
+            {/* Step 1: Basic Information */}
+            {createUserStep === 1 && (
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="origemassinatura">Origem da Assinatura</Label>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...createForm.register("email", { required: "Email é obrigatório" })}
+                    placeholder="Digite o email (identificação principal)"
+                    className="text-base"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    O email será usado como identificação principal
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="name">Nome Completo *</Label>
+                  <Input
+                    id="name"
+                    {...createForm.register("name", { required: "Nome é obrigatório" })}
+                    placeholder="Digite o nome completo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password">Senha *</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      {...createForm.register("password", { required: "Senha é obrigatória" })}
+                      placeholder="Digite a senha"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="nivelacesso">Nível de Acesso *</Label>
                   <Select onValueChange={(value) => {
-                    createForm.setValue("origemassinatura", value as OrigemAssinatura);
-                    setSelectedOrigemAssinatura(value);
+                    createForm.setValue("nivelacesso", value as NivelAcesso);
+                    setSelectedNivelAcesso(value);
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione a origem" />
+                      <SelectValue placeholder="Selecione o nível de acesso" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="hotmart">Hotmart</SelectItem>
-                      <SelectItem value="doppus">Doppus</SelectItem>
+                      {Object.entries(roleConfig).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          <div className="flex items-center gap-2">
+                            <config.icon className="w-4 h-4" />
+                            {config.label}
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Campos específicos para assinatura manual */}
-                {selectedOrigemAssinatura === "manual" && (
-                  <div className="space-y-4 p-3 border rounded bg-blue-50">
-                    <h5 className="font-medium text-blue-800">Detalhes da Assinatura Manual</h5>
-                    
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isactive"
+                    {...createForm.register("isactive")}
+                    defaultChecked={true}
+                  />
+                  <Label htmlFor="isactive">Usuário ativo</Label>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Premium Subscription Details */}
+            {createUserStep === 2 && selectedNivelAcesso === "premium" && (
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg bg-purple-50">
+                  <h4 className="font-medium text-purple-800 flex items-center gap-2 mb-4">
+                    <Zap className="w-4 h-4" />
+                    Configurações Premium
+                  </h4>
+                  
+                  <div className="space-y-4">
                     <div>
-                      <Label htmlFor="tipoplano">Tipo de Plano</Label>
+                      <Label htmlFor="origemassinatura">Origem da Assinatura *</Label>
                       <Select onValueChange={(value) => {
-                        createForm.setValue("tipoplano", value as TipoPlano);
-                        // Auto-calcular expiração quando os dois campos estão preenchidos
-                        const dataAssinatura = createForm.getValues("dataassinatura");
-                        if (dataAssinatura) {
-                          const expirationDate = calculateExpirationDate(dataAssinatura, value);
-                          createForm.setValue("dataexpiracao", expirationDate);
-                        }
+                        createForm.setValue("origemassinatura", value as OrigemAssinatura);
+                        setSelectedOrigemAssinatura(value);
                       }}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo de plano" />
+                          <SelectValue placeholder="Selecione a origem" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="mensal">Mensal</SelectItem>
-                          <SelectItem value="anual">Anual</SelectItem>
-                          <SelectItem value="vitalicio">Vitalício</SelectItem>
+                          <SelectItem value="manual">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              Manual
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="hotmart">
+                            <div className="flex items-center gap-2">
+                              <Globe className="w-4 h-4" />
+                              Hotmart
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="doppus">
+                            <div className="flex items-center gap-2">
+                              <Monitor className="w-4 h-4" />
+                              Doppus
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div>
-                      <Label htmlFor="dataassinatura">Data da Assinatura</Label>
-                      <Input
-                        id="dataassinatura"
-                        type="date"
-                        {...createForm.register("dataassinatura")}
-                        onChange={(e) => {
-                          createForm.setValue("dataassinatura", e.target.value);
-                          const tipoplano = createForm.getValues("tipoplano");
-                          if (tipoplano) {
-                            const expirationDate = calculateExpirationDate(e.target.value, tipoplano);
-                            createForm.setValue("dataexpiracao", expirationDate);
-                          }
-                        }}
-                      />
-                    </div>
+                    {/* Manual Subscription Details */}
+                    {selectedOrigemAssinatura === "manual" && (
+                      <div className="space-y-4 p-3 border rounded bg-blue-50">
+                        <h5 className="font-medium text-blue-800 flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Detalhes da Assinatura Manual
+                        </h5>
+                        
+                        <div>
+                          <Label htmlFor="tipoplano">Tipo de Plano *</Label>
+                          <Select onValueChange={(value) => {
+                            createForm.setValue("tipoplano", value as TipoPlano);
+                            const dataAssinatura = createForm.getValues("dataassinatura");
+                            if (dataAssinatura) {
+                              const expirationDate = calculateExpirationDate(dataAssinatura, value);
+                              createForm.setValue("dataexpiracao", expirationDate);
+                            }
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo de plano" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="mensal">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  Mensal
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="anual">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4" />
+                                  Anual
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="vitalicio">
+                                <div className="flex items-center gap-2">
+                                  <Star className="w-4 h-4" />
+                                  Vitalício
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                    <div>
-                      <Label htmlFor="dataexpiracao">Data de Expiração (calculada automaticamente)</Label>
-                      <Input
-                        id="dataexpiracao"
-                        type="date"
-                        {...createForm.register("dataexpiracao")}
-                        readOnly
-                        className="bg-gray-100"
-                      />
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Esta data é calculada automaticamente com base no tipo de plano e data de assinatura
-                      </p>
-                    </div>
+                        <div>
+                          <Label htmlFor="dataassinatura">Data da Assinatura *</Label>
+                          <Input
+                            id="dataassinatura"
+                            type="date"
+                            {...createForm.register("dataassinatura")}
+                            onChange={(e) => {
+                              createForm.setValue("dataassinatura", e.target.value);
+                              const tipoplano = createForm.getValues("tipoplano");
+                              if (tipoplano) {
+                                const expirationDate = calculateExpirationDate(e.target.value, tipoplano);
+                                createForm.setValue("dataexpiracao", expirationDate);
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="dataexpiracao">Data de Expiração</Label>
+                          <Input
+                            id="dataexpiracao"
+                            type="date"
+                            {...createForm.register("dataexpiracao")}
+                            readOnly
+                            className="bg-gray-100 cursor-not-allowed"
+                          />
+                          <p className="text-sm text-muted-foreground mt-1">
+                            📅 Calculada automaticamente baseada no plano
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Integration Info for Hotmart/Doppus */}
+                    {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
+                      <div className="p-3 border rounded bg-green-50">
+                        <div className="flex items-center gap-2 text-green-800 mb-2">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="font-medium">Integração Automática</span>
+                        </div>
+                        <p className="text-sm text-green-700">
+                          {selectedOrigemAssinatura === "hotmart" 
+                            ? "Os dados da assinatura serão gerenciados automaticamente via webhook da Hotmart."
+                            : "Os dados da assinatura serão gerenciados automaticamente via integração Doppus."
+                          }
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isactive"
-                {...createForm.register("isactive")}
-                defaultChecked={true}
-              />
-              <Label htmlFor="isactive">Usuário ativo</Label>
-            </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancelar
+            <DialogFooter className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  if (createUserStep === 2) {
+                    setCreateUserStep(1);
+                  } else {
+                    setIsCreateDialogOpen(false);
+                  }
+                }}
+              >
+                {createUserStep === 2 ? "Voltar" : "Cancelar"}
               </Button>
-              <Button type="submit" disabled={createUserMutation.isPending}>
-                {createUserMutation.isPending ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Criando...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Criar Usuário
-                  </>
-                )}
-              </Button>
+              
+              {createUserStep === 1 ? (
+                <Button 
+                  type="button" 
+                  onClick={() => {
+                    // Validate step 1 fields
+                    const email = createForm.getValues("email");
+                    const name = createForm.getValues("name");
+                    const password = createForm.getValues("password");
+                    const nivelacesso = createForm.getValues("nivelacesso");
+                    
+                    if (!email || !name || !password || !nivelacesso) {
+                      toast({
+                        title: "Campos obrigatórios",
+                        description: "Por favor, preencha todos os campos obrigatórios.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    if (selectedNivelAcesso === "premium") {
+                      setCreateUserStep(2);
+                    } else {
+                      handleCreateUser(createForm.getValues());
+                    }
+                  }}
+                  disabled={createUserMutation.isPending}
+                >
+                  {selectedNivelAcesso === "premium" ? (
+                    <>
+                      Próximo
+                      <ChevronDown className="w-4 h-4 ml-2 rotate-[-90deg]" />
+                    </>
+                  ) : (
+                    createUserMutation.isPending ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Criar Usuário
+                      </>
+                    )
+                  )}
+                </Button>
+              ) : (
+                <Button type="submit" disabled={createUserMutation.isPending}>
+                  {createUserMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Criar Usuário
+                    </>
+                  )}
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
