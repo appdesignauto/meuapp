@@ -5092,6 +5092,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para estatísticas de usuários - usado no painel de assinaturas
+  app.get("/api/admin/users/stats", isAdmin, async (req, res) => {
+    try {
+      console.log("Buscando estatísticas de usuários...");
+      
+      // Usar PostgreSQL direto para obter estatísticas
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      // Buscar total de usuários
+      const totalResult = await client.query('SELECT COUNT(*) as total FROM users');
+      const totalUsers = parseInt(totalResult.rows[0].total);
+      
+      // Buscar usuários premium (com acesso vitalício ou data de expiração no futuro)
+      const premiumResult = await client.query(`
+        SELECT COUNT(*) as premium FROM users 
+        WHERE acessovitalicio = true 
+        OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW())
+      `);
+      const premiumUsers = parseInt(premiumResult.rows[0].premium);
+      
+      // Calcular usuários free
+      const freeUsers = totalUsers - premiumUsers;
+      
+      await client.end();
+      
+      console.log(`Estatísticas: Total: ${totalUsers}, Premium: ${premiumUsers}, Free: ${freeUsers}`);
+      
+      res.status(200).json({
+        totalUsers,
+        premiumUsers,
+        freeUsers
+      });
+      
+    } catch (error) {
+      console.error("Erro ao obter estatísticas de usuários:", error);
+      res.status(500).json({ message: "Erro ao obter estatísticas de usuários" });
+    }
+  });
+  
   // Endpoint para obter detalhes de um usuário específico
   app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
     try {
