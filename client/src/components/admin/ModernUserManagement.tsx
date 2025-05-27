@@ -558,9 +558,10 @@ const ModernUserManagement = () => {
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Usuário</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Função</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Último Login</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Criado em</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Expiração</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Origem</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Ações</th>
                   </tr>
                 </thead>
@@ -594,14 +595,19 @@ const ModernUserManagement = () => {
                             {roleInfo?.label}
                           </Badge>
                         </td>
+                        <td className="py-4 px-4 text-sm text-gray-600">
+                          {formatDate(user.criadoem)}
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-600">
+                          {user.dataexpiracao ? formatDate(user.dataexpiracao) : "-"}
+                        </td>
                         <td className="py-4 px-4">
                           {getStatusBadge(user)}
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
-                          {formatDate(user.ultimologin)}
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-600">
-                          {formatDate(user.criadoem)}
+                          <Badge variant={user.origemassinatura ? "outline" : "secondary"} className="text-xs">
+                            {user.origemassinatura || "Sistema"}
+                          </Badge>
                         </td>
                         <td className="py-4 px-4">
                           <DropdownMenu>
