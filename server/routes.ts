@@ -2858,7 +2858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               SELECT COUNT(*) as count
               FROM downloads d
               JOIN arts a ON d."artId" = a.id
-              WHERE a.designeridid = $1
+              WHERE a.designerid = $1
             `;
             
             const downloadsResult = await db.execute(sql.raw(downloadsQuery), [user.id]);
@@ -2869,7 +2869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               SELECT COUNT(*) as count
               FROM views v
               JOIN arts a ON v."artId" = a.id
-              WHERE a.designeridid = $1
+              WHERE a.designerid = $1
             `;
             
             const viewsResult = await db.execute(sql.raw(viewsQuery), [user.id]);
