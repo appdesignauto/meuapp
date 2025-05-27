@@ -733,29 +733,30 @@ const ModernUserManagement = () => {
                               "manual": { 
                                 label: "Manual", 
                                 className: "bg-blue-100 text-blue-800 border-blue-200",
-                                icon: "👤"
+                                icon: User
                               },
                               "hotmart": { 
                                 label: "Hotmart", 
                                 className: "bg-orange-100 text-orange-800 border-orange-200",
-                                icon: "🛒"
+                                icon: ShoppingCart
                               },
                               "doppus": { 
                                 label: "Doppus", 
                                 className: "bg-purple-100 text-purple-800 border-purple-200",
-                                icon: "💳"
+                                icon: CreditCard
                               },
                               "sistema": { 
                                 label: "Sistema", 
                                 className: "bg-gray-100 text-gray-800 border-gray-200",
-                                icon: "⚙️"
+                                icon: Settings
                               }
                             };
                             const config = origemConfig[origem as keyof typeof origemConfig] || origemConfig.sistema;
+                            const IconComponent = config.icon;
                             
                             return (
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${config.className}`}>
-                                <span className="text-xs">{config.icon}</span>
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${config.className}`}>
+                                <IconComponent className="w-3 h-3" />
                                 {config.label}
                               </span>
                             );
