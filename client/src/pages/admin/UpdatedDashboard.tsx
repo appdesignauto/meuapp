@@ -1008,41 +1008,6 @@ const AdminDashboard = () => {
               {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
             </button>
             
-            {/* Assinaturas */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden"
-              defaultOpen={['subscriptions'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
-              <CollapsibleTrigger 
-                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-                title="Assinaturas"
-              >
-                <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-                {sidebarOpen && (
-                  <>
-                    <span className="ml-3 truncate">Assinaturas</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
-                  </>
-                )}
-              </CollapsibleTrigger>
-              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
-                <button
-                  onClick={() => setActiveTab('subscriptions')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                  title="Gerenciar Assinaturas"
-                >
-                  <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Assinaturas</span>}
-                </button>
-                
-
-              </CollapsibleContent>
-            </Collapsible>
-
-
             {/* Usuários e Comunidade */}
             <Collapsible 
               className="rounded-lg overflow-hidden"
@@ -1441,7 +1406,7 @@ const AdminDashboard = () => {
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
-                {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
+
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
@@ -4009,23 +3974,6 @@ const AdminDashboard = () => {
             
             <TabsContent value="settings">
               <SiteSettings />
-            </TabsContent>
-            
-            {/* Gerenciamento de Assinaturas */}
-            <TabsContent value="subscriptions" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <p className="text-muted-foreground">
-                      Gerencie assinaturas, webhooks e configurações relacionadas a pagamentos.
-                    </p>
-                  </div>
-                  
-                  <div className="grid gap-6">
-                    <SubscriptionManagement />
-                  </div>
-                </div>
-              </div>
             </TabsContent>
             
             {/* Gerenciamento de Ferramentas */}
