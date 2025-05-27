@@ -5088,7 +5088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ETAPA 1: Endpoint simples para retornar os 6 usuários (sem auth para teste inicial)
+  // ETAPA 1: Sobrescrever o endpoint problemático com versão funcional
   app.get("/api/admin/subscription-users", async (req, res) => {
     try {
       console.log("📊 ETAPA 1: Retornando os 6 usuários diretamente...");
