@@ -924,10 +924,49 @@ const ModernUserManagement = () => {
                     const password = createForm.getValues("password");
                     const nivelacesso = createForm.getValues("nivelacesso");
                     
-                    if (!email || !name || !password || !nivelacesso) {
+                    // Enhanced validation with specific error messages
+                    if (!email || email.trim() === "") {
                       toast({
-                        title: "Campos obrigatórios",
-                        description: "Por favor, preencha todos os campos obrigatórios.",
+                        title: "Email obrigatório",
+                        description: "Por favor, digite um email válido.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    if (!name || name.trim() === "") {
+                      toast({
+                        title: "Nome obrigatório",
+                        description: "Por favor, digite o nome completo.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    if (!password || password.trim() === "") {
+                      toast({
+                        title: "Senha obrigatória",
+                        description: "Por favor, digite uma senha.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    if (!nivelacesso) {
+                      toast({
+                        title: "Nível de acesso obrigatório",
+                        description: "Por favor, selecione um nível de acesso.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    // Email format validation
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                      toast({
+                        title: "Email inválido",
+                        description: "Por favor, digite um email válido.",
                         variant: "destructive",
                       });
                       return;
@@ -961,7 +1000,50 @@ const ModernUserManagement = () => {
                   )}
                 </Button>
               ) : (
-                <Button type="submit" disabled={createUserMutation.isPending}>
+                <Button 
+                  type="button" 
+                  onClick={() => {
+                    // Validate premium fields for step 2
+                    const origemassinatura = createForm.getValues("origemassinatura");
+                    
+                    if (!origemassinatura) {
+                      toast({
+                        title: "Origem da assinatura obrigatória",
+                        description: "Por favor, selecione a origem da assinatura.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    // Additional validation for manual subscriptions
+                    if (origemassinatura === "manual") {
+                      const tipoplano = createForm.getValues("tipoplano");
+                      const dataassinatura = createForm.getValues("dataassinatura");
+                      
+                      if (!tipoplano) {
+                        toast({
+                          title: "Tipo de plano obrigatório",
+                          description: "Por favor, selecione o tipo de plano.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      if (!dataassinatura) {
+                        toast({
+                          title: "Data da assinatura obrigatória",
+                          description: "Por favor, selecione a data da assinatura.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                    }
+                    
+                    // All validations passed, submit the form
+                    handleCreateUser(createForm.getValues());
+                  }}
+                  disabled={createUserMutation.isPending}
+                >
                   {createUserMutation.isPending ? (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
