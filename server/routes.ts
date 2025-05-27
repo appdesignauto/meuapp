@@ -3498,7 +3498,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             bio, 
             profileimageurl, 
             nivelacesso, 
-            role, 
             0 AS followers, 
             0 AS following, 
             "createdAt" as createdat,
@@ -3517,7 +3516,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             bio, 
             profileimageurl, 
             nivelacesso, 
-            role, 
             0 AS followers, 
             0 AS following, 
             "createdAt" as createdat,
@@ -3557,7 +3555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
         return {
-          ...designerid,
+          ...designer,
           profileImageUrl: designer.profileimageurl,
           createdAt: designer.createdat,
           nivelAcesso: designer.nivelacesso, // Adicionamos o nivelacesso explicitamente
