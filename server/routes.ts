@@ -12,6 +12,7 @@ import { db } from "./db";
 import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray } from "drizzle-orm";
 import { randomBytes, scrypt } from "crypto";
 import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
