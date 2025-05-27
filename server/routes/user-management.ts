@@ -96,8 +96,8 @@ export function setupUserManagementRoutes(app: Express) {
       });
 
     } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
+      console.error("Erro ao listar usuários:", error);
+      res.status(500).json({ message: "Erro ao listar usuários" });
     }
   });
 

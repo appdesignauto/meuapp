@@ -2794,8 +2794,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =============================================
   // GERENCIAMENTO DE USUÁRIOS
 
-  // Rota para listar todos os usuários (apenas para administradores)
-  app.get("/api/users", isAuthenticated, async (req, res) => {
+  // Rota para listar usuários - REMOVIDA - agora usando nova API moderna em user-management.ts
+  // app.get("/api/users", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as User;
       
