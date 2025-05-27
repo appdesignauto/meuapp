@@ -180,7 +180,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
     try {
       const userId = req.user?.id; // Pode ser undefined se o usuário não estiver logado
       
-      // Buscar designers (usuários com nivelacesso = 'designer' ou 'designer_adm')
+      // Buscar usuários populares (premium e admin ativos)
       const designers = await db
         .select({
           id: users.id,
@@ -189,11 +189,10 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
           profileimageurl: users.profileimageurl,
           bio: users.bio,
           nivelacesso: users.nivelacesso,
-          role: users.role,
         })
         .from(users)
         .where(
-          sql`(${users.nivelacesso} = 'designer' OR ${users.nivelacesso} = 'designer_adm' OR ${users.role} = 'designer' OR ${users.role} = 'designer_adm') AND ${users.isactive} = true`
+          sql`(${users.nivelacesso} = 'premium' OR ${users.nivelacesso} = 'admin') AND ${users.isactive} = true`
         )
         .limit(12);
 
@@ -241,7 +240,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
           return {
             ...designer,
             name: designer.name || designer.username,
-            role: designer.role || designer.nivelacesso,
+            role: designer.nivelacesso,
             artsCount: Number(artsCount?.count || 0),
             postsCount: Number(postsCount?.count || 0),
             followersCount: Number(followersCount?.count || 0),
