@@ -817,11 +817,7 @@ const ModernUserManagement = () => {
                            selectedOrigemAssinatura === "hotmart" ? "Assinatura Hotmart (Processo Manual)" :
                            "Assinatura Doppus (Processo Manual)"}
                         </h5>
-                        {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
-                          <p className="text-sm text-blue-700 bg-blue-100 p-2 rounded">
-                            ℹ️ Use esta opção quando o webhook automático falhar ou para processar compras manualmente
-                          </p>
-                        )}
+
                         
                         {/* Transaction ID for Hotmart/Doppus manual entries */}
                         {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
