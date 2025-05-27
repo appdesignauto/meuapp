@@ -135,10 +135,10 @@ export default function PainelSeguindo() {
     };
 
     return (
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
+      <Card className="overflow-hidden h-fit">
+        <CardHeader className="pb-3">
           <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-12 w-12">
               <AvatarImage
                 src={designer.profileimageurl || ""}
                 alt={designer.name}
@@ -162,53 +162,52 @@ export default function PainelSeguindo() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pb-2">
-          <p className="text-sm text-muted-foreground line-clamp-2">
+        
+        <CardContent className="pb-4 space-y-4">
+          <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
             {designer.bio && designer.bio !== "" ? designer.bio : "Este designer ainda não adicionou uma bio."}
           </p>
-        </CardContent>
-        <CardFooter className="flex justify-between py-2">
-          <div className="flex items-center space-x-4">
-            <div className="text-xs flex flex-col items-center">
-              <span className="font-medium">{designer.artsCount || 0}</span>
-              <span className="text-muted-foreground">Artes</span>
-            </div>
-            
-            <div className="text-xs flex flex-col items-center">
-              <span className="font-medium">{designer.followersCount || 0}</span>
-              <span className="text-muted-foreground">Seguidores</span>
-            </div>
-          </div>
           
-          <div className="flex space-x-2">
-            <Button
-              size="sm"
-              variant={designer.isFollowing ? "outline" : "default"}
-              className={designer.isFollowing ? "" : "bg-blue-600 hover:bg-blue-700"}
-              onClick={() => handleToggleFollow(designer.id, !!designer.isFollowing)}
-              disabled={isFollowingAction}
-            >
-              {isFollowingAction ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : designer.isFollowing ? (
-                <>
-                  <UserX className="h-4 w-4 mr-1" />
-                  Deixar de seguir
-                </>
-              ) : (
-                <>
-                  <User className="h-4 w-4 mr-1" />
-                  Seguir
-                </>
-              )}
-            </Button>
+          <div className="flex items-center justify-center space-x-6 py-2 border-t border-border">
+            <div className="text-center">
+              <div className="font-semibold text-lg">{designer.artsCount || 0}</div>
+              <div className="text-xs text-muted-foreground">Artes</div>
+            </div>
             
-            <Link href={`/designer/${designer.username}`}>
-              <Button size="sm" variant="outline">
-                Ver Perfil
-              </Button>
-            </Link>
+            <div className="text-center">
+              <div className="font-semibold text-lg">{designer.followersCount || 0}</div>
+              <div className="text-xs text-muted-foreground">Seguidores</div>
+            </div>
           </div>
+        </CardContent>
+        
+        <CardFooter className="pt-0 flex flex-col space-y-2">
+          <Button
+            className={`w-full ${designer.isFollowing ? "" : "bg-blue-600 hover:bg-blue-700"}`}
+            variant={designer.isFollowing ? "outline" : "default"}
+            onClick={() => handleToggleFollow(designer.id, !!designer.isFollowing)}
+            disabled={isFollowingAction}
+          >
+            {isFollowingAction ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : designer.isFollowing ? (
+              <>
+                <UserX className="h-4 w-4 mr-2" />
+                Deixar de seguir
+              </>
+            ) : (
+              <>
+                <User className="h-4 w-4 mr-2" />
+                Seguir
+              </>
+            )}
+          </Button>
+          
+          <Link href={`/designer/${designer.username}`} className="w-full">
+            <Button size="sm" variant="outline" className="w-full">
+              Ver Perfil
+            </Button>
+          </Link>
         </CardFooter>
       </Card>
     );
