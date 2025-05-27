@@ -5042,6 +5042,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const metricsResult = await client.query(metricsQuery);
       const metrics = metricsResult.rows[0];
       
+      console.log("🔍 Dados brutos das métricas:", metrics);
+      
       // Estatísticas por origem
       const originStatsResult = await client.query(`
         SELECT 
