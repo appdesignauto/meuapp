@@ -3841,7 +3841,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mantida para compatibilidade com código frontend legado
   app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {
     try {
-      const designerId = parseInt(req.params.designeridId);
+      const designerId = parseInt(req.params.designerId);
       const followerId = (req.user as any).id;
       
       console.log("Redirecionando chamada de /api/follow para /api/users/follow com action=follow");
@@ -3872,7 +3872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mantida para compatibilidade com código frontend legado
   app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {
     try {
-      const designerId = parseInt(req.params.designeridId);
+      const designerId = parseInt(req.params.designerId);
       const followerId = (req.user as any).id;
       
       console.log("Redirecionando chamada de /api/unfollow para /api/users/follow com action=unfollow");
