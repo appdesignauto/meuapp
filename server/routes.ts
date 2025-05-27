@@ -5035,30 +5035,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
-      // Combinar condições
-      let query = db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        nivelacesso: users.nivelacesso,
-        planstatus: sql`
-          CASE
-            WHEN ${users.acessovitalicio} = true THEN 'lifetime'
-            WHEN ${users.dataexpiracao} IS NULL THEN 'active'
-            WHEN ${users.dataexpiracao} > NOW() THEN 'active'
-            ELSE 'expired'
-          END
-        `,
-        origemassinatura: users.origemassinatura,
-        tipoplano: users.tipoplano,
-        planoexpiracao: users.dataexpiracao,
-        criadoem: users.criadoem,
-        atualizadoem: users.updatedAt,
-      })
-      .from(users)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(desc(users.criadoem));
+      // Construir query base
+      let query = db.select()
+        .from(users)
+        .limit(limit)
+        .offset(offset)
+        .orderBy(desc(users.criadoem));
       
       if (whereConditions.length > 0) {
         const finalCondition = whereConditions.length === 1
@@ -5069,7 +5051,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Executar consulta
-      const userList = await query;
+      const rawUserList = await query;
+      
+      // Processar resultados para incluir status do plano
+      const userList = rawUserList.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        nivelacesso: user.nivelacesso,
+        planstatus: user.acessovitalicio 
+          ? 'lifetime' 
+          : (!user.dataexpiracao || new Date(user.dataexpiracao) > new Date())
+          ? 'active'
+          : 'expired',
+        origemassinatura: user.origemassinatura,
+        tipoplano: user.tipoplano,
+        planoexpiracao: user.dataexpiracao,
+        criadoem: user.criadoem,
+        atualizadoem: user.atualizadoem,
+      }));
       
       // Obter contagem total para paginação
       const [totalResult] = await db
