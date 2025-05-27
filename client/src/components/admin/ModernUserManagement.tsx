@@ -1457,7 +1457,8 @@ const ModernUserManagement = () => {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="edit-isactive"
-                {...editForm.register("isactive")}
+                checked={editForm.watch("isactive")}
+                onCheckedChange={(checked) => editForm.setValue("isactive", checked)}
               />
               <Label htmlFor="edit-isactive">Usuário ativo</Label>
             </div>
