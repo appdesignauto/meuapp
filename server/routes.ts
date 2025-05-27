@@ -2885,7 +2885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             profileimageurl: user.profileimageurl, // Mantido o nome original
             profileImageUrl: user.profileimageurl, // Adicionado formato camelCase
             bio: user.bio,
-            role: user.role,
+            role: user.nivelacesso, // Mantendo compatibilidade
             nivelacesso: user.nivelacesso,
             tipoplano: user.tipoplano,
             origemassinatura: user.origemassinatura,
