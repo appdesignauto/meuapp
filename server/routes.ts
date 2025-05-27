@@ -5160,6 +5160,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalPages = Math.ceil(total / limit);
       
       console.log(`✅ Usuários processados: ${users.length} de ${total} total`);
+      console.log(`📊 DEBUG - Dados sendo enviados:`, { 
+        usersCount: users.length, 
+        total,
+        firstUser: users[0]?.email || 'nenhum',
+        page,
+        limit 
+      });
       
       res.status(200).json({
         users,
