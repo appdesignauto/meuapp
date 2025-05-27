@@ -597,9 +597,39 @@ const ModernUserManagement = () => {
                           </Badge>
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
-                          <Badge variant={user.origemassinatura ? "outline" : "secondary"} className="text-xs">
-                            {user.origemassinatura || "Sistema"}
-                          </Badge>
+                          {(() => {
+                            const origem = user.origemassinatura || "sistema";
+                            const origemConfig = {
+                              "manual": { 
+                                label: "Manual", 
+                                className: "bg-blue-100 text-blue-800 border-blue-200",
+                                icon: "👤"
+                              },
+                              "hotmart": { 
+                                label: "Hotmart", 
+                                className: "bg-orange-100 text-orange-800 border-orange-200",
+                                icon: "🛒"
+                              },
+                              "doppus": { 
+                                label: "Doppus", 
+                                className: "bg-purple-100 text-purple-800 border-purple-200",
+                                icon: "💳"
+                              },
+                              "sistema": { 
+                                label: "Sistema", 
+                                className: "bg-gray-100 text-gray-800 border-gray-200",
+                                icon: "⚙️"
+                              }
+                            };
+                            const config = origemConfig[origem as keyof typeof origemConfig] || origemConfig.sistema;
+                            
+                            return (
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${config.className}`}>
+                                <span className="text-xs">{config.icon}</span>
+                                {config.label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="py-4 px-4 text-sm text-gray-600">
                           {formatDate(user.criadoem)}
