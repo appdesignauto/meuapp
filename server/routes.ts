@@ -3376,10 +3376,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Remover códigos de verificação de e-mail
         try {
-          await db.execute(sql.raw(`
+          await db.execute(sql`
             DELETE FROM "emailVerificationCodes" 
-            WHERE "userId" = $1
-          `), [userId]);
+            WHERE "userId" = ${userId}
+          `);
           console.log("- Códigos de verificação de e-mail removidos");
         } catch (error) {
           console.log("- Não foi possível remover códigos de verificação de e-mail:", error);
@@ -3436,11 +3436,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Verificar se a tabela userFollows existe antes de tentar usar
         try {
           // Remover relações de seguidores/seguindo
-          await db.execute(sql.raw(`
+          await db.execute(sql`
             DELETE FROM "userFollows" 
-            WHERE "followerId" = $1 
-            OR "followingId" = $2
-          `), [userId, userId]);
+            WHERE "followerId" = ${userId} 
+            OR "followingId" = ${userId}
+          `);
           console.log("- Relações de seguidores removidas");
         } catch (error) {
           console.log("- Não foi possível remover relações de seguidores:", error);
