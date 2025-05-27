@@ -1230,7 +1230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/formats", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem criar formatos
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para criar formatos" });
       }
       
@@ -1265,7 +1265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/formats/:id", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem atualizar formatos
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para atualizar formatos" });
       }
       
@@ -1307,7 +1307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/formats/:id", async (req, res) => {
     try {
       // Apenas usuários admin podem excluir formatos
-      if (req.user?.role !== 'admin') {
+      if (req.user?.nivelacesso !== 'admin') {
         return res.status(403).json({ message: "Sem permissão para excluir formatos" });
       }
       
@@ -1381,7 +1381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/fileTypes", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem criar tipos de arquivo
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para criar tipos de arquivo" });
       }
       
@@ -2813,7 +2813,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name, 
           profileimageurl, 
           bio, 
-          role,
           nivelacesso,
           tipoplano,
           origemassinatura,
