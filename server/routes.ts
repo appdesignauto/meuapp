@@ -3441,7 +3441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const artsCount = await db
             .select({ count: count() })
             .from(arts)
-            .where(eq(arts.designeridid, userId));
+            .where(eq(arts.designerid, userId));
             
           if (artsCount[0].count > 0) {
             console.log(`- Usuário possui ${artsCount[0].count} artes como designer. Artes serão mantidas.`);
