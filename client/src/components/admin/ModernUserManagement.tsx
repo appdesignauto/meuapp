@@ -180,6 +180,12 @@ const ModernUserManagement = () => {
   const [selectedOrigemAssinatura, setSelectedOrigemAssinatura] = useState<string>("");
   const [createUserStep, setCreateUserStep] = useState<1 | 2>(1);
   
+  // Estados para modais das novas funcionalidades
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<User | null>(null);
+  const [showUserHistory, setShowUserHistory] = useState(false);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState<User | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -373,6 +379,42 @@ const ModernUserManagement = () => {
       isactive: user.isactive,
     });
     setIsEditDialogOpen(true);
+  };
+
+  // Função para ver detalhes do usuário
+  const handleViewUserDetails = (user: User) => {
+    setSelectedUserForDetails(user);
+    setShowUserDetails(true);
+  };
+
+  // Função para resetar senha do usuário
+  const handleResetPassword = async (user: User) => {
+    try {
+      const response = await apiRequest("PUT", `/api/users/${user.id}/reset-password`, {
+        password: "auto@123"
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Senha resetada com sucesso",
+          description: `A senha do usuário ${user.name || user.username} foi resetada para "auto@123"`,
+        });
+      } else {
+        throw new Error("Erro ao resetar senha");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao resetar senha",
+        description: "Não foi possível resetar a senha do usuário",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para ver histórico do usuário
+  const handleViewUserHistory = (user: User) => {
+    setSelectedUserForHistory(user);
+    setShowUserHistory(true);
   };
 
   const handleUpdateUser = (data: Partial<UserFormData>) => {
@@ -661,7 +703,7 @@ const ModernUserManagement = () => {
                                 <Edit className="w-4 h-4 mr-2" />
                                 Editar Perfil
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewUserDetails(user)}>
                                 <Eye className="w-4 h-4 mr-2" />
                                 Ver Detalhes
                               </DropdownMenuItem>
@@ -669,7 +711,7 @@ const ModernUserManagement = () => {
                               <DropdownMenuSeparator />
                               
                               {/* Ações de conta */}
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleResetPassword(user)}>
                                 <KeyRound className="w-4 h-4 mr-2" />
                                 Resetar Senha
                               </DropdownMenuItem>
