@@ -1,20 +1,18 @@
 /**
- * Painel de Administração de Assinaturas e Webhooks
+ * Painel de Administração de Assinaturas
  * 
  * Este painel oferece uma visão unificada e controle sobre todas as assinaturas
  * da plataforma, independente da origem (Hotmart, Doppus, manual).
  * 
- * Organizado em 4 abas principais:
+ * Organizado em 3 abas principais:
  * 1. Visão Geral - Dashboard com métricas consolidadas
  * 2. Assinaturas - Lista de usuários com assinaturas ativas/expiradas
- * 3. Webhooks - Logs e configuração de integrações externas
- * 4. Configurações - Opções gerais para gerenciamento de assinaturas
+ * 3. Configurações - Opções gerais para gerenciamento de assinaturas
  */
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import WebhookList from '@/components/admin/WebhookList';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 
@@ -89,15 +87,12 @@ export default function AssinaturasPage() {
   return (
     <AdminLayout title="Painel de Assinaturas" backLink="/admin">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" /> Visão Geral
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex items-center gap-2">
             <Users className="h-4 w-4" /> Assinaturas
-          </TabsTrigger>
-          <TabsTrigger value="webhooks" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" /> Webhooks
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" /> Configurações
@@ -487,25 +482,7 @@ export default function AssinaturasPage() {
           <SubscriptionManagement />
         </TabsContent>
 
-        {/* Webhooks */}
-        <TabsContent value="webhooks">
-          <div className="mb-6 mt-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">Integrações & Webhooks</h2>
-                <p className="text-gray-500 mt-1">Gerencie integrações externas e monitore webhooks recebidos</p>
-              </div>
-            </div>
-          </div>
 
-          
-          {/* Seção de Logs de Webhooks */}
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold mb-4">Logs de Webhooks</h3>
-            <p className="text-gray-500 mb-4">Monitore notificações e eventos recebidos das plataformas de pagamento</p>
-            <WebhookList key="webhooks-panel" />
-          </div>
-        </TabsContent>
 
         {/* Configurações */}
         <TabsContent value="settings">
