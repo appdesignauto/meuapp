@@ -1416,7 +1416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/fileTypes/:id", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem atualizar tipos de arquivo
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para atualizar tipos de arquivo" });
       }
       
@@ -1458,7 +1458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/fileTypes/:id", async (req, res) => {
     try {
       // Apenas usuários admin podem excluir tipos de arquivo
-      if (req.user?.role !== 'admin') {
+      if (req.user?.nivelacesso !== 'admin') {
         return res.status(403).json({ message: "Sem permissão para excluir tipos de arquivo" });
       }
       
@@ -3437,7 +3437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Verificar artes criadas pelo usuário e decidir se serão excluídas
-        if (userToDelete[0].role === 'designer' || userToDelete[0].role === 'designer_adm') {
+        if (userToDelete[0].nivelacesso === 'designer' || userToDelete[0].nivelacesso === 'designer_adm') {
           const artsCount = await db
             .select({ count: count() })
             .from(arts)
