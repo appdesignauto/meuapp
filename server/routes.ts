@@ -3745,34 +3745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: art.createdAt
         }))
       };
-
-      // Buscar posts da comunidade se o usuário tiver posts
-      try {
-        const communityPosts = await db.query(`
-          SELECT 
-            id, title, content, "imageUrl", "createdAt", "viewCount",
-            "isApproved", "isPinned", "featuredUntil"
-          FROM "communityPosts" 
-          WHERE "userId" = $1 
-          ORDER BY "createdAt" DESC 
-          LIMIT 20
-        `, [designer.id]);
-
-        response.posts = communityPosts.rows.map(post => ({
-          id: post.id,
-          title: post.title,
-          content: post.content,
-          imageUrl: post.imageUrl,
-          createdAt: post.createdAt,
-          viewCount: post.viewCount || 0,
-          isApproved: post.isApproved,
-          isPinned: post.isPinned,
-          featuredUntil: post.featuredUntil
-        }));
-      } catch (postsError) {
-        console.error("Erro ao buscar posts da comunidade:", postsError);
-        response.posts = [];
-      }
       
       // Retornar dados do designer com estatísticas
       res.json(response);
@@ -3841,7 +3813,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mantida para compatibilidade com código frontend legado
   app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {
     try {
-      const designerId = parseInt(req.params.designerId);
+      const designerId = parseInt(req.params.designeridId);
       const followerId = (req.user as any).id;
       
       console.log("Redirecionando chamada de /api/follow para /api/users/follow com action=follow");
@@ -3872,7 +3844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mantida para compatibilidade com código frontend legado
   app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {
     try {
-      const designerId = parseInt(req.params.designerId);
+      const designerId = parseInt(req.params.designeridId);
       const followerId = (req.user as any).id;
       
       console.log("Redirecionando chamada de /api/unfollow para /api/users/follow com action=unfollow");
