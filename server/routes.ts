@@ -1382,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/fileTypes", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem criar tipos de arquivo
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para criar tipos de arquivo" });
       }
       
@@ -1417,7 +1417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/fileTypes/:id", async (req, res) => {
     try {
       // Apenas usuários admin ou designer_adm podem atualizar tipos de arquivo
-      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
         return res.status(403).json({ message: "Sem permissão para atualizar tipos de arquivo" });
       }
       
@@ -1459,7 +1459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/fileTypes/:id", async (req, res) => {
     try {
       // Apenas usuários admin podem excluir tipos de arquivo
-      if (req.user?.role !== 'admin') {
+      if (req.user?.nivelacesso !== 'admin') {
         return res.status(403).json({ message: "Sem permissão para excluir tipos de arquivo" });
       }
       
