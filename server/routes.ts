@@ -3428,6 +3428,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para resetar senha de usuário
+  app.put("/api/users/:id/reset-password", flexibleAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Nova senha é obrigatória" });
+      }
+
+      // Hash da nova senha
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Atualizar senha no banco
+      await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.id, userId));
+
+      res.json({ 
+        success: true, 
+        message: "Senha resetada com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao resetar senha:", error);
+      res.status(500).json({ message: "Erro ao resetar senha" });
+    }
+  });
+
   // =============================================
   // SISTEMA DE DESIGNERS - ROTAS
   // =============================================

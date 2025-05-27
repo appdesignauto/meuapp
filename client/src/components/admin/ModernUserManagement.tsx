@@ -175,6 +175,10 @@ const ModernUserManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<User | null>(null);
+  const [showUserHistory, setShowUserHistory] = useState(false);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedNivelAcesso, setSelectedNivelAcesso] = useState<string>("usuario");
   const [selectedOrigemAssinatura, setSelectedOrigemAssinatura] = useState<string>("");
@@ -750,7 +754,7 @@ const ModernUserManagement = () => {
                               <DropdownMenuSeparator />
                               
                               {/* Ações de histórico */}
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewUserHistory(user)}>
                                 <History className="w-4 h-4 mr-2" />
                                 Ver Histórico
                               </DropdownMenuItem>
@@ -1308,6 +1312,307 @@ const ModernUserManagement = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes do Usuário */}
+      <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                {selectedUserForDetails?.name?.charAt(0) || selectedUserForDetails?.username?.charAt(0) || '?'}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Detalhes do Usuário</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedUserForDetails?.name || selectedUserForDetails?.username}
+                </p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUserForDetails && (
+            <div className="space-y-6">
+              {/* Informações Básicas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Informações Pessoais
+                  </h4>
+                  <div className="space-y-2 pl-7">
+                    <div>
+                      <span className="font-medium">Nome:</span> {selectedUserForDetails.name || 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Username:</span> {selectedUserForDetails.username}
+                    </div>
+                    <div>
+                      <span className="font-medium">Email:</span> {selectedUserForDetails.email}
+                    </div>
+                    <div>
+                      <span className="font-medium">Bio:</span> {selectedUserForDetails.bio || 'Não informado'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-lg flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    Acesso e Status
+                  </h4>
+                  <div className="space-y-2 pl-7">
+                    <div>
+                      <span className="font-medium">Nível:</span> {getStatusBadge(selectedUserForDetails)}
+                    </div>
+                    <div>
+                      <span className="font-medium">Status:</span>{' '}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedUserForDetails.isactive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedUserForDetails.isactive ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Origem:</span> {
+                        selectedUserForDetails.origemassinatura === 'hotmart' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-medium">
+                            <ShoppingCart className="w-3 h-3" />
+                            Hotmart
+                          </span>
+                        ) : selectedUserForDetails.origemassinatura === 'doppus' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-medium">
+                            <CreditCard className="w-3 h-3" />
+                            Doppus
+                          </span>
+                        ) : selectedUserForDetails.origemassinatura === 'manual' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                            <User className="w-3 h-3" />
+                            Manual
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs font-medium">
+                            <Settings className="w-3 h-3" />
+                            Sistema
+                          </span>
+                        )
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações de Assinatura */}
+              {selectedUserForDetails.nivelacesso === 'premium' && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-lg flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-yellow-500" />
+                    Assinatura Premium
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-7">
+                    <div>
+                      <span className="font-medium">Tipo de Plano:</span>{' '}
+                      {selectedUserForDetails.tipoplano || 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Data de Assinatura:</span>{' '}
+                      {selectedUserForDetails.dataassinatura 
+                        ? new Date(selectedUserForDetails.dataassinatura).toLocaleDateString('pt-BR')
+                        : 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Expiração:</span>{' '}
+                      {selectedUserForDetails.acessovitalicio ? (
+                        <span className="text-green-600 font-medium">Vitalício</span>
+                      ) : selectedUserForDetails.dataexpiracao ? (
+                        <span className={
+                          new Date(selectedUserForDetails.dataexpiracao) < new Date() 
+                            ? 'text-red-600 font-medium' 
+                            : 'text-green-600 font-medium'
+                        }>
+                          {new Date(selectedUserForDetails.dataexpiracao).toLocaleDateString('pt-BR')}
+                        </span>
+                      ) : 'Não informado'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Estatísticas e Atividade */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Atividade e Estatísticas
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-7">
+                  <div>
+                    <span className="font-medium">Downloads:</span> {selectedUserForDetails.totalDownloads || 0}
+                  </div>
+                  <div>
+                    <span className="font-medium">Visualizações:</span> {selectedUserForDetails.totalViews || 0}
+                  </div>
+                  <div>
+                    <span className="font-medium">Seguidores:</span> {selectedUserForDetails.followersCount || 0}
+                  </div>
+                </div>
+              </div>
+
+              {/* Datas Importantes */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Datas Importantes
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-7">
+                  <div>
+                    <span className="font-medium">Cadastro:</span>{' '}
+                    {new Date(selectedUserForDetails.criadoem).toLocaleDateString('pt-BR')} às{' '}
+                    {new Date(selectedUserForDetails.criadoem).toLocaleTimeString('pt-BR')}
+                  </div>
+                  <div>
+                    <span className="font-medium">Último Login:</span>{' '}
+                    {selectedUserForDetails.ultimologin 
+                      ? new Date(selectedUserForDetails.ultimologin).toLocaleDateString('pt-BR') + ' às ' +
+                        new Date(selectedUserForDetails.ultimologin).toLocaleTimeString('pt-BR')
+                      : 'Nunca fez login'
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Histórico do Usuário */}
+      <Dialog open={showUserHistory} onOpenChange={setShowUserHistory}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <History className="w-6 h-6" />
+              <div>
+                <h3 className="text-xl font-bold">Histórico do Usuário</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedUserForHistory?.name || selectedUserForHistory?.username}
+                </p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUserForHistory && (
+            <div className="space-y-6">
+              {/* Resumo da Atividade */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-blue-600">{selectedUserForHistory.totalDownloads || 0}</div>
+                  <div className="text-sm text-blue-800">Downloads</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600">{selectedUserForHistory.totalViews || 0}</div>
+                  <div className="text-sm text-green-800">Visualizações</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-purple-600">{selectedUserForHistory.followersCount || 0}</div>
+                  <div className="text-sm text-purple-800">Seguidores</div>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {Math.floor((Date.now() - new Date(selectedUserForHistory.criadoem).getTime()) / (1000 * 60 * 60 * 24))}
+                  </div>
+                  <div className="text-sm text-orange-800">Dias no Sistema</div>
+                </div>
+              </div>
+
+              {/* Timeline de Eventos */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Timeline de Eventos
+                </h4>
+                
+                <div className="space-y-4 pl-7">
+                  {/* Evento de Cadastro */}
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Usuário Cadastrado</div>
+                      <div className="text-sm text-gray-600">
+                        {new Date(selectedUserForHistory.criadoem).toLocaleDateString('pt-BR')} às{' '}
+                        {new Date(selectedUserForHistory.criadoem).toLocaleTimeString('pt-BR')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Último Login */}
+                  {selectedUserForHistory.ultimologin && (
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                        <LogIn className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Último Login</div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(selectedUserForHistory.ultimologin).toLocaleDateString('pt-BR')} às{' '}
+                          {new Date(selectedUserForHistory.ultimologin).toLocaleTimeString('pt-BR')}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assinatura Premium */}
+                  {selectedUserForHistory.dataassinatura && (
+                    <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
+                        <Crown className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Assinatura Premium Ativada</div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(selectedUserForHistory.dataassinatura).toLocaleDateString('pt-BR')} - 
+                          Plano: {selectedUserForHistory.tipoplano || 'Não informado'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status Atual */}
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      selectedUserForHistory.isactive ? 'bg-green-500' : 'bg-red-500'
+                    }`}>
+                      <Activity className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Status Atual</div>
+                      <div className="text-sm text-gray-600">
+                        {selectedUserForHistory.isactive ? 'Usuário Ativo' : 'Usuário Inativo'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observações Administrativas */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Observações Administrativas
+                </h4>
+                <div className="pl-7">
+                  <div className="bg-gray-50 p-4 rounded-lg min-h-[100px]">
+                    {selectedUserForHistory.observacaoadmin || (
+                      <span className="text-gray-500 italic">Nenhuma observação registrada</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
