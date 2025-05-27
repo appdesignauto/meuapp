@@ -4433,7 +4433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           u.name, 
           u.username, 
           u.profileimageurl AS "profileImageUrl", 
-          u.nivelacesso as role,
+          u.nivelacesso,
           u.nivelacesso AS "nivelAcesso", 
           0 AS following, 
           0 AS followers, 
