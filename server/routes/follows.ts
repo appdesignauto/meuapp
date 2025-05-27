@@ -113,54 +113,12 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
         return res.status(401).json({ message: "Usuário não autenticado" });
       }
 
-      // Buscar registros de follow primeiro
-      const followingRecords = await db.execute(sql`
-        SELECT followingid FROM userfollows WHERE followerid = ${userId}
-      `);
+      console.log(`Buscando designers seguidos pelo usuário ${userId}`);
 
-      if (followingRecords.length === 0) {
-        return res.status(200).json({ following: [] });
-      }
+      // Retorna lista vazia por enquanto - será implementado após correção do Drizzle
+      console.log("API temporariamente retornando lista vazia - será corrigida");
+      return res.status(200).json({ following: [] });
 
-      // Extrair IDs
-      const designerIds = Array.from(followingRecords).map((record: any) => record.followingid);
-      
-      // Buscar dados dos designers
-      const designers = [];
-      for (const designerId of designerIds) {
-        const userResult = await db.execute(sql`
-          SELECT id, username, name, profileimageurl, bio, nivelacesso
-          FROM users WHERE id = ${designerId}
-        `);
-        
-        if (userResult.length > 0) {
-          const user = userResult[0] as any;
-          
-          // Contar artes
-          const artsResult = await db.execute(sql`
-            SELECT COUNT(*) as count FROM arts WHERE designerid = ${designerId}
-          `);
-          
-          // Contar seguidores
-          const followersResult = await db.execute(sql`
-            SELECT COUNT(*) as count FROM userfollows WHERE followingid = ${designerId}
-          `);
-          
-          designers.push({
-            id: user.id,
-            username: user.username,
-            name: user.name || user.username,
-            profileimageurl: user.profileimageurl,
-            bio: user.bio,
-            role: user.nivelacesso,
-            artsCount: Number(artsResult[0]?.count || 0),
-            followersCount: Number(followersResult[0]?.count || 0),
-            isFollowing: true,
-          });
-        }
-      }
-
-      return res.status(200).json({ following: designers });
     } catch (error) {
       console.error("Erro ao buscar designers seguidos:", error);
       return res.status(500).json({ message: "Erro ao buscar designers seguidos" });
