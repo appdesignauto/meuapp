@@ -28,10 +28,11 @@ import {
   Star,
   Heart,
   TrendingUp,
-  UserCheck,
+  KeyRound,
   UserX,
-  RefreshCw,
-  FileText,
+  UserCheck,
+  MessageSquare,
+  History,
   BarChart3,
   Globe,
   Smartphone,
@@ -650,28 +651,80 @@ const ModernUserManagement = () => {
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel>Ações do Usuário</DropdownMenuLabel>
                               <DropdownMenuSeparator />
+                              
+                              {/* Ações principais */}
                               <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                 <Edit className="w-4 h-4 mr-2" />
-                                Editar
+                                Editar Perfil
                               </DropdownMenuItem>
                               <DropdownMenuItem>
                                 <Eye className="w-4 h-4 mr-2" />
                                 Ver Detalhes
                               </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
+                              {/* Ações de conta */}
+                              <DropdownMenuItem>
+                                <KeyRound className="w-4 h-4 mr-2" />
+                                Resetar Senha
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  // Toggle user status logic here
+                                  console.log(`Toggle status for user ${user.id}`);
+                                }}
+                                className={user.isactive ? "text-amber-600" : "text-green-600"}
+                              >
+                                {user.isactive ? (
+                                  <>
+                                    <UserX className="w-4 h-4 mr-2" />
+                                    Desativar Usuário
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserCheck className="w-4 h-4 mr-2" />
+                                    Ativar Usuário
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
+                              {/* Ações de comunicação */}
                               <DropdownMenuItem>
                                 <Mail className="w-4 h-4 mr-2" />
                                 Enviar Email
                               </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Enviar Notificação
+                              </DropdownMenuItem>
+                              
                               <DropdownMenuSeparator />
+                              
+                              {/* Ações de histórico */}
+                              <DropdownMenuItem>
+                                <History className="w-4 h-4 mr-2" />
+                                Ver Histórico
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Download className="w-4 h-4 mr-2" />
+                                Baixar Dados
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
+                              {/* Ação perigosa */}
                               <DropdownMenuItem 
                                 onClick={() => handleDeleteUser(user.id)}
-                                className="text-red-600"
+                                className="text-red-600 focus:text-red-600"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir
+                                Excluir Usuário
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
