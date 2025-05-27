@@ -4828,47 +4828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoint para listar usuários - REMOVIDO - agora usando nova API em user-management.ts
   
-  // Endpoint para obter detalhes de um usuário específico
-  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "ID de usuário inválido" });
-      }
-      
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId));
-      
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
-      
-      // Formatar o status do plano para exibição
-      let planStatus = 'free';
-      if (user.acessovitalicio) {
-        planStatus = 'lifetime';
-      } else if (user.dataexpiracao) {
-        if (new Date(user.dataexpiracao) > new Date()) {
-          planStatus = 'active';
-        } else {
-          planStatus = 'expired';
-        }
-      } else if (user.nivelacesso !== 'free') {
-        planStatus = 'active';
-      }
-      
-      res.status(200).json({
-        ...user,
-        planstatus: planStatus
-      });
-    } catch (error) {
-      console.error("Erro ao obter detalhes do usuário:", error);
-      res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
-    }
-  });
+  // Endpoint para obter usuário específico - REMOVIDO - agora usando nova API em user-management.ts
   
   // Endpoint para atualizar a assinatura de um usuário
   app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
