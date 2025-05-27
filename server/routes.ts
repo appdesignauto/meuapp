@@ -3525,57 +3525,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = (page - 1) * limit;
       
       // Buscar todos os usuários com nivelacesso 'designer', 'designer_adm' ou 'admin'
-      // Executar SQL direto para evitar problemas com o TypeScript
-      // Criar consultas separadas para evitar SQL injection
-      let designersQuery;
-      if (sort === 'activity') {
-        designersQuery = `
-          SELECT 
-            id, 
-            name, 
-            username, 
-            bio, 
-            profileimageurl, 
-            nivelacesso, 
-            0 AS followers, 
-            0 AS following, 
-            "createdAt" as createdat,
-            updatedat
-          FROM users 
-          WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
-          ORDER BY updatedat DESC
-          LIMIT $1 OFFSET $2
-        `;
-      } else {
-        designersQuery = `
-          SELECT 
-            id, 
-            name, 
-            username, 
-            bio, 
-            profileimageurl, 
-            nivelacesso, 
-            0 AS followers, 
-            0 AS following, 
-            "createdAt" as createdat,
-            updatedat
-          FROM users 
-          WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
-          ORDER BY "createdAt" DESC
-          LIMIT $1 OFFSET $2
-        `;
-      }
-      
-      const designers = await db.execute(sql.raw(designersQuery), [limit, offset]);
+      const designers = await db.execute(
+        sort === 'activity' 
+          ? sql`
+              SELECT 
+                id, 
+                name, 
+                username, 
+                bio, 
+                profileimageurl, 
+                nivelacesso, 
+                0 AS followers, 
+                0 AS following, 
+                "createdAt" as createdat,
+                atualizadoem as updatedat
+              FROM users 
+              WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
+              ORDER BY atualizadoem DESC
+              LIMIT ${limit} OFFSET ${offset}
+            `
+          : sql`
+              SELECT 
+                id, 
+                name, 
+                username, 
+                bio, 
+                profileimageurl, 
+                nivelacesso, 
+                0 AS followers, 
+                0 AS following, 
+                "createdAt" as createdat,
+                atualizadoem as updatedat
+              FROM users 
+              WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
+              ORDER BY "createdAt" DESC
+              LIMIT ${limit} OFFSET ${offset}
+            `
+      );
       
       // Obter contagem total
-      const totalCountQuery = `
-        SELECT COUNT(*) as value 
-        FROM users 
-        WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
-      `;
-      
-      const totalCountResult = await db.execute(sql.raw(totalCountQuery));
+      const totalCountResult = await db.execute(
+        sql`
+          SELECT COUNT(*) as value 
+          FROM users 
+          WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
+        `
+      );
       const totalCount = parseInt(totalCountResult.rows[0].value.toString());
       
       // Para cada designer, buscar algumas artes para exibir
