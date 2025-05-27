@@ -92,6 +92,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // 🎯 ETAPA 1: ENDPOINT PRIORITÁRIO - Lista dos 6 usuários (definido no início para evitar conflitos)
+  app.get("/api/admin/subscription-users", async (req, res) => {
+    try {
+      console.log("🎯 ENDPOINT PRIORITÁRIO: Retornando os 6 usuários diretamente...");
+      
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      const result = await client.query(`
+        SELECT 
+          id, username, email, name, nivelacesso, 
+          tipoplano, dataassinatura, dataexpiracao, origemassinatura
+        FROM users 
+        WHERE isactive = true
+        ORDER BY criadoem DESC
+      `);
+      
+      await client.end();
+      
+      console.log(`🎯 ENDPOINT PRIORITÁRIO - Total encontrado: ${result.rows.length} usuários`);
+      result.rows.forEach((user: any, index: number) => {
+        console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
+      });
+      
+      res.json({
+        users: result.rows,
+        pagination: {
+          total: result.rows.length,
+          page: 1,
+          limit: 50,
+          totalPages: 1
+        }
+      });
+      
+    } catch (error: any) {
+      console.error("❌ ENDPOINT PRIORITÁRIO - Erro:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ENDPOINT CRÍTICO: Estatísticas de Reports - DADOS REAIS DO BANCO
   app.get('/api/reports/stats', async (req, res) => {
     try {
@@ -5088,49 +5132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ETAPA 1: Sobrescrever o endpoint problemático com versão funcional
-  app.get("/api/admin/subscription-users", async (req, res) => {
-    try {
-      console.log("📊 ETAPA 1: Retornando os 6 usuários diretamente...");
-      
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
-      
-      await client.connect();
-      
-      const result = await client.query(`
-        SELECT 
-          id, username, email, name, nivelacesso, 
-          tipoplano, dataassinatura, dataexpiracao, origemassinatura
-        FROM users 
-        WHERE isactive = true
-        ORDER BY criadoem DESC
-      `);
-      
-      await client.end();
-      
-      console.log(`✅ ETAPA 1 - Total encontrado: ${result.rows.length} usuários`);
-      result.rows.forEach((user, index) => {
-        console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
-      });
-      
-      res.json({
-        users: result.rows,
-        pagination: {
-          total: result.rows.length,
-          page: 1,
-          limit: 50,
-          totalPages: 1
-        }
-      });
-      
-    } catch (error) {
-      console.error("❌ ETAPA 1 - Erro:", error.message);
-      res.status(500).json({ error: error.message });
-    }
-  });
+  // ENDPOINT REMOVIDO - substituído pelo endpoint prioritário no início do arquivo
 
   // ENDPOINT NOVO E FUNCIONAL - Lista de usuários com assinaturas
   app.get("/api/admin/users-subscriptions", isAdmin, async (req, res) => {
