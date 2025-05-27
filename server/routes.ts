@@ -2456,7 +2456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configurar rotas de seguidores (following)
 
   // As rotas de designers seguidos e populares foram movidas para ./routes/follows.ts
-  setupFollowRoutes(app, isAuthenticated);
+  setupFollowRoutesSimple(app, isAuthenticated);
   
   // Endpoints para gerenciar configurações do site
   
