@@ -3077,6 +3077,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Verificar se é usuário de webhook para limitar campos editáveis
         const isWebhookUser = existingUser.origemassinatura === 'hotmart' || existingUser.origemassinatura === 'doppus';
         
+        console.log(`[UserUpdate] Iniciando atualização do usuário ${userId}:`, {
+          existingUser: {
+            id: existingUser.id,
+            username: existingUser.username,
+            email: existingUser.email,
+            name: existingUser.name,
+            nivelacesso: existingUser.nivelacesso,
+            origemassinatura: existingUser.origemassinatura
+          },
+          isWebhookUser,
+          requestData: { username, email, name, nivelacesso, isactive }
+        });
+        
         // Preparar objeto de atualização
         const updateData: Record<string, any> = {
           atualizadoem: new Date()
@@ -3093,8 +3106,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Bloquear todos os outros campos para manter integridade da integração
           console.log(`[UserUpdate] Campos permitidos para webhook:`, { username, name, isactive });
+          console.log(`[UserUpdate] UpdateData para webhook:`, updateData);
         } else {
           // Para usuários não-webhook, permitir edição completa
+          console.log(`[UserUpdate] Usuário ${userId} NÃO é webhook, permitindo edição completa`);
+          
           if (username) updateData.username = username;
           if (email) updateData.email = email;
           if (name !== undefined) updateData.name = name || null;
@@ -3111,6 +3127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (dataexpiracao !== undefined) updateData.dataexpiracao = dataexpiracao ? new Date(dataexpiracao) : null;
           if (acessovitalicio !== undefined) updateData.acessovitalicio = acessovitalicio;
           if (observacaoadmin !== undefined) updateData.observacaoadmin = observacaoadmin || null;
+          
+          console.log(`[UserUpdate] UpdateData para usuário normal:`, updateData);
         }
         
         // Criptografar a nova senha se fornecida
@@ -3142,14 +3160,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Atualizar usuário
-        await db
-          .update(users)
-          .set(updateData)
-          .where(eq(users.id, userId));
+        try {
+          console.log(`[UserUpdate] Tentando atualizar usuário ${userId} com dados:`, updateData);
+          await db
+            .update(users)
+            .set(updateData)
+            .where(eq(users.id, userId));
+          
+          console.log(`[UserUpdate] Usuário ${userId} atualizado com sucesso no banco de dados`);
+        } catch (dbError) {
+          console.error(`[UserUpdate] Erro ao atualizar usuário ${userId} no banco:`, dbError);
+          return res.status(500).json({ 
+            message: "Erro ao atualizar usuário no banco de dados",
+            error: dbError.message 
+          });
+        }
           
         // Verificar se está atualizando para usuário premium ou se o usuário já era premium
         // IMPORTANTE: Para usuários vindos de webhook (hotmart/doppus), não atualizar o serviço de assinatura
-        const isWebhookUser = existingUser.origemassinatura === 'hotmart' || existingUser.origemassinatura === 'doppus';
+        // NOTA: Reutilizando a variável isWebhookUser já definida anteriormente
         
         if (!isWebhookUser && (nivelacesso === 'premium' || existingUser.nivelacesso === 'premium')) {
           // Definir o nível de acesso efetivo para o usuário (o novo valor ou o existente)
