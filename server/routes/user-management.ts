@@ -14,67 +14,52 @@ export function setupUserManagementRoutes(app: Express) {
       const { search, status, role, page = 1, limit = 20 } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
-      // Construir query SQL com filtros
-      let whereClause = "WHERE 1=1";
-      const params: any[] = [];
-      let paramIndex = 1;
-
-      // Filtro de busca por nome, email ou username
-      if (search && typeof search === 'string') {
-        whereClause += ` AND (name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR username ILIKE $${paramIndex})`;
-        params.push(`%${search}%`);
-        paramIndex++;
-      }
-
-      // Filtro por status
-      if (status === 'active') {
-        whereClause += ` AND isactive = $${paramIndex}`;
-        params.push(true);
-        paramIndex++;
-      } else if (status === 'inactive') {
-        whereClause += ` AND isactive = $${paramIndex}`;
-        params.push(false);
-        paramIndex++;
-      }
-
-      // Filtro por nível de acesso
-      if (role && typeof role === 'string') {
-        whereClause += ` AND nivelacesso = $${paramIndex}`;
-        params.push(role);
-        paramIndex++;
-      }
-
-      // Query principal para buscar usuários
-      const usersQuery = `
+      // Construir query SQL básica sem parâmetros complexos
+      let baseQuery = `
         SELECT 
           id, username, email, name, profileimageurl, bio, nivelacesso,
           tipoplano, origemassinatura, dataassinatura, dataexpiracao,
           acessovitalicio, isactive, ultimologin, criadoem, atualizadoem
         FROM users 
-        ${whereClause}
-        ORDER BY criadoem DESC
-        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        WHERE 1=1
       `;
+
+      // Aplicar filtros simples
+      if (search && typeof search === 'string') {
+        const searchTerm = search.toLowerCase();
+        baseQuery += ` AND (LOWER(name) LIKE '%${searchTerm}%' OR LOWER(email) LIKE '%${searchTerm}%' OR LOWER(username) LIKE '%${searchTerm}%')`;
+      }
+
+      if (status === 'active') {
+        baseQuery += ` AND isactive = true`;
+      } else if (status === 'inactive') {
+        baseQuery += ` AND isactive = false`;
+      }
+
+      if (role && typeof role === 'string') {
+        baseQuery += ` AND nivelacesso = '${role}'`;
+      }
+
+      // Finalizar query com ordenação e paginação
+      const finalQuery = `${baseQuery} ORDER BY criadoem DESC LIMIT ${Number(limit)} OFFSET ${offset}`;
+      const countQuery = `SELECT COUNT(*) as total FROM users WHERE 1=1` + baseQuery.split('WHERE 1=1')[1].split('ORDER BY')[0];
+
+      // Executar queries uma por vez para evitar problemas
+      console.log("[USER MANAGEMENT] Executando query principal:", finalQuery);
+      const usersResult = await sql(finalQuery);
       
-      params.push(Number(limit), offset);
-
-      // Query para contar total
-      const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
-      const countParams = params.slice(0, -2); // Remove limit e offset
-
-      // Executar queries
-      const [usersResult, countResult, statsResult] = await Promise.all([
-        sql(usersQuery, params),
-        sql(countQuery, countParams),
-        sql(`
-          SELECT 
-            COUNT(*) as total_users,
-            COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-            COUNT(CASE WHEN nivelacesso = 'premium' THEN 1 END) as premium_users,
-            COUNT(CASE WHEN nivelacesso = 'designer' THEN 1 END) as designers
-          FROM users
-        `)
-      ]);
+      console.log("[USER MANAGEMENT] Executando query de contagem:", countQuery);
+      const countResult = await sql(countQuery);
+      
+      console.log("[USER MANAGEMENT] Executando query de estatísticas");
+      const statsResult = await sql(`
+        SELECT 
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
+          COUNT(CASE WHEN nivelacesso = 'premium' THEN 1 END) as premium_users,
+          COUNT(CASE WHEN nivelacesso = 'designer' THEN 1 END) as designers
+        FROM users
+      `);
 
       const total = Number(countResult[0]?.total || 0);
       const stats = {
