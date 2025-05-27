@@ -219,30 +219,3 @@ export function setupUserManagementRoutes(app: Express) {
     }
   });
 }
-
-  // API para deletar usuário
-  app.delete("/api/admin/users/:id", async (req, res) => {
-    try {
-      if (!req.user || req.user.nivelacesso !== 'admin') {
-        return res.status(403).json({ message: "Acesso negado" });
-      }
-
-      const userId = parseInt(req.params.id);
-
-      // Verificar se não é o próprio usuário admin
-      if (userId === req.user.id) {
-        return res.status(400).json({ message: "Não é possível excluir seu próprio usuário" });
-      }
-
-      await db
-        .delete(users)
-        .where(eq(users.id, userId));
-
-      res.json({ message: "Usuário excluído com sucesso" });
-
-    } catch (error) {
-      console.error("Erro ao excluir usuário:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
-}
