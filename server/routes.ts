@@ -3641,8 +3641,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           website,
           location,
           criadoem,
-          COALESCE(followers, 0) as followers,
-          COALESCE(following, 0) as following,
+          0 as followers,
+          0 as following,
           sociallinks
         FROM users
         WHERE username = ${username}
