@@ -1,7 +1,7 @@
 import { Express } from "express";
-import { db } from "../storage";
-import { users } from "../../shared/schema";
-import { desc, count, eq, or, like } from "drizzle-orm";
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 export function setupUserManagementRoutes(app: Express) {
   // API moderna para listagem de usuários com filtros e estatísticas
@@ -14,87 +14,78 @@ export function setupUserManagementRoutes(app: Express) {
       const { search, status, role, page = 1, limit = 20 } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
-      // Construir query base
-      let whereConditions = [];
-      
+      // Construir query SQL com filtros
+      let whereClause = "WHERE 1=1";
+      const params: any[] = [];
+      let paramIndex = 1;
+
       // Filtro de busca por nome, email ou username
       if (search && typeof search === 'string') {
-        whereConditions.push(
-          or(
-            like(users.name, `%${search}%`),
-            like(users.email, `%${search}%`),
-            like(users.username, `%${search}%`)
-          )
-        );
+        whereClause += ` AND (name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR username ILIKE $${paramIndex})`;
+        params.push(`%${search}%`);
+        paramIndex++;
       }
 
       // Filtro por status
       if (status === 'active') {
-        whereConditions.push(eq(users.isactive, true));
+        whereClause += ` AND isactive = $${paramIndex}`;
+        params.push(true);
+        paramIndex++;
       } else if (status === 'inactive') {
-        whereConditions.push(eq(users.isactive, false));
+        whereClause += ` AND isactive = $${paramIndex}`;
+        params.push(false);
+        paramIndex++;
       }
 
       // Filtro por nível de acesso
       if (role && typeof role === 'string') {
-        whereConditions.push(eq(users.nivelacesso, role));
+        whereClause += ` AND nivelacesso = $${paramIndex}`;
+        params.push(role);
+        paramIndex++;
       }
 
-      // Buscar usuários com paginação
-      const allUsers = await db
-        .select({
-          id: users.id,
-          username: users.username,
-          email: users.email,
-          name: users.name,
-          profileimageurl: users.profileimageurl,
-          bio: users.bio,
-          nivelacesso: users.nivelacesso,
-          tipoplano: users.tipoplano,
-          origemassinatura: users.origemassinatura,
-          dataassinatura: users.dataassinatura,
-          dataexpiracao: users.dataexpiracao,
-          acessovitalicio: users.acessovitalicio,
-          isactive: users.isactive,
-          ultimologin: users.ultimologin,
-          criadoem: users.criadoem,
-          atualizadoem: users.atualizadoem
-        })
-        .from(users)
-        .where(whereConditions.length > 0 ? whereConditions[0] : undefined)
-        .orderBy(desc(users.criadoem))
-        .limit(Number(limit))
-        .offset(offset);
-
-      // Contar total de usuários para paginação
-      const totalResult = await db
-        .select({ count: count() })
-        .from(users)
-        .where(whereConditions.length > 0 ? whereConditions[0] : undefined);
+      // Query principal para buscar usuários
+      const usersQuery = `
+        SELECT 
+          id, username, email, name, profileimageurl, bio, nivelacesso,
+          tipoplano, origemassinatura, dataassinatura, dataexpiracao,
+          acessovitalicio, isactive, ultimologin, criadoem, atualizadoem
+        FROM users 
+        ${whereClause}
+        ORDER BY criadoem DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
       
-      const total = totalResult[0]?.count || 0;
+      params.push(Number(limit), offset);
 
-      // Estatísticas gerais
-      const statsResult = await Promise.all([
-        // Total de usuários
-        db.select({ count: count() }).from(users),
-        // Usuários ativos
-        db.select({ count: count() }).from(users).where(eq(users.isactive, true)),
-        // Usuários premium
-        db.select({ count: count() }).from(users).where(eq(users.nivelacesso, 'premium')),
-        // Designers
-        db.select({ count: count() }).from(users).where(eq(users.nivelacesso, 'designer'))
+      // Query para contar total
+      const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+      const countParams = params.slice(0, -2); // Remove limit e offset
+
+      // Executar queries
+      const [usersResult, countResult, statsResult] = await Promise.all([
+        sql(usersQuery, params),
+        sql(countQuery, countParams),
+        sql(`
+          SELECT 
+            COUNT(*) as total_users,
+            COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
+            COUNT(CASE WHEN nivelacesso = 'premium' THEN 1 END) as premium_users,
+            COUNT(CASE WHEN nivelacesso = 'designer' THEN 1 END) as designers
+          FROM users
+        `)
       ]);
 
+      const total = Number(countResult[0]?.total || 0);
       const stats = {
-        totalUsers: statsResult[0][0]?.count || 0,
-        activeUsers: statsResult[1][0]?.count || 0,
-        premiumUsers: statsResult[2][0]?.count || 0,
-        designers: statsResult[3][0]?.count || 0
+        totalUsers: Number(statsResult[0]?.total_users || 0),
+        activeUsers: Number(statsResult[0]?.active_users || 0),
+        premiumUsers: Number(statsResult[0]?.premium_users || 0),
+        designers: Number(statsResult[0]?.designers || 0)
       };
 
       res.json({
-        users: allUsers,
+        users: usersResult,
         pagination: {
           page: Number(page),
           limit: Number(limit),

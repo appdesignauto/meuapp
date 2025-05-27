@@ -134,6 +134,10 @@ app.use((req, res, next) => {
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
     
+    // Registrar rotas de gerenciamento de usuários moderno
+    setupUserManagementRoutes(app);
+    console.log('✅ Sistema moderno de gerenciamento de usuários configurado!');
+    
     // 🚀 REGISTRAR WEBHOOK HOTMART AUTOMÁTICO - SISTEMA COMPLETO
     app.use('/webhook', webhookHotmartFixedRoutes);
     console.log('✅ Sistema de webhook Hotmart automático configurado com sucesso!');
