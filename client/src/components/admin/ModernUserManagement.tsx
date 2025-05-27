@@ -447,6 +447,75 @@ const ModernUserManagement = () => {
     }
   };
 
+  // Função para bloquear/desbloquear usuário
+  const handleBlockUser = async (user: User) => {
+    try {
+      const action = user.isactive ? "bloquear" : "desbloquear";
+      const response = await apiRequest("PUT", `/api/users/${user.id}`, {
+        isactive: !user.isactive
+      });
+      
+      if (response.ok) {
+        toast({
+          title: `Usuário ${action === "bloquear" ? "bloqueado" : "desbloqueado"} com sucesso`,
+          description: `O usuário ${user.name || user.username} foi ${action === "bloquear" ? "bloqueado" : "desbloqueado"} e ${action === "bloquear" ? "não poderá mais fazer login" : "pode fazer login novamente"}`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      } else {
+        throw new Error(`Erro ao ${action} usuário`);
+      }
+    } catch (error) {
+      toast({
+        title: `Erro ao ${user.isactive ? "bloquear" : "desbloquear"} usuário`,
+        description: "Não foi possível alterar o status do usuário",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para baixar dados do usuário
+  const handleDownloadUserData = async (user: User) => {
+    try {
+      const response = await fetch(`/api/users/${user.id}/export`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Criar arquivo JSON para download
+        const dataStr = JSON.stringify(userData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        // Criar link de download
+        const url = window.URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `dados_usuario_${user.username}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast({
+          title: "Download iniciado",
+          description: `Os dados do usuário ${user.name || user.username} foram baixados com sucesso`,
+        });
+      } else {
+        throw new Error("Erro ao exportar dados");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao baixar dados",
+        description: "Não foi possível baixar os dados do usuário",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Nunca";
     return new Date(dateString).toLocaleDateString("pt-BR");
@@ -735,45 +804,30 @@ const ModernUserManagement = () => {
                                 Resetar Senha
                               </DropdownMenuItem>
                               <DropdownMenuItem 
-                                onClick={() => {
-                                  // Toggle user status logic here
-                                  console.log(`Toggle status for user ${user.id}`);
-                                }}
+                                onClick={() => handleBlockUser(user)}
                                 className={user.isactive ? "text-amber-600" : "text-green-600"}
                               >
                                 {user.isactive ? (
                                   <>
                                     <UserX className="w-4 h-4 mr-2" />
-                                    Desativar Usuário
+                                    Bloquear Usuário
                                   </>
                                 ) : (
                                   <>
                                     <UserCheck className="w-4 h-4 mr-2" />
-                                    Ativar Usuário
+                                    Desbloquear Usuário
                                   </>
                                 )}
                               </DropdownMenuItem>
                               
                               <DropdownMenuSeparator />
                               
-                              {/* Ações de comunicação */}
-                              <DropdownMenuItem>
-                                <Mail className="w-4 h-4 mr-2" />
-                                Enviar Email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <MessageSquare className="w-4 h-4 mr-2" />
-                                Enviar Notificação
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuSeparator />
-                              
-                              {/* Ações de histórico */}
+                              {/* Ações de histórico e dados */}
                               <DropdownMenuItem onClick={() => handleViewUserHistory(user)}>
                                 <History className="w-4 h-4 mr-2" />
                                 Ver Histórico
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDownloadUserData(user)}>
                                 <Download className="w-4 h-4 mr-2" />
                                 Baixar Dados
                               </DropdownMenuItem>
