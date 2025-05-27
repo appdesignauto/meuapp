@@ -338,6 +338,19 @@ const ModernUserManagement = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  // Update user handler
+  const handleUpdateUser = (data: Partial<UserFormData>) => {
+    if (!selectedUser) return;
+    
+    console.log("[Frontend] Enviando dados para atualização:", {
+      userId: selectedUser.id,
+      data: data,
+      isWebhookUser: selectedUser.origemassinatura === 'hotmart' || selectedUser.origemassinatura === 'doppus'
+    });
+    
+    updateUserMutation.mutate({ id: selectedUser.id, data });
+  };
+
   // Get user stats
   const totalUsers = users.length;
   const activeUsers = users.filter(u => u.isactive).length;
@@ -426,11 +439,6 @@ const ModernUserManagement = () => {
   const handleViewUserHistory = (user: User) => {
     setSelectedUserForHistory(user);
     setShowUserHistory(true);
-  };
-
-  const handleUpdateUser = (data: Partial<UserFormData>) => {
-    if (!selectedUser) return;
-    updateUserMutation.mutate({ id: selectedUser.id, data });
   };
 
   const handleDeleteUser = (userId: number) => {
