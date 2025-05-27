@@ -1518,7 +1518,7 @@ const ModernUserManagement = () => {
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg text-center">
                   <div className="text-2xl font-bold text-orange-600">
-                    {Math.floor((Date.now() - new Date(selectedUserForHistory.criadoem).getTime()) / (1000 * 60 * 60 * 24))}
+                    {Math.max(1, Math.floor((Date.now() - new Date(selectedUserForHistory.criadoem).getTime()) / (1000 * 60 * 60 * 24)))}
                   </div>
                   <div className="text-sm text-orange-800">Dias no Sistema</div>
                 </div>
@@ -1562,8 +1562,9 @@ const ModernUserManagement = () => {
                     </div>
                   )}
 
-                  {/* Assinatura Premium */}
-                  {selectedUserForHistory.dataassinatura && (
+                  {/* Assinatura Premium - Só mostra se a data for posterior ao cadastro */}
+                  {selectedUserForHistory.dataassinatura && 
+                   new Date(selectedUserForHistory.dataassinatura) >= new Date(selectedUserForHistory.criadoem) && (
                     <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
                       <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
                         <Crown className="w-4 h-4 text-white" />
@@ -1571,7 +1572,8 @@ const ModernUserManagement = () => {
                       <div className="flex-1">
                         <div className="font-medium">Assinatura Premium Ativada</div>
                         <div className="text-sm text-gray-600">
-                          {new Date(selectedUserForHistory.dataassinatura).toLocaleDateString('pt-BR')} - 
+                          {new Date(selectedUserForHistory.dataassinatura).toLocaleDateString('pt-BR')} às{' '}
+                          {new Date(selectedUserForHistory.dataassinatura).toLocaleTimeString('pt-BR')} - 
                           Plano: {selectedUserForHistory.tipoplano || 'Não informado'}
                         </div>
                       </div>
