@@ -300,7 +300,7 @@ const ModernUserManagement = () => {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const res = await apiRequest("DELETE", `/api/users/${userId}`);
+      const res = await apiRequest("DELETE", `/api/admin/users/${userId}`);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Erro ao excluir usuário");
