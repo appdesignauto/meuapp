@@ -852,10 +852,22 @@ const ModernUserManagement = () => {
                                   Mensal
                                 </div>
                               </SelectItem>
+                              <SelectItem value="trimestral">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  Trimestral (3 meses)
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="semestral">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  Semestral (6 meses)
+                                </div>
+                              </SelectItem>
                               <SelectItem value="anual">
                                 <div className="flex items-center gap-2">
                                   <Clock className="w-4 h-4" />
-                                  Anual
+                                  Anual (12 meses)
                                 </div>
                               </SelectItem>
                               <SelectItem value="vitalicio">
