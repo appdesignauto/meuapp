@@ -3430,7 +3430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para resetar senha de usuário
-  app.put("/api/users/:id/reset-password", flexibleAuth, async (req, res) => {
+  app.put("/api/users/:id/reset-password", async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       const { password } = req.body;
