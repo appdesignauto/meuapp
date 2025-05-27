@@ -391,12 +391,10 @@ export default function SubscriptionManagement() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
-
-          <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -723,19 +721,7 @@ export default function SubscriptionManagement() {
             
 
 
-        <TabsContent value="settings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Assinaturas</CardTitle>
-              <CardDescription>
-                Histórico de eventos de Webhook recebidos de outros provedores.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SubscriptionSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
 
       {/* Dialog para adicionar usuário */}
