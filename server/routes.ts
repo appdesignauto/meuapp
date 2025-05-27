@@ -3569,6 +3569,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("- Não foi possível remover relações de seguidores:", error);
         }
         
+        // Remover outras referências do usuário
+        try {
+          await db.execute(sql`DELETE FROM "shares" WHERE "userId" = ${userId}`);
+          console.log("- Compartilhamentos removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover compartilhamentos:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "designerStats" WHERE "userId" = ${userId}`);
+          console.log("- Estatísticas de designer removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover estatísticas de designer:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "userPreferences" WHERE "userId" = ${userId}`);
+          console.log("- Preferências do usuário removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover preferências:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "userStats" WHERE "userId" = ${userId}`);
+          console.log("- Estatísticas do usuário removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover estatísticas do usuário:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "userPermissions" WHERE "userId" = ${userId} OR "grantedBy" = ${userId}`);
+          console.log("- Permissões do usuário removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover permissões:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "courseProgress" WHERE "userId" = ${userId}`);
+          console.log("- Progresso de cursos removido");
+        } catch (error) {
+          console.log("- Não foi possível remover progresso de cursos:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "courseRatings" WHERE "userId" = ${userId}`);
+          console.log("- Avaliações de cursos removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover avaliações de cursos:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "videoComments" WHERE "userId" = ${userId}`);
+          console.log("- Comentários de vídeo removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover comentários de vídeo:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "lessonViews" WHERE "userId" = ${userId}`);
+          console.log("- Visualizações de aulas removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover visualizações de aulas:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "lessonNotes" WHERE "userId" = ${userId}`);
+          console.log("- Anotações de aulas removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover anotações de aulas:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "popupViews" WHERE "userId" = ${userId}`);
+          console.log("- Visualizações de popups removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover visualizações de popups:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "communityLikes" WHERE "userId" = ${userId}`);
+          console.log("- Curtidas na comunidade removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover curtidas na comunidade:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "communitySaves" WHERE "userId" = ${userId}`);
+          console.log("- Salvamentos na comunidade removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover salvamentos na comunidade:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "communityPoints" WHERE "userId" = ${userId}`);
+          console.log("- Pontos da comunidade removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover pontos da comunidade:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "communityLeaderboard" WHERE "userId" = ${userId}`);
+          console.log("- Posições no ranking removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover posições no ranking:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "communityCommentLikes" WHERE "userId" = ${userId}`);
+          console.log("- Curtidas em comentários removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover curtidas em comentários:", error);
+        }
+        
+        try {
+          await db.execute(sql`DELETE FROM "reports" WHERE "userId" = ${userId} OR "respondedBy" = ${userId}`);
+          console.log("- Denúncias removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover denúncias:", error);
+        }
+        
         // Verificar artes criadas pelo usuário e decidir se serão excluídas
         if (userToDelete[0].nivelacesso === 'designer' || userToDelete[0].nivelacesso === 'designer_adm') {
           const artsCount = await db
