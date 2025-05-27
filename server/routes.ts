@@ -1796,10 +1796,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar a categoria da arte pelo ID
       let category = null;
-      if (art.category) {
+      if (art.categoryId) {
         try {
-          console.log(`[DEBUG] Buscando categoria ID: ${art.category} para arte ID: ${art.id}`);
-          category = await storage.getCategoryById(art.category);
+          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.categoryId);
           console.log(`[DEBUG] Categoria encontrada:`, category);
           
           // Se a categoria for encontrada, anexá-la ao objeto arte
@@ -1807,13 +1807,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             art.category = category;
             console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
           } else {
-            console.log(`[DEBUG] Categoria ID ${art.category} não encontrada no banco de dados`);
+            console.log(`[DEBUG] Categoria ID ${art.categoryId} não encontrada no banco de dados`);
           }
         } catch (categoryError) {
           console.error("Erro ao buscar categoria da arte:", categoryError);
         }
       } else {
-        console.log(`[DEBUG] Arte ID ${art.id} não tem category definido`);
+        console.log(`[DEBUG] Arte ID ${art.id} não tem categoryId definido`);
       }
       
       // Buscar contagem de favoritos para esta arte
