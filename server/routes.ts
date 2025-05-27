@@ -5198,21 +5198,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           limit,
           totalPages: Math.ceil(countResult.rows[0].total / limit)
         }
-      
-    } catch (error) {
-      console.error("❌ Erro ao listar usuários:", error);
-      res.status(500).json({ message: "Erro ao listar usuários" });
-    }
-  });
-          page,
-          limit,
-          total: totalUsers,
-          pages: Math.ceil(totalUsers / limit)
-        }
       });
       
     } catch (error) {
-      console.error("Erro ao listar usuários:", error);
+      console.error("❌ Erro ao listar usuários:", error);
       res.status(500).json({ message: "Erro ao listar usuários" });
     }
   });
