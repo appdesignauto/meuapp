@@ -5097,22 +5097,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
       
-      // Usar SQL direto através do db.execute
-      const usersResult = await db.execute(sql`
+      // Usar PostgreSQL direto para máxima compatibilidade
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await client.connect();
+      
+      const usersQuery = `
         SELECT id, username, email, name, profileimageurl, nivelacesso, 
                origemassinatura, tipoplano, dataassinatura, dataexpiracao, 
                acessovitalicio, isactive, criadoem, ultimologin
         FROM users 
         WHERE isactive = true
         ORDER BY criadoem DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `);
+        LIMIT $1 OFFSET $2
+      `;
       
-      const countResult = await db.execute(sql`
-        SELECT COUNT(*) as total FROM users WHERE isactive = true
-      `);
+      const countQuery = `SELECT COUNT(*) as total FROM users WHERE isactive = true`;
       
-      const processedUsers = usersResult.map((user: any) => ({
+      const [usersResult, countResult] = await Promise.all([
+        client.query(usersQuery, [limit, offset]),
+        client.query(countQuery)
+      ]);
+      
+      await client.end();
+      
+      const processedUsers = usersResult.rows.map((user: any) => ({
         ...user,
         subscriptionStatus: user.acessovitalicio ? 'lifetime' : 
           (user.nivelacesso === 'premium' || user.nivelacesso === 'designer') ? 'premium' : 'free',
@@ -5121,7 +5133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           null
       }));
       
-      const totalUsers = parseInt(countResult[0].total as string);
+      const totalUsers = parseInt(countResult.rows[0].total as string);
       
       console.log(`✅ Usuários encontrados: ${processedUsers.length} de ${totalUsers} total`);
       
