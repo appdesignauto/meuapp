@@ -1893,10 +1893,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.error("Erro ao buscar artes recentes do designer:", artsError);
             }
             
-            art.designerid = {
+            art.designer = {
               ...safeDesigner,
               isFollowing,
-              followers: 0,
+              followers: stats?.followers || 0,
               totalArts: stats?.totalArts || 0,
               recentArts
             };
@@ -1925,7 +1925,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 imageUrl: a.imageUrl || ''
               }));
             
-            art.designerid = {
+            art.designer = {
               ...safeAdmin,
               isFollowing: false,
               followers: Math.floor(Math.random() * 100) + 10, // Valor demonstrativo
@@ -3725,9 +3725,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: designer.nivelacesso,
         website: designer.website || "",
         location: designer.location || "",
-        socialLinks: designer || {},
-        followers: designer || 0,
-        following: designer || 0,
+        socialLinks: designer.sociallinks || {},
+        followers: 0,
+        following: 0,
         createdAt: designer.criadoem,
         isFollowing,
         statistics: {
