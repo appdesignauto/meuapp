@@ -504,48 +504,7 @@ const ModernUserManagement = () => {
     }
   };
 
-  // Função para baixar dados do usuário
-  const handleDownloadUserData = async (user: User) => {
-    try {
-      const response = await fetch(`/api/users/${user.id}/export`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
 
-      if (response.ok) {
-        const userData = await response.json();
-        
-        // Criar arquivo JSON para download
-        const dataStr = JSON.stringify(userData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        
-        // Criar link de download
-        const url = window.URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `dados_usuario_${user.username}_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        toast({
-          title: "Download iniciado",
-          description: `Os dados do usuário ${user.name || user.username} foram baixados com sucesso`,
-        });
-      } else {
-        throw new Error("Erro ao exportar dados");
-      }
-    } catch (error) {
-      toast({
-        title: "Erro ao baixar dados",
-        description: "Não foi possível baixar os dados do usuário",
-        variant: "destructive",
-      });
-    }
-  };
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Nunca";
@@ -853,14 +812,10 @@ const ModernUserManagement = () => {
                               
                               <DropdownMenuSeparator />
                               
-                              {/* Ações de histórico e dados */}
+                              {/* Ações de histórico */}
                               <DropdownMenuItem onClick={() => handleViewUserHistory(user)}>
                                 <History className="w-4 h-4 mr-2" />
                                 Ver Histórico
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDownloadUserData(user)}>
-                                <Download className="w-4 h-4 mr-2" />
-                                Baixar Dados
                               </DropdownMenuItem>
                               
                               <DropdownMenuSeparator />
