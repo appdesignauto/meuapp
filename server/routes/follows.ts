@@ -113,60 +113,52 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
         return res.status(401).json({ message: "Usuário não autenticado" });
       }
 
-      // Buscar IDs dos designers que o usuário segue
-      const followingRecords = await db
-        .select({ designerId: userFollows.followingId })
-        .from(userFollows)
-        .where(eq(userFollows.followerId, userId));
-      
+      // Buscar registros de follow primeiro
+      const followingRecords = await db.execute(sql`
+        SELECT followingid FROM userfollows WHERE followerid = ${userId}
+      `);
+
       if (followingRecords.length === 0) {
         return res.status(200).json({ following: [] });
       }
-      
-      const followingIds = followingRecords.map(record => record.designerId);
-      
-      // Buscar dados completos dos designers usando parâmetros SQL seguros
-      const designersData = await db
-        .select({
-          id: users.id,
-          username: users.username,
-          name: users.name,
-          profileimageurl: users.profileimageurl,
-          bio: users.bio,
-          nivelacesso: users.nivelacesso,
-          role: users.role,
-        })
-        .from(users)
-        .where(sql`${users.id} IN (${sql.join(followingIds, sql`,`)})`);
-      
-      // Recuperar designers completos com dados adicionais
-      const designers = await Promise.all(
-        designersData.map(async (designer) => {
-          // Contagem de artes do designer - usando referência segura
-          const [artsCount] = await db
-            .select({ count: count() })
-            .from(arts)
-            .where(eq(arts.designerid, designer.id));
 
-          // Contagem de seguidores do designer
-          const [followersCount] = await db
-            .select({ count: count() })
-            .from(userFollows)
-            .where(eq(userFollows.followingId, designer.id));
-
-          return {
-            id: designer.id,
-            username: designer.username,
-            name: designer.name || designer.username,
-            profileimageurl: designer.profileimageurl,
-            bio: designer.bio,
-            role: designer.role || designer.nivelacesso,
-            artsCount: Number(artsCount?.count || 0),
-            followersCount: Number(followersCount?.count || 0),
-            isFollowing: true, // Já que estamos buscando os designers que o usuário segue
-          };
-        })
-      );
+      // Extrair IDs
+      const designerIds = Array.from(followingRecords).map((record: any) => record.followingid);
+      
+      // Buscar dados dos designers
+      const designers = [];
+      for (const designerId of designerIds) {
+        const userResult = await db.execute(sql`
+          SELECT id, username, name, profileimageurl, bio, nivelacesso
+          FROM users WHERE id = ${designerId}
+        `);
+        
+        if (userResult.length > 0) {
+          const user = userResult[0] as any;
+          
+          // Contar artes
+          const artsResult = await db.execute(sql`
+            SELECT COUNT(*) as count FROM arts WHERE designerid = ${designerId}
+          `);
+          
+          // Contar seguidores
+          const followersResult = await db.execute(sql`
+            SELECT COUNT(*) as count FROM userfollows WHERE followingid = ${designerId}
+          `);
+          
+          designers.push({
+            id: user.id,
+            username: user.username,
+            name: user.name || user.username,
+            profileimageurl: user.profileimageurl,
+            bio: user.bio,
+            role: user.nivelacesso,
+            artsCount: Number(artsResult[0]?.count || 0),
+            followersCount: Number(followersResult[0]?.count || 0),
+            isFollowing: true,
+          });
+        }
+      }
 
       return res.status(200).json({ following: designers });
     } catch (error) {
