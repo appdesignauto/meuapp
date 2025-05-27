@@ -92,48 +92,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // 🎯 ETAPA 1: ENDPOINT PRIORITÁRIO - Lista dos 6 usuários (definido no início para evitar conflitos)
-  app.get("/api/admin/subscription-users", async (req, res) => {
-    try {
-      console.log("🎯 ENDPOINT PRIORITÁRIO: Retornando os 6 usuários diretamente...");
-      
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
+  // 🎯 ENDPOINT DEFINITIVO - Bypass de middleware para garantir resposta JSON
+  app.get("/api/admin/subscription-users", (req, res, next) => {
+    // Forçar header de resposta JSON
+    res.setHeader('Content-Type', 'application/json');
+    
+    console.log("🎯 ENDPOINT DEFINITIVO: Processando requisição de usuários...");
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL
+    });
+    
+    client.connect()
+      .then(() => {
+        return client.query(`
+          SELECT 
+            id, username, email, name, nivelacesso, 
+            tipoplano, dataassinatura, dataexpiracao, origemassinatura
+          FROM users 
+          WHERE isactive = true
+          ORDER BY criadoem DESC
+        `);
+      })
+      .then((result) => {
+        client.end();
+        
+        console.log(`🎯 ENDPOINT DEFINITIVO - Total encontrado: ${result.rows.length} usuários`);
+        result.rows.forEach((user: any, index: number) => {
+          console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
+        });
+        
+        const response = {
+          users: result.rows,
+          pagination: {
+            total: result.rows.length,
+            page: 1,
+            limit: 50,
+            totalPages: 1
+          }
+        };
+        
+        res.status(200).json(response);
+      })
+      .catch((error) => {
+        client.end();
+        console.error("❌ ENDPOINT DEFINITIVO - Erro:", error.message);
+        res.status(500).json({ error: error.message });
       });
-      
-      await client.connect();
-      
-      const result = await client.query(`
-        SELECT 
-          id, username, email, name, nivelacesso, 
-          tipoplano, dataassinatura, dataexpiracao, origemassinatura
-        FROM users 
-        WHERE isactive = true
-        ORDER BY criadoem DESC
-      `);
-      
-      await client.end();
-      
-      console.log(`🎯 ENDPOINT PRIORITÁRIO - Total encontrado: ${result.rows.length} usuários`);
-      result.rows.forEach((user: any, index: number) => {
-        console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
-      });
-      
-      res.json({
-        users: result.rows,
-        pagination: {
-          total: result.rows.length,
-          page: 1,
-          limit: 50,
-          totalPages: 1
-        }
-      });
-      
-    } catch (error: any) {
-      console.error("❌ ENDPOINT PRIORITÁRIO - Erro:", error.message);
-      res.status(500).json({ error: error.message });
-    }
   });
 
   // ENDPOINT CRÍTICO: Estatísticas de Reports - DADOS REAIS DO BANCO
