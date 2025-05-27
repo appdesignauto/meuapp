@@ -219,9 +219,6 @@ export function setupUserManagementRoutes(app: Express) {
     }
   });
 }
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
 
   // API para deletar usuário
   app.delete("/api/admin/users/:id", async (req, res) => {
