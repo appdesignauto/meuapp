@@ -6,6 +6,7 @@ import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import SubscriptionDashboard from '@/components/admin/SubscriptionDashboard';
+import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
 import SaasDashboard from '@/components/admin/SaasDashboard';
 import {
   LayoutGrid,
@@ -3061,7 +3062,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="subscriptions">
-              <SubscriptionDashboard />
+              <SimpleSubscriptionDashboard />
             </TabsContent>
             
             <TabsContent value="community">

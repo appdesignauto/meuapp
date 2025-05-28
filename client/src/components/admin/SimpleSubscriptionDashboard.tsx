@@ -56,7 +56,7 @@ interface SubscriptionMetrics {
   monthlyRevenue: number;
 }
 
-export default function SimpleSubscriptionDashboard() {
+function SimpleSubscriptionDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -533,3 +533,5 @@ export default function SimpleSubscriptionDashboard() {
     </div>
   );
 }
+
+export default SimpleSubscriptionDashboard;
