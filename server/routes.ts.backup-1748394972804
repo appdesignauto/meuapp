@@ -3525,121 +3525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(exportData);
     } catch (error) {
       console.error("Erro ao exportar dados do usuário:", error);
-      res.status(500).json({ message: "Erro ao 
-// =================================
-// SUBSCRIPTION ROUTES - CORRIGIDAS
-// =================================
-
-// Listar usuários com assinatura (QUERY CORRIGIDA)
-app.get('/api/admin/subscription-users', isAdmin, async (req, res) => {
-  try {
-    console.log('🔍 Buscando usuários com assinatura...');
-    
-    // PRIMEIRO: Verificar que tipos de status existem no banco
-    const allUsers = await storage.db.select().from(storage.users);
-    
-    console.log(`📊 Total de usuários no banco: ${allUsers.length}`);
-    
-    // Filtrar usuários que têm indicação de assinatura
-    const subscribedUsers = allUsers.filter(user => {
-      return (
-        user.nivelacesso && 
-        ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)
-      ) || (
-        user.acessovitalicio === true
-      ) || (
-        user.tipoplano && 
-        user.tipoplano.trim() !== ''
-      );
-    });
-    
-    console.log(`✅ Usuários com assinatura encontrados: ${subscribedUsers.length}`);
-    
-    // Log para debug
-    if (subscribedUsers.length > 0) {
-      console.log('📋 Exemplos de status encontrados:');
-      subscribedUsers.slice(0, 3).forEach(user => {
-        console.log(`   - ${user.email}: nivel="${user.nivelacesso}", plano="${user.tipoplano}", vitalicio=${user.acessovitalicio}`);
-      });
-    }
-    
-    res.json(subscribedUsers);
-    
-  } catch (error) {
-    console.error('❌ Erro ao buscar usuários:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno do servidor',
-      debug: error.message
-    });
-  }
-});
-
-// Métricas de assinatura (CÁLCULOS CORRIGIDOS)
-app.get('/api/admin/subscription-metrics', isAdmin, async (req, res) => {
-  try {
-    console.log('📊 Calculando métricas de assinatura...');
-    
-    // Buscar todos os usuários
-    const allUsers = await storage.db.select().from(storage.users);
-    
-    // Calcular métricas baseado nos dados reais
-    const totalUsers = allUsers.length;
-    
-    const subscribedUsers = allUsers.filter(user => {
-      return (
-        user.nivelacesso && 
-        ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)
-      ) || (
-        user.acessovitalicio === true
-      ) || (
-        user.tipoplano && 
-        user.tipoplano.trim() !== ''
-      );
-    });
-    
-    const activeSubscriptions = subscribedUsers.length;
-    
-    // Usuários free
-    const freeUsers = allUsers.filter(user => 
-      user.nivelacesso === 'free' && !user.acessovitalicio
-    ).length;
-    
-    // Usuários recentes (últimos 7 dias)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const recentSignups = allUsers.filter(user => 
-      new Date(user.criadoem) >= sevenDaysAgo
-    ).length;
-    
-    // Calcular conversão
-    const conversionRate = totalUsers > 0 ? 
-      Math.round((activeSubscriptions / totalUsers) * 100) : 0;
-    
-    const metrics = {
-      totalUsers: totalUsers,
-      premiumUsers: activeSubscriptions,
-      freeUsers: freeUsers,
-      conversionRate: `${conversionRate}%`,
-      recentSignups: recentSignups
-    };
-    
-    console.log('📈 Métricas calculadas:', metrics);
-    
-    res.json({
-      overview: metrics
-    });
-    
-  } catch (error) {
-    console.error('❌ Erro ao calcular métricas:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro ao carregar métricas',
-      debug: error.message
-    });
-  }
-});
-
-exportar dados do usuário" });
+      res.status(500).json({ message: "Erro ao exportar dados do usuário" });
     }
   });
 
@@ -5139,6 +5025,7 @@ exportar dados do usuário" });
         expiringIn7Days: expiringIn7DaysResult.count,
         expiringIn30Days: expiringIn30DaysResult.count,
 
+
         manualCount: manualResult.count,
         subscriptionsByPlan,
         subscriptionsByOrigin,
@@ -5153,7 +5040,48 @@ exportar dados do usuário" });
   // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
   // ENDPOINT CORRIGIDO - Métricas de assinaturas usando Drizzle ORM
-  
+  app.get("/api/admin/subscription-metrics", isAdmin, async (req, res) => {
+    try {
+      console.log("📊 Calculando métricas de assinaturas...");
+      
+      // Usar Drizzle ORM que está funcionando
+      const allUsers = await db.select().from(users);
+      
+      // Calcular métricas manualmente
+      const totalUsers = allUsers.length;
+      const activeUsers = allUsers.filter(u => u.isactive).length;
+      const premiumUsers = allUsers.filter(u => 
+        u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
+      ).length;
+      const freeUsers = allUsers.filter(u => 
+        u.isactive && u.nivelacesso === 'free' && !u.acessovitalicio
+      ).length;
+      const lifetimeUsers = allUsers.filter(u => 
+        u.isactive && u.acessovitalicio
+      ).length;
+      
+      // Novos usuários (últimos 30 e 7 dias)
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+      const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      
+      const newUsers30d = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= thirtyDaysAgo
+      ).length;
+      const newUsers7d = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= sevenDaysAgo
+      ).length;
+      
+      // Estatísticas por origem
+      const premiumActiveUsers = allUsers.filter(u => 
+        u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
+      );
+      
+      const byOrigin: Record<string, number> = {};
+      premiumActiveUsers.forEach(user => {
+        const origin = user.origemassinatura || 'manual';
+        byOrigin[origin] = (byOrigin[origin] || 0) + 1;
+      });
       
       // Estatísticas por plano
       const byPlan: Record<string, number> = {};
@@ -5766,6 +5694,7 @@ exportar dados do usuário" });
     }
   });
 
+
   
 
   
@@ -5827,7 +5756,12 @@ exportar dados do usuário" });
     }
   });
 
+
   
+
+
+
+
 
   
   // User downgrade route secured for admin-only access
@@ -6755,6 +6689,7 @@ exportar dados do usuário" });
     }
   });
   
+
 
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
