@@ -93,6 +93,13 @@ function SimpleSubscriptionDashboard() {
     refetchInterval: 30000,
   });
 
+  // Buscar distribuição por origem
+  const { data: origemData } = useQuery({
+    queryKey: ['/api/dashboard/origem-distribuicao'],
+    queryFn: () => fetch('/api/dashboard/origem-distribuicao').then(res => res.json()),
+    refetchInterval: 30000,
+  });
+
   // Calcular métricas baseadas nos dados reais dos usuários do banco
   const calculateMetrics = (): SubscriptionMetrics => {
     if (!usersData || !Array.isArray(usersData)) return {
@@ -507,6 +514,35 @@ function SimpleSubscriptionDashboard() {
                 <p className="text-xs text-muted-foreground">
                   Receita recorrente
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Card de Distribuição por Origem */}
+          <div className="mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Distribuição por Origem</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {origemData && Object.entries(origemData).map(([origem, count]) => (
+                    <div key={origem} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          origem === 'Hotmart' ? 'bg-green-500' :
+                          origem === 'Manual' ? 'bg-gray-500' :
+                          'bg-blue-500'
+                        }`}></div>
+                        <span className="font-medium">{origem}</span>
+                      </div>
+                      <span className="text-lg font-bold">{count}</span>
+                    </div>
+                  ))}
+                  {!origemData && (
+                    <div className="text-center text-muted-foreground">Carregando dados...</div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>

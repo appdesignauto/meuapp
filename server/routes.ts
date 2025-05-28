@@ -7128,6 +7128,36 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // Endpoint para distribuição por origem
+  app.get('/api/dashboard/origem-distribuicao', isAuthenticated, async (req, res) => {
+    try {
+      const pool = (global as any).db;
+      const result = await pool.query(`
+        SELECT 
+          COALESCE("origemassinatura", 'Manual') as origem,
+          COUNT(*) as count
+        FROM users 
+        WHERE ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
+        GROUP BY COALESCE("origemassinatura", 'Manual')
+        ORDER BY count DESC
+      `);
+
+      // Converter para objeto com chaves como origem
+      const distribuicao = {};
+      result.rows.forEach((row: any) => {
+        const origem = row.origem === 'hotmart' ? 'Hotmart' : 
+                      row.origem === null || row.origem === 'Manual' ? 'Manual' : 
+                      row.origem.charAt(0).toUpperCase() + row.origem.slice(1);
+        distribuicao[origem] = parseInt(row.count);
+      });
+
+      res.json(distribuicao);
+    } catch (error) {
+      console.error("Erro ao buscar distribuição por origem:", error);
+      res.status(500).json({ message: "Erro ao buscar distribuição por origem" });
+    }
+  });
+
   // Endpoint para buscar dados históricos reais de receita
   app.get("/api/dashboard/revenue-data", isAuthenticated, async (req, res) => {
     try {
