@@ -521,7 +521,7 @@ function SimpleSubscriptionDashboard() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={revenueData || []}>
+                    <LineChart data={Array.isArray(revenueData) ? revenueData : (revenueData?.rows || [])}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 
@@ -559,7 +559,7 @@ function SimpleSubscriptionDashboard() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={registrationData || []}>
+                    <BarChart data={Array.isArray(registrationData) ? registrationData : (registrationData?.rows || [])}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
                       <YAxis />

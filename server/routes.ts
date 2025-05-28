@@ -7134,37 +7134,31 @@ app.use('/api/reports-v2', (req, res, next) => {
       const { period = '30' } = req.query;
       const days = parseInt(period as string);
       
-      // Buscar dados de receita baseados nos usuários e suas origens usando pool direto
+      // Buscar dados de receita agrupados por mês usando pool direto
       const pool = (global as any).db;
       const result = await pool.query(`
-        WITH daily_revenue AS (
-          SELECT 
-            DATE("dataassinatura") as date,
-            SUM(
-              CASE 
-                WHEN "origemassinatura" = 'hotmart' THEN 7.00
-                WHEN "tipoplano" = 'mensal' THEN 29.90
-                WHEN "tipoplano" = 'anual' THEN 197.00
-                WHEN "tipoplano" = 'vitalicio' THEN 497.00
-                ELSE 29.90
-              END
-            ) as revenue
-          FROM users 
-          WHERE "dataassinatura" IS NOT NULL 
-            AND "dataassinatura" >= NOW() - INTERVAL '${days} days'
-            AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
-          GROUP BY DATE("dataassinatura")
-        )
         SELECT 
-          date,
-          COALESCE(revenue, 0) as value
-        FROM daily_revenue
-        ORDER BY date ASC
+          TO_CHAR("dataassinatura", 'Mon/YY') as label,
+          SUM(
+            CASE 
+              WHEN "origemassinatura" = 'hotmart' THEN 7.00
+              WHEN "tipoplano" = 'mensal' THEN 29.90
+              WHEN "tipoplano" = 'anual' THEN 197.00
+              WHEN "tipoplano" = 'vitalicio' THEN 497.00
+              ELSE 29.90
+            END
+          ) as value
+        FROM users 
+        WHERE "dataassinatura" IS NOT NULL 
+          AND "dataassinatura" >= NOW() - INTERVAL '${days} days'
+          AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
+        GROUP BY TO_CHAR("dataassinatura", 'Mon/YY'), EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
+        ORDER BY EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
       `);
 
       // Formatar dados para o frontend
       const formattedRevenueData = result.rows.map((row: any) => ({
-        date: row.date,
+        label: row.label,
         value: parseFloat(row.value || '0')
       }));
 
