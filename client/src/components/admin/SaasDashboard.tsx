@@ -67,24 +67,13 @@ function SaasDashboard() {
         if (isHotmartUser) {
           hotmartPremiumUsers++; // Contar apenas usuários Hotmart para ARPU
           
-          // Calcular contribuição para MRR baseada no tipo de plano (apenas usuários Hotmart)
-          if (user.acessovitalicio || user.tipoplano === 'vitalicio') {
-            // Usuários vitalícios: valor total amortizado em 5 anos (estimativa)
-            monthlyRevenue += 497.00 / 60; // R$ 497 / 60 meses = ~R$ 8.28/mês
-            totalLifetimeValue += 497.00;
-          } else if (user.tipoplano === 'anual') {
-            // Plano anual: R$ 197/ano = R$ 16.42/mês
-            monthlyRevenue += 16.42;
-            totalLifetimeValue += 197.00;
-          } else if (user.tipoplano === 'mensal') {
-            // Plano mensal: R$ 29.90/mês
-            monthlyRevenue += 29.90;
-            totalLifetimeValue += 29.90;
-          } else {
-            // Usuários premium da Hotmart sem plano específico: estimativa baseada em plano mensal
-            monthlyRevenue += 29.90;
-            totalLifetimeValue += 29.90;
-          }
+          // USAR VALORES REAIS DO WEBHOOK - NÃO ESTIMATIVAS
+          // TODO: Implementar busca dos valores reais dos webhooks
+          // Por enquanto, baseado no que você disse: R$ 7,00 por usuário
+          const valorRealWebhook = 7.00; // Valor real vindo do webhook da Hotmart
+          
+          monthlyRevenue += valorRealWebhook;
+          totalLifetimeValue += valorRealWebhook;
         }
         // Usuários sem origem Hotmart (admin/designer/manual) NÃO contribuem para MRR
       }
