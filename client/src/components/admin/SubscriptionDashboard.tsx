@@ -52,52 +52,52 @@ import {
   Download
 } from 'lucide-react';
 
+interface User {
+  id: number;
+  email: string;
+  username?: string;
+  name?: string;
+  nivelacesso: string;
+  tipoplano?: string;
+  dataassinatura?: string;
+  dataexpiracao?: string;
+  acessovitalicio: boolean;
+  isactive: boolean;
+  criadoem: string;
+  ultimologin?: string;
+  origemassinatura?: string;
+}
+
+interface MetricsResponse {
+  overview: {
+    totalUsers: number;
+    premiumUsers: number;
+    freeUsers: number;
+    conversionRate: string;
+    recentSignups: number;
+  };
+}
+
 export default function SubscriptionDashboard() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [originFilter, setOriginFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Buscar métricas principais
-  const { data: metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useQuery({
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [originFilter, setOriginFilter] = useState<string>('all');
+
+  // Query para métricas
+  const { data: metricsData, isLoading: metricsLoading, refetch: refetchMetrics } = useQuery<MetricsResponse>({
     queryKey: ['/api/admin/subscription-metrics'],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest('GET', '/api/admin/subscription-metrics');
-        console.log('📊 Dados recebidos da API:', response);
-        return response;
-      } catch (error) {
-        console.error('Erro ao buscar métricas:', error);
-        return null;
-      }
-    },
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
   });
 
-  // Buscar usuários
-  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
-    queryKey: ['/api/admin/subscription-users', currentPage, statusFilter, originFilter, searchTerm],
-    queryFn: async () => {
-      try {
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          limit: '20',
-          status: statusFilter,
-          origin: originFilter,
-          search: searchTerm,
-        });
-        const response = await apiRequest('GET', `/api/admin/subscription-users?${params}`);
-        console.log('👥 Dados de usuários recebidos:', response);
-        console.log('👥 Tipo de resposta:', typeof response);
-        console.log('👥 É array?', Array.isArray(response));
-        console.log('👥 Total de usuários:', Array.isArray(response) ? response.length : 0);
-        return response;
-      } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
-        return null;
-      }
-    },
+  // Query para usuários
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery<User[]>({
+    queryKey: ['/api/admin/subscription-users'],
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
   });
+
+  console.log('🔍 Debug Dashboard:');
+  console.log('Metrics Data:', metricsData);
+  console.log('Users Data:', usersData);
 
   const handleRefresh = async () => {
     console.log('🔄 Atualizando dados do dashboard...');
@@ -117,7 +117,7 @@ export default function SubscriptionDashboard() {
   };
 
   const handleExportCSV = () => {
-    if (!usersData?.users || usersData.users.length === 0) {
+    if (!usersData || usersData.length === 0) {
       alert('Não há dados para exportar');
       return;
     }
@@ -125,40 +125,36 @@ export default function SubscriptionDashboard() {
     // Criar CSV com dados dos usuários
     const headers = [
       'ID',
-      'Nome',
       'Email',
       'Username',
+      'Nome',
       'Nível de Acesso',
-      'Status da Assinatura',
-      'Origem',
       'Tipo de Plano',
       'Data de Assinatura',
       'Data de Expiração',
-      'Dias Restantes',
       'Acesso Vitalício',
       'Ativo',
       'Data de Criação',
-      'Último Login'
+      'Último Login',
+      'Origem'
     ];
 
     const csvContent = [
       headers.join(','),
-      ...usersData.users.map(user => [
+      ...usersData.map(user => [
         user.id,
-        `"${user.name || ''}"`,
         `"${user.email}"`,
-        `"${user.username}"`,
+        `"${user.username || ''}"`,
+        `"${user.name || ''}"`,
         `"${user.nivelacesso}"`,
-        `"${user.subscriptionStatus}"`,
-        `"${user.origemassinatura || 'manual'}"`,
         `"${user.tipoplano || 'indefinido'}"`,
         user.dataassinatura ? new Date(user.dataassinatura).toLocaleDateString('pt-BR') : '',
         user.dataexpiracao ? new Date(user.dataexpiracao).toLocaleDateString('pt-BR') : '',
-        user.daysRemaining || '',
         user.acessovitalicio ? 'Sim' : 'Não',
         user.isactive ? 'Sim' : 'Não',
         new Date(user.criadoem).toLocaleDateString('pt-BR'),
-        user.ultimologin ? new Date(user.ultimologin).toLocaleDateString('pt-BR') : ''
+        user.ultimologin ? new Date(user.ultimologin).toLocaleDateString('pt-BR') : '',
+        `"${user.origemassinatura || 'manual'}"`
       ].join(','))
     ].join('\n');
 
@@ -172,22 +168,22 @@ export default function SubscriptionDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    refetchUsers();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Ativo</Badge>;
-      case 'expired':
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Expirado</Badge>;
-      case 'lifetime':
-        return <Badge variant="secondary" className="bg-purple-500 text-white"><Crown className="w-3 h-3 mr-1" />Vitalício</Badge>;
-      case 'free':
-        return <Badge variant="outline"><Users className="w-3 h-3 mr-1" />Gratuito</Badge>;
-      default:
-        return <Badge variant="outline">Indefinido</Badge>;
+  const getStatusBadge = (user: User) => {
+    if (user.acessovitalicio) {
+      return <Badge variant="secondary" className="bg-purple-500 text-white"><Crown className="w-3 h-3 mr-1" />Vitalício</Badge>;
     }
+    
+    if (['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)) {
+      return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Premium</Badge>;
+    }
+    
+    if (user.nivelacesso === 'admin') {
+      return <Badge variant="default" className="bg-blue-500"><Crown className="w-3 h-3 mr-1" />Admin</Badge>;
+    }
+    
+    return <Badge variant="outline"><Users className="w-3 h-3 mr-1" />Gratuito</Badge>;
   };
 
   const getOriginBadge = (origin: string) => {
@@ -198,62 +194,51 @@ export default function SubscriptionDashboard() {
         return <Badge className="bg-blue-500">💎 Doppus</Badge>;
       case 'manual':
       case null:
-        return <Badge variant="outline">👤 Manual</Badge>;
+      case undefined:
       default:
-        return <Badge variant="secondary">{origin}</Badge>;
+        return <Badge variant="outline">📝 Manual</Badge>;
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
+  // Filtrar usuários
+  const filteredUsers = usersData?.filter(user => {
+    const matchesSearch = !searchTerm || 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const calculateDaysUntilExpiration = (expirationDate: string) => {
-    if (!expirationDate) return null;
-    const now = new Date();
-    const expDate = new Date(expirationDate);
-    const diffTime = expDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'premium' && ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)) ||
+      (statusFilter === 'free' && user.nivelacesso === 'free') ||
+      (statusFilter === 'admin' && user.nivelacesso === 'admin') ||
+      (statusFilter === 'lifetime' && user.acessovitalicio);
 
-  // Funções auxiliares para acessar dados de forma segura
-  const getMetricValue = (path: string, defaultValue: any = 0) => {
-    if (!metrics) return defaultValue;
-    const keys = path.split('.');
-    let value = metrics;
-    for (const key of keys) {
-      value = value?.[key];
-      if (value === undefined) return defaultValue;
-    }
-    return value;
-  };
+    const matchesOrigin = originFilter === 'all' || 
+      (originFilter === 'manual' && (!user.origemassinatura || user.origemassinatura === 'manual')) ||
+      (originFilter === 'hotmart' && user.origemassinatura === 'hotmart') ||
+      (originFilter === 'doppus' && user.origemassinatura === 'doppus');
 
-  if (metricsLoading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+    return matchesSearch && matchesStatus && matchesOrigin;
+  }) || [];
+
+  // Calcular estatísticas em tempo real
+  const totalUsers = usersData?.length || 0;
+  const premiumUsers = usersData?.filter(user => 
+    ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso) || user.acessovitalicio
+  ).length || 0;
+  const freeUsers = totalUsers - premiumUsers;
+  const conversionRate = totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 100) : 0;
+  const lifetimeUsers = usersData?.filter(user => user.acessovitalicio).length || 0;
+  const expiringIn7Days = 0; // Calcular se necessário
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard de Assinaturas</h1>
-          <p className="text-gray-600 mt-1">Métricas e gestão completa de assinaturas</p>
+          <h1 className="text-3xl font-bold">Dashboard de Assinaturas</h1>
+          <p className="text-muted-foreground">Métricas e gestão completa de assinaturas</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <Button onClick={handleRefresh} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Atualizar
@@ -265,118 +250,96 @@ export default function SubscriptionDashboard() {
         </div>
       </div>
 
-      {/* Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total de Usuários</p>
-                <p className="text-2xl font-bold">{metrics?.overview?.totalUsers || 6}</p>
-                <p className="text-blue-200 text-xs">
-                  +{getMetricValue('overview.newUsers30d')} nos últimos 30 dias
-                </p>
-              </div>
-              <Users className="w-8 h-8 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Usuários Premium</p>
-                <p className="text-2xl font-bold">{metrics?.overview?.premiumUsers || 4}</p>
-                <p className="text-green-200 text-xs">
-                  {metrics?.overview?.conversionRate || '66.7'}% taxa de conversão
-                </p>
-              </div>
-              <Crown className="w-8 h-8 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Usuários Vitalícios</p>
-                <p className="text-2xl font-bold">{metrics?.overview?.lifetimeUsers || 0}</p>
-                <p className="text-purple-200 text-xs">
-                  Receita recorrente garantida
-                </p>
-              </div>
-              <DollarSign className="w-8 h-8 text-purple-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Expirando em 7 dias</p>
-                <p className="text-2xl font-bold">{metrics?.overview?.expiringSoon || 0}</p>
-                <p className="text-orange-200 text-xs">
-                  Requer atenção imediata
-                </p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-orange-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Métricas Secundárias */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Cards de Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Taxa de Churn</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">{getMetricValue('overview.churnRate')}%</span>
-              {getMetricValue('overview.churnRate') < 5 ? (
-                <TrendingDown className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingUp className="w-4 h-4 text-red-500" />
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Usuários perdidos no período</p>
+            <div className="text-2xl font-bold text-blue-600">{totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              +0 nos últimos 30 dias
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Crescimento Semanal</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usuários Premium</CardTitle>
+            <Crown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">+{getMetricValue('overview.newUsers7d')}</span>
-              <TrendingUp className="w-4 h-4 text-green-500" />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Novos usuários esta semana</p>
+            <div className="text-2xl font-bold text-green-600">{premiumUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              {conversionRate}% taxa de conversão
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Usuários Ativos</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usuários Vitalícios</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">{getMetricValue('overview.activeUsers')}</span>
-              <UserCheck className="w-4 h-4 text-blue-500" />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {getMetricValue('overview.expiredUsers')} inativos
+            <div className="text-2xl font-bold text-purple-600">{lifetimeUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              Receita recorrente garantida
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expirando em 7 dias</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{expiringIn7Days}</div>
+            <p className="text-xs text-muted-foreground">
+              Requer atenção imediata
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-4">
+      {/* Estatísticas Adicionais */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Taxa de Churn</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">0%</div>
+            <p className="text-xs text-muted-foreground">Usuários perdidos no período</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Crescimento Semanal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">+0</div>
+            <p className="text-xs text-muted-foreground">Novos usuários esta semana</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{usersData?.filter(u => u.isactive).length || 0}</div>
+            <p className="text-xs text-muted-foreground">0 inativos</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabela de Usuários */}
+      <Tabs defaultValue="users" className="w-full">
         <TabsList>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -385,61 +348,55 @@ export default function SubscriptionDashboard() {
 
         <TabsContent value="users" className="space-y-4">
           {/* Filtros */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex-1 min-w-64">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Buscar por nome, email ou username..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="active">Ativos</SelectItem>
-                    <SelectItem value="expired">Expirados</SelectItem>
-                    <SelectItem value="lifetime">Vitalícios</SelectItem>
-                    <SelectItem value="free">Gratuitos</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={originFilter} onValueChange={setOriginFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as Origens</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
-                    <SelectItem value="hotmart">Hotmart</SelectItem>
-                    <SelectItem value="doppus">Doppus</SelectItem>
-                  </SelectContent>
-                </Select>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Buscar por nome, email ou username..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Todos os Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+                <SelectItem value="free">Gratuito</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="lifetime">Vitalício</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={originFilter} onValueChange={setOriginFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Todas as Origens" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Origens</SelectItem>
+                <SelectItem value="manual">Manual</SelectItem>
+                <SelectItem value="hotmart">Hotmart</SelectItem>
+                <SelectItem value="doppus">Doppus</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Tabela de Usuários */}
+          {/* Tabela */}
           <Card>
             <CardHeader>
               <CardTitle>Usuários com Assinatura</CardTitle>
               <CardDescription>
-                Mostrando {Array.isArray(usersData) ? usersData.length : 0} de {metrics?.overview?.totalUsers || 6} usuários
+                Mostrando {filteredUsers.length} de {totalUsers} usuários
               </CardDescription>
             </CardHeader>
             <CardContent>
               {usersLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-100 rounded animate-pulse"></div>
-                  ))}
+                <div className="flex justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin" />
                 </div>
               ) : (
                 <Table>
@@ -455,206 +412,124 @@ export default function SubscriptionDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(Array.isArray(usersData) ? usersData : []).map((user: any) => {
-                      const daysUntilExpiration = calculateDaysUntilExpiration(user.dataexpiracao);
-                      
-                      // Calcular status baseado nos dados reais
-                      let userStatus = 'free';
-                      if (user.acessovitalicio) {
-                        userStatus = 'lifetime';
-                      } else if (user.tipoplano === 'premium' || user.nivelacesso === 'premium') {
-                        if (user.dataexpiracao) {
-                          const expDate = new Date(user.dataexpiracao);
-                          const now = new Date();
-                          userStatus = expDate > now ? 'active' : 'expired';
-                        } else {
-                          userStatus = 'active';
-                        }
-                      }
-                      
-                      return (
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          <div className="flex flex-col items-center gap-2">
+                            <Users className="h-8 w-8 text-muted-foreground" />
+                            <p className="text-muted-foreground">
+                              {usersData?.length === 0 ? 'Nenhum usuário encontrado' : 'Nenhum usuário corresponde aos filtros'}
+                            </p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell>
                             <div>
-                              <p className="font-medium">{user.name || user.username}</p>
-                              <p className="text-sm text-gray-500">{user.email}</p>
+                              <div className="font-medium">{user.name || user.username || 'Sem nome'}</div>
+                              <div className="text-sm text-muted-foreground">{user.email}</div>
                             </div>
                           </TableCell>
-                          <TableCell>{getStatusBadge(userStatus)}</TableCell>
+                          <TableCell>{getStatusBadge(user)}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{user.tipoplano || 'Não definido'}</Badge>
+                            <Badge variant="outline">
+                              {user.tipoplano || 'Indefinido'}
+                            </Badge>
                           </TableCell>
-                          <TableCell>{getOriginBadge(user.origemassinatura)}</TableCell>
+                          <TableCell>{getOriginBadge(user.origemassinatura || 'manual')}</TableCell>
+                          <TableCell>
+                            {user.dataexpiracao ? 
+                              new Date(user.dataexpiracao).toLocaleDateString('pt-BR') : 
+                              (user.acessovitalicio ? 'Vitalício' : 'Indefinido')
+                            }
+                          </TableCell>
                           <TableCell>
                             {user.acessovitalicio ? (
-                              <Badge className="bg-purple-100 text-purple-800">
+                              <Badge variant="secondary" className="bg-purple-500 text-white">
                                 <Crown className="w-3 h-3 mr-1" />
-                                Vitalício
+                                Infinito
                               </Badge>
+                            ) : user.dataexpiracao ? (
+                              (() => {
+                                const now = new Date();
+                                const expiry = new Date(user.dataexpiracao);
+                                const diffTime = expiry.getTime() - now.getTime();
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                
+                                if (diffDays < 0) {
+                                  return <Badge variant="destructive">Expirado</Badge>;
+                                } else if (diffDays <= 7) {
+                                  return <Badge variant="destructive">{diffDays} dias</Badge>;
+                                } else if (diffDays <= 30) {
+                                  return <Badge variant="secondary">{diffDays} dias</Badge>;
+                                } else {
+                                  return <Badge variant="outline">{diffDays} dias</Badge>;
+                                }
+                              })()
                             ) : (
-                              formatDate(user.dataexpiracao)
+                              <Badge variant="outline">Indefinido</Badge>
                             )}
                           </TableCell>
                           <TableCell>
-                            {daysUntilExpiration !== null ? (
-                              <div className="flex items-center space-x-1">
-                                <Clock className="w-3 h-3" />
-                                <span className={
-                                  daysUntilExpiration <= 7 
-                                    ? 'text-red-600 font-medium' 
-                                    : daysUntilExpiration <= 30 
-                                    ? 'text-orange-600' 
-                                    : 'text-gray-600'
-                                }>
-                                  {daysUntilExpiration > 0 ? `${daysUntilExpiration}d` : 'Expirado'}
-                                </span>
-                              </div>
-                            ) : (
-                              '-'
-                            )}
+                            {new Date(user.criadoem).toLocaleDateString('pt-BR')}
                           </TableCell>
-                          <TableCell>{formatDate(user.criadoem)}</TableCell>
                         </TableRow>
-                      );
-                    })}
+                      ))
+                    )}
                   </TableBody>
                 </Table>
-              )}
-
-              {/* Paginação */}
-              {usersData && usersData.pagination?.pages > 1 && (
-                <div className="flex justify-center space-x-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Anterior
-                  </Button>
-                  <span className="flex items-center px-4 text-sm">
-                    Página {currentPage} de {usersData.pagination.pages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(usersData.pagination.pages, currentPage + 1))}
-                    disabled={currentPage === usersData.pagination.pages}
-                  >
-                    Próxima
-                  </Button>
-                </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Crescimento Mensal</CardTitle>
-                <CardDescription>Novos usuários e conversões por mês</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {(getMetricValue('growth', []) as any[]).slice(0, 6).map((month: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <span className="font-medium">
-                        {new Date(month.month).toLocaleDateString('pt-BR', { 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
-                      </span>
-                      <div className="flex space-x-4 text-sm">
-                        <span className="text-blue-600">
-                          {month.newUsers} novos
-                        </span>
-                        <span className="text-green-600">
-                          {month.newPremium} premium
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição por Origem</CardTitle>
-                <CardDescription>Como os usuários chegaram até nós</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {(getMetricValue('distribution.byOrigin', []) as any[]).map((origin: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        {getOriginBadge(origin.origin)}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{origin.count}</span>
-                        <Badge variant="outline">{origin.percentage}%</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics de Assinaturas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Gráficos e análises detalhadas em desenvolvimento.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="distribution" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição por Plano</CardTitle>
-                <CardDescription>Tipos de planos mais populares</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {(getMetricValue('distribution.byPlan', []) as any[]).map((plan: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-3 border rounded">
-                      <span className="font-medium">{plan.plan}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg font-bold">{plan.count}</span>
-                        <Badge variant="secondary">{plan.percentage}%</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Resumo Financeiro</CardTitle>
-                <CardDescription>Visão geral das métricas de receita</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded">
-                    <span className="font-medium text-green-800">Taxa de Conversão</span>
-                    <span className="text-xl font-bold text-green-600">
-                      {getMetricValue('overview.conversionRate')}%
-                    </span>
+        <TabsContent value="distribution">
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição de Usuários</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm">
+                    <span>Premium</span>
+                    <span>{premiumUsers} usuários</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-red-50 rounded">
-                    <span className="font-medium text-red-800">Taxa de Churn</span>
-                    <span className="text-xl font-bold text-red-600">
-                      {getMetricValue('overview.churnRate')}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
-                    <span className="font-medium text-blue-800">Retenção</span>
-                    <span className="text-xl font-bold text-blue-600">
-                      {100 - getMetricValue('overview.churnRate')}%
-                    </span>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-600 h-2 rounded-full" 
+                      style={{ width: `${totalUsers > 0 ? (premiumUsers / totalUsers) * 100 : 0}%` }}
+                    ></div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div>
+                  <div className="flex justify-between text-sm">
+                    <span>Gratuito</span>
+                    <span>{freeUsers} usuários</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gray-400 h-2 rounded-full" 
+                      style={{ width: `${totalUsers > 0 ? (freeUsers / totalUsers) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
