@@ -5497,31 +5497,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("📊 Calculando métricas completas do dashboard SaaS...");
       
-      const allUsers = await storage.getAllUsers();
+      // Buscar todos os usuários usando consulta SQL direta
+      const allUsers = await db.select().from(users);
       
       // Métricas básicas
       const totalUsers = allUsers.length;
-      const activeUsers = allUsers.filter(u => u.isactive).length;
+      const activeUsers = allUsers.filter((u: any) => u.isactive).length;
       const inactiveUsers = totalUsers - activeUsers;
       
       // Categorização por nível de acesso
-      const premiumUsers = allUsers.filter(u => 
+      const premiumUsers = allUsers.filter((u: any) => 
         u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
       ).length;
       
-      const freeUsers = allUsers.filter(u => 
+      const freeUsers = allUsers.filter((u: any) => 
         u.isactive && !u.acessovitalicio && !['premium', 'designer', 'designer_adm'].includes(u.nivelacesso)
       ).length;
       
-      const designerUsers = allUsers.filter(u => 
+      const designerUsers = allUsers.filter((u: any) => 
         u.isactive && ['designer', 'designer_adm'].includes(u.nivelacesso)
       ).length;
       
-      const adminUsers = allUsers.filter(u => 
+      const adminUsers = allUsers.filter((u: any) => 
         u.isactive && u.nivelacesso === 'admin'
       ).length;
       
-      const supportUsers = allUsers.filter(u => 
+      const supportUsers = allUsers.filter((u: any) => 
         u.isactive && u.nivelacesso === 'support'
       ).length;
       
@@ -5531,20 +5532,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       
-      const newUsersToday = allUsers.filter(u => 
+      const newUsersToday = allUsers.filter((u: any) => 
         u.criadoem && new Date(u.criadoem) >= today
       ).length;
       
-      const newUsersWeek = allUsers.filter(u => 
+      const newUsersWeek = allUsers.filter((u: any) => 
         u.criadoem && new Date(u.criadoem) >= sevenDaysAgo
       ).length;
       
-      const newUsersMonth = allUsers.filter(u => 
+      const newUsersMonth = allUsers.filter((u: any) => 
         u.criadoem && new Date(u.criadoem) >= thirtyDaysAgo
       ).length;
       
       // Métricas de assinatura
-      const lifetimeUsers = allUsers.filter(u => u.acessovitalicio).length;
+      const lifetimeUsers = allUsers.filter((u: any) => u.acessovitalicio).length;
       
       const expiringIn7Days = allUsers.filter(user => {
         if (!user.dataexpiracao || user.acessovitalicio) return false;
