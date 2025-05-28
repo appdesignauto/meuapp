@@ -95,7 +95,23 @@ function SimpleSubscriptionDashboard() {
 
   // Calcular métricas baseadas nos dados reais dos usuários
   const calculateMetrics = (): SubscriptionMetrics => {
-    if (!usersData) return {
+    // Se temos dados dos endpoints específicos, usar eles como prioridade
+    if (periodMetrics) {
+      return {
+        totalUsers: periodMetrics.totalUsers,
+        activeSubscriptions: periodMetrics.activeSubscriptions,
+        lifetimeUsers: 0,
+        expiredSubscriptions: periodMetrics.totalUsers - periodMetrics.activeSubscriptions,
+        freeUsers: periodMetrics.totalUsers - periodMetrics.activeSubscriptions,
+        conversionRate: periodMetrics.conversionRate,
+        monthlyRevenue: periodMetrics.monthlyRevenue,
+        newUsersToday: periodMetrics.newUsersInPeriod,
+        avgSubscriptionValue: periodMetrics.avgSubscriptionValue,
+        revenueGrowth: 0
+      };
+    }
+
+    if (!usersData || !Array.isArray(usersData)) return {
       totalUsers: 0,
       activeSubscriptions: 0,
       lifetimeUsers: 0,
@@ -105,7 +121,7 @@ function SimpleSubscriptionDashboard() {
       monthlyRevenue: 0,
       newUsersToday: 0,
       avgSubscriptionValue: 0,
-      revenueGrowth: 12.5
+      revenueGrowth: 0
     };
 
     const now = new Date();
