@@ -78,18 +78,21 @@ function SimpleSubscriptionDashboard() {
   // Buscar dados reais de cadastros
   const { data: registrationData } = useQuery({
     queryKey: ['/api/dashboard/user-registrations', selectedPeriod],
+    queryFn: () => fetch(`/api/dashboard/user-registrations?period=${selectedPeriod}`).then(res => res.json()),
     refetchInterval: 30000,
   });
 
   // Buscar dados reais de receita
   const { data: revenueData } = useQuery({
     queryKey: ['/api/dashboard/revenue-data', selectedPeriod],
+    queryFn: () => fetch(`/api/dashboard/revenue-data?period=${selectedPeriod}`).then(res => res.json()),
     refetchInterval: 30000,
   });
 
   // Buscar métricas específicas do período
   const { data: periodMetrics } = useQuery({
     queryKey: ['/api/dashboard/metrics', selectedPeriod],
+    queryFn: () => fetch(`/api/dashboard/metrics?period=${selectedPeriod}`).then(res => res.json()),
     refetchInterval: 30000,
   });
 
