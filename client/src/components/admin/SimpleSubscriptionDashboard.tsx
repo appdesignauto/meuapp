@@ -533,7 +533,7 @@ function SimpleSubscriptionDashboard() {
           {/* Tabela de Usuários */}
           <Card>
             <CardHeader>
-              <CardTitle>Lista de Usuários ({filteredUsers.length})</CardTitle>
+              <CardTitle>Lista de Assinantes ({filteredUsers.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
