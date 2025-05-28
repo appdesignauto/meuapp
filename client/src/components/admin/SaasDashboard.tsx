@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Crown, TrendingUp, DollarSign, Activity, UserCheck, Calendar, Target, UserMinus, Shield, RotateCcw, TrendingDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Crown, TrendingUp, DollarSign, Activity, UserCheck, Calendar, Target, UserMinus, Shield, RotateCcw, TrendingDown, BarChart3 } from 'lucide-react';
+import { useState } from 'react';
 
 interface AdvancedSaaSMetrics {
   totalUsers: number;
@@ -18,6 +20,9 @@ interface AdvancedSaaSMetrics {
 }
 
 function SaasDashboard() {
+  // Estado para filtro de data do gráfico
+  const [dateFilter, setDateFilter] = useState('30d');
+  
   // Usar endpoint de usuários existente para dados básicos
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['/api/users'],
@@ -132,6 +137,73 @@ function SaasDashboard() {
 
   const metrics = calculateAdvancedMetrics();
   const freeUsers = metrics.totalUsers - metrics.premiumUsers;
+
+  // Função para gerar dados do gráfico de crescimento baseado nos dados reais
+  const generateGrowthChartData = () => {
+    if (!usersData) return [];
+
+    const now = new Date();
+    const periods = [];
+    let daysBack = 30; // padrão
+
+    // Determinar período baseado no filtro
+    switch (dateFilter) {
+      case '7d':
+        daysBack = 7;
+        break;
+      case '30d':
+        daysBack = 30;
+        break;
+      case '90d':
+        daysBack = 90;
+        break;
+      case '6m':
+        daysBack = 180;
+        break;
+      case '1y':
+        daysBack = 365;
+        break;
+    }
+
+    // Gerar pontos de data baseados nos cadastros reais
+    for (let i = daysBack; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      
+      // Contar usuários criados até esta data
+      const totalUsers = usersData.filter((user: any) => 
+        new Date(user.criadoem) <= date
+      ).length;
+
+      // Contar usuários premium até esta data
+      const premiumUsers = usersData.filter((user: any) => {
+        const userCreatedDate = new Date(user.criadoem);
+        if (userCreatedDate > date) return false;
+        
+        return user.acessovitalicio || 
+               user.nivelacesso === 'premium' || 
+               user.nivelacesso === 'admin' || 
+               user.nivelacesso === 'designer' || 
+               user.nivelacesso === 'designer_adm' ||
+               (user.dataexpiracao && new Date(user.dataexpiracao) > date);
+      }).length;
+
+      periods.push({
+        date: date.toLocaleDateString('pt-BR', { 
+          day: '2-digit', 
+          month: '2-digit',
+          year: daysBack > 90 ? '2-digit' : undefined 
+        }),
+        total: totalUsers,
+        premium: premiumUsers,
+        free: totalUsers - premiumUsers
+      });
+    }
+
+    return periods;
+  };
+
+  const chartData = generateGrowthChartData();
 
   if (isLoading) {
     return (
@@ -400,6 +472,129 @@ function SaasDashboard() {
                 <span className="text-sm text-muted-foreground">ARPU</span>
                 <span className="font-semibold text-purple-600">{formatCurrency(metrics.arpu)}</span>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Nova Seção: Gráfico de Crescimento de Assinantes */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Crescimento de Assinantes
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Evolução temporal baseada em dados reais
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {[
+                { key: '7d', label: '7 dias' },
+                { key: '30d', label: '30 dias' },
+                { key: '90d', label: '3 meses' },
+                { key: '6m', label: '6 meses' },
+                { key: '1y', label: '1 ano' }
+              ].map(filter => (
+                <Button
+                  key={filter.key}
+                  variant={dateFilter === filter.key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDateFilter(filter.key)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Área do gráfico visual simples */}
+              <div className="h-64 w-full relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100 p-4">
+                {chartData.length > 0 ? (
+                  <div className="h-full flex items-end justify-between gap-1">
+                    {chartData.map((point, index) => {
+                      const maxValue = Math.max(...chartData.map(p => p.total));
+                      const totalHeight = (point.total / maxValue) * 100;
+                      const premiumHeight = (point.premium / maxValue) * 100;
+                      
+                      return (
+                        <div key={index} className="flex flex-col items-center group flex-1">
+                          {/* Barra do gráfico */}
+                          <div 
+                            className="w-full bg-gradient-to-t from-emerald-400 to-emerald-500 rounded-t-sm relative transition-all hover:shadow-md"
+                            style={{ height: `${totalHeight}%`, minHeight: '4px' }}
+                          >
+                            {/* Segmento premium */}
+                            <div 
+                              className="w-full bg-gradient-to-t from-blue-500 to-blue-600 rounded-t-sm absolute bottom-0"
+                              style={{ height: `${(premiumHeight / totalHeight) * 100}%` }}
+                            />
+                          </div>
+                          
+                          {/* Tooltip no hover */}
+                          <div className="opacity-0 group-hover:opacity-100 absolute -top-16 bg-black text-white text-xs rounded px-2 py-1 transition-opacity z-10">
+                            <div>Total: {point.total}</div>
+                            <div>Premium: {point.premium}</div>
+                            <div>Free: {point.free}</div>
+                          </div>
+                          
+                          {/* Label da data (mostrar apenas alguns para não poluir) */}
+                          {index % Math.ceil(chartData.length / 6) === 0 && (
+                            <span className="text-xs text-muted-foreground mt-2 transform -rotate-45 origin-left">
+                              {point.date}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    Carregando dados do gráfico...
+                  </div>
+                )}
+              </div>
+              
+              {/* Legenda do gráfico */}
+              <div className="flex items-center justify-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded"></div>
+                  <span className="text-sm">Usuários Premium</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded"></div>
+                  <span className="text-sm">Total de Usuários</span>
+                </div>
+              </div>
+
+              {/* Estatísticas rápidas do período */}
+              {chartData.length > 0 && (
+                <div className="border-t pt-4">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-emerald-600">
+                        +{chartData[chartData.length - 1]?.total - chartData[0]?.total || 0}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Novos usuários</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        +{chartData[chartData.length - 1]?.premium - chartData[0]?.premium || 0}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Novos premium</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {chartData[chartData.length - 1]?.total > 0 
+                          ? ((chartData[chartData.length - 1]?.premium / chartData[chartData.length - 1]?.total) * 100).toFixed(1)
+                          : 0}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">Taxa conversão atual</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
