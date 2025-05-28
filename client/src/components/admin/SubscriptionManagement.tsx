@@ -173,8 +173,9 @@ export default function SubscriptionManagement() {
 
   // Query para buscar usuários (ENDPOINT FUNCIONAL)
   const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery<UsersResponse>({
-    queryKey: ['/api/admin/users-subscriptions', usersCurrentPage, pageSize, searchTerm, selectedPlanType, selectedStatus, originFilter],
+    queryKey: ['/api/admin/subscription-users', usersCurrentPage, pageSize, searchTerm, selectedPlanType, selectedStatus, originFilter],
     queryFn: () => {
+      console.log('🔄 Fazendo requisição para buscar usuários...');
       const params = new URLSearchParams({
         page: usersCurrentPage.toString(),
         limit: pageSize.toString(),
@@ -183,7 +184,7 @@ export default function SubscriptionManagement() {
         ...(selectedStatus !== 'all' && { status: selectedStatus }),
         ...(originFilter !== 'all' && { origin: originFilter }),
       });
-      return apiRequest('GET', `/api/admin/users-subscriptions?${params.toString()}`);
+      return apiRequest('GET', `/api/admin/subscription-users?${params.toString()}`);
     },
   });
 
