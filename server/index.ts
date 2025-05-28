@@ -12,10 +12,6 @@ import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
 
 import { Pool } from "pg";
 
-
-
-
-
 const app = express();
 
 // Configurar CORS para o domínio customizado
@@ -204,17 +200,7 @@ app.use((req, res, next) => {
     // Criar usuário administrador
     await createAdminUser();
     
-    // Endpoint FIXO para usuários de assinatura - GARANTIDO FUNCIONAMENTO
-    app.get('/api/admin/subscription-users', async (req, res) => {
-      try {
-        console.log('🔍 ENDPOINT FIXO: Buscando usuários de assinatura');
-        const db = storage.db;
-        const allUsers = await db.select().from(storage.users);
-        
-        console.log(`📊 Total de usuários encontrados: ${allUsers.length}`);
-        allUsers.forEach((user: any, index: number) => {
-          console.log(`👤 Usuário ${index + 1}: ${user.name || user.username} (${user.email}) - Nível: ${user.nivelacesso}`);
-        });
+    
         
         res.setHeader('Content-Type', 'application/json');
         res.status(200).json(allUsers);
@@ -336,7 +322,6 @@ app.use((req, res, next) => {
       }
     });
     
-
 
     
     console.log("✅ Configuração das rotas concluída com sucesso!");
