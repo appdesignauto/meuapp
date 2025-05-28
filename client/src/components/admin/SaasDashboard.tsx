@@ -509,65 +509,59 @@ function SaasDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Gráfico de linha elegante */}
-              <div className="h-64 w-full relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100 p-4">
+              {/* Gráfico simples e limpo */}
+              <div className="h-64 w-full relative bg-white rounded-lg border border-gray-200 p-6">
                 {chartData.length > 0 ? (
                   <div className="h-full w-full relative">
-                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      {/* Linhas de grade */}
+                    <svg className="w-full h-full" viewBox="0 0 100 80" preserveAspectRatio="none">
                       <defs>
-                        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                          <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" strokeWidth="0.5" opacity="0.3"/>
-                        </pattern>
                         <linearGradient id="totalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.8"/>
-                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.1"/>
+                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.3"/>
+                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.05"/>
                         </linearGradient>
                         <linearGradient id="premiumGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8"/>
-                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1"/>
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3"/>
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05"/>
                         </linearGradient>
                       </defs>
-                      
-                      <rect width="100" height="100" fill="url(#grid)" />
                       
                       {(() => {
                         const maxValue = Math.max(...chartData.map(p => p.total));
                         const width = 100;
-                        const height = 100;
+                        const height = 80;
                         const stepX = width / (chartData.length - 1);
                         
-                        // Gerar pontos para linha total
+                        // Pontos para linha total
                         const totalPoints = chartData.map((point, index) => {
                           const x = index * stepX;
-                          const y = height - (point.total / maxValue) * height;
+                          const y = height - (point.total / maxValue) * height * 0.8 - 5;
                           return `${x},${y}`;
                         }).join(' ');
                         
-                        // Gerar pontos para linha premium
+                        // Pontos para linha premium
                         const premiumPoints = chartData.map((point, index) => {
                           const x = index * stepX;
-                          const y = height - (point.premium / maxValue) * height;
+                          const y = height - (point.premium / maxValue) * height * 0.8 - 5;
                           return `${x},${y}`;
                         }).join(' ');
                         
-                        // Área preenchida para total
-                        const totalAreaPoints = `0,${height} ${totalPoints} ${width},${height}`;
+                        // Área preenchida total
+                        const totalArea = `0,${height} ${totalPoints} ${width},${height}`;
                         
-                        // Área preenchida para premium
-                        const premiumAreaPoints = `0,${height} ${premiumPoints} ${width},${height}`;
+                        // Área preenchida premium
+                        const premiumArea = `0,${height} ${premiumPoints} ${width},${height}`;
                         
                         return (
                           <>
-                            {/* Área preenchida total */}
+                            {/* Área total */}
                             <polygon 
-                              points={totalAreaPoints}
+                              points={totalArea}
                               fill="url(#totalGradient)"
                             />
                             
-                            {/* Área preenchida premium */}
+                            {/* Área premium */}
                             <polygon 
-                              points={premiumAreaPoints}
+                              points={premiumArea}
                               fill="url(#premiumGradient)"
                             />
                             
@@ -576,7 +570,7 @@ function SaasDashboard() {
                               points={totalPoints}
                               fill="none"
                               stroke="#10b981"
-                              strokeWidth="2"
+                              strokeWidth="2.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
                             />
@@ -586,40 +580,21 @@ function SaasDashboard() {
                               points={premiumPoints}
                               fill="none"
                               stroke="#3b82f6"
-                              strokeWidth="2"
+                              strokeWidth="2.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
                             />
                             
-                            {/* Pontos interativos */}
+                            {/* Pontos na linha */}
                             {chartData.map((point, index) => {
                               const x = index * stepX;
-                              const yTotal = height - (point.total / maxValue) * height;
-                              const yPremium = height - (point.premium / maxValue) * height;
+                              const yTotal = height - (point.total / maxValue) * height * 0.8 - 5;
+                              const yPremium = height - (point.premium / maxValue) * height * 0.8 - 5;
                               
                               return (
                                 <g key={index}>
-                                  {/* Ponto total */}
-                                  <circle
-                                    cx={x}
-                                    cy={yTotal}
-                                    r="3"
-                                    fill="#10b981"
-                                    stroke="white"
-                                    strokeWidth="2"
-                                    className="hover:r-4 transition-all cursor-pointer"
-                                  />
-                                  
-                                  {/* Ponto premium */}
-                                  <circle
-                                    cx={x}
-                                    cy={yPremium}
-                                    r="3"
-                                    fill="#3b82f6"
-                                    stroke="white"
-                                    strokeWidth="2"
-                                    className="hover:r-4 transition-all cursor-pointer"
-                                  />
+                                  <circle cx={x} cy={yTotal} r="4" fill="#10b981" stroke="white" strokeWidth="2"/>
+                                  <circle cx={x} cy={yPremium} r="4" fill="#3b82f6" stroke="white" strokeWidth="2"/>
                                 </g>
                               );
                             })}
@@ -628,12 +603,12 @@ function SaasDashboard() {
                       })()}
                     </svg>
                     
-                    {/* Labels de data */}
-                    <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-muted-foreground px-2">
+                    {/* Labels de data na parte inferior */}
+                    <div className="absolute -bottom-6 left-0 right-0 flex justify-between text-xs text-gray-500">
                       {chartData.map((point, index) => {
-                        if (index % Math.ceil(chartData.length / 5) === 0) {
+                        if (index % Math.ceil(chartData.length / 4) === 0 || index === chartData.length - 1) {
                           return (
-                            <span key={index} className="transform -translate-x-1/2">
+                            <span key={index}>
                               {point.date}
                             </span>
                           );
@@ -643,8 +618,8 @@ function SaasDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">
-                    Carregando dados do gráfico...
+                  <div className="h-full flex items-center justify-center text-gray-500">
+                    Carregando dados...
                   </div>
                 )}
               </div>
