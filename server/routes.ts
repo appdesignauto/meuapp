@@ -5598,19 +5598,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para estatísticas de usuários - usado no painel de assinaturas
   app.get("/api/admin/users/stats", isAdmin, async (req, res) => {
     try {
-      const allUsers = await storage.getUsers();
+      // Usar query SQL direta para evitar problemas de schema
+      const result = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
+          COUNT(CASE WHEN acessogratuito = false THEN 1 END) as premium_users
+        FROM users
+      `);
       
-      const totalUsers = allUsers.length;
-      const activeUsers = allUsers.filter(u => u.isactive).length;
-      const premiumUsers = allUsers.filter(u => !u.acessogratuito).length;
+      const stats = result.rows[0];
+      const totalUsers = Number(stats.total_users) || 0;
+      const activeUsers = Number(stats.active_users) || 0;
+      const premiumUsers = Number(stats.premium_users) || 0;
+      const inactiveUsers = totalUsers - activeUsers;
+      const freeUsers = totalUsers - premiumUsers;
       
       res.json({
         totalUsers,
         activeUsers,
+        inactiveUsers,
         premiumUsers,
-        freeUsers: totalUsers - premiumUsers,
-        conversionRate: totalUsers > 0 ? ((premiumUsers / totalUsers) * 100).toFixed(1) : 0,
-        subscriptionRevenue: premiumUsers * 29.90
+        freeUsers,
+        conversionRate: totalUsers > 0 ? parseFloat(((premiumUsers / totalUsers) * 100).toFixed(1)) : 0,
+        subscriptionRevenue: parseFloat((premiumUsers * 29.90).toFixed(2))
       });
     } catch (error) {
       console.error('Erro ao buscar métricas:', error);
@@ -5618,54 +5629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint para estatísticas de usuários - usado no painel de assinaturas
-  app.get("/api/admin/users/stats", isAdmin, async (req, res) => {
-    try {
-      console.log("📊 Buscando estatísticas de usuários para dashboard...");
-      
-      // Usar PostgreSQL direto para máxima compatibilidade
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL
-      });
-      
-      await client.connect();
-      
-      // Query para obter todas as estatísticas de uma vez
-      const statsQuery = `
-        SELECT 
-          COUNT(*) as total_users,
-          COUNT(CASE WHEN (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') THEN 1 END) as premium_users,
-          COUNT(CASE WHEN NOT (acessovitalicio = true OR (dataexpiracao IS NOT NULL AND dataexpiracao > NOW()) OR nivelacesso = 'premium') THEN 1 END) as free_users
-        FROM users 
-        WHERE isactive = true;
-      `;
-      
-      const result = await client.query(statsQuery);
-      const stats = result.rows[0];
-      
-      await client.end();
-      
-      const response = {
-        totalUsers: parseInt(stats.total_users) || 0,
-        premiumUsers: parseInt(stats.premium_users) || 0,
-        freeUsers: parseInt(stats.free_users) || 0
-      };
-      
-      console.log("📈 Estatísticas calculadas:", response);
-      
-      res.status(200).json(response);
-      
-    } catch (error) {
-      console.error("❌ Erro ao obter estatísticas:", error);
-      res.status(500).json({ 
-        message: "Erro ao obter estatísticas de usuários",
-        totalUsers: 0,
-        premiumUsers: 0,
-        freeUsers: 0
-      });
-    }
-  });
+
   
   // Endpoint para obter detalhes de um usuário específico
   app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
