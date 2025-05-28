@@ -22,7 +22,7 @@ import fs from "fs";
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
-import { SubscriptionService } from "./services/subscription-service";
+
 
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
@@ -3275,17 +3275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               expiracao: endDate
             });
             
-            try {
-              // Criar ou atualizar registro de assinatura
-              await SubscriptionService.createOrUpdateSubscription(
-                userId, 
-                effectiveTipoPlano, 
-                new Date(), // Data de início (atual)
-                endDate
-              );
-            } catch (error) {
-              console.log(`[UserUpdate] Erro ao atualizar serviço de assinatura, mas usuário foi atualizado:`, error);
-            }
+            // Subscription system removed - user updated successfully
           }
         } else if (isWebhookUser) {
           console.log(`[UserUpdate] Usuário ${userId} é de webhook (${existingUser.origemassinatura}), pulando atualização do serviço de assinatura`);
@@ -3530,113 +3520,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 // =================================
-// SUBSCRIPTION ROUTES - CORRIGIDAS
+// USER MANAGEMENT ROUTES
 // =================================
 
-// Listar usuários com assinatura (QUERY CORRIGIDA)
-app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => {
-  try {
-    console.log('🔍 Buscando usuários com assinatura...');
-    
-    // Usar Pool do PostgreSQL para buscar usuários
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
-    
-    const query = `
-      SELECT id, email, username, name, profileimageurl, nivelacesso, 
-             tipoplano, dataassinatura, dataexpiracao, acessovitalicio, 
-             origemassinatura, criadoem, isactive
-      FROM users 
-      WHERE (nivelacesso IN ('premium', 'designer', 'designer_adm', 'admin')) 
-         OR (acessovitalicio = true) 
-         OR (tipoplano IS NOT NULL AND tipoplano != '' AND tipoplano != 'null')
-      ORDER BY criadoem DESC
-    `;
-    
-    const result = await pool.query(query);
-    const subscribedUsers = result.rows;
-    await pool.end();
-    
-    console.log(`✅ Usuários com assinatura encontrados: ${subscribedUsers.length}`);
-    
-    // Log para debug
-    if (subscribedUsers.length > 0) {
-      console.log('📋 Usuários encontrados:');
-      subscribedUsers.slice(0, 3).forEach((user: any) => {
-        console.log(`   - ${user.email}: nivel="${user.nivelacesso}", plano="${user.tipoplano}"`);
-      });
-    }
-    
-    res.json(subscribedUsers);
-    
-  } catch (error: any) {
-    console.error('❌ Erro ao buscar usuários:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno do servidor',
-      debug: error.message
-    });
-  }
-});
-
-// Métricas de assinatura (BUSCAR DIRETO DO BANCO)
-app.get('/api/admin/subscription-metrics', isAdmin, async (req: any, res: any) => {
-  try {
-    console.log('🔍 Buscando métricas do banco de dados...');
-    
-    // Query para contar total de usuários
-    const totalResult = await storage.client.query('SELECT COUNT(*) as total FROM users');
-    const totalUsers = parseInt(totalResult.rows[0].total);
-    
-    // Query para contar usuários com assinatura
-    const premiumResult = await storage.client.query(`
-      SELECT COUNT(*) as premium FROM users 
-      WHERE (nivelacesso IN ('premium', 'designer', 'designer_adm', 'admin')) 
-         OR (acessovitalicio = true) 
-         OR (tipoplano IS NOT NULL AND tipoplano != '' AND tipoplano != 'null')
-    `);
-    const premiumUsers = parseInt(premiumResult.rows[0].premium);
-    
-    // Query para usuários vitalícios
-    const vitalicioResult = await storage.client.query('SELECT COUNT(*) as vitalicio FROM users WHERE acessovitalicio = true');
-    const vitalicioUsers = parseInt(vitalicioResult.rows[0].vitalicio);
-    
-    // Query para usuários expirando em 7 dias
-    const expiringResult = await storage.client.query(`
-      SELECT COUNT(*) as expiring FROM users 
-      WHERE dataexpiracao IS NOT NULL 
-        AND dataexpiracao BETWEEN NOW() AND NOW() + INTERVAL '7 days'
-    `);
-    const expiringUsers = parseInt(expiringResult.rows[0].expiring);
-    
-    // Calcular conversão
-    const conversionRate = totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 100) : 0;
-    
-    const metrics = {
-      totalUsers: totalUsers,
-      premiumUsers: premiumUsers,
-      vitalicioUsers: vitalicioUsers,
-      conversionRate: `${conversionRate}%`,
-      expiringUsers: expiringUsers
-    };
-    
-    console.log('✅ Métricas do banco:', metrics);
-    
-    res.json({
-      overview: metrics
-    });
-    
-  } catch (error: any) {
-    console.error('❌ Erro ao calcular métricas:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro ao carregar métricas',
-      debug: error.message
-    });
-  }
-});
+// User management route
 
   // Rota para excluir um usuário (apenas para administradores)
   app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
@@ -4944,55 +4831,8 @@ app.get('/api/admin/subscription-metrics', isAdmin, async (req: any, res: any) =
   });
 
   // =============================================
-  // SISTEMA DE ASSINATURAS - ROTAS
+  // USER MANAGEMENT ROUTES
   // =============================================
-  
-  // Verificar assinaturas expiradas e rebaixar usuários (apenas para admin)
-  app.post("/api/admin/subscriptions/check-expired", isAdmin, async (req, res) => {
-    try {
-      const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
-      res.json({ 
-        success: true, 
-        message: `${downgradedCount} usuários rebaixados para free`,
-        downgradedCount
-      });
-    } catch (error) {
-      console.error("Erro ao verificar assinaturas expiradas:", error);
-      res.status(500).json({ message: "Erro ao verificar assinaturas expiradas" });
-    }
-  });
-  
-  // Força downgrade de um usuário específico para nível free (apenas para admin - para testes)
-  app.post("/api/admin/subscriptions/force-downgrade/:userId", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      
-      // Verificar se o usuário existe
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId));
-        
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
-      
-      // Forçar rebaixamento
-      const success = await SubscriptionService.downgradeUserToFree(userId);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Erro ao rebaixar usuário" });
-      }
-      
-      res.json({ 
-        success: true, 
-        message: `Usuário ${user.username} rebaixado para free com sucesso`
-      });
-    } catch (error) {
-      console.error("Erro ao rebaixar usuário:", error);
-      res.status(500).json({ message: "Erro ao rebaixar usuário" });
-    }
-  });
 
   // Endpoint para obter estatísticas de assinaturas para o painel administrativo
   app.get("/api/subscriptions/stats", isAdmin, async (req, res) => {
