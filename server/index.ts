@@ -48,7 +48,7 @@ app.get("/api/subscription-data", async (req, res) => {
     const result = await client.query(`
       SELECT 
         id, username, email, name, nivelacesso, 
-        tipoplano, dataassinatura, dataexpiracao, origemassinatura, criadoem
+        tipoplano, dataassinatura, dataexpiracao, origemassinatura, criadoem, isactive
       FROM users 
       WHERE isactive = true
       ORDER BY criadoem DESC
@@ -57,13 +57,26 @@ app.get("/api/subscription-data", async (req, res) => {
     await client.end();
     
     console.log(`🚀 ENDPOINT DIRETO - Encontrados: ${result.rows.length} usuários`);
-    result.rows.forEach((user, index) => {
+    result.rows.forEach((user: any, index: any) => {
       console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
     });
+    
+    // Calcular métricas reais
+    const total = result.rows.length;
+    const premium = result.rows.filter((user: any) => 
+      ['designer', 'designer_adm', 'admin'].includes(user.nivelacesso)
+    ).length;
+    const conversion = ((premium / total) * 100).toFixed(1);
     
     const response = {
       success: true,
       users: result.rows,
+      overview: {
+        totalUsers: total,
+        premiumUsers: premium,
+        freeUsers: total - premium,
+        conversionRate: `${conversion}%`
+      },
       pagination: {
         total: result.rows.length,
         page: 1,
@@ -74,12 +87,18 @@ app.get("/api/subscription-data", async (req, res) => {
     
     return res.status(200).json(response);
     
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ ENDPOINT DIRETO - Erro:", error.message);
     return res.status(500).json({ 
       success: false,
       error: error.message,
       users: [],
+      overview: {
+        totalUsers: 0,
+        premiumUsers: 0,
+        freeUsers: 0,
+        conversionRate: '0%'
+      },
       pagination: { total: 0, page: 1, limit: 50, totalPages: 0 }
     });
   }
