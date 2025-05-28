@@ -55,7 +55,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const navItems: NavItem[] = [
     {
-      title: 'Dashboard',
+      title: 'Visão Geral',
       href: '/admin',
       icon: <Gauge className="h-5 w-5" />,
     },
