@@ -167,8 +167,8 @@ export default function SubscriptionManagement() {
 
   // Função para buscar estatísticas
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/admin/users/stats'],
-    queryFn: () => apiRequest('GET', '/api/admin/users/stats'),
+    queryKey: ['/api/admin/subscription-metrics'],
+    queryFn: () => apiRequest('GET', '/api/admin/subscription-metrics'),
   });
 
   // Query para buscar usuários (ENDPOINT FUNCIONAL)
@@ -404,7 +404,10 @@ export default function SubscriptionManagement() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.totalUsers || 0}</div>
+                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.overview?.totalUsers || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  nos últimos 30 dias
+                </p>
               </CardContent>
             </Card>
             
@@ -414,7 +417,10 @@ export default function SubscriptionManagement() {
                 <Crown className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.premiumUsers || 0}</div>
+                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.overview?.premiumUsers || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.overview?.conversionRate || '0%'} taxa de conversão
+                </p>
               </CardContent>
             </Card>
             
@@ -424,7 +430,10 @@ export default function SubscriptionManagement() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.freeUsers || 0}</div>
+                <div className="text-2xl font-bold">{statsLoading ? '...' : (stats?.overview?.totalUsers - stats?.overview?.premiumUsers) || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  Usuários gratuitos
+                </p>
               </CardContent>
             </Card>
             
@@ -513,16 +522,17 @@ export default function SubscriptionManagement() {
                         <TableCell className="font-medium">{user.email}</TableCell>
                         <TableCell>{user.name}</TableCell>
                         <TableCell>
-                          <Badge variant={user.accountType === 'premium' ? 'default' : 'secondary'}>
-                            {user.accountType === 'premium' ? 'Premium' : 'Free'}
+                          <Badge variant={user.nivelacesso === 'admin' || user.nivelacesso === 'designer' || user.nivelacesso === 'designer_adm' ? 'default' : 'secondary'}>
+                            {user.nivelacesso === 'admin' ? 'Admin' : 
+                             user.nivelacesso === 'designer' || user.nivelacesso === 'designer_adm' ? 'Designer' : 'Free'}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                            {user.isActive ? 'Ativo' : 'Inativo'}
+                          <Badge variant={user.isactive ? 'default' : 'destructive'}>
+                            {user.isactive ? 'Ativo' : 'Inativo'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{formatDate(user.createdAt)}</TableCell>
+                        <TableCell>{formatDate(user.criadoem)}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button
