@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import {
   Card,
   CardContent,
@@ -90,7 +90,7 @@ export default function SubscriptionDashboard() {
         console.log('👥 Dados de usuários recebidos:', response);
         console.log('👥 Tipo de resposta:', typeof response);
         console.log('👥 É array?', Array.isArray(response));
-        console.log('👥 Tem propriedade users?', response?.users);
+        console.log('👥 Total de usuários:', Array.isArray(response) ? response.length : 0);
         return response;
       } catch (error) {
         console.error('Erro ao buscar usuários:', error);
@@ -431,7 +431,7 @@ export default function SubscriptionDashboard() {
             <CardHeader>
               <CardTitle>Usuários com Assinatura</CardTitle>
               <CardDescription>
-                Mostrando {Array.isArray(usersData) ? usersData.length : (usersData?.users?.length || 0)} de {metrics?.overview?.totalUsers || 6} usuários
+                Mostrando {Array.isArray(usersData) ? usersData.length : 0} de {metrics?.overview?.totalUsers || 6} usuários
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -455,7 +455,7 @@ export default function SubscriptionDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(Array.isArray(usersData) ? usersData : usersData?.users || []).map((user: any) => {
+                    {(Array.isArray(usersData) ? usersData : []).map((user: any) => {
                       const daysUntilExpiration = calculateDaysUntilExpiration(user.dataexpiracao);
                       
                       // Calcular status baseado nos dados reais
