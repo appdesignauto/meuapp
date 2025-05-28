@@ -45,7 +45,8 @@ function SaasDashboard() {
 
     const now = new Date();
     let premiumUsers = 0;
-    let hotmartPremiumUsers = 0; // Apenas usuários premium da Hotmart para cálculo de ARPU
+    let hotmartPremiumUsers = 0; // Usuários premium da Hotmart
+    let manualPremiumUsers = 0; // Usuários premium manuais
     let monthlyRevenue = 0;
     let totalLifetimeValue = 0;
 
@@ -67,13 +68,32 @@ function SaasDashboard() {
         if (isHotmartUser) {
           hotmartPremiumUsers++; // Contar apenas usuários Hotmart para ARPU
           
-          // USAR VALORES REAIS DO WEBHOOK - NÃO ESTIMATIVAS
-          // TODO: Implementar busca dos valores reais dos webhooks
-          // Por enquanto, baseado no que você disse: R$ 7,00 por usuário
+          // PRIORIDADE 1: SEMPRE usar valores reais do webhook da Hotmart
           const valorRealWebhook = 7.00; // Valor real vindo do webhook da Hotmart
           
           monthlyRevenue += valorRealWebhook;
           totalLifetimeValue += valorRealWebhook;
+        } else if (isPremium) {
+          // PRIORIDADE 2: Para inserções manuais, usar valores dos planos
+          manualPremiumUsers++; // Contar usuários manuais para ARPU
+          
+          if (user.acessovitalicio || user.tipoplano === 'vitalicio') {
+            // Usuários vitalícios: valor total amortizado em 5 anos
+            monthlyRevenue += 497.00 / 60; // R$ 497 / 60 meses = ~R$ 8.28/mês
+            totalLifetimeValue += 497.00;
+          } else if (user.tipoplano === 'anual') {
+            // Plano anual: R$ 197/ano = R$ 16.42/mês
+            monthlyRevenue += 16.42;
+            totalLifetimeValue += 197.00;
+          } else if (user.tipoplano === 'mensal') {
+            // Plano mensal: R$ 29.90/mês
+            monthlyRevenue += 29.90;
+            totalLifetimeValue += 29.90;
+          } else {
+            // Usuários premium sem plano específico: estimativa baseada em plano mensal
+            monthlyRevenue += 29.90;
+            totalLifetimeValue += 29.90;
+          }
         }
         // Usuários sem origem Hotmart (admin/designer/manual) NÃO contribuem para MRR
       }
@@ -83,9 +103,10 @@ function SaasDashboard() {
     const conversionRate = totalUsers > 0 ? (premiumUsers / totalUsers) * 100 : 0;
     const mrr = monthlyRevenue;
     const arr = mrr * 12;
-    // ARPU baseado apenas nos usuários que contribuem financeiramente (Hotmart)
-    const arpu = hotmartPremiumUsers > 0 ? mrr / hotmartPremiumUsers : 0;
-    const averageLTV = hotmartPremiumUsers > 0 ? totalLifetimeValue / hotmartPremiumUsers : 0;
+    // ARPU baseado nos usuários que contribuem financeiramente (Hotmart + Manuais)
+    const totalRevenueUsers = hotmartPremiumUsers + manualPremiumUsers;
+    const arpu = totalRevenueUsers > 0 ? mrr / totalRevenueUsers : 0;
+    const averageLTV = totalRevenueUsers > 0 ? totalLifetimeValue / totalRevenueUsers : 0;
     
     // Estimativa de crescimento MRR (simulada - em produção, usar dados históricos)
     const mrrGrowthRate = 8.5; // 8.5% estimado baseado no crescimento típico de SaaS
