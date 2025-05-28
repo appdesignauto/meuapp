@@ -403,6 +403,84 @@ function SaasDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Nova Seção: Segmentação Financeira */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Segmentação Financeira</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Receita por Fonte */}
+              <div>
+                <h4 className="font-medium text-sm mb-2">Receita por Fonte de Assinatura</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-red-500 rounded-full"></div>
+                      <span className="text-sm">Hotmart</span>
+                    </div>
+                    <span className="font-semibold text-orange-600">
+                      {formatCurrency(usersData?.filter((user: any) => user.origemassinatura === 'hotmart').length * 29.90 || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full"></div>
+                      <span className="text-sm">Doppus</span>
+                    </div>
+                    <span className="font-semibold text-blue-600">
+                      {formatCurrency(usersData?.filter((user: any) => user.origemassinatura === 'doppus').length * 29.90 || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full"></div>
+                      <span className="text-sm">Manual</span>
+                    </div>
+                    <span className="font-semibold text-gray-600">
+                      {formatCurrency(usersData?.filter((user: any) => !user.origemassinatura || user.origemassinatura === 'manual').length * 29.90 || 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Receita por Tipo de Plano */}
+              <div>
+                <h4 className="font-medium text-sm mb-2">Receita por Tipo de Plano</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                      <span className="text-sm">Plano Mensal</span>
+                    </div>
+                    <span className="font-semibold text-emerald-600">
+                      {formatCurrency(usersData?.filter((user: any) => user.tipoplano === 'mensal').length * 29.90 || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm">Plano Anual</span>
+                    </div>
+                    <span className="font-semibold text-blue-600">
+                      {formatCurrency(usersData?.filter((user: any) => user.tipoplano === 'anual').length * 16.42 || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                      <span className="text-sm">Plano Vitalício</span>
+                    </div>
+                    <span className="font-semibold text-purple-600">
+                      {formatCurrency(usersData?.filter((user: any) => user.tipoplano === 'vitalicio' || user.acessovitalicio).length * 8.28 || 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
