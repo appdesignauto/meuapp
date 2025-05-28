@@ -162,23 +162,46 @@ function SimpleSubscriptionDashboard() {
   // Processar dados dos usuários para exibição
   const processedUsers = usersData?.map((user: any) => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Normalizar para início do dia
     let subscriptionStatus = 'free';
     let daysRemaining = null;
 
     if (user.acessovitalicio) {
       subscriptionStatus = 'lifetime';
+      daysRemaining = '∞'; // Infinito para vitalício
     } else if (user.nivelacesso === 'premium' || 
                user.nivelacesso === 'admin' || 
                user.nivelacesso === 'designer' || 
                user.nivelacesso === 'designer_adm') {
       subscriptionStatus = 'active';
+      
+      // Se tem data de expiração, calcular dias restantes
+      if (user.dataexpiracao) {
+        const expirationDate = new Date(user.dataexpiracao);
+        expirationDate.setHours(23, 59, 59, 999); // Final do dia de expiração
+        
+        if (expirationDate > now) {
+          const timeDiff = expirationDate.getTime() - now.getTime();
+          daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        } else {
+          subscriptionStatus = 'expired';
+          daysRemaining = 0;
+        }
+      } else {
+        // Admin sem data de expiração = indefinido
+        daysRemaining = user.nivelacesso === 'admin' ? '∞' : null;
+      }
     } else if (user.dataexpiracao) {
       const expirationDate = new Date(user.dataexpiracao);
+      expirationDate.setHours(23, 59, 59, 999);
+      
       if (expirationDate > now) {
         subscriptionStatus = 'active';
-        daysRemaining = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const timeDiff = expirationDate.getTime() - now.getTime();
+        daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
       } else {
         subscriptionStatus = 'expired';
+        daysRemaining = 0;
       }
     }
 
@@ -222,14 +245,42 @@ function SimpleSubscriptionDashboard() {
   const getOriginBadge = (origin: string | null) => {
     switch (origin) {
       case 'hotmart':
-        return <Badge className="bg-orange-500">🔥 Hotmart</Badge>;
+        return (
+          <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-sm font-medium px-3 py-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              Hotmart
+            </div>
+          </Badge>
+        );
       case 'doppus':
-        return <Badge className="bg-blue-500">💎 Doppus</Badge>;
+        return (
+          <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-sm font-medium px-3 py-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+              Doppus
+            </div>
+          </Badge>
+        );
       case 'manual':
       case null:
-        return <Badge variant="outline">👤 Manual</Badge>;
+        return (
+          <Badge className="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-300 shadow-sm font-medium px-3 py-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+              Manual
+            </div>
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{origin}</Badge>;
+        return (
+          <Badge className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700 border border-purple-300 shadow-sm font-medium px-3 py-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              {origin}
+            </div>
+          </Badge>
+        );
     }
   };
 
