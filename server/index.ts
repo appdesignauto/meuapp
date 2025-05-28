@@ -4,13 +4,17 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
 import { createAdminUser } from "./init-admin";
-
+import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
 import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
 
 import { Pool } from "pg";
+
+
+
+
 
 const app = express();
 
@@ -200,17 +204,6 @@ app.use((req, res, next) => {
     // Criar usuário administrador
     await createAdminUser();
     
-    
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.status(200).json(allUsers);
-        console.log('✅ Dados enviados como array direto');
-      } catch (error) {
-        console.error('❌ Erro no endpoint fixo:', error);
-        res.status(500).json({ error: 'Erro interno' });
-      }
-    });
-
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
     
@@ -226,7 +219,7 @@ app.use((req, res, next) => {
       try {
         const agora = new Date().toLocaleString('pt-BR');
         console.log(`🔄 [${agora}] Iniciando verificação automática de assinaturas expiradas (24h)...`);
-        const downgradedCount = await // Subscription system removed
+        const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
         console.log(`✅ [${agora}] Verificação automática concluída: ${downgradedCount} usuários rebaixados para free`);
       } catch (error) {
         console.error(`❌ [${new Date().toLocaleString('pt-BR')}] Erro na verificação automática:`, error);
@@ -235,7 +228,7 @@ app.use((req, res, next) => {
     
     // Executar verificação inicial na inicialização do servidor
     console.log("🔄 Executando verificação inicial de assinaturas expiradas...");
-    const initialDowngradedCount = await // Subscription system removed
+    const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
     console.log(`✅ Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
     
     // Informar quando será a próxima verificação
@@ -322,6 +315,7 @@ app.use((req, res, next) => {
       }
     });
     
+
 
     
     console.log("✅ Configuração das rotas concluída com sucesso!");

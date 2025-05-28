@@ -28,7 +28,7 @@ import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
 import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
-
+import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
 import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
@@ -49,7 +49,7 @@ import PainelArtes from "@/pages/painel/PainelArtes";
 import PainelFavoritas from "@/pages/painel/PainelFavoritas";
 import PainelSeguindo from "@/pages/painel/PainelSeguindo";
 import PainelDownloads from "@/pages/painel/PainelDownloads";
-
+import PainelAssinatura from "@/pages/painel/PainelAssinatura";
 import PainelPerfil from "@/pages/painel/PainelPerfil";
 
 // Componente para decidir se mostra o layout padrão
@@ -209,7 +209,7 @@ function AppRoutes() {
       <ProtectedPainelRoute path="/painel/favoritas" component={PainelFavoritas} />
       <ProtectedPainelRoute path="/painel/seguindo" component={PainelSeguindo} />
       <ProtectedPainelRoute path="/painel/downloads" component={PainelDownloads} />
-
+      <ProtectedPainelRoute path="/painel/assinatura" component={PainelAssinatura} />
       <ProtectedPainelRoute path="/painel/perfil" component={PainelPerfil} />
       
       {/* Redirecionamento da raiz do painel para /painel/inicio */}
@@ -253,7 +253,17 @@ function AppRoutes() {
         component={AddArtMultiFormatPage}
         roles={['admin', 'designer_adm']} 
       />
-
+      {/* Rota normal protegida que requer papel de admin */}
+      <ProtectedRoute 
+        path="/admin/test-subscription-settings" 
+        component={TestSubscriptionSettingsPage}
+        roles={['admin']} 
+      />
+      
+      {/* Rota alternativa sem proteção para teste */}
+      <Route path="/test-subscription-settings">
+        <TestSubscriptionSettingsPage />
+      </Route>
       <ProtectedRoute 
         path="/admin/gerenciar-cursos" 
         component={GerenciarCursosPage}
@@ -293,7 +303,18 @@ function AppRoutes() {
         }}
         roles={['admin']}
       />
-
+      <ProtectedRoute
+        path="/admin/assinaturas"
+        component={() => {
+          const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <AssinaturasPage />
+            </Suspense>
+          );
+        }}
+        roles={['admin']}
+      />
       <ProtectedRoute 
         path="/admin/webhooks" 
         component={WebhookLogsPage}
