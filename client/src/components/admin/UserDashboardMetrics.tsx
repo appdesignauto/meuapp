@@ -63,6 +63,18 @@ export default function UserDashboardMetrics() {
     retry: 2,
   });
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Erro ao carregar métricas</h3>
+          <p className="text-muted-foreground">Tente recarregar a página</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading || !metrics) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
