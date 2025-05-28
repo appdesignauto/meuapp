@@ -3525,31 +3525,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(exportData);
     } catch (error) {
       console.error("Erro ao exportar dados do usuário:", error);
-      res.status(500).json({ message: "Erro ao 
+      res.status(500).json({ message: "Erro ao exportar dados" });
+    }
+  });
+
 // =================================
 // SUBSCRIPTION ROUTES - CORRIGIDAS
 // =================================
 
 // Listar usuários com assinatura (QUERY CORRIGIDA)
-app.get('/api/admin/subscription-users', isAdmin, async (req, res) => {
+app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => {
   try {
     console.log('🔍 Buscando usuários com assinatura...');
     
-    // PRIMEIRO: Verificar que tipos de status existem no banco
-    const allUsers = await storage.db.select().from(storage.users);
+    // Buscar TODOS os usuários para identificar os dados
+    const allUsers = await storage.getUsers();
     
     console.log(`📊 Total de usuários no banco: ${allUsers.length}`);
     
-    // Filtrar usuários que têm indicação de assinatura
-    const subscribedUsers = allUsers.filter(user => {
+    // Filtrar usuários que têm indicação de assinatura baseado nos dados reais
+    const subscribedUsers = allUsers.filter((user: any) => {
       return (
         user.nivelacesso && 
-        ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)
+        ['premium', 'designer', 'designer_adm', 'admin'].includes(user.nivelacesso)
       ) || (
         user.acessovitalicio === true
       ) || (
         user.tipoplano && 
-        user.tipoplano.trim() !== ''
+        user.tipoplano.trim() !== '' && 
+        user.tipoplano !== 'null'
       );
     });
     
@@ -3558,14 +3562,14 @@ app.get('/api/admin/subscription-users', isAdmin, async (req, res) => {
     // Log para debug
     if (subscribedUsers.length > 0) {
       console.log('📋 Exemplos de status encontrados:');
-      subscribedUsers.slice(0, 3).forEach(user => {
+      subscribedUsers.slice(0, 3).forEach((user: any) => {
         console.log(`   - ${user.email}: nivel="${user.nivelacesso}", plano="${user.tipoplano}", vitalicio=${user.acessovitalicio}`);
       });
     }
     
     res.json(subscribedUsers);
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erro ao buscar usuários:', error);
     res.status(500).json({
       success: false,
@@ -3576,17 +3580,17 @@ app.get('/api/admin/subscription-users', isAdmin, async (req, res) => {
 });
 
 // Métricas de assinatura (CÁLCULOS CORRIGIDOS)
-app.get('/api/admin/subscription-metrics', isAdmin, async (req, res) => {
+app.get('/api/admin/subscription-metrics', isAdmin, async (req: any, res: any) => {
   try {
     console.log('📊 Calculando métricas de assinatura...');
     
     // Buscar todos os usuários
-    const allUsers = await storage.db.select().from(storage.users);
+    const allUsers = await storage.getUsers();
     
     // Calcular métricas baseado nos dados reais
     const totalUsers = allUsers.length;
     
-    const subscribedUsers = allUsers.filter(user => {
+    const subscribedUsers = allUsers.filter((user: any) => {
       return (
         user.nivelacesso && 
         ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)
@@ -3601,13 +3605,13 @@ app.get('/api/admin/subscription-metrics', isAdmin, async (req, res) => {
     const activeSubscriptions = subscribedUsers.length;
     
     // Usuários free
-    const freeUsers = allUsers.filter(user => 
+    const freeUsers = allUsers.filter((user: any) => 
       user.nivelacesso === 'free' && !user.acessovitalicio
     ).length;
     
     // Usuários recentes (últimos 7 dias)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const recentSignups = allUsers.filter(user => 
+    const recentSignups = allUsers.filter((user: any) => 
       new Date(user.criadoem) >= sevenDaysAgo
     ).length;
     
@@ -3629,7 +3633,7 @@ app.get('/api/admin/subscription-metrics', isAdmin, async (req, res) => {
       overview: metrics
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erro ao calcular métricas:', error);
     res.status(500).json({
       success: false,
@@ -3638,10 +3642,6 @@ app.get('/api/admin/subscription-metrics', isAdmin, async (req, res) => {
     });
   }
 });
-
-exportar dados do usuário" });
-    }
-  });
 
   // Rota para excluir um usuário (apenas para administradores)
   app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {

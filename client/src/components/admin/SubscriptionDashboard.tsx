@@ -221,14 +221,16 @@ export default function SubscriptionDashboard() {
     return matchesSearch && matchesStatus && matchesOrigin;
   }) || [];
 
-  // Calcular estatísticas em tempo real
-  const totalUsers = usersData?.length || 0;
-  const premiumUsers = usersData?.filter(user => 
+  // Usar dados da API ou calcular como fallback
+  const totalUsers = metricsData?.overview?.totalUsers || usersData?.length || 0;
+  const premiumUsers = metricsData?.overview?.premiumUsers || usersData?.filter(user => 
     ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso) || user.acessovitalicio
   ).length || 0;
-  const freeUsers = totalUsers - premiumUsers;
-  const conversionRate = totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 100) : 0;
+  const freeUsers = metricsData?.overview?.freeUsers || (totalUsers - premiumUsers);
+  const conversionRate = metricsData?.overview?.conversionRate || 
+    (totalUsers > 0 ? `${Math.round((premiumUsers / totalUsers) * 100)}%` : '0%');
   const lifetimeUsers = usersData?.filter(user => user.acessovitalicio).length || 0;
+  const recentSignups = metricsData?.overview?.recentSignups || 0;
   const expiringIn7Days = 0; // Calcular se necessário
 
   return (
@@ -273,7 +275,7 @@ export default function SubscriptionDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{premiumUsers}</div>
             <p className="text-xs text-muted-foreground">
-              {conversionRate}% taxa de conversão
+              {conversionRate} taxa de conversão
             </p>
           </CardContent>
         </Card>
