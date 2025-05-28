@@ -1010,6 +1010,18 @@ const AdminDashboard = () => {
               {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
             </button>
             
+            {/* Financeiro */}
+            <button
+              onClick={() => setActiveTab('financeiro')}
+              className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'financeiro' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+              title="Financeiro"
+            >
+              <BarChart3 className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+              {sidebarOpen && <span className="ml-3 truncate">Financeiro</span>}
+            </button>
+            
             {/* Assinaturas */}
             <button
               onClick={() => setActiveTab('subscriptions')}
@@ -1418,6 +1430,7 @@ const AdminDashboard = () => {
                 {activeTab === 'collections' && 'Coleções'}
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
+                {activeTab === 'financeiro' && 'Dashboard Financeiro'}
                 {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
