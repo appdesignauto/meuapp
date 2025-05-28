@@ -92,12 +92,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // 🎯 ENDPOINT DEFINITIVO - Bypass de middleware para garantir resposta JSON
-  app.get("/api/admin/subscription-users", (req, res, next) => {
-    // Forçar header de resposta JSON
-    res.setHeader('Content-Type', 'application/json');
+  // 🚀 ENDPOINT FUNCIONANDO - Novo nome para evitar conflitos de middleware
+  app.get("/api/admin/subscription-data", (req, res) => {
+    console.log("🚀 ENDPOINT FUNCIONANDO: Consultando usuários...");
     
-    console.log("🎯 ENDPOINT DEFINITIVO: Processando requisição de usuários...");
+    // Definir headers antes de qualquer resposta
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
     
     const { Client } = require('pg');
     const client = new Client({
@@ -109,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return client.query(`
           SELECT 
             id, username, email, name, nivelacesso, 
-            tipoplano, dataassinatura, dataexpiracao, origemassinatura
+            tipoplano, dataassinatura, dataexpiracao, origemassinatura, criadoem
           FROM users 
           WHERE isactive = true
           ORDER BY criadoem DESC
@@ -118,12 +119,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .then((result) => {
         client.end();
         
-        console.log(`🎯 ENDPOINT DEFINITIVO - Total encontrado: ${result.rows.length} usuários`);
+        console.log(`🚀 ENDPOINT FUNCIONANDO - Encontrados: ${result.rows.length} usuários`);
         result.rows.forEach((user: any, index: number) => {
           console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
         });
         
         const response = {
+          success: true,
           users: result.rows,
           pagination: {
             total: result.rows.length,
@@ -133,12 +135,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         };
         
-        res.status(200).json(response);
+        return res.status(200).json(response);
       })
       .catch((error) => {
-        client.end();
-        console.error("❌ ENDPOINT DEFINITIVO - Erro:", error.message);
-        res.status(500).json({ error: error.message });
+        if (client) client.end();
+        console.error("❌ ENDPOINT FUNCIONANDO - Erro:", error.message);
+        return res.status(500).json({ 
+          success: false,
+          error: error.message,
+          users: [],
+          pagination: { total: 0, page: 1, limit: 50, totalPages: 0 }
+        });
       });
   });
 

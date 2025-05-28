@@ -30,6 +30,61 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 // Configuração para servir arquivos de upload local (fallback quando Supabase falha)
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// 🚀 ENDPOINT DIRETO PARA DADOS DE ASSINATURAS - ANTES DO MIDDLEWARE SPA
+app.get("/api/subscription-data", async (req, res) => {
+  console.log("🚀 ENDPOINT DIRETO: Buscando dados de assinaturas...");
+  
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache');
+  
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(`
+      SELECT 
+        id, username, email, name, nivelacesso, 
+        tipoplano, dataassinatura, dataexpiracao, origemassinatura, criadoem
+      FROM users 
+      WHERE isactive = true
+      ORDER BY criadoem DESC
+    `);
+    
+    await client.end();
+    
+    console.log(`🚀 ENDPOINT DIRETO - Encontrados: ${result.rows.length} usuários`);
+    result.rows.forEach((user, index) => {
+      console.log(`${index + 1}. ${user.email} (${user.nivelacesso})`);
+    });
+    
+    const response = {
+      success: true,
+      users: result.rows,
+      pagination: {
+        total: result.rows.length,
+        page: 1,
+        limit: 50,
+        totalPages: 1
+      }
+    };
+    
+    return res.status(200).json(response);
+    
+  } catch (error) {
+    console.error("❌ ENDPOINT DIRETO - Erro:", error.message);
+    return res.status(500).json({ 
+      success: false,
+      error: error.message,
+      users: [],
+      pagination: { total: 0, page: 1, limit: 50, totalPages: 0 }
+    });
+  }
+});
+
 // Middleware para adicionar cabeçalhos de cache-control apropriados
 app.use((req, res, next) => {
   // Gerar timestamp único para forçar revalidação
