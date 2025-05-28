@@ -211,12 +211,10 @@ app.use((req, res, next) => {
     
     // Sistema de assinaturas removido - verificação automática desabilitada
     
-    // Executar verificação inicial na inicialização do servidor
-    console.log("🔄 Executando verificação inicial de assinaturas expiradas...");
+    // Sistema de assinaturas removido - verificação desabilitada
+    console.log("✅ Sistema funcionando sem verificação de assinaturas");
     
-    // Informar quando será a próxima verificação
-    const proximaVerificacao = new Date(Date.now() + VERIFICAR_ASSINATURAS_INTERVALO);
-    console.log(`⏰ Próxima verificação automática: ${proximaVerificacao.toLocaleString('pt-BR')} (em 24 horas)`);
+    // Sistema de assinaturas removido - logs de verificação desabilitados
     
     // IMPORTANTE: Configurar rotas de webhook ANTES de qualquer fallback para o SPA
     // Isso garante que webhooks da Hotmart e Doppus sejam processados corretamente

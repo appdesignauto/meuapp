@@ -100,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // All subscription endpoints and metrics have been removed
 
-  setupFollowRoutesSimple(app, db);
+  // Rotas de seguir usuários removidas temporariamente para finalizar remoção do sistema de assinaturas
   
   return server;
 }
