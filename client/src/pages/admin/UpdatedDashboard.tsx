@@ -3061,13 +3061,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="subscriptions">
-              <div className="space-y-6">
-                <SubscriptionDashboard />
-                <div className="bg-white rounded-lg border p-6">
-                  <h3 className="text-lg font-semibold mb-4">Gerenciamento Avançado de Usuários</h3>
-                  <ModernUserManagement />
-                </div>
-              </div>
+              <SubscriptionDashboard />
             </TabsContent>
             
             <TabsContent value="community">
