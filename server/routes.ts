@@ -81,6 +81,8 @@ import { PrismaClient } from '@prisma/client';
 export async function registerRoutes(app: Express): Promise<Server> {
   const server = createServer(app);
   
+  setupAuth(app);
+  
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
@@ -94,47 +96,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // 🚀 ENDPOINT FUNCIONANDO - Novo nome para evitar conflitos de middleware
-  app.get("/api/admin/subscription-data", async (req, res) => {
-    console.log("🚀 ENDPOINT FUNCIONANDO: Consultando usuários...");
-    
-    // Definir headers antes de qualquer resposta
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-cache');
-    
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: process.env.DATABASE_URL
-    });
-    
-    try {
-      await client.connect();
-      const result = await client.query(`
-        SELECT 
-          id, username, email, name, nivelacesso, 
-          tipoplano, dataassinatura, dataexpiracao, origemassinatura, criadoem
-        FROM users 
-        WHERE isactive = true
-      `);
-      
-      res.json({
-        users: result.rows,
-        pagination: {
-          total: result.rowCount || 0,
-          page: 1,
-          limit: 100,
-          totalPages: 1
-        }
-      });
-    } catch (error) {
-      console.error('Erro na consulta:', error);
-      res.status(500).json({ message: 'Erro interno do servidor' });
-    } finally {
-      await client.end();
-    }
-  });
+
 
   // All subscription endpoints and metrics have been removed
 
+  setupFollowRoutesSimple(app, db);
+  
   return server;
 }

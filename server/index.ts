@@ -200,16 +200,7 @@ app.use((req, res, next) => {
     // Criar usuário administrador
     await createAdminUser();
     
-    
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.status(200).json(allUsers);
-        console.log('✅ Dados enviados como array direto');
-      } catch (error) {
-        console.error('❌ Erro no endpoint fixo:', error);
-        res.status(500).json({ error: 'Erro interno' });
-      }
-    });
+
 
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
@@ -218,25 +209,10 @@ app.use((req, res, next) => {
     app.use('/webhook', webhookHotmartFixedRoutes);
     console.log('✅ Sistema de webhook Hotmart automático configurado com sucesso!');
     
-    // Configurar verificação diária de assinaturas expiradas (executar a cada 24 horas)
-    const VERIFICAR_ASSINATURAS_INTERVALO = 24 * 60 * 60 * 1000; // 24 horas em milissegundos
-    
-    // Iniciar verificador de assinaturas expiradas
-    setInterval(async () => {
-      try {
-        const agora = new Date().toLocaleString('pt-BR');
-        console.log(`🔄 [${agora}] Iniciando verificação automática de assinaturas expiradas (24h)...`);
-        const downgradedCount = await // Subscription system removed
-        console.log(`✅ [${agora}] Verificação automática concluída: ${downgradedCount} usuários rebaixados para free`);
-      } catch (error) {
-        console.error(`❌ [${new Date().toLocaleString('pt-BR')}] Erro na verificação automática:`, error);
-      }
-    }, VERIFICAR_ASSINATURAS_INTERVALO);
+    // Sistema de assinaturas removido - verificação automática desabilitada
     
     // Executar verificação inicial na inicialização do servidor
     console.log("🔄 Executando verificação inicial de assinaturas expiradas...");
-    const initialDowngradedCount = await // Subscription system removed
-    console.log(`✅ Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
     
     // Informar quando será a próxima verificação
     const proximaVerificacao = new Date(Date.now() + VERIFICAR_ASSINATURAS_INTERVALO);
