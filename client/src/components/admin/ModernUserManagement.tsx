@@ -73,6 +73,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import UserDashboardMetrics from "@/components/admin/UserDashboardMetrics";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -551,9 +552,18 @@ const ModernUserManagement = () => {
             Novo Usuário
           </Button>
         </div>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Tabs for User Management and Dashboard */}
+      <Tabs defaultValue="management" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="management">Gerenciar Usuários</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard SaaS</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="management" className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -601,11 +611,10 @@ const ModernUserManagement = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
+          </div>
 
-      {/* Filters and Search */}
-      <Card>
+          {/* Filters and Search */}
+          <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-col md:flex-row gap-4 flex-1">
@@ -1828,6 +1837,12 @@ const ModernUserManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+        
+        <TabsContent value="dashboard" className="space-y-6">
+          <UserDashboardMetrics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

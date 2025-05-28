@@ -3039,7 +3039,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="users">
-              <UserManagement />
+              <ModernUserManagement />
             </TabsContent>
             
             <TabsContent value="subscriptions">
