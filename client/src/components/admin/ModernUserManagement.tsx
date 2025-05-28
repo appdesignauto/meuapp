@@ -555,14 +555,8 @@ const ModernUserManagement = () => {
         </div>
       </div>
 
-      {/* Tabs for User Management and Dashboard */}
-      <Tabs defaultValue="management" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="management">Gerenciar Usuários</TabsTrigger>
-          <TabsTrigger value="subscriptions">Dashboard Assinaturas</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="management" className="space-y-6">
+      {/* User Management Content */}
+      <div className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -1838,12 +1832,6 @@ const ModernUserManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-        </TabsContent>
-        
-        <TabsContent value="subscriptions" className="space-y-6">
-          <SimpleSubscriptionDashboard />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
