@@ -19,19 +19,55 @@ export function SaasDashboard() {
   // Calcular métricas simples baseadas nos dados dos usuários
   const metrics: SimplifiedMetrics = {
     totalUsers: usersData?.length || 0,
-    premiumUsers: usersData?.filter((user: any) => 
-      user.acessovitalicio || 
-      user.nivelacesso === 'premium' || 
-      (user.dataexpiracao && new Date(user.dataexpiracao) > new Date())
-    ).length || 0,
+    premiumUsers: usersData?.filter((user: any) => {
+      // Usuário é premium se:
+      // 1. Tem acesso vitalício
+      // 2. Tem nível de acesso premium
+      // 3. Tem data de expiração válida (no futuro)
+      // 4. É admin ou designer (também considerados premium)
+      return user.acessovitalicio || 
+             user.nivelacesso === 'premium' || 
+             user.nivelacesso === 'admin' || 
+             user.nivelacesso === 'designer' || 
+             user.nivelacesso === 'designer_adm' ||
+             (user.dataexpiracao && new Date(user.dataexpiracao) > new Date());
+    }).length || 0,
     conversionRate: 0,
     subscriptionRevenue: 0
   };
 
-  // Calcular taxa de conversão e receita
+  // Calcular taxa de conversão e receita baseada nos tipos de plano
   if (metrics.totalUsers > 0) {
     metrics.conversionRate = parseFloat(((metrics.premiumUsers / metrics.totalUsers) * 100).toFixed(1));
-    metrics.subscriptionRevenue = parseFloat((metrics.premiumUsers * 29.90).toFixed(2));
+    
+    // Calcular receita baseada nos tipos de plano reais
+    let totalRevenue = 0;
+    usersData?.forEach((user: any) => {
+      if (user.acessovitalicio || 
+          user.nivelacesso === 'premium' || 
+          user.nivelacesso === 'admin' || 
+          user.nivelacesso === 'designer' || 
+          user.nivelacesso === 'designer_adm' ||
+          (user.dataexpiracao && new Date(user.dataexpiracao) > new Date())) {
+        
+        // Valores baseados no tipo de plano
+        switch (user.tipoplano) {
+          case 'mensal':
+            totalRevenue += 29.90;
+            break;
+          case 'anual':
+            totalRevenue += 197.00; // Aproximadamente 16.42/mês
+            break;
+          case 'vitalicio':
+            totalRevenue += 497.00; // Valor único, mas consideramos mensal para métricas
+            break;
+          default:
+            totalRevenue += 29.90; // Valor padrão
+        }
+      }
+    });
+    
+    metrics.subscriptionRevenue = parseFloat(totalRevenue.toFixed(2));
   }
 
   const freeUsers = metrics.totalUsers - metrics.premiumUsers;
@@ -121,7 +157,7 @@ export function SaasDashboard() {
       </div>
 
       {/* Resumo Detalhado */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Distribuição de Usuários</CardTitle>
@@ -148,24 +184,84 @@ export function SaasDashboard() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Tipos de Planos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(() => {
+              const planCounts = {
+                mensal: 0,
+                anual: 0,
+                vitalicio: 0,
+                admin: 0,
+                outros: 0
+              };
+
+              usersData?.forEach((user: any) => {
+                if (user.acessovitalicio || 
+                    user.nivelacesso === 'premium' || 
+                    user.nivelacesso === 'admin' || 
+                    user.nivelacesso === 'designer' || 
+                    user.nivelacesso === 'designer_adm' ||
+                    (user.dataexpiracao && new Date(user.dataexpiracao) > new Date())) {
+                  
+                  if (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm') {
+                    planCounts.admin++;
+                  } else if (user.acessovitalicio || user.tipoplano === 'vitalicio') {
+                    planCounts.vitalicio++;
+                  } else if (user.tipoplano === 'anual') {
+                    planCounts.anual++;
+                  } else if (user.tipoplano === 'mensal') {
+                    planCounts.mensal++;
+                  } else {
+                    planCounts.outros++;
+                  }
+                }
+              });
+
+              return (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Plano Mensal (R$ 29,90)</span>
+                    <span className="text-sm text-blue-600 font-semibold">{planCounts.mensal}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Plano Anual (R$ 197,00)</span>
+                    <span className="text-sm text-green-600 font-semibold">{planCounts.anual}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Plano Vitalício (R$ 497,00)</span>
+                    <span className="text-sm text-purple-600 font-semibold">{planCounts.vitalicio}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Admin/Staff</span>
+                    <span className="text-sm text-orange-600 font-semibold">{planCounts.admin}</span>
+                  </div>
+                </>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Métricas Financeiras</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Receita Atual</span>
+              <span className="text-sm font-medium">Receita Mensal Total</span>
               <span className="text-sm text-green-600 font-semibold">R$ {metrics.subscriptionRevenue.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Valor por Assinatura</span>
-              <span className="text-sm text-gray-600">R$ 29,90</span>
+              <span className="text-sm font-medium">Ticket Médio</span>
+              <span className="text-sm text-gray-600">R$ {metrics.premiumUsers > 0 ? (metrics.subscriptionRevenue / metrics.premiumUsers).toFixed(2) : '0,00'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Potencial de Receita</span>
               <span className="text-sm text-purple-600 font-semibold">R$ {(freeUsers * 29.90).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Receita Máxima</span>
-              <span className="text-sm text-blue-600 font-semibold">R$ {(metrics.totalUsers * 29.90).toFixed(2)}</span>
+              <span className="text-sm font-medium">Receita Anual Estimada</span>
+              <span className="text-sm text-blue-600 font-semibold">R$ {(metrics.subscriptionRevenue * 12).toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
