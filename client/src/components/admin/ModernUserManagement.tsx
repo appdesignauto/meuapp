@@ -42,8 +42,7 @@ import {
   LogIn,
   ShoppingCart,
   CreditCard,
-  AlertTriangle,
-  BarChart2
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +81,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { NivelAcesso, OrigemAssinatura, TipoPlano } from "@shared/schema";
-import UserDashboardMetrics from "./UserDashboardMetrics";
 
 // Types
 interface User {
@@ -606,26 +604,8 @@ const ModernUserManagement = () => {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart2 className="h-4 w-4" />
-            Dashboard SaaS
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Gerenciar Usuários
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dashboard" className="mt-6">
-          <UserDashboardMetrics />
-        </TabsContent>
-
-        <TabsContent value="users" className="mt-6 space-y-6">
-          {/* Filters and Search */}
-          <Card>
+      {/* Filters and Search */}
+      <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-col md:flex-row gap-4 flex-1">
@@ -1848,8 +1828,6 @@ const ModernUserManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
