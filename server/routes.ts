@@ -3538,33 +3538,28 @@ app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => 
   try {
     console.log('🔍 Buscando usuários com assinatura...');
     
-    // Buscar TODOS os usuários usando query SQL direta
-    const result = await storage.db.execute(`SELECT * FROM users ORDER BY criadoem DESC`);
-    const allUsers = result.rows || result;
+    // Query SQL direta para buscar usuários com assinatura
+    const query = `
+      SELECT id, email, username, name, profileimageurl, nivelacesso, 
+             tipoplano, dataassinatura, dataexpiracao, acessovitalicio, 
+             origemassinatura, criadoem, isactive
+      FROM users 
+      WHERE (nivelacesso IN ('premium', 'designer', 'designer_adm', 'admin')) 
+         OR (acessovitalicio = true) 
+         OR (tipoplano IS NOT NULL AND tipoplano != '' AND tipoplano != 'null')
+      ORDER BY criadoem DESC
+    `;
     
-    console.log(`📊 Total de usuários no banco: ${allUsers.length}`);
-    
-    // Filtrar usuários que têm indicação de assinatura baseado nos dados reais
-    const subscribedUsers = allUsers.filter((user: any) => {
-      return (
-        user.nivelacesso && 
-        ['premium', 'designer', 'designer_adm', 'admin'].includes(user.nivelacesso)
-      ) || (
-        user.acessovitalicio === true
-      ) || (
-        user.tipoplano && 
-        user.tipoplano.trim() !== '' && 
-        user.tipoplano !== 'null'
-      );
-    });
+    const result = await storage.client.query(query);
+    const subscribedUsers = result.rows;
     
     console.log(`✅ Usuários com assinatura encontrados: ${subscribedUsers.length}`);
     
     // Log para debug
     if (subscribedUsers.length > 0) {
-      console.log('📋 Exemplos de status encontrados:');
+      console.log('📋 Usuários encontrados:');
       subscribedUsers.slice(0, 3).forEach((user: any) => {
-        console.log(`   - ${user.email}: nivel="${user.nivelacesso}", plano="${user.tipoplano}", vitalicio=${user.acessovitalicio}`);
+        console.log(`   - ${user.email}: nivel="${user.nivelacesso}", plano="${user.tipoplano}"`);
       });
     }
     
