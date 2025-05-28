@@ -4,7 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
 import { createAdminUser } from "./init-admin";
-import { SubscriptionService } from "./services/subscription-service";
+
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
@@ -226,7 +226,7 @@ app.use((req, res, next) => {
       try {
         const agora = new Date().toLocaleString('pt-BR');
         console.log(`🔄 [${agora}] Iniciando verificação automática de assinaturas expiradas (24h)...`);
-        const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
+        const downgradedCount = await // Subscription system removed
         console.log(`✅ [${agora}] Verificação automática concluída: ${downgradedCount} usuários rebaixados para free`);
       } catch (error) {
         console.error(`❌ [${new Date().toLocaleString('pt-BR')}] Erro na verificação automática:`, error);
@@ -235,7 +235,7 @@ app.use((req, res, next) => {
     
     // Executar verificação inicial na inicialização do servidor
     console.log("🔄 Executando verificação inicial de assinaturas expiradas...");
-    const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
+    const initialDowngradedCount = await // Subscription system removed
     console.log(`✅ Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
     
     // Informar quando será a próxima verificação
