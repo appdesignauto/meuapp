@@ -93,24 +93,8 @@ function SimpleSubscriptionDashboard() {
     refetchInterval: 30000,
   });
 
-  // Calcular métricas baseadas nos dados reais dos usuários
+  // Calcular métricas baseadas nos dados reais dos usuários do banco
   const calculateMetrics = (): SubscriptionMetrics => {
-    // Se temos dados dos endpoints específicos, usar eles como prioridade
-    if (periodMetrics) {
-      return {
-        totalUsers: periodMetrics.totalUsers,
-        activeSubscriptions: periodMetrics.activeSubscriptions,
-        lifetimeUsers: 0,
-        expiredSubscriptions: periodMetrics.totalUsers - periodMetrics.activeSubscriptions,
-        freeUsers: periodMetrics.totalUsers - periodMetrics.activeSubscriptions,
-        conversionRate: periodMetrics.conversionRate,
-        monthlyRevenue: periodMetrics.monthlyRevenue,
-        newUsersToday: periodMetrics.newUsersInPeriod,
-        avgSubscriptionValue: periodMetrics.avgSubscriptionValue,
-        revenueGrowth: 0
-      };
-    }
-
     if (!usersData || !Array.isArray(usersData)) return {
       totalUsers: 0,
       activeSubscriptions: 0,
@@ -480,9 +464,9 @@ function SimpleSubscriptionDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{periodMetrics?.totalUsers || 0}</div>
+                <div className="text-2xl font-bold">{metrics.totalUsers}</div>
                 <p className="text-xs text-muted-foreground">
-                  {periodMetrics?.newUsersInPeriod || 0} novos em {selectedPeriod} dias
+                  {metrics.newUsersToday} novos hoje
                 </p>
               </CardContent>
             </Card>
@@ -493,9 +477,9 @@ function SimpleSubscriptionDashboard() {
                 <UserCheck className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{periodMetrics?.activeSubscriptions || 0}</div>
+                <div className="text-2xl font-bold text-green-600">{metrics.activeSubscriptions}</div>
                 <p className="text-xs text-muted-foreground">
-                  {periodMetrics?.conversionRate || 0}% de conversão
+                  {metrics.conversionRate.toFixed(1)}% de conversão
                 </p>
               </CardContent>
             </Card>
@@ -519,7 +503,7 @@ function SimpleSubscriptionDashboard() {
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">R$ {periodMetrics?.monthlyRevenue?.toFixed(2) || '0.00'}</div>
+                <div className="text-2xl font-bold text-green-600">R$ {metrics.monthlyRevenue.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">
                   Receita recorrente
                 </p>
@@ -575,19 +559,7 @@ function SimpleSubscriptionDashboard() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[
-                      { date: '14/01', users: 2 },
-                      { date: '23/01', users: 1 },
-                      { date: '01/02', users: 3 },
-                      { date: '10/02', users: 0 },
-                      { date: '19/02', users: 2 },
-                      { date: '28/02', users: 1 },
-                      { date: '09/03', users: 4 },
-                      { date: '18/03', users: 2 },
-                      { date: '27/03', users: 1 },
-                      { date: '05/04', users: 3 },
-                      { date: '14/04', users: 2 },
-                      { date: '23/04', users: 1 },
+                    <BarChart data={userRegistrationsData || []}>
                       { date: '02/05', users: 2 },
                       { date: '13/05', users: metrics.newUsersToday }
                     ]}>
