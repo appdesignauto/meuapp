@@ -73,7 +73,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import UserDashboardMetrics from "@/components/admin/UserDashboardMetrics";
+import { SaasDashboard } from "@/components/admin/SaasDashboard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -1840,7 +1840,7 @@ const ModernUserManagement = () => {
         </TabsContent>
         
         <TabsContent value="dashboard" className="space-y-6">
-          <UserDashboardMetrics />
+          <SaasDashboard />
         </TabsContent>
       </Tabs>
     </div>
