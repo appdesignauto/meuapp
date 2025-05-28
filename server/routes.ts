@@ -3538,7 +3538,12 @@ app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => 
   try {
     console.log('🔍 Buscando usuários com assinatura...');
     
-    // Query SQL direta para buscar usuários com assinatura
+    // Usar Pool do PostgreSQL para buscar usuários
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    
     const query = `
       SELECT id, email, username, name, profileimageurl, nivelacesso, 
              tipoplano, dataassinatura, dataexpiracao, acessovitalicio, 
@@ -3550,8 +3555,9 @@ app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => 
       ORDER BY criadoem DESC
     `;
     
-    const result = await storage.client.query(query);
+    const result = await pool.query(query);
     const subscribedUsers = result.rows;
+    await pool.end();
     
     console.log(`✅ Usuários com assinatura encontrados: ${subscribedUsers.length}`);
     
@@ -3575,55 +3581,48 @@ app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => 
   }
 });
 
-// Métricas de assinatura (CÁLCULOS CORRIGIDOS)
+// Métricas de assinatura (BUSCAR DIRETO DO BANCO)
 app.get('/api/admin/subscription-metrics', isAdmin, async (req: any, res: any) => {
   try {
-    console.log('📊 Calculando métricas de assinatura...');
+    console.log('🔍 Buscando métricas do banco de dados...');
     
-    // Buscar todos os usuários
-    const allUsers = await storage.getUsers();
+    // Query para contar total de usuários
+    const totalResult = await storage.client.query('SELECT COUNT(*) as total FROM users');
+    const totalUsers = parseInt(totalResult.rows[0].total);
     
-    // Calcular métricas baseado nos dados reais
-    const totalUsers = allUsers.length;
+    // Query para contar usuários com assinatura
+    const premiumResult = await storage.client.query(`
+      SELECT COUNT(*) as premium FROM users 
+      WHERE (nivelacesso IN ('premium', 'designer', 'designer_adm', 'admin')) 
+         OR (acessovitalicio = true) 
+         OR (tipoplano IS NOT NULL AND tipoplano != '' AND tipoplano != 'null')
+    `);
+    const premiumUsers = parseInt(premiumResult.rows[0].premium);
     
-    const subscribedUsers = allUsers.filter((user: any) => {
-      return (
-        user.nivelacesso && 
-        ['premium', 'designer', 'designer_adm'].includes(user.nivelacesso)
-      ) || (
-        user.acessovitalicio === true
-      ) || (
-        user.tipoplano && 
-        user.tipoplano.trim() !== ''
-      );
-    });
+    // Query para usuários vitalícios
+    const vitalicioResult = await storage.client.query('SELECT COUNT(*) as vitalicio FROM users WHERE acessovitalicio = true');
+    const vitalicioUsers = parseInt(vitalicioResult.rows[0].vitalicio);
     
-    const activeSubscriptions = subscribedUsers.length;
-    
-    // Usuários free
-    const freeUsers = allUsers.filter((user: any) => 
-      user.nivelacesso === 'free' && !user.acessovitalicio
-    ).length;
-    
-    // Usuários recentes (últimos 7 dias)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const recentSignups = allUsers.filter((user: any) => 
-      new Date(user.criadoem) >= sevenDaysAgo
-    ).length;
+    // Query para usuários expirando em 7 dias
+    const expiringResult = await storage.client.query(`
+      SELECT COUNT(*) as expiring FROM users 
+      WHERE dataexpiracao IS NOT NULL 
+        AND dataexpiracao BETWEEN NOW() AND NOW() + INTERVAL '7 days'
+    `);
+    const expiringUsers = parseInt(expiringResult.rows[0].expiring);
     
     // Calcular conversão
-    const conversionRate = totalUsers > 0 ? 
-      Math.round((activeSubscriptions / totalUsers) * 100) : 0;
+    const conversionRate = totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 100) : 0;
     
     const metrics = {
       totalUsers: totalUsers,
-      premiumUsers: activeSubscriptions,
-      freeUsers: freeUsers,
+      premiumUsers: premiumUsers,
+      vitalicioUsers: vitalicioUsers,
       conversionRate: `${conversionRate}%`,
-      recentSignups: recentSignups
+      expiringUsers: expiringUsers
     };
     
-    console.log('📈 Métricas calculadas:', metrics);
+    console.log('✅ Métricas do banco:', metrics);
     
     res.json({
       overview: metrics
