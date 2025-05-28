@@ -88,6 +88,9 @@ export default function SubscriptionDashboard() {
         });
         const response = await apiRequest('GET', `/api/admin/subscription-users?${params}`);
         console.log('👥 Dados de usuários recebidos:', response);
+        console.log('👥 Tipo de resposta:', typeof response);
+        console.log('👥 É array?', Array.isArray(response));
+        console.log('👥 Tem propriedade users?', response?.users);
         return response;
       } catch (error) {
         console.error('Erro ao buscar usuários:', error);
