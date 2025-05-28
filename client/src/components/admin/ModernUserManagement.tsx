@@ -1832,6 +1832,7 @@ const ModernUserManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };
