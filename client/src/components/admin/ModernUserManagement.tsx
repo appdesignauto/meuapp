@@ -74,6 +74,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SaasDashboard } from "@/components/admin/SaasDashboard";
+import SimpleSubscriptionDashboard from "@/components/admin/SimpleSubscriptionDashboard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -1842,6 +1843,10 @@ const ModernUserManagement = () => {
         
         <TabsContent value="dashboard" className="space-y-6">
           <SaasDashboard />
+        </TabsContent>
+
+        <TabsContent value="subscriptions" className="space-y-6">
+          <SimpleSubscriptionDashboard />
         </TabsContent>
       </Tabs>
     </div>
