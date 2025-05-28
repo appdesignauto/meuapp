@@ -45,6 +45,7 @@ function SaasDashboard() {
 
     const now = new Date();
     let premiumUsers = 0;
+    let hotmartPremiumUsers = 0; // Apenas usuários premium da Hotmart para cálculo de ARPU
     let monthlyRevenue = 0;
     let totalLifetimeValue = 0;
 
@@ -60,24 +61,32 @@ function SaasDashboard() {
       if (isPremium) {
         premiumUsers++;
         
-        // Calcular contribuição para MRR baseada no tipo de plano
-        if (user.acessovitalicio || user.tipoplano === 'vitalicio') {
-          // Usuários vitalícios: valor total amortizado em 5 anos (estimativa)
-          monthlyRevenue += 497.00 / 60; // R$ 497 / 60 meses = ~R$ 8.28/mês
-          totalLifetimeValue += 497.00;
-        } else if (user.tipoplano === 'anual') {
-          // Plano anual: R$ 197/ano = R$ 16.42/mês
-          monthlyRevenue += 16.42;
-          totalLifetimeValue += 197.00;
-        } else if (user.tipoplano === 'mensal') {
-          // Plano mensal: R$ 29.90/mês
-          monthlyRevenue += 29.90;
-          totalLifetimeValue += 29.90;
-        } else {
-          // Usuários premium sem plano específico (admin/designer): estimativa baseada em plano mensal
-          monthlyRevenue += 29.90;
-          totalLifetimeValue += 29.90;
+        // APENAS usuários com origem de assinatura da Hotmart contribuem para métricas financeiras
+        const isHotmartUser = user.origemassinatura === 'hotmart';
+        
+        if (isHotmartUser) {
+          hotmartPremiumUsers++; // Contar apenas usuários Hotmart para ARPU
+          
+          // Calcular contribuição para MRR baseada no tipo de plano (apenas usuários Hotmart)
+          if (user.acessovitalicio || user.tipoplano === 'vitalicio') {
+            // Usuários vitalícios: valor total amortizado em 5 anos (estimativa)
+            monthlyRevenue += 497.00 / 60; // R$ 497 / 60 meses = ~R$ 8.28/mês
+            totalLifetimeValue += 497.00;
+          } else if (user.tipoplano === 'anual') {
+            // Plano anual: R$ 197/ano = R$ 16.42/mês
+            monthlyRevenue += 16.42;
+            totalLifetimeValue += 197.00;
+          } else if (user.tipoplano === 'mensal') {
+            // Plano mensal: R$ 29.90/mês
+            monthlyRevenue += 29.90;
+            totalLifetimeValue += 29.90;
+          } else {
+            // Usuários premium da Hotmart sem plano específico: estimativa baseada em plano mensal
+            monthlyRevenue += 29.90;
+            totalLifetimeValue += 29.90;
+          }
         }
+        // Usuários sem origem Hotmart (admin/designer/manual) NÃO contribuem para MRR
       }
     });
 
@@ -85,8 +94,9 @@ function SaasDashboard() {
     const conversionRate = totalUsers > 0 ? (premiumUsers / totalUsers) * 100 : 0;
     const mrr = monthlyRevenue;
     const arr = mrr * 12;
-    const arpu = totalUsers > 0 ? mrr / totalUsers : 0;
-    const averageLTV = premiumUsers > 0 ? totalLifetimeValue / premiumUsers : 0;
+    // ARPU baseado apenas nos usuários que contribuem financeiramente (Hotmart)
+    const arpu = hotmartPremiumUsers > 0 ? mrr / hotmartPremiumUsers : 0;
+    const averageLTV = hotmartPremiumUsers > 0 ? totalLifetimeValue / hotmartPremiumUsers : 0;
     
     // Estimativa de crescimento MRR (simulada - em produção, usar dados históricos)
     const mrrGrowthRate = 8.5; // 8.5% estimado baseado no crescimento típico de SaaS
