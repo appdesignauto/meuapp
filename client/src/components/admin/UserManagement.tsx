@@ -94,6 +94,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import UserDashboardMetrics from "./UserDashboardMetrics";
 
 // Definições de tipos
 interface User {
@@ -1687,11 +1688,20 @@ const UserManagement = () => {
 
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="dashboard">
+            <BarChart2Icon className="h-4 w-4 mr-2" />
+            Dashboard SaaS
+          </TabsTrigger>
           <TabsTrigger value="all">Todos</TabsTrigger>
           <TabsTrigger value="active">Ativos</TabsTrigger>
           <TabsTrigger value="inactive">Inativos</TabsTrigger>
           <TabsTrigger value="designers">Designers</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="dashboard" className="mt-6">
+          <UserDashboardMetrics />
+        </TabsContent>
+        
         <TabsContent value="all" className="mt-6">
           <UserTable 
             users={sortedUsers} 
