@@ -60,9 +60,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       icon: <Gauge className="h-5 w-5" />,
     },
     {
-      title: 'Assinaturas',
-      href: '/admin/dashboard?tab=subscriptions',
-      icon: <CreditCard className="h-5 w-5" />,
+      title: 'Financeiro',
+      href: '/admin/financeiro',
+      icon: <BarChart className="h-5 w-5" />,
     },
     {
       title: 'Usuários',

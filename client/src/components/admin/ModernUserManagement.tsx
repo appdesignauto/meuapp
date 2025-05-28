@@ -557,9 +557,8 @@ const ModernUserManagement = () => {
 
       {/* Tabs for User Management and Dashboard */}
       <Tabs defaultValue="management" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="management">Gerenciar Usuários</TabsTrigger>
-          <TabsTrigger value="dashboard">Dashboard SaaS</TabsTrigger>
           <TabsTrigger value="subscriptions">Dashboard Assinaturas</TabsTrigger>
         </TabsList>
         
@@ -1841,10 +1840,6 @@ const ModernUserManagement = () => {
       </Dialog>
         </TabsContent>
         
-        <TabsContent value="dashboard" className="space-y-6">
-          <SaasDashboard />
-        </TabsContent>
-
         <TabsContent value="subscriptions" className="space-y-6">
           <SimpleSubscriptionDashboard />
         </TabsContent>

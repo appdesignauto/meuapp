@@ -27,6 +27,7 @@ import DesignerProfile from "@/pages/DesignerProfile";
 import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
 import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
+import FinanceiroPage from "@/pages/admin/Financeiro";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
@@ -236,6 +237,11 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin" 
         component={UpdatedDashboard} 
+        roles={['admin', 'designer_adm']} 
+      />
+      <ProtectedRoute 
+        path="/admin/financeiro" 
+        component={FinanceiroPage} 
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute
