@@ -559,10 +559,7 @@ function SimpleSubscriptionDashboard() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={userRegistrationsData || []}>
-                      { date: '02/05', users: 2 },
-                      { date: '13/05', users: metrics.newUsersToday }
-                    ]}>
+                    <BarChart data={registrationData || []}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
                       <YAxis />
