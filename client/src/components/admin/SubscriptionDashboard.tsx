@@ -99,9 +99,21 @@ export default function SubscriptionDashboard() {
     },
   });
 
-  const handleRefresh = () => {
-    refetchMetrics();
-    refetchUsers();
+  const handleRefresh = async () => {
+    console.log('🔄 Atualizando dados do dashboard...');
+    
+    try {
+      // Invalidar cache e forçar reload
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subscription-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subscription-users'] });
+      
+      // Refetch dados
+      await Promise.all([refetchMetrics(), refetchUsers()]);
+      
+      console.log('✅ Dados atualizados com sucesso!');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar dados:', error);
+    }
   };
 
   const handleExportCSV = () => {
