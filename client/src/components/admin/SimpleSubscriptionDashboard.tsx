@@ -464,9 +464,9 @@ function SimpleSubscriptionDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.totalUsers}</div>
+                <div className="text-2xl font-bold">{periodMetrics?.totalUsers || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  Base completa de usuários
+                  {periodMetrics?.newUsersInPeriod || 0} novos em {selectedPeriod} dias
                 </p>
               </CardContent>
             </Card>
@@ -477,9 +477,9 @@ function SimpleSubscriptionDashboard() {
                 <UserCheck className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{metrics.activeSubscriptions}</div>
+                <div className="text-2xl font-bold text-green-600">{periodMetrics?.activeSubscriptions || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.conversionRate}% de conversão
+                  {periodMetrics?.conversionRate || 0}% de conversão
                 </p>
               </CardContent>
             </Card>
@@ -503,7 +503,7 @@ function SimpleSubscriptionDashboard() {
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">R$ {metrics.monthlyRevenue.toFixed(2)}</div>
+                <div className="text-2xl font-bold text-green-600">R$ {periodMetrics?.monthlyRevenue?.toFixed(2) || '0.00'}</div>
                 <p className="text-xs text-muted-foreground">
                   Receita recorrente
                 </p>
