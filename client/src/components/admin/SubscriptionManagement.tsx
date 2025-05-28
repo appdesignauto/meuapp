@@ -404,7 +404,7 @@ export default function SubscriptionManagement() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.overview?.totalUsers || 0}</div>
+                <div className="text-2xl font-bold">{metricsLoading ? '...' : metricsData?.overview?.totalUsers || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   nos últimos 30 dias
                 </p>
@@ -417,9 +417,9 @@ export default function SubscriptionManagement() {
                 <Crown className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.overview?.premiumUsers || 0}</div>
+                <div className="text-2xl font-bold">{metricsLoading ? '...' : metricsData?.overview?.premiumUsers || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats?.overview?.conversionRate || '0%'} taxa de conversão
+                  {metricsData?.overview?.conversionRate || '0%'} taxa de conversão
                 </p>
               </CardContent>
             </Card>
@@ -430,7 +430,7 @@ export default function SubscriptionManagement() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statsLoading ? '...' : (stats?.overview?.totalUsers - stats?.overview?.premiumUsers) || 0}</div>
+                <div className="text-2xl font-bold">{metricsLoading ? '...' : (metricsData?.overview?.totalUsers - metricsData?.overview?.premiumUsers) || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Usuários gratuitos
                 </p>
