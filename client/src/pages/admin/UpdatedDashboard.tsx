@@ -6,6 +6,7 @@ import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import SubscriptionDashboard from '@/components/admin/SubscriptionDashboard';
+import SaasDashboard from '@/components/admin/SaasDashboard';
 import {
   LayoutGrid,
   Image,

@@ -285,3 +285,5 @@ export function SaasDashboard() {
     </div>
   );
 }
+
+export default SaasDashboard;
