@@ -5492,6 +5492,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para métricas completas do dashboard SaaS
+  app.get("/api/admin/user-metrics", isAdmin, async (req, res) => {
+    try {
+      console.log("📊 Calculando métricas completas do dashboard SaaS...");
+      
+      const allUsers = await storage.getAllUsers();
+      
+      // Métricas básicas
+      const totalUsers = allUsers.length;
+      const activeUsers = allUsers.filter(u => u.isactive).length;
+      const inactiveUsers = totalUsers - activeUsers;
+      
+      // Categorização por nível de acesso
+      const premiumUsers = allUsers.filter(u => 
+        u.isactive && (u.acessovitalicio || ['premium', 'designer', 'designer_adm'].includes(u.nivelacesso))
+      ).length;
+      
+      const freeUsers = allUsers.filter(u => 
+        u.isactive && !u.acessovitalicio && !['premium', 'designer', 'designer_adm'].includes(u.nivelacesso)
+      ).length;
+      
+      const designerUsers = allUsers.filter(u => 
+        u.isactive && ['designer', 'designer_adm'].includes(u.nivelacesso)
+      ).length;
+      
+      const adminUsers = allUsers.filter(u => 
+        u.isactive && u.nivelacesso === 'admin'
+      ).length;
+      
+      const supportUsers = allUsers.filter(u => 
+        u.isactive && u.nivelacesso === 'support'
+      ).length;
+      
+      // Métricas temporais
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      const newUsersToday = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= today
+      ).length;
+      
+      const newUsersWeek = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= sevenDaysAgo
+      ).length;
+      
+      const newUsersMonth = allUsers.filter(u => 
+        u.criadoem && new Date(u.criadoem) >= thirtyDaysAgo
+      ).length;
+      
+      // Métricas de assinatura
+      const lifetimeUsers = allUsers.filter(u => u.acessovitalicio).length;
+      
+      const expiringIn7Days = allUsers.filter(user => {
+        if (!user.dataexpiracao || user.acessovitalicio) return false;
+        const expDate = new Date(user.dataexpiracao);
+        const days7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        return expDate <= days7 && expDate > now;
+      }).length;
+      
+      const expiringIn30Days = allUsers.filter(user => {
+        if (!user.dataexpiracao || user.acessovitalicio) return false;
+        const expDate = new Date(user.dataexpiracao);
+        const days30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        return expDate <= days30 && expDate > now;
+      }).length;
+      
+      // Receita estimada
+      const monthlyPrice = 29.90;
+      const yearlyPrice = 297.00;
+      
+      const monthlySubscribers = allUsers.filter(user => 
+        user.tipoplano === 'mensal' && user.isactive
+      ).length;
+      
+      const yearlySubscribers = allUsers.filter(user => 
+        user.tipoplano === 'anual' && user.isactive
+      ).length;
+      
+      const subscriptionRevenue = (monthlySubscribers * monthlyPrice) + 
+                                (yearlySubscribers * yearlyPrice / 12);
+      
+      // Distribuição por origem
+      const usersByOrigin: Record<string, number> = {};
+      allUsers.forEach(user => {
+        const origin = user.origemassinatura || 'manual';
+        usersByOrigin[origin] = (usersByOrigin[origin] || 0) + 1;
+      });
+      
+      // Distribuição por plano
+      const usersByPlan: Record<string, number> = {};
+      allUsers.forEach(user => {
+        const plan = user.tipoplano || 'indefinido';
+        usersByPlan[plan] = (usersByPlan[plan] || 0) + 1;
+      });
+      
+      // Taxa de conversão
+      const conversionRate = totalUsers > 0 ? 
+        parseFloat(((premiumUsers / totalUsers) * 100).toFixed(1)) : 0;
+      
+      // Taxa de churn (estimativa)
+      const churnRate = premiumUsers > 0 ? 
+        parseFloat(((expiringIn30Days / premiumUsers) * 100).toFixed(1)) : 0;
+      
+      // Dados de crescimento (últimos 12 meses)
+      const growthTrend = [];
+      for (let i = 11; i >= 0; i--) {
+        const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        
+        const usersInMonth = allUsers.filter(u => 
+          u.criadoem && 
+          new Date(u.criadoem) >= monthDate && 
+          new Date(u.criadoem) < nextMonth
+        ).length;
+        
+        growthTrend.push({
+          date: monthDate.toISOString().split('T')[0],
+          count: usersInMonth
+        });
+      }
+      
+      const metrics = {
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        premiumUsers,
+        freeUsers,
+        designerUsers,
+        adminUsers,
+        supportUsers,
+        newUsersToday,
+        newUsersWeek,
+        newUsersMonth,
+        onlineUsers: activeUsers, // Simplificação
+        recentActivity: newUsersWeek,
+        subscriptionRevenue: Math.round(subscriptionRevenue * 100) / 100,
+        expiringIn7Days,
+        expiringIn30Days,
+        lifetimeUsers,
+        trialUsers: 0, // Não implementado ainda
+        conversionRate,
+        churnRate,
+        avgSessionDuration: 0, // Não implementado ainda
+        usersByOrigin,
+        usersByPlan,
+        growthTrend
+      };
+      
+      console.log("📈 Métricas calculadas:", {
+        total: metrics.totalUsers,
+        premium: metrics.premiumUsers,
+        conversion: metrics.conversionRate + '%'
+      });
+      
+      res.status(200).json(metrics);
+      
+    } catch (error) {
+      console.error("❌ Erro ao calcular métricas:", error);
+      res.status(500).json({ 
+        message: "Erro ao calcular métricas do dashboard",
+        error: error.message 
+      });
+    }
+  });
+
   // Endpoint para estatísticas de usuários - usado no painel de assinaturas
   app.get("/api/admin/users/stats", isAdmin, async (req, res) => {
     try {

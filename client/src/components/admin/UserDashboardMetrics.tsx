@@ -50,13 +50,17 @@ interface UserMetrics {
 }
 
 export default function UserDashboardMetrics() {
-  const { data: metrics, isLoading } = useQuery<UserMetrics>({
+  const { data: metrics, isLoading, error } = useQuery<UserMetrics>({
     queryKey: ['/api/admin/user-metrics'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/admin/user-metrics');
+      if (!res.ok) {
+        throw new Error('Erro ao carregar métricas');
+      }
       return await res.json();
     },
     refetchInterval: 30000,
+    retry: 2,
   });
 
   if (isLoading || !metrics) {
