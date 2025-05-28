@@ -3538,8 +3538,9 @@ app.get('/api/admin/subscription-users', isAdmin, async (req: any, res: any) => 
   try {
     console.log('🔍 Buscando usuários com assinatura...');
     
-    // Buscar TODOS os usuários para identificar os dados
-    const allUsers = await storage.getUsers();
+    // Buscar TODOS os usuários usando query SQL direta
+    const result = await storage.db.execute(`SELECT * FROM users ORDER BY criadoem DESC`);
+    const allUsers = result.rows || result;
     
     console.log(`📊 Total de usuários no banco: ${allUsers.length}`);
     
