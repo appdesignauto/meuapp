@@ -106,6 +106,7 @@ import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
+import ModernUserManagement from '@/components/admin/ModernUserManagement';
 import CommunityManagement from './community/CommunityManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
 import CommentsManagement from '@/components/admin/CommentsManagement';
@@ -3042,7 +3043,13 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="subscriptions">
-              <SubscriptionDashboard />
+              <div className="space-y-6">
+                <SubscriptionDashboard />
+                <div className="bg-white rounded-lg border p-6">
+                  <h3 className="text-lg font-semibold mb-4">Gerenciamento Avançado de Usuários</h3>
+                  <ModernUserManagement />
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="community">
