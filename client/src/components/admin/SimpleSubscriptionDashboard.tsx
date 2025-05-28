@@ -526,21 +526,24 @@ function SimpleSubscriptionDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {origemData && Object.entries(origemData).map(([origem, count]) => (
-                    <div key={origem} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${
-                          origem === 'Hotmart' ? 'bg-green-500' :
-                          origem === 'Manual' ? 'bg-gray-500' :
-                          'bg-blue-500'
-                        }`}></div>
-                        <span className="font-medium">{origem}</span>
+                  {origemData && typeof origemData === 'object' && Object.keys(origemData).length > 0 ? (
+                    Object.entries(origemData).map(([origem, count]) => (
+                      <div key={origem} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${
+                            origem === 'Hotmart' ? 'bg-green-500' :
+                            origem === 'Manual' ? 'bg-gray-500' :
+                            'bg-blue-500'
+                          }`}></div>
+                          <span className="font-medium">{origem}</span>
+                        </div>
+                        <span className="text-lg font-bold">{count}</span>
                       </div>
-                      <span className="text-lg font-bold">{count}</span>
+                    ))
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      {origemData ? 'Nenhum dado encontrado' : 'Carregando dados...'}
                     </div>
-                  ))}
-                  {!origemData && (
-                    <div className="text-center text-muted-foreground">Carregando dados...</div>
                   )}
                 </div>
               </CardContent>

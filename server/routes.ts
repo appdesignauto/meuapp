@@ -7137,13 +7137,15 @@ app.use('/api/reports-v2', (req, res, next) => {
           COALESCE("origemassinatura", 'Manual') as origem,
           COUNT(*) as count
         FROM users 
-        WHERE ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
+        WHERE "isactive" = true
         GROUP BY COALESCE("origemassinatura", 'Manual')
         ORDER BY count DESC
       `);
 
+      console.log('Dados da distribuição por origem:', result.rows);
+
       // Converter para objeto com chaves como origem
-      const distribuicao = {};
+      const distribuicao: any = {};
       result.rows.forEach((row: any) => {
         const origem = row.origem === 'hotmart' ? 'Hotmart' : 
                       row.origem === null || row.origem === 'Manual' ? 'Manual' : 
@@ -7151,6 +7153,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         distribuicao[origem] = parseInt(row.count);
       });
 
+      console.log('Distribuição formatada:', distribuicao);
       res.json(distribuicao);
     } catch (error) {
       console.error("Erro ao buscar distribuição por origem:", error);
