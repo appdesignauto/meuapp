@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { SaasDashboard } from '@/components/admin/SaasDashboard';
+import SaasDashboard from '@/components/admin/SaasDashboard';
 import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
 
 const FinanceiroPage = () => {
