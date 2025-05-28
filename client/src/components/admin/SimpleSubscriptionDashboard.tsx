@@ -67,10 +67,29 @@ function SimpleSubscriptionDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [originFilter, setOriginFilter] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('30');
 
   // Buscar dados dos usuários
   const { data: usersData, isLoading, refetch } = useQuery({
     queryKey: ['/api/users'],
+    refetchInterval: 30000,
+  });
+
+  // Buscar dados reais de cadastros
+  const { data: registrationData } = useQuery({
+    queryKey: ['/api/dashboard/user-registrations', selectedPeriod],
+    refetchInterval: 30000,
+  });
+
+  // Buscar dados reais de receita
+  const { data: revenueData } = useQuery({
+    queryKey: ['/api/dashboard/revenue-data', selectedPeriod],
+    refetchInterval: 30000,
+  });
+
+  // Buscar métricas específicas do período
+  const { data: periodMetrics } = useQuery({
+    queryKey: ['/api/dashboard/metrics', selectedPeriod],
     refetchInterval: 30000,
   });
 
@@ -406,17 +425,33 @@ function SimpleSubscriptionDashboard() {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Dashboard Analítico</h3>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant={selectedPeriod === '1' ? "destructive" : "outline"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('1')}
+              >
                 Hoje
               </Button>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant={selectedPeriod === '7' ? "destructive" : "outline"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('7')}
+              >
                 7 Dias
               </Button>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant={selectedPeriod === '30' ? "destructive" : "outline"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('30')}
+              >
                 30 Dias
               </Button>
-              <Button variant="destructive" size="sm">
-                Personalizado
+              <Button 
+                variant={selectedPeriod === '90' ? "destructive" : "outline"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('90')}
+              >
+                90 Dias
               </Button>
             </div>
           </div>
@@ -486,26 +521,23 @@ function SimpleSubscriptionDashboard() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={[
-                      { date: '14/01', value: 98 },
-                      { date: '23/01', value: 156 },
-                      { date: '01/02', value: 189 },
-                      { date: '10/02', value: 234 },
-                      { date: '19/02', value: 267 },
-                      { date: '28/02', value: 298 },
-                      { date: '09/03', value: 334 },
-                      { date: '18/03', value: 378 },
-                      { date: '27/03', value: 398 },
-                      { date: '05/04', value: 423 },
-                      { date: '14/04', value: 456 },
-                      { date: '23/04', value: 478 },
-                      { date: '02/05', value: 498 },
-                      { date: '13/05', value: metrics.monthlyRevenue }
-                    ]}>
+                    <LineChart data={revenueData || []}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(value) => {
+                          const date = new Date(value);
+                          return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        }}
+                      />
                       <YAxis tickFormatter={(value) => `R$${value}`} />
-                      <Tooltip formatter={(value) => [`R$ ${value}`, 'Faturamento']} />
+                      <Tooltip 
+                        formatter={(value) => [`R$ ${Number(value).toFixed(2)}`, 'Faturamento']}
+                        labelFormatter={(value) => {
+                          const date = new Date(value);
+                          return date.toLocaleDateString('pt-BR');
+                        }}
+                      />
                       <Line 
                         type="monotone" 
                         dataKey="value" 

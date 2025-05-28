@@ -7093,5 +7093,152 @@ app.use('/api/reports-v2', (req, res, next) => {
   res.redirect(307, newUrl);
 });
 
+  // ===============================================
+  // ENDPOINTS PARA DASHBOARD DE ASSINATURAS COM DADOS REAIS
+  // ===============================================
+
+  // Endpoint para buscar dados históricos reais de cadastros
+  app.get("/api/dashboard/user-registrations", isAuthenticated, async (req, res) => {
+    try {
+      const { period = '30' } = req.query;
+      const days = parseInt(period as string);
+      
+      // Buscar registros dos últimos X dias agrupados por data
+      const registrations = await db.execute(sql`
+        SELECT 
+          DATE("criadoem") as date,
+          COUNT(*) as count
+        FROM users 
+        WHERE "criadoem" >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+        GROUP BY DATE("criadoem")
+        ORDER BY DATE("criadoem") ASC
+      `);
+
+      res.json(registrations);
+    } catch (error) {
+      console.error("Erro ao buscar dados de cadastros:", error);
+      res.status(500).json({ message: "Erro ao buscar dados de cadastros" });
+    }
+  });
+
+  // Endpoint para buscar dados históricos reais de receita
+  app.get("/api/dashboard/revenue-data", isAuthenticated, async (req, res) => {
+    try {
+      const { period = '30' } = req.query;
+      const days = parseInt(period as string);
+      
+      // Buscar dados de receita baseados nos usuários e suas origens
+      const revenueData = await db.execute(sql`
+        WITH daily_revenue AS (
+          SELECT 
+            DATE("dataassinatura") as date,
+            SUM(
+              CASE 
+                WHEN "origemassinatura" = 'hotmart' THEN 7.00
+                WHEN "tipoplano" = 'mensal' THEN 29.90
+                WHEN "tipoplano" = 'anual' THEN 197.00
+                WHEN "tipoplano" = 'vitalicio' THEN 497.00
+                ELSE 29.90
+              END
+            ) as revenue
+          FROM users 
+          WHERE "dataassinatura" IS NOT NULL 
+            AND "dataassinatura" >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+            AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
+          GROUP BY DATE("dataassinatura")
+        )
+        SELECT 
+          date,
+          COALESCE(revenue, 0) as value
+        FROM daily_revenue
+        ORDER BY date ASC
+      `);
+
+      res.json(revenueData);
+    } catch (error) {
+      console.error("Erro ao buscar dados de receita:", error);
+      res.status(500).json({ message: "Erro ao buscar dados de receita" });
+    }
+  });
+
+  // Endpoint para métricas específicas do dashboard com filtros de data
+  app.get("/api/dashboard/metrics", isAuthenticated, async (req, res) => {
+    try {
+      const { period = '30' } = req.query;
+      const days = parseInt(period as string);
+      const now = new Date();
+      const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      
+      // Buscar métricas do período
+      const [
+        totalUsersResult,
+        activeSubscriptionsResult,
+        newUsersResult,
+        revenueResult
+      ] = await Promise.all([
+        // Total de usuários
+        db.execute(sql`SELECT COUNT(*) as count FROM users`),
+        
+        // Assinaturas ativas
+        db.execute(sql`
+          SELECT COUNT(*) as count FROM users 
+          WHERE (
+            "nivelacesso" IN ('premium', 'designer', 'admin') OR 
+            "acessovitalicio" = true OR
+            ("dataexpiracao" IS NOT NULL AND "dataexpiracao" > NOW())
+          ) AND "isactive" = true
+        `),
+        
+        // Novos usuários no período
+        db.execute(sql`
+          SELECT COUNT(*) as count FROM users 
+          WHERE "criadoem" >= ${periodStart.toISOString()}
+        `),
+        
+        // Receita total do período
+        db.execute(sql`
+          SELECT 
+            SUM(
+              CASE 
+                WHEN "origemassinatura" = 'hotmart' THEN 7.00
+                WHEN "tipoplano" = 'mensal' THEN 29.90
+                WHEN "tipoplano" = 'anual' THEN 16.42
+                WHEN "tipoplano" = 'vitalicio' THEN 8.28
+                ELSE 0
+              END
+            ) as total_revenue
+          FROM users 
+          WHERE (
+            "nivelacesso" IN ('premium', 'designer', 'admin') OR 
+            "acessovitalicio" = true OR
+            ("dataexpiracao" IS NOT NULL AND "dataexpiracao" > NOW())
+          ) AND "isactive" = true
+        `)
+      ]);
+
+      const totalUsers = totalUsersResult[0]?.count || 0;
+      const activeSubscriptions = activeSubscriptionsResult[0]?.count || 0;
+      const newUsers = newUsersResult[0]?.count || 0;
+      const totalRevenue = parseFloat(revenueResult[0]?.total_revenue || '0');
+      
+      // Calcular métricas derivadas
+      const conversionRate = totalUsers > 0 ? (activeSubscriptions / totalUsers) * 100 : 0;
+      const avgSubscriptionValue = activeSubscriptions > 0 ? totalRevenue / activeSubscriptions : 0;
+      
+      res.json({
+        totalUsers: parseInt(totalUsers),
+        activeSubscriptions: parseInt(activeSubscriptions),
+        newUsersInPeriod: parseInt(newUsers),
+        monthlyRevenue: totalRevenue,
+        conversionRate: parseFloat(conversionRate.toFixed(1)),
+        avgSubscriptionValue: parseFloat(avgSubscriptionValue.toFixed(2)),
+        period: days
+      });
+    } catch (error) {
+      console.error("Erro ao buscar métricas do dashboard:", error);
+      res.status(500).json({ message: "Erro ao buscar métricas do dashboard" });
+    }
+  });
+
   return httpServer;
 }
