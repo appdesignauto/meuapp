@@ -523,20 +523,11 @@ function SimpleSubscriptionDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={Array.isArray(revenueData) ? revenueData : (revenueData?.rows || [])}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                        }}
-                      />
+                      <XAxis dataKey="label" />
                       <YAxis tickFormatter={(value) => `R$${value}`} />
                       <Tooltip 
                         formatter={(value) => [`R$ ${Number(value).toFixed(2)}`, 'Faturamento']}
-                        labelFormatter={(value) => {
-                          const date = new Date(value);
-                          return date.toLocaleDateString('pt-BR');
-                        }}
+                        labelFormatter={(label) => label}
                       />
                       <Line 
                         type="monotone" 
@@ -561,10 +552,10 @@ function SimpleSubscriptionDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={Array.isArray(registrationData) ? registrationData : (registrationData?.rows || [])}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
+                      <XAxis dataKey="label" />
                       <YAxis />
                       <Tooltip formatter={(value) => [`${value}`, 'Usuários']} />
-                      <Bar dataKey="users" fill="#3b82f6" />
+                      <Bar dataKey="count" fill="#3b82f6" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

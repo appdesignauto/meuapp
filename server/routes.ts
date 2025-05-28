@@ -7103,22 +7103,22 @@ app.use('/api/reports-v2', (req, res, next) => {
       const { period = '30' } = req.query;
       const days = parseInt(period as string);
       
-      // Buscar registros dos últimos X dias agrupados por data usando pool direto
+      // Buscar registros agrupados por mês usando pool direto
       const pool = (global as any).db;
       const result = await pool.query(`
         SELECT 
-          DATE("criadoem") as date,
+          TO_CHAR("criadoem", 'Mon/YY') as label,
           COUNT(*) as count
         FROM users 
         WHERE "criadoem" >= NOW() - INTERVAL '${days} days'
-        GROUP BY DATE("criadoem")
-        ORDER BY DATE("criadoem") ASC
+        GROUP BY TO_CHAR("criadoem", 'Mon/YY'), EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
+        ORDER BY EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
       `);
 
       // Formatar dados para o frontend
       const formattedData = result.rows.map((row: any) => ({
-        date: row.date,
-        users: parseInt(row.count)
+        label: row.label,
+        count: parseInt(row.count)
       }));
 
       res.json(formattedData);
