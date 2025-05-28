@@ -7103,18 +7103,25 @@ app.use('/api/reports-v2', (req, res, next) => {
       const { period = '30' } = req.query;
       const days = parseInt(period as string);
       
-      // Buscar registros dos últimos X dias agrupados por data
-      const registrations = await db.execute(sql`
+      // Buscar registros dos últimos X dias agrupados por data usando pool direto
+      const pool = (global as any).db;
+      const result = await pool.query(`
         SELECT 
           DATE("criadoem") as date,
           COUNT(*) as count
         FROM users 
-        WHERE "criadoem" >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+        WHERE "criadoem" >= NOW() - INTERVAL '${days} days'
         GROUP BY DATE("criadoem")
         ORDER BY DATE("criadoem") ASC
       `);
 
-      res.json(registrations);
+      // Formatar dados para o frontend
+      const formattedData = result.rows.map((row: any) => ({
+        date: row.date,
+        users: parseInt(row.count)
+      }));
+
+      res.json(formattedData);
     } catch (error) {
       console.error("Erro ao buscar dados de cadastros:", error);
       res.status(500).json({ message: "Erro ao buscar dados de cadastros" });
@@ -7127,8 +7134,9 @@ app.use('/api/reports-v2', (req, res, next) => {
       const { period = '30' } = req.query;
       const days = parseInt(period as string);
       
-      // Buscar dados de receita baseados nos usuários e suas origens
-      const revenueData = await db.execute(sql`
+      // Buscar dados de receita baseados nos usuários e suas origens usando pool direto
+      const pool = (global as any).db;
+      const result = await pool.query(`
         WITH daily_revenue AS (
           SELECT 
             DATE("dataassinatura") as date,
@@ -7143,7 +7151,7 @@ app.use('/api/reports-v2', (req, res, next) => {
             ) as revenue
           FROM users 
           WHERE "dataassinatura" IS NOT NULL 
-            AND "dataassinatura" >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+            AND "dataassinatura" >= NOW() - INTERVAL '${days} days'
             AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
           GROUP BY DATE("dataassinatura")
         )
@@ -7154,7 +7162,13 @@ app.use('/api/reports-v2', (req, res, next) => {
         ORDER BY date ASC
       `);
 
-      res.json(revenueData);
+      // Formatar dados para o frontend
+      const formattedRevenueData = result.rows.map((row: any) => ({
+        date: row.date,
+        value: parseFloat(row.value || '0')
+      }));
+
+      res.json(formattedRevenueData);
     } catch (error) {
       console.error("Erro ao buscar dados de receita:", error);
       res.status(500).json({ message: "Erro ao buscar dados de receita" });
