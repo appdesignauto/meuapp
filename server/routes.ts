@@ -7101,16 +7101,22 @@ app.use('/api/reports-v2', (req, res, next) => {
   app.get("/api/dashboard/user-registrations", isAuthenticated, async (req, res) => {
     try {
       const { period = '30' } = req.query;
-      const days = parseInt(period as string);
       
       // Buscar registros agrupados por mês usando pool direto
       const pool = (global as any).db;
+      
+      let whereClause = '';
+      if (period !== 'all') {
+        const days = parseInt(period as string);
+        whereClause = `WHERE "criadoem" >= NOW() - INTERVAL '${days} days'`;
+      }
+      
       const result = await pool.query(`
         SELECT 
           TO_CHAR("criadoem", 'Mon/YY') as label,
           COUNT(*) as count
         FROM users 
-        WHERE "criadoem" >= NOW() - INTERVAL '${days} days'
+        ${whereClause}
         GROUP BY TO_CHAR("criadoem", 'Mon/YY'), EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
         ORDER BY EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
       `);
@@ -7165,10 +7171,18 @@ app.use('/api/reports-v2', (req, res, next) => {
   app.get("/api/dashboard/revenue-data", isAuthenticated, async (req, res) => {
     try {
       const { period = '30' } = req.query;
-      const days = parseInt(period as string);
       
       // Buscar dados de receita agrupados por mês usando pool direto
       const pool = (global as any).db;
+      
+      let whereClause = `WHERE "dataassinatura" IS NOT NULL 
+        AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)`;
+      
+      if (period !== 'all') {
+        const days = parseInt(period as string);
+        whereClause += ` AND "dataassinatura" >= NOW() - INTERVAL '${days} days'`;
+      }
+      
       const result = await pool.query(`
         SELECT 
           TO_CHAR("dataassinatura", 'Mon/YY') as label,
@@ -7182,9 +7196,7 @@ app.use('/api/reports-v2', (req, res, next) => {
             END
           ) as value
         FROM users 
-        WHERE "dataassinatura" IS NOT NULL 
-          AND "dataassinatura" >= NOW() - INTERVAL '${days} days'
-          AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
+        ${whereClause}
         GROUP BY TO_CHAR("dataassinatura", 'Mon/YY'), EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
         ORDER BY EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
       `);
@@ -7206,11 +7218,17 @@ app.use('/api/reports-v2', (req, res, next) => {
   app.get("/api/dashboard/metrics", isAuthenticated, async (req, res) => {
     try {
       const { period = '30' } = req.query;
-      const days = parseInt(period as string);
-      const now = new Date();
-      const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
       
-      // Buscar métricas do período
+      let periodCondition = '';
+      if (period !== 'all') {
+        const days = parseInt(period as string);
+        const now = new Date();
+        const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        periodCondition = `AND "criadoem" >= '${periodStart.toISOString()}'`;
+      }
+      
+      // Buscar métricas do período usando pool direto
+      const pool = (global as any).db;
       const [
         totalUsersResult,
         activeSubscriptionsResult,
@@ -7218,10 +7236,10 @@ app.use('/api/reports-v2', (req, res, next) => {
         revenueResult
       ] = await Promise.all([
         // Total de usuários
-        db.execute(sql`SELECT COUNT(*) as count FROM users`),
+        pool.query(`SELECT COUNT(*) as count FROM users`),
         
         // Assinaturas ativas
-        db.execute(sql`
+        pool.query(`
           SELECT COUNT(*) as count FROM users 
           WHERE (
             "nivelacesso" IN ('premium', 'designer', 'admin') OR 
@@ -7231,13 +7249,13 @@ app.use('/api/reports-v2', (req, res, next) => {
         `),
         
         // Novos usuários no período
-        db.execute(sql`
+        pool.query(`
           SELECT COUNT(*) as count FROM users 
-          WHERE "criadoem" >= ${periodStart.toISOString()}
+          WHERE 1=1 ${periodCondition}
         `),
         
         // Receita total do período
-        db.execute(sql`
+        pool.query(`
           SELECT 
             SUM(
               CASE 
