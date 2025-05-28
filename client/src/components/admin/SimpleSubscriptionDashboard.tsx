@@ -402,6 +402,25 @@ function SimpleSubscriptionDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* Header com filtros */}
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Dashboard Analítico</h3>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                Hoje
+              </Button>
+              <Button variant="outline" size="sm">
+                7 Dias
+              </Button>
+              <Button variant="outline" size="sm">
+                30 Dias
+              </Button>
+              <Button variant="destructive" size="sm">
+                Personalizado
+              </Button>
+            </div>
+          </div>
+
           {/* Cards de Métricas */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -453,6 +472,85 @@ function SimpleSubscriptionDashboard() {
                 <p className="text-xs text-muted-foreground">
                   Receita recorrente
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico de Faturamento */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Faturamento</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={[
+                      { date: '14/01', value: 98 },
+                      { date: '23/01', value: 156 },
+                      { date: '01/02', value: 189 },
+                      { date: '10/02', value: 234 },
+                      { date: '19/02', value: 267 },
+                      { date: '28/02', value: 298 },
+                      { date: '09/03', value: 334 },
+                      { date: '18/03', value: 378 },
+                      { date: '27/03', value: 398 },
+                      { date: '05/04', value: 423 },
+                      { date: '14/04', value: 456 },
+                      { date: '23/04', value: 478 },
+                      { date: '02/05', value: 498 },
+                      { date: '13/05', value: metrics.monthlyRevenue }
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis tickFormatter={(value) => `R$${value}`} />
+                      <Tooltip formatter={(value) => [`R$ ${value}`, 'Faturamento']} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="value" 
+                        stroke="#ef4444" 
+                        strokeWidth={2}
+                        dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Gráfico de Cadastros de Usuários */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Cadastros de Usuários</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      { date: '14/01', users: 2 },
+                      { date: '23/01', users: 1 },
+                      { date: '01/02', users: 3 },
+                      { date: '10/02', users: 0 },
+                      { date: '19/02', users: 2 },
+                      { date: '28/02', users: 1 },
+                      { date: '09/03', users: 4 },
+                      { date: '18/03', users: 2 },
+                      { date: '27/03', users: 1 },
+                      { date: '05/04', users: 3 },
+                      { date: '14/04', users: 2 },
+                      { date: '23/04', users: 1 },
+                      { date: '02/05', users: 2 },
+                      { date: '13/05', users: metrics.newUsersToday }
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [`${value}`, 'Usuários']} />
+                      <Bar dataKey="users" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -522,6 +620,42 @@ function SimpleSubscriptionDashboard() {
                     </div>
                   ));
                 })()}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Métricas adicionais */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{metrics.conversionRate.toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground">Usuários que assinaram</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Valor Médio</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">R$ {metrics.avgSubscriptionValue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Por assinatura</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Crescimento</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">+{metrics.revenueGrowth}%</div>
+                <p className="text-xs text-muted-foreground">Últimos 30 dias</p>
               </CardContent>
             </Card>
           </div>
