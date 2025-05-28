@@ -426,39 +426,9 @@ function SimpleSubscriptionDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Header com filtros */}
+          {/* Header */}
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Dashboard Analítico</h3>
-            <div className="flex gap-2">
-              <Button 
-                variant={selectedPeriod === '1' ? "destructive" : "outline"} 
-                size="sm"
-                onClick={() => setSelectedPeriod('1')}
-              >
-                Hoje
-              </Button>
-              <Button 
-                variant={selectedPeriod === '7' ? "destructive" : "outline"} 
-                size="sm"
-                onClick={() => setSelectedPeriod('7')}
-              >
-                7 Dias
-              </Button>
-              <Button 
-                variant={selectedPeriod === '30' ? "destructive" : "outline"} 
-                size="sm"
-                onClick={() => setSelectedPeriod('30')}
-              >
-                30 Dias
-              </Button>
-              <Button 
-                variant={selectedPeriod === '90' ? "destructive" : "outline"} 
-                size="sm"
-                onClick={() => setSelectedPeriod('90')}
-              >
-                90 Dias
-              </Button>
-            </div>
           </div>
 
           {/* Cards de Métricas */}
@@ -516,7 +486,39 @@ function SimpleSubscriptionDashboard() {
             </Card>
           </div>
 
-
+          {/* Filtros de Data */}
+          <div className="flex justify-center">
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+              <Button 
+                variant={selectedPeriod === '1' ? "destructive" : "ghost"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('1')}
+              >
+                Hoje
+              </Button>
+              <Button 
+                variant={selectedPeriod === '7' ? "destructive" : "ghost"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('7')}
+              >
+                7 Dias
+              </Button>
+              <Button 
+                variant={selectedPeriod === '30' ? "destructive" : "ghost"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('30')}
+              >
+                30 Dias
+              </Button>
+              <Button 
+                variant={selectedPeriod === '90' ? "destructive" : "ghost"} 
+                size="sm"
+                onClick={() => setSelectedPeriod('90')}
+              >
+                90 Dias
+              </Button>
+            </div>
+          </div>
 
           {/* Gráficos */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
