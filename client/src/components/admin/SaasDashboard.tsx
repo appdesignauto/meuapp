@@ -509,45 +509,138 @@ function SaasDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Área do gráfico visual simples */}
+              {/* Gráfico de linha elegante */}
               <div className="h-64 w-full relative bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100 p-4">
                 {chartData.length > 0 ? (
-                  <div className="h-full flex items-end justify-between gap-1">
-                    {chartData.map((point, index) => {
-                      const maxValue = Math.max(...chartData.map(p => p.total));
-                      const totalHeight = (point.total / maxValue) * 100;
-                      const premiumHeight = (point.premium / maxValue) * 100;
+                  <div className="h-full w-full relative">
+                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {/* Linhas de grade */}
+                      <defs>
+                        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                          <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" strokeWidth="0.5" opacity="0.3"/>
+                        </pattern>
+                        <linearGradient id="totalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.8"/>
+                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.1"/>
+                        </linearGradient>
+                        <linearGradient id="premiumGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8"/>
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1"/>
+                        </linearGradient>
+                      </defs>
                       
-                      return (
-                        <div key={index} className="flex flex-col items-center group flex-1">
-                          {/* Barra do gráfico */}
-                          <div 
-                            className="w-full bg-gradient-to-t from-emerald-400 to-emerald-500 rounded-t-sm relative transition-all hover:shadow-md"
-                            style={{ height: `${totalHeight}%`, minHeight: '4px' }}
-                          >
-                            {/* Segmento premium */}
-                            <div 
-                              className="w-full bg-gradient-to-t from-blue-500 to-blue-600 rounded-t-sm absolute bottom-0"
-                              style={{ height: `${(premiumHeight / totalHeight) * 100}%` }}
+                      <rect width="100" height="100" fill="url(#grid)" />
+                      
+                      {(() => {
+                        const maxValue = Math.max(...chartData.map(p => p.total));
+                        const width = 100;
+                        const height = 100;
+                        const stepX = width / (chartData.length - 1);
+                        
+                        // Gerar pontos para linha total
+                        const totalPoints = chartData.map((point, index) => {
+                          const x = index * stepX;
+                          const y = height - (point.total / maxValue) * height;
+                          return `${x},${y}`;
+                        }).join(' ');
+                        
+                        // Gerar pontos para linha premium
+                        const premiumPoints = chartData.map((point, index) => {
+                          const x = index * stepX;
+                          const y = height - (point.premium / maxValue) * height;
+                          return `${x},${y}`;
+                        }).join(' ');
+                        
+                        // Área preenchida para total
+                        const totalAreaPoints = `0,${height} ${totalPoints} ${width},${height}`;
+                        
+                        // Área preenchida para premium
+                        const premiumAreaPoints = `0,${height} ${premiumPoints} ${width},${height}`;
+                        
+                        return (
+                          <>
+                            {/* Área preenchida total */}
+                            <polygon 
+                              points={totalAreaPoints}
+                              fill="url(#totalGradient)"
                             />
-                          </div>
-                          
-                          {/* Tooltip no hover */}
-                          <div className="opacity-0 group-hover:opacity-100 absolute -top-16 bg-black text-white text-xs rounded px-2 py-1 transition-opacity z-10">
-                            <div>Total: {point.total}</div>
-                            <div>Premium: {point.premium}</div>
-                            <div>Free: {point.free}</div>
-                          </div>
-                          
-                          {/* Label da data (mostrar apenas alguns para não poluir) */}
-                          {index % Math.ceil(chartData.length / 6) === 0 && (
-                            <span className="text-xs text-muted-foreground mt-2 transform -rotate-45 origin-left">
+                            
+                            {/* Área preenchida premium */}
+                            <polygon 
+                              points={premiumAreaPoints}
+                              fill="url(#premiumGradient)"
+                            />
+                            
+                            {/* Linha total */}
+                            <polyline
+                              points={totalPoints}
+                              fill="none"
+                              stroke="#10b981"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Linha premium */}
+                            <polyline
+                              points={premiumPoints}
+                              fill="none"
+                              stroke="#3b82f6"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Pontos interativos */}
+                            {chartData.map((point, index) => {
+                              const x = index * stepX;
+                              const yTotal = height - (point.total / maxValue) * height;
+                              const yPremium = height - (point.premium / maxValue) * height;
+                              
+                              return (
+                                <g key={index}>
+                                  {/* Ponto total */}
+                                  <circle
+                                    cx={x}
+                                    cy={yTotal}
+                                    r="3"
+                                    fill="#10b981"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    className="hover:r-4 transition-all cursor-pointer"
+                                  />
+                                  
+                                  {/* Ponto premium */}
+                                  <circle
+                                    cx={x}
+                                    cy={yPremium}
+                                    r="3"
+                                    fill="#3b82f6"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    className="hover:r-4 transition-all cursor-pointer"
+                                  />
+                                </g>
+                              );
+                            })}
+                          </>
+                        );
+                      })()}
+                    </svg>
+                    
+                    {/* Labels de data */}
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-muted-foreground px-2">
+                      {chartData.map((point, index) => {
+                        if (index % Math.ceil(chartData.length / 5) === 0) {
+                          return (
+                            <span key={index} className="transform -translate-x-1/2">
                               {point.date}
                             </span>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center text-muted-foreground">
