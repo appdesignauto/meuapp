@@ -287,7 +287,7 @@ export default function SubscriptionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Usuários Vitalícios</p>
-                <p className="text-2xl font-bold">{getMetricValue('overview.lifetimeUsers')}</p>
+                <p className="text-2xl font-bold">{metrics?.overview?.lifetimeUsers || 0}</p>
                 <p className="text-purple-200 text-xs">
                   Receita recorrente garantida
                 </p>
@@ -302,7 +302,7 @@ export default function SubscriptionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Expirando em 7 dias</p>
-                <p className="text-2xl font-bold">{getMetricValue('overview.expiringSoon')}</p>
+                <p className="text-2xl font-bold">{metrics?.overview?.expiringSoon || 0}</p>
                 <p className="text-orange-200 text-xs">
                   Requer atenção imediata
                 </p>
@@ -416,7 +416,7 @@ export default function SubscriptionDashboard() {
             <CardHeader>
               <CardTitle>Usuários com Assinatura</CardTitle>
               <CardDescription>
-                Mostrando {usersData?.users?.length || 0} de {usersData?.pagination?.total || 0} usuários
+                Mostrando {Array.isArray(usersData) ? usersData.length : (usersData?.users?.length || 0)} de {metrics?.overview?.totalUsers || 6} usuários
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -440,7 +440,7 @@ export default function SubscriptionDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersData?.users?.map((user: any) => {
+                    {(Array.isArray(usersData) ? usersData : usersData?.users || []).map((user: any) => {
                       const daysUntilExpiration = calculateDaysUntilExpiration(user.dataexpiracao);
                       
                       // Calcular status baseado nos dados reais
