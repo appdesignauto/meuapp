@@ -7105,15 +7105,16 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       // Buscar registros agrupados por mês usando pool direto
       const pool = (global as any).db;
-      const result = await pool.query(`
-        SELECT 
+      const result = await pool.query(
+        `SELECT 
           TO_CHAR(criadoem, 'Mon/YY') as label,
           COUNT(*) as count
         FROM users 
-        WHERE criadoem >= NOW() - INTERVAL '${days} days'
+        WHERE criadoem >= NOW() - INTERVAL $1
         GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
-        ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
-      `);
+        ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)`,
+        [`${days} days`]
+      );
 
       // Formatar dados para o frontend
       const formattedData = result.rows.map((row: any) => ({
@@ -7169,8 +7170,8 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       // Buscar dados de receita agrupados por mês usando pool direto
       const pool = (global as any).db;
-      const result = await pool.query(`
-        SELECT 
+      const result = await pool.query(
+        `SELECT 
           TO_CHAR(dataassinatura, 'Mon/YY') as label,
           SUM(
             CASE 
@@ -7183,11 +7184,12 @@ app.use('/api/reports-v2', (req, res, next) => {
           ) as value
         FROM users 
         WHERE dataassinatura IS NOT NULL 
-          AND dataassinatura >= NOW() - INTERVAL '${days} days'
+          AND dataassinatura >= NOW() - INTERVAL $1
           AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
         GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
-        ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
-      `);
+        ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)`,
+        [`${days} days`]
+      );
 
       // Formatar dados para o frontend
       const formattedRevenueData = result.rows.map((row: any) => ({
