@@ -23,20 +23,18 @@ export function useSubscription(user: User | null): SubscriptionStatus {
     };
   }
 
-  // Verificação de acesso premium baseado no nível de acesso do usuário
-  const isPremiumRole: boolean = 
-    user.role === "premium" || 
-    user.role === "designer" || 
-    user.role === "designer_adm" || 
-    user.role === "admin";
-    
-  const isPremiumAccess: boolean = Boolean(
-    user.nivelacesso && 
-    user.nivelacesso !== "free" && 
-    user.nivelacesso !== "usuario"
+  // Verificação de acesso premium baseado no nível de acesso e planos do usuário
+  const isPremium: boolean = Boolean(
+    user.tipoplano === 'mensal' || 
+    user.tipoplano === 'anual' || 
+    user.tipoplano === 'vitalicio' || 
+    user.tipoplano === 'personalizado' || 
+    user.acessovitalicio || 
+    user.nivelacesso === 'admin' || 
+    user.nivelacesso === 'designer_adm' ||
+    user.nivelacesso === 'designer' ||
+    user.nivelacesso === 'suporte'
   );
-
-  const isPremium: boolean = isPremiumRole || isPremiumAccess;
 
   // Verificar se tem acesso vitalício
   const isLifetime: boolean = user.acessovitalicio === true;
