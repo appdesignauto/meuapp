@@ -2858,7 +2858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as User;
       
       // Verificar se o usuário tem permissão de administrador
-      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "support") {
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "suporte") {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
