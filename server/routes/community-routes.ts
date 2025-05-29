@@ -2053,8 +2053,8 @@ async function updateLeaderboardForPeriod(period: string) {
 // GET: Estatísticas administrativas da comunidade
 router.get('/api/community/admin/stats', async (req, res) => {
   try {
-    // Verificar permissão - apenas admin pode acessar
-    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+    // Verificar permissão - admin, designer_adm e suporte podem acessar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm' && req.user.nivelacesso !== 'suporte')) {
       return res.status(403).json({ message: 'Sem permissão para esta ação' });
     }
 
@@ -2093,8 +2093,8 @@ router.get('/api/community/admin/stats', async (req, res) => {
 // GET: Listar posts para administração (com filtros e paginação)
 router.get('/api/community/admin/posts', async (req, res) => {
   try {
-    // Verificar permissão - apenas admin pode acessar
-    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+    // Verificar permissão - admin, designer_adm e suporte podem acessar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm' && req.user.nivelacesso !== 'suporte')) {
       return res.status(403).json({ message: 'Sem permissão para esta ação' });
     }
 
@@ -2212,8 +2212,8 @@ router.get('/api/community/admin/posts', async (req, res) => {
 // POST: Aprovar um post
 router.post('/api/community/admin/posts/:id/approve', async (req, res) => {
   try {
-    // Verificar permissão - apenas admin pode aprovar
-    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+    // Verificar permissão - admin, designer_adm e suporte podem aprovar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm' && req.user.nivelacesso !== 'suporte')) {
       return res.status(403).json({ message: 'Sem permissão para esta ação' });
     }
 
@@ -2278,8 +2278,8 @@ router.post('/api/community/admin/posts/:id/approve', async (req, res) => {
 // POST: Rejeitar um post
 router.post('/api/community/admin/posts/:id/reject', async (req, res) => {
   try {
-    // Verificar permissão - apenas admin pode rejeitar
-    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+    // Verificar permissão - admin, designer_adm e suporte podem rejeitar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm' && req.user.nivelacesso !== 'suporte')) {
       return res.status(403).json({ message: 'Sem permissão para esta ação' });
     }
 
