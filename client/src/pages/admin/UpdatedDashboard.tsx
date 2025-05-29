@@ -1278,13 +1278,15 @@ const AdminDashboard = () => {
                 </button>
               </CollapsibleContent>
             </Collapsible>
+            )}
             
-            {/* Reports */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden mb-1"
-              defaultOpen={['reports'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
+            {/* Reports - Visível para suporte */}
+            {(user?.nivelacesso === 'suporte' || user?.nivelacesso === 'admin') && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden mb-1"
+                defaultOpen={['reports'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
               <CollapsibleTrigger 
                 className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Reports"
@@ -1310,13 +1312,15 @@ const AdminDashboard = () => {
                 </button>
               </CollapsibleContent>
             </Collapsible>
+            )}
             
-            {/* Ferramentas */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden mb-1"
-              defaultOpen={['ferramentas'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
+            {/* Ferramentas - Oculto para suporte */}
+            {user?.nivelacesso !== 'suporte' && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden mb-1"
+                defaultOpen={['ferramentas'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
               <CollapsibleTrigger 
                 className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Ferramentas"
@@ -1342,13 +1346,15 @@ const AdminDashboard = () => {
                 </button>
               </CollapsibleContent>
             </Collapsible>
+            )}
             
-            {/* Configurações */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden mb-1"
-              defaultOpen={['settings', 'collections'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
+            {/* Configurações - Oculto para suporte */}
+            {user?.nivelacesso !== 'suporte' && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden mb-1"
+                defaultOpen={['settings', 'collections'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
               <CollapsibleTrigger 
                 className={`flex items-center w-full px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Configurações"
@@ -1411,6 +1417,7 @@ const AdminDashboard = () => {
                 )}
               </CollapsibleContent>
             </Collapsible>
+            )}
           </nav>
         </div>
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-2 flex flex-col items-center'} border-t`}>
