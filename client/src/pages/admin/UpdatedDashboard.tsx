@@ -1164,12 +1164,13 @@ const AdminDashboard = () => {
             </Collapsible>
             )}
             
-            {/* Cursos e Vídeo-aulas */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden"
-              defaultOpen={['courses', 'modules', 'lessons', 'coursesConfig', 'courseStats'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
+            {/* Cursos e Vídeo-aulas - Visível para suporte e admin */}
+            {(user?.nivelacesso === 'suporte' || user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm') && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden"
+                defaultOpen={['courses', 'modules', 'lessons', 'coursesConfig', 'courseStats'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
               <CollapsibleTrigger 
                 className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Cursos"
@@ -1245,6 +1246,7 @@ const AdminDashboard = () => {
                 </button>
               </CollapsibleContent>
             </Collapsible>
+            )}
             
             {/* Marketing - Oculto para suporte */}
             {user?.nivelacesso !== 'suporte' && (
