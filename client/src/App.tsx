@@ -242,7 +242,7 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin/financeiro" 
         component={FinanceiroPage} 
-        roles={['admin', 'designer_adm']} 
+        roles={['admin']} 
       />
       <ProtectedRoute
         path="/admin/storage-test"
@@ -252,12 +252,12 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin/logo-upload" 
         component={LogoUploadPage}
-        roles={['admin', 'designer_adm']} 
+        roles={['admin']} 
       />
       <ProtectedRoute 
         path="/admin/add-art-multi" 
         component={AddArtMultiFormatPage}
-        roles={['admin', 'designer_adm']} 
+        roles={['admin']} 
       />
       {/* Rota normal protegida que requer papel de admin */}
       <ProtectedRoute 
