@@ -65,6 +65,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       icon: <BarChart className="h-5 w-5" />,
     },
     {
+      title: 'Assinaturas',
+      href: '/admin/assinaturas',
+      icon: <CreditCard className="h-5 w-5" />,
+    },
+    {
       title: 'Usuários',
       href: '/admin/users',
       icon: <Users className="h-5 w-5" />,
