@@ -130,6 +130,21 @@ const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const queryClient = useQueryClient();
 
+  // Função para verificar se o usuário tem acesso a uma aba específica
+  const hasTabAccess = (tabName: string): boolean => {
+    if (user?.nivelacesso === 'admin') {
+      return true; // Admin tem acesso total
+    }
+    
+    if (user?.nivelacesso === 'designer_adm') {
+      // Designer ADM tem acesso apenas a: arts, courses, ferramentas, community
+      const allowedTabs = ['arts', 'courses', 'ferramentas', 'community'];
+      return allowedTabs.includes(tabName);
+    }
+    
+    return false;
+  };
+
   // Estados para cursos
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
   const [isConfirmDeleteCourseOpen, setIsConfirmDeleteCourseOpen] = useState(false);
@@ -1012,29 +1027,33 @@ const AdminDashboard = () => {
               {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
             </button>
             
-            {/* Financeiro */}
-            <button
-              onClick={() => setActiveTab('financeiro')}
-              className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                activeTab === 'financeiro' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-              title="Financeiro"
-            >
-              <BarChart3 className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-              {sidebarOpen && <span className="ml-3 truncate">Financeiro</span>}
-            </button>
+            {/* Financeiro - apenas para admin */}
+            {hasTabAccess('financeiro') && (
+              <button
+                onClick={() => setActiveTab('financeiro')}
+                className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
+                  activeTab === 'financeiro' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Financeiro"
+              >
+                <BarChart3 className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                {sidebarOpen && <span className="ml-3 truncate">Financeiro</span>}
+              </button>
+            )}
             
-            {/* Assinaturas */}
-            <button
-              onClick={() => setActiveTab('subscriptions')}
-              className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-              title="Assinaturas"
-            >
-              <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-              {sidebarOpen && <span className="ml-3 truncate">Assinaturas</span>}
-            </button>
+            {/* Assinaturas - apenas para admin */}
+            {hasTabAccess('subscriptions') && (
+              <button
+                onClick={() => setActiveTab('subscriptions')}
+                className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
+                  activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Assinaturas"
+              >
+                <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                {sidebarOpen && <span className="ml-3 truncate">Assinaturas</span>}
+              </button>
+            )}
             
             {/* Usuários e Comunidade */}
             <Collapsible 
