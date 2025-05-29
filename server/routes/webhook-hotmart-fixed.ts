@@ -29,8 +29,8 @@ router.post('/hotmart-fixed', async (req, res) => {
       const now = new Date();
       let endDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-      // Verifica se usuário existe e busca dados da assinatura
-      const existingUser = await pool.query('SELECT id, dataassinatura, tipoplano FROM users WHERE email = $1', [email]);
+      // Verifica se usuário existe e busca dados completos da assinatura
+      const existingUser = await pool.query('SELECT id, dataassinatura, tipoplano, dataexpiracao FROM users WHERE email = $1', [email]);
       
       if (existingUser.rowCount === 0) {
         // Cria novo usuário
@@ -46,29 +46,42 @@ router.post('/hotmart-fixed', async (req, res) => {
         const userData = existingUser.rows[0];
         const originalSubscriptionDate = userData.dataassinatura;
         
-        // Se já existe uma data de assinatura, usa ela para calcular a nova expiração
+        // Se já existe uma data de assinatura, verifica se é redisparo ou renovação real
         if (originalSubscriptionDate) {
           const originalDate = new Date(originalSubscriptionDate);
-          const preservedEndDate = new Date(originalDate);
+          const currentExpiration = userData.dataexpiracao ? new Date(userData.dataexpiracao) : null;
+          const isExpired = currentExpiration && currentExpiration <= now;
           
-          if (planType === 'anual') {
-            // Para plano anual: adiciona 1 ano preservando dia, hora, minuto e segundo originais
-            preservedEndDate.setFullYear(originalDate.getFullYear() + 1);
+          // Se a assinatura expirou, trata como renovação real (atualiza data de assinatura)
+          if (isExpired) {
+            await pool.query(`
+              UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', dataassinatura = $4
+              WHERE email = $1;
+            `, [email, planType, endDate, now]);
+            console.log(`🔄 RENOVAÇÃO REAL - Usuário ${name} com assinatura expirada, data atualizada`);
+            console.log(`📅 Nova data de assinatura: ${now.toISOString()}`);
+            console.log(`📅 Nova data de expiração: ${endDate.toISOString()}`);
           } else {
-            // Para plano mensal: adiciona 30 dias preservando hora, minuto e segundo originais
-            preservedEndDate.setDate(originalDate.getDate() + 30);
+            // Se ainda não expirou, é redisparo - preserva data original
+            const preservedEndDate = new Date(originalDate);
+            
+            if (planType === 'anual') {
+              preservedEndDate.setFullYear(originalDate.getFullYear() + 1);
+            } else {
+              preservedEndDate.setDate(originalDate.getDate() + 30);
+            }
+            
+            await pool.query(`
+              UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
+              WHERE email = $1;
+            `, [email, planType, preservedEndDate]);
+            console.log(`🔁 REDISPARO - Preservando data original para: ${name}`);
+            console.log(`📅 Data assinatura original mantida: ${originalDate.toISOString()}`);
+            console.log(`📅 Expiração recalculada: ${preservedEndDate.toISOString()}`);
+            
+            // Usa a data preservada na assinatura
+            endDate = preservedEndDate;
           }
-          
-          await pool.query(`
-            UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
-            WHERE email = $1;
-          `, [email, planType, preservedEndDate]);
-          console.log(`✅ Usuário atualizado PRESERVANDO data original: ${name}`);
-          console.log(`📅 Data assinatura original: ${originalDate.toISOString()}`);
-          console.log(`📅 Nova expiração calculada: ${preservedEndDate.toISOString()}`);
-          
-          // Usa a data preservada na assinatura
-          endDate = preservedEndDate;
         } else {
           // Se não há data de assinatura original, trata como novo usuário
           await pool.query(`
