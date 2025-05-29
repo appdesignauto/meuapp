@@ -27,10 +27,10 @@ router.post('/hotmart-fixed', async (req, res) => {
       const planName = payload.data?.subscription?.plan?.name?.toLowerCase();
       const planType = planName?.includes('anual') ? 'anual' : 'mensal';
       const now = new Date();
-      const endDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+      let endDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-      // Verifica se usuário existe
-      const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      // Verifica se usuário existe e busca dados da assinatura
+      const existingUser = await pool.query('SELECT id, dataassinatura, tipoplano FROM users WHERE email = $1', [email]);
       
       if (existingUser.rowCount === 0) {
         // Cria novo usuário
@@ -42,12 +42,31 @@ router.post('/hotmart-fixed', async (req, res) => {
         `, [email, name, username, tempPassword, planType, now, endDate]);
         console.log(`✅ Novo usuário criado: ${name}`);
       } else {
-        // Atualiza usuário existente
+        // Atualiza usuário existente MANTENDO a data de assinatura original
+        const userData = existingUser.rows[0];
+        const originalSubscriptionDate = userData.dataassinatura || now;
+        
+        // Calcula data de expiração baseada EXATAMENTE na data de assinatura original
+        const originalDate = new Date(originalSubscriptionDate);
+        let newEndDate;
+        if (planType === 'anual') {
+          // Para plano anual: adiciona exatamente 365 dias à data original
+          newEndDate = new Date(originalDate);
+          newEndDate.setFullYear(originalDate.getFullYear() + 1);
+        } else {
+          // Para plano mensal: adiciona exatamente 30 dias à data original
+          newEndDate = new Date(originalDate);
+          newEndDate.setDate(originalDate.getDate() + 30);
+        }
+        
         await pool.query(`
           UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
           WHERE email = $1;
-        `, [email, planType, endDate]);
-        console.log(`✅ Usuário atualizado para premium: ${name}`);
+        `, [email, planType, newEndDate]);
+        console.log(`✅ Usuário atualizado para premium (preservando data original): ${name}`);
+        
+        // Atualiza a variável endDate para usar na assinatura
+        endDate = newEndDate;
       }
 
       // Cria ou atualiza assinatura
