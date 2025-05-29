@@ -237,7 +237,7 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin" 
         component={UpdatedDashboard} 
-        roles={['admin', 'designer_adm']} 
+        roles={['admin', 'designer_adm', 'suporte']} 
       />
       <ProtectedRoute 
         path="/admin/financeiro" 
