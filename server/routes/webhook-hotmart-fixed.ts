@@ -25,9 +25,23 @@ router.post('/hotmart-fixed', async (req, res) => {
 
     if (!isPurchaseApproved && !isCancellation) {
       console.log('❌ [WEBHOOK] Validação falhou - evento não suportado:', payload?.event);
+      
+      // Registrar webhook não processado para análise
+      try {
+        await pool.query(`
+          INSERT INTO "webhookLogs" (
+            "eventType", status, source, "payloadData", "createdAt"
+          ) VALUES (
+            $1, 'not_processed', 'hotmart', $2, $3
+          )
+        `, [payload?.event || 'UNKNOWN', JSON.stringify(payload), new Date()]);
+      } catch (logError) {
+        console.error('Erro ao registrar webhook não processado:', logError);
+      }
+      
       return res.status(200).json({ 
         success: true, 
-        message: 'Evento processado - tipo não suportado',
+        message: 'Eventoprocessado-nãoécompraaprovada',
         processed: false
       });
     }
