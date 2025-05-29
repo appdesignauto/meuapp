@@ -7113,11 +7113,24 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       const result = await db.execute(sql`
         SELECT 
-          TO_CHAR(criadoem, 'Mon/YY') as label,
+          CASE TO_CHAR(criadoem, 'Mon')
+            WHEN 'Jan' THEN 'Jan/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Feb' THEN 'Fev/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Mar' THEN 'Mar/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Apr' THEN 'Abr/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'May' THEN 'Mai/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Jun' THEN 'Jun/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Jul' THEN 'Jul/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Aug' THEN 'Ago/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Sep' THEN 'Set/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Oct' THEN 'Out/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Nov' THEN 'Nov/' || TO_CHAR(criadoem, 'YY')
+            WHEN 'Dec' THEN 'Dez/' || TO_CHAR(criadoem, 'YY')
+          END as label,
           COUNT(*) as count
         FROM users 
         WHERE criadoem >= ${cutoffDate.toISOString()}
-        GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
+        GROUP BY TO_CHAR(criadoem, 'Mon'), TO_CHAR(criadoem, 'YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
         ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
       `);
       
@@ -7188,7 +7201,20 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       const result = await db.execute(sql`
         SELECT 
-          TO_CHAR(dataassinatura, 'Mon/YY') as label,
+          CASE TO_CHAR(dataassinatura, 'Mon')
+            WHEN 'Jan' THEN 'Jan/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Feb' THEN 'Fev/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Mar' THEN 'Mar/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Apr' THEN 'Abr/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'May' THEN 'Mai/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Jun' THEN 'Jun/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Jul' THEN 'Jul/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Aug' THEN 'Ago/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Sep' THEN 'Set/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Oct' THEN 'Out/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Nov' THEN 'Nov/' || TO_CHAR(dataassinatura, 'YY')
+            WHEN 'Dec' THEN 'Dez/' || TO_CHAR(dataassinatura, 'YY')
+          END as label,
           SUM(
             CASE 
               WHEN origemassinatura = 'hotmart' THEN 7.00
@@ -7202,7 +7228,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         WHERE dataassinatura IS NOT NULL 
           AND dataassinatura >= ${cutoffDate.toISOString()}
           AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
-        GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
+        GROUP BY TO_CHAR(dataassinatura, 'Mon'), TO_CHAR(dataassinatura, 'YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
         ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
       `);
       
