@@ -7103,34 +7103,49 @@ app.use('/api/reports-v2', (req, res, next) => {
       const { period = '30' } = req.query;
       const days = parseInt(period as string);
       
+      console.log("📊 [USER-REGISTRATIONS] Iniciando busca com período:", days, "dias");
+      
       // Buscar registros agrupados por mês usando pool direto
       const pool = (global as any).db;
+      
+      if (!pool) {
+        console.error("❌ [USER-REGISTRATIONS] Pool de conexão não disponível");
+        return res.status(500).json({ message: "Conexão com banco não disponível" });
+      }
       
       // Query mais simples sem INTERVAL complexo
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       
-      const result = await pool.query(
-        `SELECT 
-          TO_CHAR(criadoem, 'Mon/YY') as label,
-          COUNT(*) as count
-        FROM users 
-        WHERE criadoem >= $1
-        GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
-        ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)`,
-        [cutoffDate.toISOString()]
-      );
+      console.log("📅 [USER-REGISTRATIONS] Data de corte:", cutoffDate.toISOString());
+      
+      const query = `SELECT 
+        TO_CHAR(criadoem, 'Mon/YY') as label,
+        COUNT(*) as count
+      FROM users 
+      WHERE criadoem >= $1
+      GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
+      ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)`;
+      
+      console.log("🔍 [USER-REGISTRATIONS] Executando query:", query);
+      
+      const result = await pool.query(query, [cutoffDate.toISOString()]);
+      
+      console.log("✅ [USER-REGISTRATIONS] Resultado obtido:", result.rows.length, "registros");
 
       // Formatar dados para o frontend
       const formattedData = result.rows.map((row: any) => ({
         label: row.label,
         count: parseInt(row.count)
       }));
+      
+      console.log("📈 [USER-REGISTRATIONS] Dados formatados:", formattedData);
 
       res.json(formattedData);
     } catch (error) {
-      console.error("Erro ao buscar dados de cadastros:", error);
-      res.status(500).json({ message: "Erro ao buscar dados de cadastros" });
+      console.error("❌ [USER-REGISTRATIONS] Erro detalhado:", error);
+      console.error("❌ [USER-REGISTRATIONS] Stack trace:", (error as any).stack);
+      res.status(500).json({ message: "Erro ao buscar dados de cadastros", error: (error as any).message });
     }
   });
 
@@ -7173,44 +7188,59 @@ app.use('/api/reports-v2', (req, res, next) => {
       const { period = '30' } = req.query;
       const days = parseInt(period as string);
       
+      console.log("💰 [REVENUE-DATA] Iniciando busca com período:", days, "dias");
+      
       // Buscar dados de receita agrupados por mês usando pool direto
       const pool = (global as any).db;
+      
+      if (!pool) {
+        console.error("❌ [REVENUE-DATA] Pool de conexão não disponível");
+        return res.status(500).json({ message: "Conexão com banco não disponível" });
+      }
       
       // Query mais simples sem INTERVAL complexo
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       
-      const result = await pool.query(
-        `SELECT 
-          TO_CHAR(dataassinatura, 'Mon/YY') as label,
-          SUM(
-            CASE 
-              WHEN origemassinatura = 'hotmart' THEN 7.00
-              WHEN tipoplano = 'mensal' THEN 29.90
-              WHEN tipoplano = 'anual' THEN 197.00
-              WHEN tipoplano = 'vitalicio' THEN 497.00
-              ELSE 29.90
-            END
-          ) as value
-        FROM users 
-        WHERE dataassinatura IS NOT NULL 
-          AND dataassinatura >= $1
-          AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
-        GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
-        ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)`,
-        [cutoffDate.toISOString()]
-      );
+      console.log("📅 [REVENUE-DATA] Data de corte:", cutoffDate.toISOString());
+      
+      const query = `SELECT 
+        TO_CHAR(dataassinatura, 'Mon/YY') as label,
+        SUM(
+          CASE 
+            WHEN origemassinatura = 'hotmart' THEN 7.00
+            WHEN tipoplano = 'mensal' THEN 29.90
+            WHEN tipoplano = 'anual' THEN 197.00
+            WHEN tipoplano = 'vitalicio' THEN 497.00
+            ELSE 29.90
+          END
+        ) as value
+      FROM users 
+      WHERE dataassinatura IS NOT NULL 
+        AND dataassinatura >= $1
+        AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
+      GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
+      ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)`;
+      
+      console.log("🔍 [REVENUE-DATA] Executando query:", query);
+      
+      const result = await pool.query(query, [cutoffDate.toISOString()]);
+      
+      console.log("✅ [REVENUE-DATA] Resultado obtido:", result.rows.length, "registros");
 
       // Formatar dados para o frontend
       const formattedRevenueData = result.rows.map((row: any) => ({
         label: row.label,
         value: parseFloat(row.value || '0')
       }));
+      
+      console.log("📈 [REVENUE-DATA] Dados formatados:", formattedRevenueData);
 
       res.json(formattedRevenueData);
     } catch (error) {
-      console.error("Erro ao buscar dados de receita:", error);
-      res.status(500).json({ message: "Erro ao buscar dados de receita" });
+      console.error("❌ [REVENUE-DATA] Erro detalhado:", error);
+      console.error("❌ [REVENUE-DATA] Stack trace:", (error as any).stack);
+      res.status(500).json({ message: "Erro ao buscar dados de receita", error: (error as any).message });
     }
   });
 
