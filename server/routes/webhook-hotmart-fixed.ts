@@ -13,21 +13,30 @@ router.post('/hotmart-fixed', async (req, res) => {
     const payload = req.body;
     console.log('📦 [WEBHOOK] Payload completo:', JSON.stringify(payload, null, 2));
 
-    // ✅ 1. VALIDAÇÃO CORRETA DO WEBHOOK (event + status)
-    const isValid = 
+    // ✅ 1. VALIDAÇÃO CORRETA DO WEBHOOK (compra aprovada OU cancelamento)
+    const isPurchaseApproved = 
       payload?.event === 'PURCHASE_APPROVED' &&
       payload?.data?.purchase?.status === 'APPROVED';
 
-    if (!isValid) {
-      console.log('❌ [WEBHOOK] Validação falhou - não é compra aprovada');
+    const isCancellation = 
+      payload?.event === 'PURCHASE_PROTEST' ||
+      payload?.event === 'PURCHASE_REFUNDED' ||
+      payload?.event === 'SUBSCRIPTION_CANCELLATION';
+
+    if (!isPurchaseApproved && !isCancellation) {
+      console.log('❌ [WEBHOOK] Validação falhou - evento não suportado:', payload?.event);
       return res.status(200).json({ 
         success: true, 
-        message: 'Evento processado - não é compra aprovada',
+        message: 'Evento processado - tipo não suportado',
         processed: false
       });
     }
 
-    console.log('✅ [WEBHOOK] Validação OK - compra aprovada detectada!');
+    if (isPurchaseApproved) {
+      console.log('✅ [WEBHOOK] Validação OK - compra aprovada detectada!');
+    } else if (isCancellation) {
+      console.log('🚫 [WEBHOOK] Validação OK - cancelamento detectado!');
+    }
 
     // ✅ 2. EXTRAÇÃO CORRETA DOS DADOS DO WEBHOOK
     const buyer = payload.data.buyer;
@@ -63,7 +72,83 @@ router.post('/hotmart-fixed', async (req, res) => {
       connectionString: process.env.DATABASE_URL
     });
 
-    // ✅ 3. INSERÇÃO NO BANCO COM OS NOMES CORRETOS
+    // ✅ 3. PROCESSAR CANCELAMENTO SE FOR EVENTO DE CANCELAMENTO
+    if (isCancellation) {
+      console.log('🚫 [WEBHOOK] Processando cancelamento de assinatura...');
+      
+      if (!email || !transactionId) {
+        console.error('❌ [WEBHOOK] Dados insuficientes para cancelamento');
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Email ou ID de transação ausente para cancelamento' 
+        });
+      }
+
+      try {
+        // Rebaixar usuário para free
+        const userUpdateResult = await pool.query(`
+          UPDATE users SET
+            nivelacesso = 'free',
+            acessovitalicio = false,
+            tipoplano = NULL,
+            dataexpiracao = CURRENT_DATE
+          WHERE email = $1
+          RETURNING id, name
+        `, [email]);
+
+        if (userUpdateResult.rowCount === 0) {
+          console.log('⚠️ [WEBHOOK] Usuário não encontrado para cancelamento:', email);
+        } else {
+          console.log('✅ [WEBHOOK] Usuário rebaixado para free:', userUpdateResult.rows[0]);
+        }
+
+        // Cancelar assinatura
+        const subscriptionUpdateResult = await pool.query(`
+          UPDATE subscriptions SET
+            status = 'canceled',
+            "endDate" = CURRENT_DATE,
+            lastevent = $1
+          WHERE transactionid = $2
+          RETURNING id, "planType"
+        `, [payload.event, transactionId]);
+
+        if (subscriptionUpdateResult.rowCount === 0) {
+          console.log('⚠️ [WEBHOOK] Assinatura não encontrada para cancelamento:', transactionId);
+        } else {
+          console.log('✅ [WEBHOOK] Assinatura cancelada:', subscriptionUpdateResult.rows[0]);
+        }
+
+        // Log do webhook de cancelamento
+        await pool.query(`
+          INSERT INTO "webhookLogs" (
+            email, "payloadData", status, "createdAt", source, "transactionId", "eventType"
+          ) VALUES (
+            $1, $2, 'processed', $3, 'hotmart', $4, $5
+          )
+        `, [email, JSON.stringify(payload), payload.event, new Date(), transactionId]);
+
+        await pool.end();
+
+        console.log('🎉 [WEBHOOK] Cancelamento processado com sucesso!');
+        return res.status(200).json({
+          success: true,
+          message: 'Assinatura cancelada e usuário rebaixado com sucesso',
+          event: payload.event,
+          email: email,
+          transactionId: transactionId
+        });
+
+      } catch (error) {
+        console.error('❌ [WEBHOOK] Erro ao processar cancelamento:', error);
+        await pool.end();
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Erro interno ao cancelar assinatura' 
+        });
+      }
+    }
+
+    // ✅ 4. INSERÇÃO NO BANCO PARA COMPRAS APROVADAS
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     let userId;
 
