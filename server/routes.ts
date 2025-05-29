@@ -7107,12 +7107,12 @@ app.use('/api/reports-v2', (req, res, next) => {
       const pool = (global as any).db;
       const result = await pool.query(`
         SELECT 
-          TO_CHAR("criadoem", 'Mon/YY') as label,
+          TO_CHAR(criadoem, 'Mon/YY') as label,
           COUNT(*) as count
         FROM users 
-        WHERE "criadoem" >= NOW() - INTERVAL '${days} days'
-        GROUP BY TO_CHAR("criadoem", 'Mon/YY'), EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
-        ORDER BY EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
+        WHERE criadoem >= NOW() - INTERVAL '${days} days'
+        GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
+        ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
       `);
 
       // Formatar dados para o frontend
@@ -7171,22 +7171,22 @@ app.use('/api/reports-v2', (req, res, next) => {
       const pool = (global as any).db;
       const result = await pool.query(`
         SELECT 
-          TO_CHAR("dataassinatura", 'Mon/YY') as label,
+          TO_CHAR(dataassinatura, 'Mon/YY') as label,
           SUM(
             CASE 
-              WHEN "origemassinatura" = 'hotmart' THEN 7.00
-              WHEN "tipoplano" = 'mensal' THEN 29.90
-              WHEN "tipoplano" = 'anual' THEN 197.00
-              WHEN "tipoplano" = 'vitalicio' THEN 497.00
+              WHEN origemassinatura = 'hotmart' THEN 7.00
+              WHEN tipoplano = 'mensal' THEN 29.90
+              WHEN tipoplano = 'anual' THEN 197.00
+              WHEN tipoplano = 'vitalicio' THEN 497.00
               ELSE 29.90
             END
           ) as value
         FROM users 
-        WHERE "dataassinatura" IS NOT NULL 
-          AND "dataassinatura" >= NOW() - INTERVAL '${days} days'
-          AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
-        GROUP BY TO_CHAR("dataassinatura", 'Mon/YY'), EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
-        ORDER BY EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
+        WHERE dataassinatura IS NOT NULL 
+          AND dataassinatura >= NOW() - INTERVAL '${days} days'
+          AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
+        GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
+        ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
       `);
 
       // Formatar dados para o frontend
