@@ -150,6 +150,12 @@ const AdminDashboard = () => {
       return allowedTabs.includes(tabName);
     }
     
+    if (user?.nivelacesso === 'suporte') {
+      // Suporte tem acesso apenas a: subscriptions, users, community, reports
+      const allowedTabs = ['subscriptions', 'users', 'community', 'reports'];
+      return allowedTabs.includes(tabName);
+    }
+    
     return false;
   };
 
@@ -962,8 +968,8 @@ const AdminDashboard = () => {
     }
   };
   
-  // Verifica se o usuário é admin ou designer_adm
-  const isAuthorized = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm';
+  // Verifica se o usuário é admin, designer_adm ou suporte
+  const isAuthorized = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || user?.nivelacesso === 'suporte';
 
   if (!isAuthorized) {
     // Redireciona para home se não for autorizado
