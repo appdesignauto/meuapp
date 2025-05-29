@@ -21,7 +21,17 @@ router.post('/hotmart-fixed', async (req, res) => {
     const isCancellation = 
       payload?.event === 'PURCHASE_PROTEST' ||
       payload?.event === 'PURCHASE_REFUNDED' ||
-      payload?.event === 'SUBSCRIPTION_CANCELLATION';
+      payload?.event === 'SUBSCRIPTION_CANCELLATION' ||
+      payload?.event === 'PURCHASE_CANCELED' ||
+      payload?.event === 'PURCHASE_CHARGEBACK' ||
+      (payload?.data?.subscription?.status === 'CANCELED') ||
+      (payload?.data?.purchase?.status === 'CANCELED') ||
+      (payload?.data?.purchase?.status === 'DISPUTE');
+
+    // Conexão com banco
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
 
     if (!isPurchaseApproved && !isCancellation) {
       console.log('❌ [WEBHOOK] Validação falhou - evento não suportado:', payload?.event);
@@ -39,6 +49,7 @@ router.post('/hotmart-fixed', async (req, res) => {
         console.error('Erro ao registrar webhook não processado:', logError);
       }
       
+      await pool.end();
       return res.status(200).json({ 
         success: true, 
         message: 'Eventoprocessado-nãoécompraaprovada',
@@ -63,11 +74,6 @@ router.post('/hotmart-fixed', async (req, res) => {
     const transactionId = purchase?.transaction;
     const event = payload.event;
     const origin = "hotmart";
-
-    // Conexão com banco
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL
-    });
 
     // ✅ 3. PROCESSAR CANCELAMENTO SE FOR EVENTO DE CANCELAMENTO
     if (isCancellation) {
