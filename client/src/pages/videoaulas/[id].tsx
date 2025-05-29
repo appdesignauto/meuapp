@@ -126,7 +126,17 @@ const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string; videoProvi
 const VideoLessonPage: React.FC = () => {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
+  const isPremiumUser = user && (
+    user.tipoplano === 'mensal' || 
+    user.tipoplano === 'anual' || 
+    user.tipoplano === 'vitalicio' || 
+    user.tipoplano === 'personalizado' || 
+    user.acessovitalicio || 
+    user.nivelacesso === 'admin' || 
+    user.nivelacesso === 'designer_adm' ||
+    user.nivelacesso === 'designer' ||
+    user.nivelacesso === 'suporte'
+  );
   const [, navigate] = useLocation();
 
   // Conversão segura do id para número, com tratamento de erro

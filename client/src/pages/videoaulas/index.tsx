@@ -49,7 +49,17 @@ import {
 
 export default function VideoaulasPage() {
   const { user } = useAuth();
-  const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
+  const isPremiumUser = user && (
+    user.tipoplano === 'mensal' || 
+    user.tipoplano === 'anual' || 
+    user.tipoplano === 'vitalicio' || 
+    user.tipoplano === 'personalizado' || 
+    user.acessovitalicio || 
+    user.nivelacesso === 'admin' || 
+    user.nivelacesso === 'designer_adm' ||
+    user.nivelacesso === 'designer' ||
+    user.nivelacesso === 'suporte'
+  );
   const [activeTab, setActiveTab] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [infoModalOpen, setInfoModalOpen] = useState(false);

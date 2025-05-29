@@ -268,7 +268,9 @@ export default function ArtDetail() {
            user.tipoplano === 'personalizado' || 
            user.acessovitalicio || 
            user.nivelacesso === 'admin' || 
-           user.nivelacesso === 'designer_adm';
+           user.nivelacesso === 'designer_adm' ||
+           user.nivelacesso === 'designer' ||
+           user.nivelacesso === 'suporte';
   };
   
   // Função para determinar se a arte deve ser bloqueada para edição
