@@ -7174,52 +7174,40 @@ app.use('/api/reports-v2', (req, res, next) => {
     try {
       const { period = '30' } = req.query;
       
-      // Usar Drizzle ORM em vez do pool direto
-      let query = db.select({
-        label: sql`TO_CHAR(${users.dataassinatura}, 'Mon/YY')`,
-        value: sql`SUM(
-          CASE 
-            WHEN ${users.origemassinatura} = 'hotmart' THEN 7.00
-            WHEN ${users.tipoplano} = 'mensal' THEN 29.90
-            WHEN ${users.tipoplano} = 'anual' THEN 197.00
-            WHEN ${users.tipoplano} = 'vitalicio' THEN 497.00
-            ELSE 29.90
-          END
-        )`
-      }).from(users)
-      .where(
-        and(
-          isNotNull(users.dataassinatura),
-          or(
-            inArray(users.nivelacesso, ['premium', 'designer', 'admin']),
-            eq(users.acessovitalicio, true)
-          )
-        )
-      );
+      // Usar consulta SQL direta com Drizzle
+      let whereCondition = sql`"dataassinatura" IS NOT NULL 
+        AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)`;
       
       if (period !== 'all') {
         const days = parseInt(period as string);
         // Verificar se é um número válido antes de usar na query
         if (!isNaN(days) && days > 0) {
-          query = query.where(
-            and(
-              isNotNull(users.dataassinatura),
-              or(
-                inArray(users.nivelacesso, ['premium', 'designer', 'admin']),
-                eq(users.acessovitalicio, true)
-              ),
-              sql`${users.dataassinatura} >= NOW() - INTERVAL '${days} days'`
-            )
-          );
+          whereCondition = sql`"dataassinatura" IS NOT NULL 
+            AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
+            AND "dataassinatura" >= NOW() - INTERVAL '${days} days'`;
         }
       }
       
-      const result = await query
-        .groupBy(sql`TO_CHAR(${users.dataassinatura}, 'Mon/YY'), EXTRACT(YEAR FROM ${users.dataassinatura}), EXTRACT(MONTH FROM ${users.dataassinatura})`)
-        .orderBy(sql`EXTRACT(YEAR FROM ${users.dataassinatura}), EXTRACT(MONTH FROM ${users.dataassinatura})`);
+      const result = await db.execute(sql`
+        SELECT 
+          TO_CHAR("dataassinatura", 'Mon/YY') as label,
+          SUM(
+            CASE 
+              WHEN "origemassinatura" = 'hotmart' THEN 7.00
+              WHEN "tipoplano" = 'mensal' THEN 29.90
+              WHEN "tipoplano" = 'anual' THEN 197.00
+              WHEN "tipoplano" = 'vitalicio' THEN 497.00
+              ELSE 29.90
+            END
+          ) as value
+        FROM ${users} 
+        WHERE ${whereCondition}
+        GROUP BY TO_CHAR("dataassinatura", 'Mon/YY'), EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
+        ORDER BY EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
+      `);
 
       // Formatar dados para o frontend
-      const formattedRevenueData = result.map((row: any) => ({
+      const formattedRevenueData = result.rows.map((row: any) => ({
         label: row.label,
         value: parseFloat(row.value || '0')
       }));
