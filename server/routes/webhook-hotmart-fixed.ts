@@ -35,10 +35,11 @@ router.post('/hotmart-fixed', async (req, res) => {
       if (existingUser.rowCount === 0) {
         // Cria novo usuário
         const username = email.split('@')[0]; // Username baseado no email
+        const tempPassword = Math.random().toString(36).substring(2, 15); // Password temporário
         await pool.query(`
-          INSERT INTO users (email, name, username, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed)
-          VALUES ($1, $2, $3, 'premium', 'hotmart', $4, $5, $6, false, true, true);
-        `, [email, name, username, planType, now, endDate]);
+          INSERT INTO users (email, name, username, password, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed)
+          VALUES ($1, $2, $3, $4, 'premium', 'hotmart', $5, $6, $7, false, true, true);
+        `, [email, name, username, tempPassword, planType, now, endDate]);
         console.log(`✅ Novo usuário criado: ${name}`);
       } else {
         // Atualiza usuário existente
