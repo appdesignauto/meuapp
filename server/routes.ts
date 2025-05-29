@@ -7105,31 +7105,21 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       console.log("📊 [USER-REGISTRATIONS] Iniciando busca com período:", days, "dias");
       
-      // Buscar registros agrupados por mês usando pool direto
-      const pool = (global as any).db;
-      
-      if (!pool) {
-        console.error("❌ [USER-REGISTRATIONS] Pool de conexão não disponível");
-        return res.status(500).json({ message: "Conexão com banco não disponível" });
-      }
-      
       // Query mais simples sem INTERVAL complexo
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       
       console.log("📅 [USER-REGISTRATIONS] Data de corte:", cutoffDate.toISOString());
       
-      const query = `SELECT 
-        TO_CHAR(criadoem, 'Mon/YY') as label,
-        COUNT(*) as count
-      FROM users 
-      WHERE criadoem >= $1
-      GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
-      ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)`;
-      
-      console.log("🔍 [USER-REGISTRATIONS] Executando query:", query);
-      
-      const result = await pool.query(query, [cutoffDate.toISOString()]);
+      const result = await db.execute(sql`
+        SELECT 
+          TO_CHAR(criadoem, 'Mon/YY') as label,
+          COUNT(*) as count
+        FROM users 
+        WHERE criadoem >= ${cutoffDate.toISOString()}
+        GROUP BY TO_CHAR(criadoem, 'Mon/YY'), EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
+        ORDER BY EXTRACT(YEAR FROM criadoem), EXTRACT(MONTH FROM criadoem)
+      `);
       
       console.log("✅ [USER-REGISTRATIONS] Resultado obtido:", result.rows.length, "registros");
 
@@ -7190,41 +7180,31 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       console.log("💰 [REVENUE-DATA] Iniciando busca com período:", days, "dias");
       
-      // Buscar dados de receita agrupados por mês usando pool direto
-      const pool = (global as any).db;
-      
-      if (!pool) {
-        console.error("❌ [REVENUE-DATA] Pool de conexão não disponível");
-        return res.status(500).json({ message: "Conexão com banco não disponível" });
-      }
-      
       // Query mais simples sem INTERVAL complexo
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
       
       console.log("📅 [REVENUE-DATA] Data de corte:", cutoffDate.toISOString());
       
-      const query = `SELECT 
-        TO_CHAR(dataassinatura, 'Mon/YY') as label,
-        SUM(
-          CASE 
-            WHEN origemassinatura = 'hotmart' THEN 7.00
-            WHEN tipoplano = 'mensal' THEN 29.90
-            WHEN tipoplano = 'anual' THEN 197.00
-            WHEN tipoplano = 'vitalicio' THEN 497.00
-            ELSE 29.90
-          END
-        ) as value
-      FROM users 
-      WHERE dataassinatura IS NOT NULL 
-        AND dataassinatura >= $1
-        AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
-      GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
-      ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)`;
-      
-      console.log("🔍 [REVENUE-DATA] Executando query:", query);
-      
-      const result = await pool.query(query, [cutoffDate.toISOString()]);
+      const result = await db.execute(sql`
+        SELECT 
+          TO_CHAR(dataassinatura, 'Mon/YY') as label,
+          SUM(
+            CASE 
+              WHEN origemassinatura = 'hotmart' THEN 7.00
+              WHEN tipoplano = 'mensal' THEN 29.90
+              WHEN tipoplano = 'anual' THEN 197.00
+              WHEN tipoplano = 'vitalicio' THEN 497.00
+              ELSE 29.90
+            END
+          ) as value
+        FROM users 
+        WHERE dataassinatura IS NOT NULL 
+          AND dataassinatura >= ${cutoffDate.toISOString()}
+          AND (nivelacesso IN ('premium', 'designer', 'admin') OR acessovitalicio = true)
+        GROUP BY TO_CHAR(dataassinatura, 'Mon/YY'), EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
+        ORDER BY EXTRACT(YEAR FROM dataassinatura), EXTRACT(MONTH FROM dataassinatura)
+      `);
       
       console.log("✅ [REVENUE-DATA] Resultado obtido:", result.rows.length, "registros");
 
