@@ -7108,7 +7108,10 @@ app.use('/api/reports-v2', (req, res, next) => {
       let whereClause = '';
       if (period !== 'all') {
         const days = parseInt(period as string);
-        whereClause = `WHERE "criadoem" >= NOW() - INTERVAL '${days} days'`;
+        // Verificar se é um número válido antes de usar na query
+        if (!isNaN(days) && days > 0) {
+          whereClause = `WHERE "criadoem" >= NOW() - INTERVAL '${days} days'`;
+        }
       }
       
       const result = await pool.query(`
@@ -7180,7 +7183,10 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       if (period !== 'all') {
         const days = parseInt(period as string);
-        whereClause += ` AND "dataassinatura" >= NOW() - INTERVAL '${days} days'`;
+        // Verificar se é um número válido antes de usar na query
+        if (!isNaN(days) && days > 0) {
+          whereClause += ` AND "dataassinatura" >= NOW() - INTERVAL '${days} days'`;
+        }
       }
       
       const result = await pool.query(`
@@ -7222,9 +7228,12 @@ app.use('/api/reports-v2', (req, res, next) => {
       let periodCondition = '';
       if (period !== 'all') {
         const days = parseInt(period as string);
-        const now = new Date();
-        const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        periodCondition = `AND "criadoem" >= '${periodStart.toISOString()}'`;
+        // Verificar se é um número válido antes de usar na query
+        if (!isNaN(days) && days > 0) {
+          const now = new Date();
+          const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+          periodCondition = `AND "criadoem" >= '${periodStart.toISOString()}'`;
+        }
       }
       
       // Buscar métricas do período usando pool direto
