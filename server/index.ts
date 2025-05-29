@@ -282,7 +282,9 @@ app.use((req, res, next) => {
         const purchase = payload.data?.purchase;
         const subscriber = payload.data?.subscriber;
         
-        const email = buyer?.email?.toLowerCase().trim() || subscriber?.email?.toLowerCase().trim();
+        const email = buyer?.email?.toLowerCase().trim() || 
+                     subscriber?.email?.toLowerCase().trim() ||
+                     payload.data?.buyer?.email?.toLowerCase().trim();
         const transactionId = purchase?.transaction;
         
         const pool = new Pool({
