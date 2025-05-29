@@ -382,7 +382,7 @@ const Header = () => {
               <Link href="/admin">
                 <Button 
                   variant="ghost" 
-                  className="hidden md:flex h-9 items-center rounded-full px-3 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
+                  className="flex h-9 items-center rounded-full px-3 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
                 >
                   <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
                   <span className="text-xs font-medium">Admin</span>
