@@ -61,9 +61,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     
     if (user?.nivelacesso === 'designer_adm') {
       // Designer ADM tem acesso apenas a: Conteúdo (Artes), Cursos, Ferramentas e Comunidade
-      // NÃO tem acesso a: Financeiro, Assinaturas, Usuários, Analytics, Configurações, etc.
+      // NÃO tem acesso a: Visão Geral, Financeiro, Assinaturas, Usuários, Analytics, Configurações, etc.
       const allowedItems = [
-        'Visão Geral',
         'Artes', // Conteúdo
         'Cursos',
         'Ferramentas',

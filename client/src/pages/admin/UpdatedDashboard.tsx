@@ -1015,17 +1015,19 @@ const AdminDashboard = () => {
             )}
           </div>
           <nav className="mt-5 space-y-2">
-            {/* Dashboard principal */}
-            <button
-              onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                activeTab === 'stats' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-              title="Visão Geral"
-            >
-              <LayoutDashboard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-              {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
-            </button>
+            {/* Dashboard principal - apenas para admin */}
+            {hasTabAccess('stats') && (
+              <button
+                onClick={() => setActiveTab('stats')}
+                className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
+                  activeTab === 'stats' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Visão Geral"
+              >
+                <LayoutDashboard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
+              </button>
+            )}
             
             {/* Financeiro - apenas para admin */}
             {hasTabAccess('financeiro') && (
@@ -1357,16 +1359,18 @@ const AdminDashboard = () => {
                 )}
               </CollapsibleTrigger>
               <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'settings' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                  title="Configurações do Site"
-                >
-                  <Settings className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate">Configurações do Site</span>}
-                </button>
+                {hasTabAccess('settings') && (
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                      activeTab === 'settings' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                    } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                    title="Configurações do Site"
+                  >
+                    <Settings className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                    {sidebarOpen && <span className="truncate">Configurações do Site</span>}
+                  </button>
+                )}
 
                 {user?.nivelacesso === 'admin' && (
                   <>
@@ -4020,9 +4024,11 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="settings">
-              <SiteSettings />
-            </TabsContent>
+            {hasTabAccess('settings') && (
+              <TabsContent value="settings">
+                <SiteSettings />
+              </TabsContent>
+            )}
             
             {/* Gerenciamento de Ferramentas */}
             <TabsContent value="analytics" className="mt-0">
