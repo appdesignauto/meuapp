@@ -84,11 +84,8 @@ router.post('/hotmart-fixed', async (req, res) => {
         `, [payload.event, transactionId]);
       }
 
-      // Log do webhook (opcional)
-      await pool.query(`
-        INSERT INTO "webhookLogs" (email, "eventType", status, "payloadData", "createdAt", source)
-        VALUES ($1, $2, 'processed', $3, $4, 'hotmart');
-      `, [email, payload.event, JSON.stringify(payload), new Date()]);
+      // Log do webhook (opcional) - removido temporariamente
+      console.log(`📝 Log do webhook: ${email} - ${payload.event} processado com sucesso`);
 
       return res.status(200).json({ success: true, message: 'Usuário rebaixado com sucesso' });
     } catch (err) {
