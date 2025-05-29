@@ -7101,26 +7101,18 @@ app.use('/api/reports-v2', (req, res, next) => {
   app.get("/api/dashboard/user-registrations", isAuthenticated, async (req, res) => {
     try {
       const { period = '30' } = req.query;
+      const days = parseInt(period as string);
       
-      // Usar consulta SQL direta com Drizzle
-      let whereCondition = sql`TRUE`;
-      
-      if (period !== 'all') {
-        const days = parseInt(period as string);
-        // Verificar se é um número válido antes de usar na query
-        if (!isNaN(days) && days > 0) {
-          whereCondition = sql`${users.criadoem} >= NOW() - INTERVAL '${days} days'`;
-        }
-      }
-      
-      const result = await db.execute(sql`
+      // Buscar registros agrupados por mês usando pool direto
+      const pool = (global as any).db;
+      const result = await pool.query(`
         SELECT 
-          TO_CHAR(${users.criadoem}, 'Mon/YY') as label,
+          TO_CHAR("criadoem", 'Mon/YY') as label,
           COUNT(*) as count
-        FROM ${users} 
-        WHERE ${whereCondition}
-        GROUP BY TO_CHAR(${users.criadoem}, 'Mon/YY'), EXTRACT(YEAR FROM ${users.criadoem}), EXTRACT(MONTH FROM ${users.criadoem})
-        ORDER BY EXTRACT(YEAR FROM ${users.criadoem}), EXTRACT(MONTH FROM ${users.criadoem})
+        FROM users 
+        WHERE "criadoem" >= NOW() - INTERVAL '${days} days'
+        GROUP BY TO_CHAR("criadoem", 'Mon/YY'), EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
+        ORDER BY EXTRACT(YEAR FROM "criadoem"), EXTRACT(MONTH FROM "criadoem")
       `);
 
       // Formatar dados para o frontend
@@ -7173,22 +7165,11 @@ app.use('/api/reports-v2', (req, res, next) => {
   app.get("/api/dashboard/revenue-data", isAuthenticated, async (req, res) => {
     try {
       const { period = '30' } = req.query;
+      const days = parseInt(period as string);
       
-      // Usar consulta SQL direta com Drizzle
-      let whereCondition = sql`"dataassinatura" IS NOT NULL 
-        AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)`;
-      
-      if (period !== 'all') {
-        const days = parseInt(period as string);
-        // Verificar se é um número válido antes de usar na query
-        if (!isNaN(days) && days > 0) {
-          whereCondition = sql`"dataassinatura" IS NOT NULL 
-            AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
-            AND "dataassinatura" >= NOW() - INTERVAL '${days} days'`;
-        }
-      }
-      
-      const result = await db.execute(sql`
+      // Buscar dados de receita agrupados por mês usando pool direto
+      const pool = (global as any).db;
+      const result = await pool.query(`
         SELECT 
           TO_CHAR("dataassinatura", 'Mon/YY') as label,
           SUM(
@@ -7200,8 +7181,10 @@ app.use('/api/reports-v2', (req, res, next) => {
               ELSE 29.90
             END
           ) as value
-        FROM ${users} 
-        WHERE ${whereCondition}
+        FROM users 
+        WHERE "dataassinatura" IS NOT NULL 
+          AND "dataassinatura" >= NOW() - INTERVAL '${days} days'
+          AND ("nivelacesso" IN ('premium', 'designer', 'admin') OR "acessovitalicio" = true)
         GROUP BY TO_CHAR("dataassinatura", 'Mon/YY'), EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
         ORDER BY EXTRACT(YEAR FROM "dataassinatura"), EXTRACT(MONTH FROM "dataassinatura")
       `);
@@ -7223,20 +7206,11 @@ app.use('/api/reports-v2', (req, res, next) => {
   app.get("/api/dashboard/metrics", isAuthenticated, async (req, res) => {
     try {
       const { period = '30' } = req.query;
+      const days = parseInt(period as string);
+      const now = new Date();
+      const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
       
-      let periodCondition = '';
-      if (period !== 'all') {
-        const days = parseInt(period as string);
-        // Verificar se é um número válido antes de usar na query
-        if (!isNaN(days) && days > 0) {
-          const now = new Date();
-          const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-          periodCondition = `AND "criadoem" >= '${periodStart.toISOString()}'`;
-        }
-      }
-      
-      // Buscar métricas do período usando pool direto
-      const pool = (global as any).db;
+      // Buscar métricas do período
       const [
         totalUsersResult,
         activeSubscriptionsResult,
@@ -7244,10 +7218,10 @@ app.use('/api/reports-v2', (req, res, next) => {
         revenueResult
       ] = await Promise.all([
         // Total de usuários
-        pool.query(`SELECT COUNT(*) as count FROM users`),
+        db.execute(sql`SELECT COUNT(*) as count FROM users`),
         
         // Assinaturas ativas
-        pool.query(`
+        db.execute(sql`
           SELECT COUNT(*) as count FROM users 
           WHERE (
             "nivelacesso" IN ('premium', 'designer', 'admin') OR 
@@ -7257,13 +7231,13 @@ app.use('/api/reports-v2', (req, res, next) => {
         `),
         
         // Novos usuários no período
-        pool.query(`
+        db.execute(sql`
           SELECT COUNT(*) as count FROM users 
-          WHERE 1=1 ${periodCondition}
+          WHERE "criadoem" >= ${periodStart.toISOString()}
         `),
         
         // Receita total do período
-        pool.query(`
+        db.execute(sql`
           SELECT 
             SUM(
               CASE 

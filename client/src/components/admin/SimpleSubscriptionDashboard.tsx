@@ -488,7 +488,7 @@ function SimpleSubscriptionDashboard() {
 
           {/* Filtros de Data */}
           <div className="flex justify-center">
-            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg flex-wrap">
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
               <Button 
                 variant={selectedPeriod === '1' ? "destructive" : "ghost"} 
                 size="sm"
@@ -516,20 +516,6 @@ function SimpleSubscriptionDashboard() {
                 onClick={() => setSelectedPeriod('90')}
               >
                 90 Dias
-              </Button>
-              <Button 
-                variant={selectedPeriod === '365' ? "destructive" : "ghost"} 
-                size="sm"
-                onClick={() => setSelectedPeriod('365')}
-              >
-                Anual
-              </Button>
-              <Button 
-                variant={selectedPeriod === 'all' ? "destructive" : "ghost"} 
-                size="sm"
-                onClick={() => setSelectedPeriod('all')}
-              >
-                Todo período
               </Button>
             </div>
           </div>
