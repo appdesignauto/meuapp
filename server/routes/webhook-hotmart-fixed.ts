@@ -28,6 +28,14 @@ router.post('/hotmart-fixed', async (req, res) => {
       (payload?.data?.purchase?.status === 'CANCELED') ||
       (payload?.data?.purchase?.status === 'DISPUTE');
 
+    console.log('🔍 [WEBHOOK] Debug validação:', {
+      event: payload?.event,
+      isPurchaseApproved: isPurchaseApproved,
+      isCancellation: isCancellation,
+      subscriptionStatus: payload?.data?.subscription?.status,
+      purchaseStatus: payload?.data?.purchase?.status
+    });
+
     // Conexão com banco
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL
