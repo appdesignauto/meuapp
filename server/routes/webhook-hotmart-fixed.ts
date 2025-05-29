@@ -42,31 +42,41 @@ router.post('/hotmart-fixed', async (req, res) => {
         `, [email, name, username, tempPassword, planType, now, endDate]);
         console.log(`✅ Novo usuário criado: ${name}`);
       } else {
-        // Atualiza usuário existente MANTENDO a data de assinatura original
+        // Atualiza usuário existente PRESERVANDO completamente a data de assinatura original
         const userData = existingUser.rows[0];
-        const originalSubscriptionDate = userData.dataassinatura || now;
+        const originalSubscriptionDate = userData.dataassinatura;
         
-        // Calcula data de expiração baseada EXATAMENTE na data de assinatura original
-        const originalDate = new Date(originalSubscriptionDate);
-        let newEndDate;
-        if (planType === 'anual') {
-          // Para plano anual: adiciona exatamente 365 dias à data original
-          newEndDate = new Date(originalDate);
-          newEndDate.setFullYear(originalDate.getFullYear() + 1);
+        // Se já existe uma data de assinatura, usa ela para calcular a nova expiração
+        if (originalSubscriptionDate) {
+          const originalDate = new Date(originalSubscriptionDate);
+          const preservedEndDate = new Date(originalDate);
+          
+          if (planType === 'anual') {
+            // Para plano anual: adiciona 1 ano preservando dia, hora, minuto e segundo originais
+            preservedEndDate.setFullYear(originalDate.getFullYear() + 1);
+          } else {
+            // Para plano mensal: adiciona 30 dias preservando hora, minuto e segundo originais
+            preservedEndDate.setDate(originalDate.getDate() + 30);
+          }
+          
+          await pool.query(`
+            UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
+            WHERE email = $1;
+          `, [email, planType, preservedEndDate]);
+          console.log(`✅ Usuário atualizado PRESERVANDO data original: ${name}`);
+          console.log(`📅 Data assinatura original: ${originalDate.toISOString()}`);
+          console.log(`📅 Nova expiração calculada: ${preservedEndDate.toISOString()}`);
+          
+          // Usa a data preservada na assinatura
+          endDate = preservedEndDate;
         } else {
-          // Para plano mensal: adiciona exatamente 30 dias à data original
-          newEndDate = new Date(originalDate);
-          newEndDate.setDate(originalDate.getDate() + 30);
+          // Se não há data de assinatura original, trata como novo usuário
+          await pool.query(`
+            UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', dataassinatura = $4
+            WHERE email = $1;
+          `, [email, planType, endDate, now]);
+          console.log(`✅ Usuário atualizado (sem data original): ${name}`);
         }
-        
-        await pool.query(`
-          UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
-          WHERE email = $1;
-        `, [email, planType, newEndDate]);
-        console.log(`✅ Usuário atualizado para premium (preservando data original): ${name}`);
-        
-        // Atualiza a variável endDate para usar na assinatura
-        endDate = newEndDate;
       }
 
       // Cria ou atualiza assinatura
