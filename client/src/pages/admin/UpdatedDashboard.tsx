@@ -1457,16 +1457,7 @@ const AdminDashboard = () => {
               
               {(activeTab === 'arts' || activeTab === 'categories' || activeTab === 'collections' || activeTab === 'formats' || activeTab === 'fileTypes') && (
                 <div className="flex gap-2 flex-wrap">
-                  {activeTab === 'arts' && (
-                    <Button 
-                      variant="default" 
-                      className="flex items-center bg-blue-600 hover:bg-blue-700"
-                      onClick={() => setIsMultiFormOpen(true)}
-                    >
-                      <ImagePlus className="h-4 w-4 mr-2" />
-                      Nova Arte Multi-Formato
-                    </Button>
-                  )}
+
                   
                   {activeTab === 'categories' && (
                     <Button 

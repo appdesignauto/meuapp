@@ -200,18 +200,7 @@ export default function PainelArtes() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold tracking-tight">Artes</h1>
-          {canAddArts && (
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={() => setIsMultiFormOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                size="sm"
-              >
-                <LayoutGrid className="h-4 w-4 mr-2" />
-                Nova Arte Multi-Formato
-              </Button>
-            </div>
-          )}
+
         </div>
         
         {/* Barra de pesquisa e filtros */}
