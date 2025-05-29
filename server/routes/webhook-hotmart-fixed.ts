@@ -29,22 +29,47 @@ router.post('/hotmart-fixed', async (req, res) => {
       const now = new Date();
       const endDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-      // Cria ou atualiza usuário
-      await pool.query(`
-        INSERT INTO users (email, name, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed)
-        VALUES ($1, $2, 'premium', 'hotmart', $3, $4, $5, false, true, true)
-        ON CONFLICT (email)
-        DO UPDATE SET nivelacesso = 'premium', tipoplano = $3, dataexpiracao = $5;
-      `, [email, name, planType, now, endDate]);
+      // Verifica se usuário existe
+      const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      
+      if (existingUser.rowCount === 0) {
+        // Cria novo usuário
+        const username = email.split('@')[0]; // Username baseado no email
+        await pool.query(`
+          INSERT INTO users (email, name, username, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed)
+          VALUES ($1, $2, $3, 'premium', 'hotmart', $4, $5, $6, false, true, true);
+        `, [email, name, username, planType, now, endDate]);
+        console.log(`✅ Novo usuário criado: ${name}`);
+      } else {
+        // Atualiza usuário existente
+        await pool.query(`
+          UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
+          WHERE email = $1;
+        `, [email, planType, endDate]);
+        console.log(`✅ Usuário atualizado para premium: ${name}`);
+      }
 
       // Cria ou atualiza assinatura
-      await pool.query(`
-        INSERT INTO subscriptions (userId, planType, startDate, endDate, isActive, transactionId, source, lastevent)
-        SELECT id, $1, $2, $3, true, $4, 'hotmart', 'PURCHASE_APPROVED'
-        FROM users WHERE email = $5
-        ON CONFLICT (transactionId)
-        DO UPDATE SET isActive = true, endDate = $3, lastevent = 'PURCHASE_APPROVED';
-      `, [planType, now, endDate, transactionId, email]);
+      const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      const userId = userResult.rows[0].id;
+      
+      const existingSubscription = await pool.query('SELECT id FROM subscriptions WHERE "userId" = $1', [userId]);
+      
+      if (existingSubscription.rowCount === 0) {
+        // Cria nova assinatura
+        await pool.query(`
+          INSERT INTO subscriptions ("userId", "planType", "startDate", "endDate", status, "transactionId", source, lastevent, "createdAt")
+          VALUES ($1, $2, $3, $4, 'active', $5, 'hotmart', 'PURCHASE_APPROVED', $6);
+        `, [userId, planType, now, endDate, transactionId, now]);
+        console.log(`✅ Nova assinatura criada para usuário ${userId}`);
+      } else {
+        // Atualiza assinatura existente
+        await pool.query(`
+          UPDATE subscriptions SET "planType" = $2, "endDate" = $3, status = 'active', "transactionId" = $4, lastevent = 'PURCHASE_APPROVED'
+          WHERE "userId" = $1;
+        `, [userId, planType, endDate, transactionId]);
+        console.log(`✅ Assinatura atualizada para usuário ${userId}`);
+      }
 
       return res.status(200).json({ success: true, message: 'Usuário criado ou atualizado com sucesso' });
     } catch (err) {
