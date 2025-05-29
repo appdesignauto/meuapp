@@ -71,6 +71,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       return allowedItems.includes(item);
     }
     
+    if (user?.nivelacesso === 'suporte') {
+      // Suporte tem acesso apenas a: Assinaturas, Usuários, Comunidade e Reports
+      // NÃO tem acesso a: Visão Geral, Financeiro, Artes, Cursos, Ferramentas, Analytics, Configurações, etc.
+      const allowedItems = [
+        'Assinaturas',
+        'Usuários',
+        'Comunidade',
+        'Reports'
+      ];
+      return allowedItems.includes(item);
+    }
+    
     return false;
   };
 

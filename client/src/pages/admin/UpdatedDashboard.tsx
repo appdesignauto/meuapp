@@ -123,7 +123,15 @@ import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
-  const [activeTab, setActiveTab] = useState('arts');
+  // Define aba padrão baseada no nível de acesso
+  const getDefaultTab = () => {
+    if (user?.nivelacesso === 'suporte') {
+      return 'subscriptions'; // Suporte inicia na aba Assinaturas
+    }
+    return 'arts'; // Admin e designer_adm iniciam na aba Artes
+  };
+  
+  const [activeTab, setActiveTab] = useState(getDefaultTab());
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
