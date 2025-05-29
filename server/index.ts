@@ -258,30 +258,112 @@ app.use((req, res, next) => {
       next();
     });
     
-    // Rota dedicada para webhook da Hotmart - implementação direta para garantir resposta JSON
+    // Rota dedicada para webhook da Hotmart - implementação completa
     app.post('/webhook/hotmart', async (req, res) => {
       console.log('📩 Webhook da Hotmart recebido em', new Date().toISOString());
       
       try {
-        // Capturar dados básicos do webhook
         const payload = req.body;
         const event = payload?.event || 'UNKNOWN';
-        const email = null;
-        const transactionId = null;
+        console.log('📦 [WEBHOOK] Evento:', event);
         
-        // Registrar no banco de dados (log only)
-        try {
-          const pool = new Pool({
-            connectionString: process.env.DATABASE_URL
-          });
+        // Verificar se é evento de cancelamento
+        const isCancellation = 
+          event === 'PURCHASE_PROTEST' ||
+          event === 'PURCHASE_REFUNDED' ||
+          event === 'SUBSCRIPTION_CANCELLATION';
+        
+        const isPurchaseApproved = 
+          event === 'PURCHASE_APPROVED' &&
+          payload?.data?.purchase?.status === 'APPROVED';
+        
+        // Extrair dados do webhook
+        const buyer = payload.data?.buyer;
+        const purchase = payload.data?.purchase;
+        const subscriber = payload.data?.subscriber;
+        
+        const email = buyer?.email?.toLowerCase().trim() || subscriber?.email?.toLowerCase().trim();
+        const transactionId = purchase?.transaction;
+        
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL
+        });
+        
+        // Processar cancelamento
+        if (isCancellation && email && transactionId) {
+          console.log('🚫 [WEBHOOK] Processando cancelamento para:', email);
           
+          try {
+            // Rebaixar usuário para free
+            const userUpdateResult = await pool.query(`
+              UPDATE users SET
+                nivelacesso = 'free',
+                acessovitalicio = false,
+                tipoplano = NULL,
+                dataexpiracao = CURRENT_DATE
+              WHERE email = $1
+              RETURNING id, name
+            `, [email]);
+
+            if (userUpdateResult.rowCount > 0) {
+              console.log('✅ [WEBHOOK] Usuário rebaixado:', userUpdateResult.rows[0]);
+            }
+
+            // Cancelar assinatura
+            const subscriptionUpdateResult = await pool.query(`
+              UPDATE subscriptions SET
+                status = 'canceled',
+                "endDate" = CURRENT_DATE,
+                lastevent = $1
+              WHERE transactionid = $2
+              RETURNING id
+            `, [event, transactionId]);
+
+            if (subscriptionUpdateResult.rowCount > 0) {
+              console.log('✅ [WEBHOOK] Assinatura cancelada');
+            }
+
+            // Log do webhook processado
+            await pool.query(
+              `INSERT INTO webhook_logs 
+               (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+              [
+                event,
+                'processed',
+                email,
+                'hotmart',
+                JSON.stringify(payload),
+                transactionId,
+                req.ip,
+                new Date()
+              ]
+            );
+            
+            await pool.end();
+            
+            return res.status(200).json({
+              success: true,
+              message: 'Cancelamento processado com sucesso',
+              event: event,
+              email: email
+            });
+            
+          } catch (error) {
+            console.error('❌ Erro ao processar cancelamento:', error);
+            await pool.end();
+          }
+        }
+        
+        // Registrar webhook (para outros eventos ou quando não conseguir processar)
+        try {
           await pool.query(
             `INSERT INTO webhook_logs 
              (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
             [
               event,
-              'received',
+              isCancellation ? 'received' : 'received',
               email,
               'hotmart',
               JSON.stringify(payload),
@@ -294,19 +376,17 @@ app.use((req, res, next) => {
           await pool.end();
         } catch (dbError) {
           console.error('❌ Erro ao registrar webhook:', dbError);
-          // Continuar mesmo com erro de log
         }
         
-        // Sempre retornar sucesso para a Hotmart não reenviar
         return res.status(200).json({
           success: true,
           message: 'Webhook recebido com sucesso',
           timestamp: new Date().toISOString()
         });
+        
       } catch (error) {
         console.error('❌ Erro ao processar webhook:', error);
         
-        // Mesmo com erro, retornar 200 para evitar reenvios
         return res.status(200).json({
           success: false,
           message: 'Erro ao processar webhook, mas confirmamos o recebimento',
