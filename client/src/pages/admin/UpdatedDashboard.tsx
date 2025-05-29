@@ -1099,12 +1099,13 @@ const AdminDashboard = () => {
               </button>
             )}
             
-            {/* Gerenciamento de Conteúdo */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden"
-              defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
+            {/* Gerenciamento de Conteúdo - Oculto para suporte */}
+            {user?.nivelacesso !== 'suporte' && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden"
+                defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
               <CollapsibleTrigger 
                 className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Conteúdo"
@@ -1161,6 +1162,7 @@ const AdminDashboard = () => {
 
               </CollapsibleContent>
             </Collapsible>
+            )}
             
             {/* Cursos e Vídeo-aulas */}
             <Collapsible 
@@ -1244,12 +1246,13 @@ const AdminDashboard = () => {
               </CollapsibleContent>
             </Collapsible>
             
-            {/* Marketing - Apenas Popups agora */}
-            <Collapsible 
-              className="rounded-lg overflow-hidden mb-1"
-              defaultOpen={['popups'].includes(activeTab)}
-              open={sidebarOpen ? undefined : false}
-            >
+            {/* Marketing - Oculto para suporte */}
+            {user?.nivelacesso !== 'suporte' && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden mb-1"
+                defaultOpen={['popups'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
               <CollapsibleTrigger 
                 className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Marketing"
