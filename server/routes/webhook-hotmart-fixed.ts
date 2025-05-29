@@ -67,11 +67,12 @@ router.post('/hotmart-fixed', async (req, res) => {
     const buyer = payload.data.buyer;
     const purchase = payload.data.purchase;
     const subscription = payload.data.subscription;
+    const subscriber = payload.data.subscriber;
 
-    const full_name = buyer?.name;
-    const email = buyer?.email?.toLowerCase().trim();
+    const full_name = buyer?.name || subscriber?.name;
+    const email = (buyer?.email || subscriber?.email)?.toLowerCase().trim();
     const phone = buyer?.document;
-    const transactionId = purchase?.transaction;
+    const transactionId = purchase?.transaction || subscription?.id;
     const event = payload.event;
     const origin = "hotmart";
 
