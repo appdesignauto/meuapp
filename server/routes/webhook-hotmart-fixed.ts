@@ -46,26 +46,9 @@ router.post('/hotmart-fixed', async (req, res) => {
     const full_name = buyer?.name;
     const email = buyer?.email?.toLowerCase().trim();
     const phone = buyer?.document;
-
-    const planType = subscription?.plan?.name?.toLowerCase().includes('anual') ? 'anual' : 'mensal';
-    const startDate = new Date(purchase?.order_date);
-    const endDate = new Date(purchase?.date_next_charge);
-
     const transactionId = purchase?.transaction;
     const event = payload.event;
     const origin = "hotmart";
-
-    console.log('👤 [WEBHOOK] Dados extraídos:', {
-      full_name, email, phone, planType, startDate, endDate, transactionId
-    });
-
-    if (!email || !full_name) {
-      console.error('❌ [WEBHOOK] Dados obrigatórios ausentes');
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email ou nome ausente no payload' 
-      });
-    }
 
     // Conexão com banco
     const pool = new Pool({
@@ -148,63 +131,64 @@ router.post('/hotmart-fixed', async (req, res) => {
       }
     }
 
-    // ✅ 4. INSERÇÃO NO BANCO PARA COMPRAS APROVADAS
+    // ✅ 4. VALIDAÇÃO E PROCESSAMENTO DE COMPRAS APROVADAS
+    const planType = subscription?.plan?.name?.toLowerCase().includes('anual') ? 'anual' : 'mensal';
+    const startDate = new Date(purchase?.order_date);
+    const endDate = new Date(purchase?.date_next_charge);
+
+    console.log('👤 [WEBHOOK] Dados extraídos:', {
+      full_name, email, phone, planType, startDate, endDate, transactionId
+    });
+
+    if (!email || !full_name) {
+      console.error('❌ [WEBHOOK] Dados obrigatórios ausentes');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email ou nome ausente no payload' 
+      });
+    }
+
+    // ✅ 5. INSERÇÃO NO BANCO PARA COMPRAS APROVADAS
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     let userId;
 
     if (existingUser.rowCount === 0) {
       // Criar novo usuário
       console.log('👤 [WEBHOOK] Criando novo usuário...');
+      const hashedPassword = await bcrypt.hash('designauto2024', 10);
       
-      // Gerar username único
-      const baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
-      const username = await generateUniqueUsername(baseUsername, pool);
-      
-      // Senha padrão criptografada
-      const hashedPassword = await bcrypt.hash('auto@123', 10);
-      
-      const insertUser = await pool.query(`
+      const newUser = await pool.query(`
         INSERT INTO users (
-          username, name, email, phone, password, nivelacesso, origemassinatura,
-          tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed,
+          name, email, username, password, nivelacesso, tipoplano, 
+          origemassinatura, dataassinatura, dataexpiracao, isactive, 
           criadoem, atualizadoem
         ) VALUES (
-          $1, $2, $3, $4, $5, 'premium', $6,
-          $7, $8, $9, false, true, true,
-          $10, $11
+          $1, $2, $3, $4, 'premium', $5, 
+          'hotmart', $6, $7, true, 
+          $8, $9
         ) RETURNING id
       `, [
-        username, full_name, email, phone, hashedPassword, origin,
-        planType, startDate, endDate,
-        new Date(), new Date()
+        full_name, email, email.split('@')[0], hashedPassword, planType,
+        startDate, endDate, new Date(), new Date()
       ]);
-
-      userId = insertUser.rows[0].id;
-      console.log(`✅ [WEBHOOK] Novo usuário criado! ID: ${userId}`);
       
+      userId = newUser.rows[0].id;
+      console.log('✅ [WEBHOOK] Novo usuário criado! ID:', userId);
     } else {
       // Atualizar usuário existente
       userId = existingUser.rows[0].id;
-      console.log(`✅ [WEBHOOK] Usuário existente encontrado! ID: ${userId}`);
-
+      console.log('👤 [WEBHOOK] Atualizando usuário existente... ID:', userId);
+      
       await pool.query(`
         UPDATE users SET
-          nivelacesso = 'premium',
-          origemassinatura = $1,
-          tipoplano = $2,
-          dataassinatura = $3,
-          dataexpiracao = $4,
-          acessovitalicio = false,
-          atualizadoem = $5
-        WHERE id = $6
-      `, [origin, planType, startDate, endDate, new Date(), userId]);
-      
-      console.log(`✅ [WEBHOOK] Usuário atualizado para premium!`);
+          nivelacesso = 'premium', tipoplano = $2, origemassinatura = 'hotmart',
+          dataassinatura = $3, dataexpiracao = $4, atualizadoem = $5
+        WHERE id = $1
+      `, [userId, planType, startDate, endDate, new Date()]);
     }
 
-    // ✅ 4. CRIAÇÃO/ATUALIZAÇÃO DA ASSINATURA NA TABELA SUBSCRIPTIONS
+    // ✅ 6. CRIAR OU ATUALIZAR ASSINATURA
     console.log('📝 [WEBHOOK] Verificando assinatura existente...');
-    
     const existingSubscription = await pool.query(`
       SELECT id FROM subscriptions WHERE "userId" = $1
     `, [userId]);
@@ -239,53 +223,35 @@ router.post('/hotmart-fixed', async (req, res) => {
 
     console.log('✅ [WEBHOOK] Assinatura criada com sucesso!');
 
-    // ✅ 5. LOG DO WEBHOOK
+    // ✅ 7. LOG DO WEBHOOK
     await pool.query(`
       INSERT INTO "webhookLogs" (
         email, "payloadData", status, "createdAt", source, "transactionId", "eventType"
       ) VALUES (
         $1, $2, 'processed', $3, 'hotmart', $4, $5
       )
-    `, [email, JSON.stringify(payload), new Date(), transactionId, event]);
+    `, [email, JSON.stringify(payload), event, new Date(), transactionId]);
 
+    // Fechar conexão
     await pool.end();
 
     console.log('🎉 [WEBHOOK] PROCESSAMENTO CONCLUÍDO COM SUCESSO!');
-    
     return res.status(200).json({
       success: true,
       message: 'Webhook processado com sucesso',
+      event: event,
       userId: userId,
       planType: planType,
-      processed: true
+      transactionId: transactionId
     });
 
   } catch (error) {
-    console.error('❌ [WEBHOOK] Erro durante processamento:', error);
-    
+    console.error('❌ [WEBHOOK] Erro geral:', error);
     return res.status(500).json({
       success: false,
-      error: 'Erro interno do servidor',
-      message: error instanceof Error ? error.message : String(error)
+      error: 'Erro interno do servidor'
     });
   }
 });
-
-// 🔤 FUNÇÃO AUXILIAR - Gera username único
-async function generateUniqueUsername(baseUsername: string, pool: Pool): Promise<string> {
-  let username = baseUsername;
-  let counter = 1;
-  
-  while (true) {
-    const result = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
-    
-    if (result.rows.length === 0) {
-      return username;
-    }
-    
-    username = `${baseUsername}${counter}`;
-    counter++;
-  }
-}
 
 export default router;
