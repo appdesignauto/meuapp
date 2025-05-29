@@ -53,7 +53,29 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-  const navItems: NavItem[] = [
+  // Função para verificar se o usuário tem acesso a um item
+  const hasAccess = (item: string): boolean => {
+    if (user?.nivelacesso === 'admin') {
+      return true; // Admin tem acesso total
+    }
+    
+    if (user?.nivelacesso === 'designer_adm') {
+      // Designer ADM tem acesso apenas a: Conteudo, Cursos, Marketing, Reports, Ferramentas, e Comunidade (dentro de usuários)
+      const allowedItems = [
+        'Visão Geral',
+        'Artes', // Conteúdo
+        'Cursos',
+        'Ferramentas',
+        'Usuários', // Apenas para acessar Comunidade
+        'Comunidade'
+      ];
+      return allowedItems.includes(item);
+    }
+    
+    return false;
+  };
+
+  const allNavItems: NavItem[] = [
     {
       title: 'Visão Geral',
       href: '/admin',
@@ -120,6 +142,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       icon: <Settings className="h-5 w-5" />,
     },
   ];
+
+  // Filtrar itens baseado nas permissões do usuário
+  const navItems = allNavItems.filter(item => hasAccess(item.title));
 
   const NavLinks = () => (
     <TooltipProvider>
