@@ -35,7 +35,7 @@ router.post('/hotmart-fixed', async (req, res) => {
       if (existingUser.rowCount === 0) {
         // Cria novo usuário
         const username = email.split('@')[0]; // Username baseado no email
-        const tempPassword = Math.random().toString(36).substring(2, 15); // Password temporário
+        const tempPassword = 'auto@123'; // Password padrão do sistema
         await pool.query(`
           INSERT INTO users (email, name, username, password, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed)
           VALUES ($1, $2, $3, $4, 'premium', 'hotmart', $5, $6, $7, false, true, true);
@@ -59,14 +59,14 @@ router.post('/hotmart-fixed', async (req, res) => {
       if (existingSubscription.rowCount === 0) {
         // Cria nova assinatura
         await pool.query(`
-          INSERT INTO subscriptions ("userId", "planType", "startDate", "endDate", status, "transactionId", source, lastevent, "createdAt")
+          INSERT INTO subscriptions ("userId", "planType", "startDate", "endDate", status, transactionid, origin, lastevent, "createdAt")
           VALUES ($1, $2, $3, $4, 'active', $5, 'hotmart', 'PURCHASE_APPROVED', $6);
         `, [userId, planType, now, endDate, transactionId, now]);
         console.log(`✅ Nova assinatura criada para usuário ${userId}`);
       } else {
         // Atualiza assinatura existente
         await pool.query(`
-          UPDATE subscriptions SET "planType" = $2, "endDate" = $3, status = 'active', "transactionId" = $4, lastevent = 'PURCHASE_APPROVED'
+          UPDATE subscriptions SET "planType" = $2, "endDate" = $3, status = 'active', transactionid = $4, lastevent = 'PURCHASE_APPROVED'
           WHERE "userId" = $1;
         `, [userId, planType, endDate, transactionId]);
         console.log(`✅ Assinatura atualizada para usuário ${userId}`);
