@@ -33,7 +33,8 @@ router.post('/hotmart-fixed', async (req, res) => {
       isPurchaseApproved: isPurchaseApproved,
       isCancellation: isCancellation,
       subscriptionStatus: payload?.data?.subscription?.status,
-      purchaseStatus: payload?.data?.purchase?.status
+      purchaseStatus: payload?.data?.purchase?.status,
+      eventIsSubscriptionCancellation: payload?.event === 'SUBSCRIPTION_CANCELLATION'
     });
 
     // Conexão com banco
@@ -43,6 +44,12 @@ router.post('/hotmart-fixed', async (req, res) => {
 
     if (!isPurchaseApproved && !isCancellation) {
       console.log('❌ [WEBHOOK] Validação falhou - evento não suportado:', payload?.event);
+      console.log('🔍 [WEBHOOK] Debug completo da validação:', {
+        event: payload?.event,
+        isPurchaseApproved,
+        isCancellation,
+        eventCheck: payload?.event === 'SUBSCRIPTION_CANCELLATION'
+      });
       
       // Registrar webhook não processado para análise
       try {
@@ -60,7 +67,7 @@ router.post('/hotmart-fixed', async (req, res) => {
       await pool.end();
       return res.status(200).json({ 
         success: true, 
-        message: 'Eventoprocessado-nãoécompraaprovada',
+        message: 'Evento processado - não é compra aprovada nem cancelamento',
         processed: false
       });
     }
