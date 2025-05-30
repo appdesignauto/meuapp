@@ -502,7 +502,7 @@ export default function ArtsPage() {
         ) : (
           <>
             <div 
-              className="arts-gallery-compact columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5"
+              className="columns-compact columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5"
             >
               {arts.map((art) => (
                 <div 

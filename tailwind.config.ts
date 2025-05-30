@@ -188,7 +188,25 @@ export default {
         "pulse-subtle": "pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "popupEntrance": "popupEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
+      // Customização das classes de colunas com espaçamento compacto
+      columnGap: {
+        'compact': '8px',
+      },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"), 
+    require("@tailwindcss/typography"),
+    function({ addUtilities }: any) {
+      addUtilities({
+        '.columns-compact': {
+          'column-gap': '8px',
+        },
+        '.columns-compact > *': {
+          'margin-bottom': '8px',
+          'break-inside': 'avoid',
+        },
+      })
+    }
+  ],
 } satisfies Config;
