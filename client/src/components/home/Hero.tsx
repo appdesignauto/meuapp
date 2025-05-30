@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Images, FileText, Laptop, RefreshCw, ChevronRight } from 'lucide-react';
@@ -11,6 +12,7 @@ export const HIDE_SEARCHBAR_EVENT = 'searchbar:hideInHeader';
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const searchFormRef = useRef<HTMLFormElement>(null);
 
   // Configurar o Intersection Observer para detectar quando a barra de pesquisa sai da área visível
@@ -107,20 +109,43 @@ const Hero = () => {
           
           {/* CTA Buttons */}
           <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 mb-6 px-3">
-            <Button 
-              className="bg-blue-600 text-white hover:bg-blue-700 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center shadow-md flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
-              onClick={() => setLocation('/register')}
-            >
-              Cadastre-se
-              <ChevronRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              className="border-blue-400 text-blue-600 hover:bg-blue-50 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
-              onClick={() => setLocation('/demo')}
-            >
-              Ver Demonstração
-            </Button>
+            {user ? (
+              // Botões para usuários logados
+              <>
+                <Button 
+                  className="bg-blue-600 text-white hover:bg-blue-700 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center shadow-md flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
+                  onClick={() => setLocation('/artes')}
+                >
+                  Ver Artes
+                  <ChevronRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-blue-400 text-blue-600 hover:bg-blue-50 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
+                  onClick={() => setLocation('/videoaulas')}
+                >
+                  Ver Tutoriais
+                </Button>
+              </>
+            ) : (
+              // Botões para usuários não logados
+              <>
+                <Button 
+                  className="bg-blue-600 text-white hover:bg-blue-700 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center shadow-md flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
+                  onClick={() => setLocation('/register')}
+                >
+                  Cadastre-se
+                  <ChevronRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-blue-400 text-blue-600 hover:bg-blue-50 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
+                  onClick={() => setLocation('/demo')}
+                >
+                  Ver Demonstração
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
