@@ -6,10 +6,20 @@
 .columns-2,
 .columns-3,
 .columns-4,
-.columns-5 {
+.columns-5,
+[class*="columns-"] {
   column-gap: 8px !important;
   -webkit-column-gap: 8px !important;
   -moz-column-gap: 8px !important;
+}
+
+/* Sobrescrever especificamente classes do Tailwind que possam conflitar */
+.gap-2,
+.gap-3,
+.gap-4,
+.gap-6,
+.gap-8 {
+  column-gap: 8px !important;
 }
 
 /* Animações para popups */
