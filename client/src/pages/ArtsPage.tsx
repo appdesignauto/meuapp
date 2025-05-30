@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
@@ -37,10 +37,13 @@ import { useToast } from '@/hooks/use-toast';
 export default function ArtsPage() {
   // Garantir rolagem para o topo ao navegar para esta página
   useScrollTop();
+
+
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [page, setPage] = useState(1);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     categoryId: null as number | null,
@@ -107,6 +110,25 @@ export default function ArtsPage() {
   const arts = data?.arts || [];
   const totalCount = data?.totalCount || 0;
   const hasMore = page * limit < totalCount;
+
+  // Força o espaçamento correto na galeria após renderização
+  useEffect(() => {
+    const forceGallerySpacing = () => {
+      if (galleryRef.current) {
+        galleryRef.current.style.setProperty('column-gap', '8px', 'important');
+        galleryRef.current.style.setProperty('-webkit-column-gap', '8px', 'important');
+        galleryRef.current.style.setProperty('-moz-column-gap', '8px', 'important');
+      }
+    };
+
+    // Aplicar imediatamente
+    forceGallerySpacing();
+
+    // Aplicar após um pequeno delay para garantir que o DOM esteja totalmente carregado
+    const timeoutId = setTimeout(forceGallerySpacing, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [data]);
   
   // Carregar parâmetros de busca da URL quando a página é carregada
   useEffect(() => {
@@ -502,11 +524,10 @@ export default function ArtsPage() {
         ) : (
           <>
             <div 
+              ref={galleryRef}
               className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5"
               style={{
-                columnGap: '8px',
-                WebkitColumnGap: '8px',
-                MozColumnGap: '8px'
+                columnGap: '8px'
               }}
             >
               {arts.map((art) => (
