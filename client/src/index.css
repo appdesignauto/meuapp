@@ -2,24 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Força espaçamento de 8px em todas as vitrines de colunas */
-.columns-2,
-.columns-3,
-.columns-4,
-.columns-5,
-[class*="columns-"] {
+/* Força espaçamento de 8px em todas as vitrines de colunas com máxima especificidade */
+html body .columns-2,
+html body .columns-3,
+html body .columns-4,
+html body .columns-5,
+html body [class*="columns-"],
+html body div[class*="columns-"] {
   column-gap: 8px !important;
   -webkit-column-gap: 8px !important;
   -moz-column-gap: 8px !important;
+  gap: inherit !important;
 }
 
-/* Sobrescrever especificamente classes do Tailwind que possam conflitar */
-.gap-2,
-.gap-3,
-.gap-4,
-.gap-6,
-.gap-8 {
+/* Sobrescrever classes gap do Tailwind com especificidade máxima */
+html body .gap-2,
+html body .gap-3,
+html body .gap-4,
+html body .gap-6,
+html body .gap-8,
+html body div.gap-2,
+html body div.gap-3,
+html body div.gap-4,
+html body div.gap-6,
+html body div.gap-8 {
   column-gap: 8px !important;
+  gap: inherit !important;
+}
+
+/* Classe utilitária para forçar espaçamento de 8px */
+.vitrine-8px {
+  column-gap: 8px !important;
+  -webkit-column-gap: 8px !important;
+  -moz-column-gap: 8px !important;
+  gap: inherit !important;
 }
 
 /* Animações para popups */
