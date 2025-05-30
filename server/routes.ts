@@ -78,6 +78,20 @@ import reportsRouter from './routes/reports'; // Rotas para o sistema de denúnc
 
 import { PrismaClient } from '@prisma/client';
 
+// Middleware de autenticação para administradores
+const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  const userLevel = req.user?.nivelacesso;
+  if (userLevel !== 'admin') {
+    return res.status(403).json({ message: "Acesso negado - privilégios de administrador necessários" });
+  }
+  
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
