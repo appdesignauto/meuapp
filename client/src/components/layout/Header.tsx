@@ -420,11 +420,14 @@ const Header = () => {
                     )}
                     <div className="hidden sm:flex flex-col items-start leading-none">
                       <span className="text-xs font-medium text-gray-800">{user.name || user.username}</span>
-                      <span className="text-[10px] text-gray-500 mt-0.5">
-                        {user.nivelacesso === 'usuario' || !user.tipoplano 
-                          ? 'Conta Free' 
-                          : `Conta ${user.tipoplano}`}
-                      </span>
+                      {/* Ocultar tag de assinatura para contas admin */}
+                      {user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && user.nivelacesso !== 'suporte' && (
+                        <span className="text-[10px] text-gray-500 mt-0.5">
+                          {user.nivelacesso === 'usuario' || !user.tipoplano 
+                            ? 'Conta Free' 
+                            : `Conta ${user.tipoplano}`}
+                        </span>
+                      )}
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                   </Button>
@@ -434,7 +437,9 @@ const Header = () => {
                   <div className="relative">
                     {/* Banner colorido no fundo que depende do tipo de conta */}
                     <div className={`absolute top-0 left-0 right-0 h-20 rounded-t-xl ${
-                      user.nivelacesso === 'usuario' || !user.tipoplano 
+                      user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'suporte'
+                        ? 'bg-gradient-to-r from-gray-600 to-gray-700' 
+                        : user.nivelacesso === 'usuario' || !user.tipoplano 
                         ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
                         : 'bg-gradient-to-r from-green-500 to-green-600'
                     }`}></div>
@@ -461,16 +466,18 @@ const Header = () => {
                         <h3 className="font-medium text-lg">{user.name || user.username}</h3>
                         <p className="text-sm text-gray-500 mb-2">{user.email}</p>
                         
-                        {/* Badge de tipo de conta */}
-                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                          user.nivelacesso === 'usuario' || !user.tipoplano 
-                            ? 'bg-blue-100 text-blue-700' 
-                            : 'bg-green-100 text-green-700'
-                        }`}>
-                          {user.nivelacesso === 'usuario' || !user.tipoplano 
-                            ? 'CONTA GRÁTIS' 
-                            : `CONTA ${user.tipoplano?.toUpperCase()}`}
-                        </div>
+                        {/* Badge de tipo de conta - oculto para contas administrativas */}
+                        {user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && user.nivelacesso !== 'suporte' && (
+                          <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                            user.nivelacesso === 'usuario' || !user.tipoplano 
+                              ? 'bg-blue-100 text-blue-700' 
+                              : 'bg-green-100 text-green-700'
+                          }`}>
+                            {user.nivelacesso === 'usuario' || !user.tipoplano 
+                              ? 'CONTA GRÁTIS' 
+                              : `CONTA ${user.tipoplano?.toUpperCase()}`}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
