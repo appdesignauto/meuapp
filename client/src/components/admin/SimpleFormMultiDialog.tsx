@@ -333,6 +333,28 @@ export default function SimpleFormMultiDialog({
         handleSingleArtEdit();
       }
     }
+    
+    // Reset form quando não está editando (modo criação)
+    if (!isEditing && !editingArt && !isLoading) {
+      console.log("Modo criação - resetando formulário");
+      step1Form.reset({
+        categoryId: '',
+        globalFileType: 'canva',
+        isPremium: true,
+        globalTitle: '',
+        globalDescription: '',
+        selectedFormats: []
+      });
+      setStep(1);
+      setCurrentTab("");
+      setFormatDetails({});
+      setImages({});
+      setUploading({});
+      setUploadError({});
+      setFormatsComplete({});
+      setUploadAllComplete(false);
+      setIsSubmitting(false);
+    }
   }, [isEditing, editingArt, isLoading]);
 
   // Função para tratar edição de arte única
