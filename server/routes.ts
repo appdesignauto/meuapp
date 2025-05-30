@@ -5380,7 +5380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ENDPOINT: Métricas da Plataforma para Painel do Usuário (NOVA IMPLEMENTAÇÃO)
-  app.get("/api/platform/metrics", isAdmin, async (req, res) => {
+  app.get("/api/platform/metrics", async (req, res) => {
     try {
       console.log("📊 Calculando métricas da plataforma para painel...");
       
@@ -5458,18 +5458,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT: Métricas da Plataforma - Versão Corrigida
-  app.get("/api/platform/metrics-fixed", (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    
-    // Dados reais do banco sem autenticação para teste
-    res.json({
-      totalArts: 73,
-      totalCollections: 8,
-      totalDownloads: 145,
-      newArtsThisMonth: 12,
-      topDownloads: []
-    });
+  // ENDPOINT: Métricas da Plataforma - Versão Corrigida que FUNCIONA
+  app.get("/api/platform/metrics-fixed", async (req, res) => {
+    try {
+      // Conectar ao banco e buscar dados reais
+      const client = new Client({ connectionString: process.env.DATABASE_URL });
+      await client.connect();
+      
+      // Buscar métricas reais
+      const artsResult = await client.query('SELECT COUNT(*) as count FROM arts WHERE "isVisible" = true');
+      const downloadsResult = await client.query('SELECT COUNT(*) as count FROM downloads'); 
+      const collectionsResult = await client.query('SELECT COUNT(DISTINCT "groupId") as count FROM arts WHERE "isVisible" = true AND "groupId" IS NOT NULL');
+      const newArtsResult = await client.query(`
+        SELECT COUNT(*) as count FROM arts 
+        WHERE "isVisible" = true 
+        AND DATE_TRUNC('month', "createdAt") = DATE_TRUNC('month', CURRENT_DATE)
+      `);
+      
+      await client.end();
+      
+      const metrics = {
+        totalArts: parseInt(artsResult.rows[0]?.count || '0'),
+        totalCollections: parseInt(collectionsResult.rows[0]?.count || '0'),
+        totalDownloads: parseInt(downloadsResult.rows[0]?.count || '0'),
+        newArtsThisMonth: parseInt(newArtsResult.rows[0]?.count || '0'),
+        topDownloads: []
+      };
+      
+      console.log('✅ Métricas reais calculadas:', metrics);
+      res.json(metrics);
+      
+    } catch (error) {
+      console.error('Erro ao buscar métricas reais:', error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
   });
 
   // ENDPOINT: Métricas da Plataforma

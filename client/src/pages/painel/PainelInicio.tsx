@@ -40,7 +40,7 @@ export default function PainelInicio() {
 
   // Buscar métricas da plataforma
   const { data: platformMetrics, isLoading: platformLoading } = useQuery({
-    queryKey: ["/api/platform/metrics"],
+    queryKey: ["/api/platform/metrics-fixed"],
     refetchInterval: 300000, // Atualiza a cada 5 minutos
   });
   
