@@ -8,6 +8,7 @@ import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import SubscriptionDashboard from '@/components/admin/SubscriptionDashboard';
 import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
 import SaasDashboard from '@/components/admin/SaasDashboard';
+import PlatformMetrics from '@/components/admin/PlatformMetrics';
 import {
   LayoutGrid,
   Image,
