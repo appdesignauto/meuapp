@@ -42,9 +42,20 @@ export default function PainelInicio() {
   const { data: platformMetrics, isLoading: platformLoading } = useQuery({
     queryKey: ["/api/platform/metrics-fixed"],
     refetchInterval: 300000, // Atualiza a cada 5 minutos
+    enabled: true, // Força a execução da query
+    staleTime: 0, // Remove cache para buscar dados frescos
+    refetchOnMount: true, // Busca dados ao montar o componente
   });
   
   // Log para depuração de estatísticas
+  useEffect(() => {
+    console.log("Platform metrics state:", {
+      data: platformMetrics,
+      loading: platformLoading,
+      queryKey: "/api/platform/metrics-fixed"
+    });
+  }, [platformMetrics, platformLoading]);
+
   useEffect(() => {
     if (userStats) {
       console.log("Stats dados recebidos:", userStats);
