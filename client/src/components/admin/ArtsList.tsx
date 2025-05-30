@@ -565,7 +565,7 @@ const ArtsList = () => {
                             <Button 
                               size="icon" 
                               variant="ghost"
-                              onClick={() => window.open(art.imageUrl, '_blank')}
+                              onClick={() => window.open(`/artes/${art.id}-${art.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`, '_blank')}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
