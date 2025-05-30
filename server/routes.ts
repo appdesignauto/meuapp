@@ -5434,13 +5434,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `)
       ]);
       
+      // Debug para entender a estrutura dos resultados
+      console.log("Estrutura dos resultados:", {
+        artsCountResult: artsCountResult,
+        collectionsCountResult: collectionsCountResult,
+        downloadsCountResult: downloadsCountResult,
+        newArtsThisMonthResult: newArtsThisMonthResult,
+        topDownloadsResult: topDownloadsResult
+      });
+
+      // Usar apenas a primeira linha dos resultados das queries de contagem
       const totalArts = parseInt(artsCountResult[0]?.count || '0');
-      const totalCollections = parseInt(collectionsCountResult[0]?.count || '0');
+      const totalCollections = parseInt(collectionsCountResult[0]?.count || '0'); 
       const totalDownloads = parseInt(downloadsCountResult[0]?.count || '0');
       const newArtsThisMonth = parseInt(newArtsThisMonthResult[0]?.count || '0');
       
-      // Formatar top downloads
-      const topDownloads = topDownloadsResult.map(item => ({
+      // Para top downloads, usar apenas os primeiros 3 resultados
+      const topDownloads = (topDownloadsResult || []).slice(0, 3).map((item: any) => ({
         id: item.id,
         title: item.title,
         imageUrl: item.imageUrl,
