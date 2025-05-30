@@ -36,8 +36,12 @@ export function useSubscription(user: User | null): SubscriptionStatus {
     user.nivelacesso === 'suporte'
   );
 
-  // Verificar se tem acesso vitalício
-  const isLifetime: boolean = user.acessovitalicio === true;
+  // Verificar se tem acesso vitalício (incluindo contas administrativas)
+  const isLifetime: boolean = user.acessovitalicio === true || 
+    user.nivelacesso === 'admin' || 
+    user.nivelacesso === 'designer_adm' ||
+    user.nivelacesso === 'designer' ||
+    user.nivelacesso === 'suporte';
 
   // Obter a data de expiração e verificar se expirou
   const expirationDate = user.dataexpiracao ? new Date(user.dataexpiracao) : null;

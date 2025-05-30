@@ -365,7 +365,7 @@ const Header = () => {
               </Button>
             )}
 
-            {user && !['premium', 'admin', 'designer_adm', 'suporte'].includes(user.nivelacesso) && (
+            {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
               <Link href="/planos">
                 <Button 
                   variant="ghost" 
@@ -489,7 +489,9 @@ const Header = () => {
                       </DropdownMenuItem>
                     </Link>
                     
-                    {user.nivelacesso === 'usuario' || !user.tipoplano ? (
+                    {(user.nivelacesso === 'usuario' || !user.tipoplano) && 
+                     user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && 
+                     user.nivelacesso !== 'designer' && user.nivelacesso !== 'suporte' ? (
                       <Link href="/planos">
                         <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
                           <div className="w-9 h-9 rounded-full flex items-center justify-center bg-green-50 mr-3">
@@ -502,7 +504,8 @@ const Header = () => {
                           <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
                         </DropdownMenuItem>
                       </Link>
-                    ) : (
+                    ) : (user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && 
+                        user.nivelacesso !== 'designer' && user.nivelacesso !== 'suporte' && user.tipoplano) ? (
                       <Link href="/painel/assinatura">
                         <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
                           <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 mr-3">
@@ -526,7 +529,9 @@ const Header = () => {
                           <span className="text-xs text-gray-500">Histórico de downloads</span>
                         </div>
                         <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 font-medium">
-                          {user.nivelacesso === 'premium' || user.tipoplano 
+                          {user.nivelacesso === 'premium' || user.tipoplano || 
+                           user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || 
+                           user.nivelacesso === 'designer' || user.nivelacesso === 'suporte'
                             ? '∞' 
                             : `${userStats?.totalDownloads || 0}/10`}
                         </span>

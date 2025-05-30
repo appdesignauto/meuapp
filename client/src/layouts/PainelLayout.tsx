@@ -306,7 +306,8 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                       <span className="text-sm">Downloads</span>
                     </div>
                     <span className="text-xs">
-                      {isPremium ? (
+                      {isPremium || user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || 
+                       user?.nivelacesso === 'designer' || user?.nivelacesso === 'suporte' ? (
                         <span className="flex items-center text-blue-600 font-medium">
                           <span className="mr-1">{userStats?.totalDownloads || 0}</span> / <span className="text-lg mx-0.5">∞</span>
                         </span>
@@ -323,7 +324,8 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                       <span className="text-sm">Favoritos</span>
                     </div>
                     <span className="text-xs">
-                      {isPremium ? (
+                      {isPremium || user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || 
+                       user?.nivelacesso === 'designer' || user?.nivelacesso === 'suporte' ? (
                         <span className="flex items-center text-blue-600 font-medium">
                           <span className="mr-1">{userStats?.totalFavorites || 0}</span> / <span className="text-lg mx-0.5">∞</span>
                         </span>
@@ -334,7 +336,8 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                   </div>
                   
                   {/* Botão de Upgrade para usuários free */}
-                  {!isPremium && (
+                  {!isPremium && user?.nivelacesso !== 'admin' && user?.nivelacesso !== 'designer_adm' && 
+                   user?.nivelacesso !== 'designer' && user?.nivelacesso !== 'suporte' && (
                     <Link href="/planos">
                       <Button
                         variant="default"
