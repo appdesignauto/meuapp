@@ -18,7 +18,7 @@ interface ArtGalleryProps {
 }
 
 const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtGalleryProps) => {
-  const initialLimit = 5; // Mostra 5 itens por seção inicialmente
+  const initialLimit = 12; // Sempre mostra 12 itens inicialmente
   const [, setLocation] = useLocation();
   const [loadCounter, setLoadCounter] = useState(0); // Contador para controlar redirecionamento
   const [allArts, setAllArts] = useState<any[]>([]); // Estado para armazenar todas as artes carregadas
