@@ -5434,13 +5434,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `)
       ]);
       
-      // Debug para entender a estrutura dos resultados
+      // Debug para entender a estrutura dos resultados - verificar se topDownloadsResult é array
       console.log("Estrutura dos resultados:", {
-        artsCountResult: artsCountResult,
-        collectionsCountResult: collectionsCountResult,
-        downloadsCountResult: downloadsCountResult,
-        newArtsThisMonthResult: newArtsThisMonthResult,
-        topDownloadsResult: topDownloadsResult
+        artsCountType: typeof artsCountResult,
+        collectionsCountType: typeof collectionsCountResult,
+        downloadsCountType: typeof downloadsCountResult,
+        newArtsThisMonthType: typeof newArtsThisMonthResult,
+        topDownloadsType: typeof topDownloadsResult,
+        topDownloadsIsArray: Array.isArray(topDownloadsResult)
       });
 
       // Usar apenas a primeira linha dos resultados das queries de contagem
@@ -5449,13 +5450,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalDownloads = parseInt(downloadsCountResult[0]?.count || '0');
       const newArtsThisMonth = parseInt(newArtsThisMonthResult[0]?.count || '0');
       
-      // Para top downloads, usar apenas os primeiros 3 resultados
-      const topDownloads = (topDownloadsResult || []).slice(0, 3).map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        imageUrl: item.imageUrl,
-        downloadCount: parseInt(item.download_count || '0')
-      }));
+      // Para top downloads, garantir que seja um array válido
+      const topDownloads = Array.isArray(topDownloadsResult) 
+        ? topDownloadsResult.slice(0, 3).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            imageUrl: item.imageUrl,
+            downloadCount: parseInt(item.download_count || '0')
+          }))
+        : [];
       
       console.log("📊 Métricas calculadas:", {
         totalArts,
