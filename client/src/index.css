@@ -301,75 +301,75 @@
     }
   }
   
-  /* Pinterest-style masonry layout com columnCount - Espaçamento otimizado */
+  /* Pinterest-style masonry layout com columnCount - Espaçamento reduzido e harmonioso */
   .pinterest-grid {
     column-count: 2;
-    column-gap: 16px;
-    padding: 0 4px;
+    column-gap: 8px;
+    padding: 0 2px;
   }
   
   .pinterest-grid > * {
     display: inline-block;
     width: 100%;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     break-inside: avoid;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
   
   .pinterest-grid > *:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 1;
   }
   
   @media (min-width: 640px) {
     .pinterest-grid {
       column-count: 3;
-      column-gap: 20px;
-      padding: 0 8px;
+      column-gap: 12px;
+      padding: 0 4px;
     }
     
     .pinterest-grid > * {
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
   }
   
   @media (min-width: 768px) {
     .pinterest-grid {
       column-count: 4;
-      column-gap: 24px;
-      padding: 0 12px;
+      column-gap: 14px;
+      padding: 0 6px;
     }
     
     .pinterest-grid > * {
-      margin-bottom: 24px;
+      margin-bottom: 14px;
     }
   }
   
   @media (min-width: 1024px) {
     .pinterest-grid {
       column-count: 4;
-      column-gap: 28px;
-      padding: 0 16px;
+      column-gap: 16px;
+      padding: 0 8px;
     }
     
     .pinterest-grid > * {
-      margin-bottom: 28px;
+      margin-bottom: 16px;
     }
   }
   
   @media (min-width: 1280px) {
     .pinterest-grid {
       column-count: 5;
-      column-gap: 32px;
-      padding: 0 20px;
+      column-gap: 18px;
+      padding: 0 10px;
     }
     
     .pinterest-grid > * {
-      margin-bottom: 32px;
+      margin-bottom: 18px;
     }
   }
   
