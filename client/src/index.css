@@ -358,6 +358,15 @@
   }
   
   /* Forçar espaçamento reduzido na vitrine */
+  .arts-gallery-compact {
+    column-gap: 8px !important;
+  }
+  
+  .arts-gallery-compact > * {
+    margin-bottom: 8px !important;
+    break-inside: avoid !important;
+  }
+  
   .columns-2 > *, .columns-3 > *, .columns-4 > *, .columns-5 > * {
     margin-bottom: 0.5rem !important;
   }

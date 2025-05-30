@@ -502,9 +502,10 @@ export default function ArtsPage() {
         ) : (
           <>
             <div 
-              className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
+              className="arts-gallery-compact columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
               style={{ 
-                columnGap: '8px'
+                columnGap: '8px !important',
+                gap: '8px !important'
               }}
             >
               {arts.map((art) => (
