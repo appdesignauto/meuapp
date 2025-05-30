@@ -249,6 +249,28 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     max-height: 90vh;
   }
+
+  /* Espaçamento compacto para a galeria de artes */
+  .arts-gallery-compact .grid {
+    gap: 0.75rem !important;
+  }
+
+  .arts-gallery-compact .grid > * {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Correção específica para o grid de artes na vitrine */
+  .arts-grid {
+    gap: 0.75rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .arts-grid > div {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   
   /* Estilos para grid no estilo Pinterest (masonry) */
   .masonry-grid {
