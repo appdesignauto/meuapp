@@ -631,7 +631,7 @@ export default function DesignerProfile() {
             {/* Vitrine Pinterest - Layout Masonry UX/UI Profissional */}
             <div className="w-full max-w-6xl mx-auto px-4">
               <div 
-                className="columns-2 sm:columns-3 md:columns-4 lg:columns-4 gap-4 space-y-0"
+                className="columns-2 sm:columns-3 md:columns-4 lg:columns-4 gap-2 space-y-0"
                 key={activeFilter}
                 style={{
                   columnFill: 'balance',
@@ -641,7 +641,7 @@ export default function DesignerProfile() {
                 {displayedArts(data).map((art, index) => (
                   <div 
                     key={art.id} 
-                    className="break-inside-avoid mb-4 group animate-fadeIn"
+                    className="break-inside-avoid mb-2 group animate-fadeIn"
                     style={{
                       animationDelay: `${index * 50}ms`,
                       pageBreakInside: 'avoid',
