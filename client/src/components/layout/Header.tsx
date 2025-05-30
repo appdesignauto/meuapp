@@ -496,34 +496,31 @@ const Header = () => {
                       </DropdownMenuItem>
                     </Link>
                     
-                    {/* Ocultar seção de assinatura para contas administrativas */}
-                    {user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && user.nivelacesso !== 'suporte' && (
-                      user.nivelacesso === 'usuario' || !user.tipoplano ? (
-                        <Link href="/planos">
-                          <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center bg-green-50 mr-3">
-                              <CreditCard className="w-4.5 h-4.5 text-green-600" />
-                            </div>
-                            <div className="flex flex-col flex-1">
-                              <span className="font-medium">Assinatura</span>
-                              <span className="text-xs text-gray-500">Fazer upgrade</span>
-                            </div>
-                            <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
-                          </DropdownMenuItem>
-                        </Link>
-                      ) : (
-                        <Link href="/painel/assinatura">
-                          <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 mr-3">
-                              <CreditCard className="w-4.5 h-4.5 text-blue-600" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium">Assinatura</span>
-                              <span className="text-xs text-gray-500">Gerenciar sua assinatura</span>
-                            </div>
-                          </DropdownMenuItem>
-                        </Link>
-                      )
+                    {user.nivelacesso === 'usuario' || !user.tipoplano ? (
+                      <Link href="/planos">
+                        <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                            <CreditCard className="w-4.5 h-4.5 text-green-600" />
+                          </div>
+                          <div className="flex flex-col flex-1">
+                            <span className="font-medium">Assinatura</span>
+                            <span className="text-xs text-gray-500">Fazer upgrade</span>
+                          </div>
+                          <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
+                        </DropdownMenuItem>
+                      </Link>
+                    ) : (
+                      <Link href="/painel/assinatura">
+                        <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                            <CreditCard className="w-4.5 h-4.5 text-blue-600" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Assinatura</span>
+                            <span className="text-xs text-gray-500">Gerenciar sua assinatura</span>
+                          </div>
+                        </DropdownMenuItem>
+                      </Link>
                     )}
                     
                     <Link href="/painel/downloads">
