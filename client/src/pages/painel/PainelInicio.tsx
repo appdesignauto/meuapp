@@ -38,37 +38,13 @@ export default function PainelInicio() {
     enabled: !!user?.id,
   });
 
-  // Métricas da plataforma com dados reais do banco
-  const platformMetrics = {
-    totalArts: 73,
-    totalCollections: 8,
-    totalDownloads: 145,
-    newArtsThisMonth: 12,
-    topDownloads: [
-      {
-        id: 61,
-        title: "Flyer Agenda Semanal Banner - Arte Editável no Canva",
-        imageUrl: "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/designer_1/vendas/1746218231056_754fed17-e975-49ec-a8a9-2b232ffc6291.webp",
-        format: "feed",
-        downloadCount: 3
-      },
-      {
-        id: 40,
-        title: "Arte Promocional",
-        imageUrl: "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/designer_1/vendas/1746121276880_882e60f3-4d55-4739-9161-dace1d193497.webp",
-        format: "carrocel",
-        downloadCount: 1
-      },
-      {
-        id: 88,
-        title: "Flyer Agenda Semanal Banner - Arte Editável no Canva",
-        imageUrl: "/imgs/designauto-images/vendas/1748542129384_9872fcbb-82d0-478d-ba4b-bf3546f6f3c9.webp",
-        format: "feed",
-        downloadCount: 1
-      }
-    ]
-  };
-  const platformLoading = false;
+  // Buscar métricas da plataforma com dados reais do banco
+  const { data: platformMetrics, isLoading: platformLoading } = useQuery({
+    queryKey: ["/api/platform/metrics"],
+    enabled: !!user?.id,
+    refetchInterval: 30000, // Atualiza a cada 30 segundos para dados em tempo real
+    staleTime: 10000, // Cache por apenas 10 segundos
+  });
   
   // Log para depuração de estatísticas
   useEffect(() => {
