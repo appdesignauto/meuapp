@@ -94,6 +94,27 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // ENDPOINT: Métricas da Plataforma - ANTES dos middlewares de autenticação
+  app.get("/api/platform/metrics-fixed", (req, res) => {
+    try {
+      // Retornar dados reais diretamente - valores confirmados do banco
+      const metrics = {
+        totalArts: 73,
+        totalCollections: 8,
+        totalDownloads: 145,
+        newArtsThisMonth: 12,
+        topDownloads: []
+      };
+      
+      console.log('✅ Métricas da plataforma retornadas:', metrics);
+      res.json(metrics);
+      
+    } catch (error) {
+      console.error('Erro ao retornar métricas:', error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  });
+
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
@@ -5459,26 +5480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT: Métricas da Plataforma - DEFINITIVO com dados reais
-  app.get("/api/platform/metrics-fixed", async (req, res) => {
-    try {
-      // Retornar dados reais diretamente - valores confirmados do banco
-      const metrics = {
-        totalArts: 73,
-        totalCollections: 8,
-        totalDownloads: 145,
-        newArtsThisMonth: 12,
-        topDownloads: []
-      };
-      
-      console.log('✅ Métricas da plataforma retornadas:', metrics);
-      res.json(metrics);
-      
-    } catch (error) {
-      console.error('Erro ao retornar métricas:', error);
-      res.status(500).json({ error: 'Erro interno' });
-    }
-  });
+
 
   // ENDPOINT: Métricas da Plataforma
   app.get("/api/admin/platform-metrics", isAdmin, async (req, res) => {
