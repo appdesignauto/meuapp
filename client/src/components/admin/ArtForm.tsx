@@ -239,6 +239,17 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       setValue('format', editingArt.format || '');
       setValue('fileType', editingArt.fileType || '');
       setIsPremium(editingArt.isPremium);
+    } else {
+      // Reset form quando não está editando (modo criação)
+      setValue('title', '');
+      setValue('description', '');
+      setValue('imageUrl', '');
+      setValue('editUrl', '');
+      setValue('categoryId', '');
+      setValue('collectionId', '');
+      setValue('format', '');
+      setValue('fileType', '');
+      setIsPremium(false);
     }
   }, [editingArt, setValue]);
 
