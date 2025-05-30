@@ -786,19 +786,16 @@ export default function SimpleFormMultiDialog({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="max-w-5xl pt-0 px-0 pb-0">
+      <DialogContent className="max-w-5xl pt-0 px-0 pb-0 [&>button]:h-8 [&>button]:w-8 [&>button>svg]:h-6 [&>button>svg]:w-6">
         <div className="overflow-y-auto max-h-[85vh]">
-          {/* Header com título e botão de fechar */}
-          <div className="flex justify-between items-center p-6 border-b">
+          {/* Header com título */}
+          <div className="flex items-center p-6 border-b">
             <div className="flex items-center gap-2">
               <FileImage className="h-6 w-6 text-blue-600" />
               <DialogTitle className="text-xl font-bold">
                 {isEditing ? 'Editar Arte Multi-Formato' : 'Adicionar Arte Multi-Formato'}
               </DialogTitle>
             </div>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
-              <X className="h-5 w-5" />
-            </button>
           </div>
           
           {/* Indicador de progresso (etapas) com textos alinhados */}
