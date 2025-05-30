@@ -25,6 +25,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreArts, setHasMoreArts] = useState(true);
   const loadMoreButtonRef = useRef<HTMLButtonElement>(null); // Referência para o botão carregar mais
+  const galleryRef = useRef<HTMLDivElement>(null); // Referência para a galeria principal
   const { user } = useAuth();
 
   // Reset page when filters change
