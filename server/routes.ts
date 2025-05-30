@@ -5379,8 +5379,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT: Métricas da Plataforma para Painel do Usuário
-  app.get("/api/platform/metrics", async (req, res) => {
+  // ENDPOINT: Métricas da Plataforma para Painel do Usuário (NOVA IMPLEMENTAÇÃO)
+  app.get("/api/platform/metrics", isAdmin, async (req, res) => {
     try {
       console.log("📊 Calculando métricas da plataforma para painel...");
       
