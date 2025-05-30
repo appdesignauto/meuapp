@@ -301,11 +301,11 @@
     }
   }
   
-  /* Pinterest-style masonry layout com columnCount - Espaçamento reduzido e harmonioso */
+  /* Pinterest-style masonry layout - Espaçamento horizontal igual ao vertical */
   .pinterest-grid {
     column-count: 2;
     column-gap: 8px;
-    padding: 0 2px;
+    padding: 0;
   }
   
   .pinterest-grid > * {
@@ -329,7 +329,6 @@
     .pinterest-grid {
       column-count: 3;
       column-gap: 12px;
-      padding: 0 4px;
     }
     
     .pinterest-grid > * {
@@ -341,7 +340,6 @@
     .pinterest-grid {
       column-count: 4;
       column-gap: 14px;
-      padding: 0 6px;
     }
     
     .pinterest-grid > * {
@@ -353,7 +351,6 @@
     .pinterest-grid {
       column-count: 4;
       column-gap: 16px;
-      padding: 0 8px;
     }
     
     .pinterest-grid > * {
@@ -365,7 +362,6 @@
     .pinterest-grid {
       column-count: 5;
       column-gap: 18px;
-      padding: 0 10px;
     }
     
     .pinterest-grid > * {
