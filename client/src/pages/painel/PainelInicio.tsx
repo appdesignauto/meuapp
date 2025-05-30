@@ -520,19 +520,21 @@ export default function PainelInicio() {
                   <div className="pl-10 space-y-2 mt-1">
                     {platformMetrics?.topDownloads?.length > 0 ? (
                       platformMetrics.topDownloads.map((art: any, index: number) => (
-                        <div key={art.id} className={`flex items-center space-x-2 py-1 ${index < 2 ? 'border-b border-border/40' : ''}`}>
-                          <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                            <img 
-                              src={art.imageUrl || '/placeholder-art.jpg'} 
-                              alt={art.title} 
-                              className="h-full w-full object-cover" 
-                            />
+                        <Link key={art.id} href={`/arte/${art.id}`}>
+                          <div className={`flex items-center space-x-2 py-1 hover:bg-muted/70 rounded-md px-1 transition-colors cursor-pointer ${index < 2 ? 'border-b border-border/40' : ''}`}>
+                            <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
+                              <img 
+                                src={art.imageUrl || '/placeholder-art.jpg'} 
+                                alt={art.title} 
+                                className="h-full w-full object-cover" 
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate hover:text-primary">{art.title}</p>
+                              <p className="text-[11px] text-muted-foreground">{art.downloadCount} downloads</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium truncate">{art.title}</p>
-                            <p className="text-[11px] text-muted-foreground">{art.downloadCount} downloads</p>
-                          </div>
-                        </div>
+                        </Link>
                       ))
                     ) : (
                       <div className="text-center py-4">
