@@ -301,55 +301,31 @@
     }
   }
   
-  /* Pinterest-style masonry layout - Espaçamento horizontal igual ao vertical */
+  /* Pinterest-style masonry layout com columnCount */
   .pinterest-grid {
     column-count: 2;
-    column-gap: 8px;
-    padding: 0;
+    column-gap: 12px;
   }
   
   .pinterest-grid > * {
     display: inline-block;
     width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     break-inside: avoid;
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
   
   .pinterest-grid > *:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     z-index: 1;
   }
   
   @media (min-width: 640px) {
     .pinterest-grid {
       column-count: 3;
-      column-gap: 12px;
-    }
-    
-    .pinterest-grid > * {
-      margin-bottom: 12px;
-    }
-  }
-  
-  @media (min-width: 768px) {
-    .pinterest-grid {
-      column-count: 4;
-      column-gap: 14px;
-    }
-    
-    .pinterest-grid > * {
-      margin-bottom: 14px;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .pinterest-grid {
-      column-count: 4;
       column-gap: 16px;
     }
     
@@ -358,14 +334,21 @@
     }
   }
   
-  @media (min-width: 1280px) {
+  @media (min-width: 768px) {
     .pinterest-grid {
-      column-count: 5;
-      column-gap: 18px;
+      column-count: 4;
+      column-gap: 16px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .pinterest-grid {
+      column-count: 4;
+      column-gap: 20px;
     }
     
     .pinterest-grid > * {
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
   }
   
