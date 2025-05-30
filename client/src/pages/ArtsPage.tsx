@@ -460,11 +460,19 @@ export default function ArtsPage() {
         
         {/* Galeria de imagens estilo Pinterest */}
         {artsLoading && page === 1 ? (
-          <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2 space-y-0">
+          <div 
+            className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
+            style={{ 
+              columnGap: '8px'
+            }}
+          >
             {Array.from({ length: 15 }).map((_, index) => (
               <div 
                 key={index} 
-                className="block overflow-hidden animate-pulse break-inside-avoid mb-2 rounded-xl shadow-sm"
+                className="block overflow-hidden animate-pulse break-inside-avoid rounded-xl shadow-sm"
+                style={{ 
+                  marginBottom: '8px'
+                }}
               >
                 <div className={`${index % 3 === 0 ? 'aspect-[3/4]' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[1/1]')} bg-neutral-200 rounded-xl`} />
               </div>
@@ -493,14 +501,20 @@ export default function ArtsPage() {
           </div>
         ) : (
           <>
-            <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2 space-y-0">
+            <div 
+              className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
+              style={{ 
+                columnGap: '8px'
+              }}
+            >
               {arts.map((art) => (
                 <div 
                   key={art.id} 
-                  className="break-inside-avoid mb-2 transform hover:-translate-y-1 transition-transform duration-300"
+                  className="break-inside-avoid transform hover:-translate-y-1 transition-transform duration-300"
                   style={{ 
                     display: 'inline-block',
-                    width: '100%'
+                    width: '100%',
+                    marginBottom: '8px'
                   }}
                 >
                   <ArtCard 

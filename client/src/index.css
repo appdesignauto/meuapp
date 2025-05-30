@@ -357,6 +357,15 @@
     @apply shadow-[0_0_15px_rgba(0,0,0,0.1)];
   }
   
+  /* Forçar espaçamento reduzido na vitrine */
+  .columns-2 > *, .columns-3 > *, .columns-4 > *, .columns-5 > * {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .columns-2, .columns-3, .columns-4, .columns-5 {
+    column-gap: 0.5rem !important;
+  }
+  
   /* Melhoria na animação de hover para links */
   .link-hover {
     @apply relative;
@@ -402,3 +411,4 @@
     width: auto !important;
   }
 }
+/* Cache buster: 1748646572 */
