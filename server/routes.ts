@@ -5388,84 +5388,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       currentMonth.setDate(1); // Primeiro dia do mês atual
       const currentMonthISO = currentMonth.toISOString();
       
-      // Executar todas as consultas em paralelo
-      const [
-        artsCountResult,
-        collectionsCountResult,
-        downloadsCountResult,
-        newArtsThisMonthResult,
-        topDownloadsResult
-      ] = await Promise.all([
-        // Total de artes disponíveis
-        db.execute(sql`
-          SELECT COUNT(*) as count FROM arts WHERE "isVisible" = true
-        `),
-        
-        // Total de coleções
-        db.execute(sql`
-          SELECT COUNT(*) as count FROM collections
-        `),
-        
-        // Total de downloads realizados
-        db.execute(sql`
-          SELECT COUNT(*) as count FROM downloads
-        `),
-        
-        // Novas artes adicionadas este mês
-        db.execute(sql`
-          SELECT COUNT(*) as count FROM arts 
-          WHERE "createdAt" >= ${currentMonthISO} AND "isVisible" = true
-        `),
-        
-        // Top 3 artes mais baixadas do mês
-        db.execute(sql`
-          SELECT 
-            a.id,
-            a.title,
-            a."imageUrl",
-            COUNT(d.id) as download_count
-          FROM arts a
-          LEFT JOIN downloads d ON a.id = d."artId" 
-            AND d."createdAt" >= ${currentMonthISO}
-          WHERE a."isVisible" = true
-          GROUP BY a.id, a.title, a."imageUrl"
-          ORDER BY download_count DESC
-          LIMIT 3
-        `)
-      ]);
+      // Conectar ao banco PostgreSQL diretamente para garantir dados reais
+      const client = new Client({ connectionString: process.env.DATABASE_URL });
+      await client.connect();
       
-      // Debug para entender a estrutura dos resultados - verificar se topDownloadsResult é array
-      console.log("Estrutura dos resultados:", {
-        artsCountType: typeof artsCountResult,
-        collectionsCountType: typeof collectionsCountResult,
-        downloadsCountType: typeof downloadsCountResult,
-        newArtsThisMonthType: typeof newArtsThisMonthResult,
-        topDownloadsType: typeof topDownloadsResult,
-        topDownloadsIsArray: Array.isArray(topDownloadsResult)
-      });
-
-      // Usar apenas a primeira linha dos resultados das queries de contagem
-      const totalArts = parseInt(artsCountResult[0]?.count || '0');
-      const totalCollections = parseInt(collectionsCountResult[0]?.count || '0'); 
-      const totalDownloads = parseInt(downloadsCountResult[0]?.count || '0');
-      const newArtsThisMonth = parseInt(newArtsThisMonthResult[0]?.count || '0');
+      // Total de artes visíveis
+      const artsQuery = await client.query('SELECT COUNT(*) as count FROM arts WHERE "isVisible" = true');
+      const totalArts = parseInt(artsQuery.rows[0]?.count || '0');
       
-      // Para top downloads, garantir que seja um array válido
-      const topDownloads = Array.isArray(topDownloadsResult) 
-        ? topDownloadsResult.slice(0, 3).map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            imageUrl: item.imageUrl,
-            downloadCount: parseInt(item.download_count || '0')
-          }))
-        : [];
+      // Total de downloads
+      const downloadsQuery = await client.query('SELECT COUNT(*) as count FROM downloads');
+      const totalDownloads = parseInt(downloadsQuery.rows[0]?.count || '0');
       
-      console.log("📊 Métricas calculadas:", {
+      // Total de coleções (grupos únicos)
+      const collectionsQuery = await client.query('SELECT COUNT(DISTINCT "groupId") as count FROM arts WHERE "isVisible" = true AND "groupId" IS NOT NULL');
+      const totalCollections = parseInt(collectionsQuery.rows[0]?.count || '0');
+      
+      // Artes criadas este mês
+      const newArtsQuery = await client.query(`
+        SELECT COUNT(*) as count FROM arts 
+        WHERE "isVisible" = true 
+        AND DATE_TRUNC('month', "createdAt") = DATE_TRUNC('month', CURRENT_DATE)
+      `);
+      const newArtsThisMonth = parseInt(newArtsQuery.rows[0]?.count || '0');
+      
+      // Top downloads do mês atual
+      const topDownloadsQuery = await client.query(`
+        SELECT 
+          a.id,
+          a.title,
+          a."imageUrl",
+          COUNT(d.id) as download_count
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId"
+        WHERE a."isVisible" = true 
+        AND (d."createdAt" IS NULL OR DATE_TRUNC('month', d."createdAt") = DATE_TRUNC('month', CURRENT_DATE))
+        GROUP BY a.id, a.title, a."imageUrl"
+        ORDER BY download_count DESC
+        LIMIT 3
+      `);
+      
+      const topDownloads = topDownloadsQuery.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        imageUrl: row.imageUrl,
+        downloadCount: parseInt(row.download_count || '0')
+      }));
+      
+      await client.end();
+      
+      console.log("📊 Métricas calculadas com dados reais:", {
         totalArts,
-        totalCollections, 
+        totalCollections,
         totalDownloads,
         newArtsThisMonth,
-        topDownloads: topDownloads.length
+        topDownloadsCount: topDownloads.length
       });
       
       res.json({
