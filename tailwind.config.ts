@@ -191,6 +191,18 @@ export default {
       // Customização das classes de colunas com espaçamento compacto
       columnGap: {
         'compact': '8px',
+        '2': '8px',
+        '3': '8px', 
+        '4': '8px',
+        '6': '8px',
+        '8': '8px',
+      },
+      gap: {
+        '2': '8px',
+        '3': '8px',
+        '4': '8px', 
+        '6': '8px',
+        '8': '8px',
       },
     },
   },
