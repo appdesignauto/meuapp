@@ -336,8 +336,8 @@ const ArtsList = () => {
   };
   
   const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setEditingArt(null);
+    setEditingArt(null);  // Limpa primeiro o estado de edição
+    setIsFormOpen(false); // Depois fecha o modal
   };
 
   const arts = data?.arts || [];
