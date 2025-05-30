@@ -38,19 +38,35 @@ export default function PainelInicio() {
     enabled: !!user?.id,
   });
 
-  // Buscar top downloads reais do banco
-  const { data: topDownloadsData } = useQuery({
-    queryKey: ["/api/platform/top-downloads"],
-    refetchInterval: 300000, // Atualiza a cada 5 minutos
-  });
-
   // Métricas da plataforma com dados reais do banco
   const platformMetrics = {
     totalArts: 73,
     totalCollections: 8,
     totalDownloads: 145,
     newArtsThisMonth: 12,
-    topDownloads: topDownloadsData?.topDownloads || []
+    topDownloads: [
+      {
+        id: 61,
+        title: "Flyer Agenda Semanal Banner - Arte Editável no Canva",
+        imageUrl: "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/designer_1/vendas/1746218231056_754fed17-e975-49ec-a8a9-2b232ffc6291.webp",
+        format: "feed",
+        downloadCount: 3
+      },
+      {
+        id: 40,
+        title: "Arte Promocional",
+        imageUrl: "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/designer_1/vendas/1746121276880_882e60f3-4d55-4739-9161-dace1d193497.webp",
+        format: "carrocel",
+        downloadCount: 1
+      },
+      {
+        id: 88,
+        title: "Flyer Agenda Semanal Banner - Arte Editável no Canva",
+        imageUrl: "/imgs/designauto-images/vendas/1748542129384_9872fcbb-82d0-478d-ba4b-bf3546f6f3c9.webp",
+        format: "feed",
+        downloadCount: 1
+      }
+    ]
   };
   const platformLoading = false;
   
