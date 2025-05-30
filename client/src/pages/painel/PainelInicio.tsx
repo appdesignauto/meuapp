@@ -37,6 +37,12 @@ export default function PainelInicio() {
     queryKey: ["/api/users/stats"],
     enabled: !!user?.id,
   });
+
+  // Buscar métricas da plataforma
+  const { data: platformMetrics, isLoading: platformLoading } = useQuery({
+    queryKey: ["/api/platform/metrics"],
+    refetchInterval: 300000, // Atualiza a cada 5 minutos
+  });
   
   // Log para depuração de estatísticas
   useEffect(() => {
@@ -434,12 +440,24 @@ export default function PainelInicio() {
                 <div className="flex-1">
                   <div className="flex justify-between items-baseline">
                     <p className="text-sm font-medium">Total de artes disponíveis</p>
-                    <span className="text-lg font-bold text-indigo-600">3.247</span>
+                    {platformLoading ? (
+                      <Skeleton className="h-5 w-12" />
+                    ) : (
+                      <span className="text-lg font-bold text-indigo-600">
+                        {platformMetrics?.totalArts || 0}
+                      </span>
+                    )}
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1.5">
                     <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: '100%' }}></div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">+78 artes adicionadas este mês</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {platformLoading ? (
+                      <Skeleton className="h-3 w-32" />
+                    ) : (
+                      `+${platformMetrics?.newArtsThisMonth || 0} artes adicionadas este mês`
+                    )}
+                  </p>
                 </div>
               </div>
               
@@ -452,37 +470,43 @@ export default function PainelInicio() {
                   <p className="text-sm font-medium">Top 3 artes mais baixadas do mês</p>
                 </div>
                 
-                <div className="pl-10 space-y-2 mt-1">
-                  <div className="flex items-center space-x-2 py-1 border-b border-border/40">
-                    <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designautoimages/arte_21.webp" alt="Arte popular" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">Banner Promoção de Fiat Strada</p>
-                      <p className="text-[11px] text-muted-foreground">247 downloads</p>
-                    </div>
+                {platformLoading ? (
+                  <div className="pl-10 space-y-2 mt-1">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center space-x-2 py-1">
+                        <Skeleton className="h-7 w-7 rounded" />
+                        <div className="flex-1">
+                          <Skeleton className="h-3 w-24 mb-1" />
+                          <Skeleton className="h-2 w-16" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div className="flex items-center space-x-2 py-1 border-b border-border/40">
-                    <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designautoimages/arte_22.webp" alt="Arte popular" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">Stories Lavagem Completa</p>
-                      <p className="text-[11px] text-muted-foreground">189 downloads</p>
-                    </div>
+                ) : (
+                  <div className="pl-10 space-y-2 mt-1">
+                    {platformMetrics?.topDownloads?.length > 0 ? (
+                      platformMetrics.topDownloads.map((art: any, index: number) => (
+                        <div key={art.id} className={`flex items-center space-x-2 py-1 ${index < 2 ? 'border-b border-border/40' : ''}`}>
+                          <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
+                            <img 
+                              src={art.imageUrl || '/placeholder-art.jpg'} 
+                              alt={art.title} 
+                              className="h-full w-full object-cover" 
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{art.title}</p>
+                            <p className="text-[11px] text-muted-foreground">{art.downloadCount} downloads</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-xs text-muted-foreground">Nenhum download registrado este mês</p>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className="flex items-center space-x-2 py-1">
-                    <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designautoimages/arte_23.webp" alt="Arte popular" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">Post Ofertas do Final de Semana</p>
-                      <p className="text-[11px] text-muted-foreground">156 downloads</p>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
               
               {/* Métrica: Novas coleções */}

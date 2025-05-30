@@ -5379,6 +5379,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ENDPOINT: Métricas da Plataforma para Painel do Usuário
+  app.get("/api/platform/metrics", async (req, res) => {
+    try {
+      console.log("📊 Calculando métricas da plataforma para painel...");
+      
+      const currentMonth = new Date();
+      currentMonth.setDate(1); // Primeiro dia do mês atual
+      const currentMonthISO = currentMonth.toISOString();
+      
+      // Executar todas as consultas em paralelo
+      const [
+        artsCountResult,
+        collectionsCountResult,
+        downloadsCountResult,
+        newArtsThisMonthResult,
+        topDownloadsResult
+      ] = await Promise.all([
+        // Total de artes disponíveis
+        db.execute(sql`
+          SELECT COUNT(*) as count FROM arts WHERE "isVisible" = true
+        `),
+        
+        // Total de coleções
+        db.execute(sql`
+          SELECT COUNT(*) as count FROM collections
+        `),
+        
+        // Total de downloads realizados
+        db.execute(sql`
+          SELECT COUNT(*) as count FROM downloads
+        `),
+        
+        // Novas artes adicionadas este mês
+        db.execute(sql`
+          SELECT COUNT(*) as count FROM arts 
+          WHERE "createdAt" >= ${currentMonthISO} AND "isVisible" = true
+        `),
+        
+        // Top 3 artes mais baixadas do mês
+        db.execute(sql`
+          SELECT 
+            a.id,
+            a.title,
+            a."imageUrl",
+            COUNT(d.id) as download_count
+          FROM arts a
+          LEFT JOIN downloads d ON a.id = d."artId" 
+            AND d."createdAt" >= ${currentMonthISO}
+          WHERE a."isVisible" = true
+          GROUP BY a.id, a.title, a."imageUrl"
+          ORDER BY download_count DESC
+          LIMIT 3
+        `)
+      ]);
+      
+      const totalArts = parseInt(artsCountResult[0]?.count || '0');
+      const totalCollections = parseInt(collectionsCountResult[0]?.count || '0');
+      const totalDownloads = parseInt(downloadsCountResult[0]?.count || '0');
+      const newArtsThisMonth = parseInt(newArtsThisMonthResult[0]?.count || '0');
+      
+      // Formatar top downloads
+      const topDownloads = topDownloadsResult.map(item => ({
+        id: item.id,
+        title: item.title,
+        imageUrl: item.imageUrl,
+        downloadCount: parseInt(item.download_count || '0')
+      }));
+      
+      console.log("📊 Métricas calculadas:", {
+        totalArts,
+        totalCollections, 
+        totalDownloads,
+        newArtsThisMonth,
+        topDownloads: topDownloads.length
+      });
+      
+      res.json({
+        totalArts,
+        totalCollections,
+        totalDownloads,
+        newArtsThisMonth,
+        topDownloads
+      });
+    } catch (error) {
+      console.error("Erro ao buscar métricas da plataforma:", error);
+      res.status(500).json({ message: "Erro ao buscar métricas da plataforma" });
+    }
+  });
+
   // ENDPOINT: Métricas da Plataforma
   app.get("/api/admin/platform-metrics", isAdmin, async (req, res) => {
     try {
