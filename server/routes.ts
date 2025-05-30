@@ -94,23 +94,45 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // ENDPOINT: Métricas da Plataforma - ANTES dos middlewares de autenticação
-  app.get("/api/platform/metrics-fixed", (req, res) => {
+  // ENDPOINT: Top 3 artes mais baixadas - ANTES dos middlewares de autenticação
+  app.get("/api/platform/top-downloads", async (req, res) => {
     try {
-      // Retornar dados reais diretamente - valores confirmados do banco
-      const metrics = {
-        totalArts: 73,
-        totalCollections: 8,
-        totalDownloads: 145,
-        newArtsThisMonth: 12,
-        topDownloads: []
-      };
+      const { Client } = require('pg');
+      const client = new Client({
+        connectionString: process.env.DATABASE_URL
+      });
       
-      console.log('✅ Métricas da plataforma retornadas:', metrics);
-      res.json(metrics);
+      await client.connect();
+      
+      // Buscar top 3 artes mais baixadas com dados reais
+      const result = await client.query(`
+        SELECT 
+          a.id,
+          a.title,
+          a.imageUrl,
+          a.downloadCount,
+          a.format
+        FROM arts a 
+        WHERE a.isVisible = true 
+        ORDER BY a.downloadCount DESC 
+        LIMIT 3
+      `);
+      
+      await client.end();
+      
+      const topDownloads = result.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageurl,
+        downloadCount: art.downloadcount || 0,
+        format: art.format
+      }));
+      
+      console.log('✅ Top 3 artes mais baixadas:', topDownloads);
+      res.json({ topDownloads });
       
     } catch (error) {
-      console.error('Erro ao retornar métricas:', error);
+      console.error('Erro ao buscar top downloads:', error);
       res.status(500).json({ error: 'Erro interno' });
     }
   });

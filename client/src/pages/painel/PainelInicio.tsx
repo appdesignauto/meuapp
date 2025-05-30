@@ -38,13 +38,19 @@ export default function PainelInicio() {
     enabled: !!user?.id,
   });
 
+  // Buscar top downloads reais do banco
+  const { data: topDownloadsData } = useQuery({
+    queryKey: ["/api/platform/top-downloads"],
+    refetchInterval: 300000, // Atualiza a cada 5 minutos
+  });
+
   // Métricas da plataforma com dados reais do banco
   const platformMetrics = {
     totalArts: 73,
     totalCollections: 8,
     totalDownloads: 145,
     newArtsThisMonth: 12,
-    topDownloads: []
+    topDownloads: topDownloadsData?.topDownloads || []
   };
   const platformLoading = false;
   
