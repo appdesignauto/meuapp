@@ -509,17 +509,29 @@ export default function PainelInicio() {
                 )}
               </div>
               
-              {/* Métrica: Novas coleções */}
+              {/* Métrica: Total de coleções */}
               <div className="flex items-center space-x-3 p-3 rounded-md bg-muted/50">
                 <div className="bg-amber-100 p-2 rounded-full">
                   <FolderPlus className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-baseline">
-                    <p className="text-sm font-medium">Novas coleções este mês</p>
-                    <span className="text-lg font-bold text-amber-600">4</span>
+                    <p className="text-sm font-medium">Total de coleções</p>
+                    {platformLoading ? (
+                      <Skeleton className="h-5 w-8" />
+                    ) : (
+                      <span className="text-lg font-bold text-amber-600">
+                        {platformMetrics?.totalCollections || 0}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">Lavagem Premium, Oficina Motos, SUVs e Ofertas Relâmpago</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {platformLoading ? (
+                      <Skeleton className="h-3 w-40" />
+                    ) : (
+                      "Coleções organizadas por categorias de design"
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
