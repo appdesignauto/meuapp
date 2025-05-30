@@ -132,6 +132,21 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
   }, [categoryId, formatId, fileTypeId, user?.nivelacesso]);
 
+  // Força o espaçamento correto na galeria da home
+  useEffect(() => {
+    const forceGallerySpacing = () => {
+      if (galleryRef.current) {
+        galleryRef.current.style.setProperty('column-gap', '8px', 'important');
+        galleryRef.current.style.setProperty('-webkit-column-gap', '8px', 'important');
+        galleryRef.current.style.setProperty('-moz-column-gap', '8px', 'important');
+      }
+    };
+
+    forceGallerySpacing();
+    const timeoutId = setTimeout(forceGallerySpacing, 100);
+    return () => clearTimeout(timeoutId);
+  }, [allArts]);
+
   const loadMore = useCallback(() => {
     if (isFetching) return;
 
@@ -207,7 +222,10 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         </div>
         
         {isLoading ? (
-          <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
+          <div 
+            className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 space-y-0"
+            style={{ columnGap: '8px' }}
+          >
             {Array.from({ length: 8 }).map((_, index) => (
               <div 
                 key={index} 
@@ -219,7 +237,11 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
           </div>
         ) : (
           <>
-            <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
+            <div 
+              ref={galleryRef}
+              className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 space-y-0"
+              style={{ columnGap: '8px' }}
+            >
               <AnimatePresence>
                 {allArts.map((art) => (
                   <motion.div

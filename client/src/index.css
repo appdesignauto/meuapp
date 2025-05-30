@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Força espaçamento de 8px em todas as vitrines de colunas */
+.columns-2,
+.columns-3,
+.columns-4,
+.columns-5 {
+  column-gap: 8px !important;
+  -webkit-column-gap: 8px !important;
+  -moz-column-gap: 8px !important;
+}
+
 /* Animações para popups */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
