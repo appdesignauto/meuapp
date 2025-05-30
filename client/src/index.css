@@ -250,26 +250,39 @@
     max-height: 90vh;
   }
 
-  /* Espaçamento compacto para a galeria de artes - SOLUÇÃO ROBUSTA */
+  /* SOLUÇÃO DEFINITIVA PARA ESPAÇAMENTO DA VITRINE - v1.1 */
+  /* Força espaçamento em TODAS as páginas que usam layout de colunas */
+  .columns-2,
+  .columns-3,
+  .columns-4,
+  .columns-5,
+  [class*="columns-"] {
+    column-gap: 8px !important;
+    -webkit-column-gap: 8px !important;
+    -moz-column-gap: 8px !important;
+  }
+
+  .columns-2 > div,
+  .columns-3 > div,
+  .columns-4 > div,
+  .columns-5 > div,
+  [class*="columns-"] > div {
+    margin-bottom: 8px !important;
+    break-inside: avoid !important;
+    display: inline-block !important;
+    width: 100% !important;
+  }
+
+  /* Aplicação específica na página de artes */
   .arts-gallery-compact {
     column-gap: 8px !important;
-    gap: 8px !important;
+    -webkit-column-gap: 8px !important;
+    -moz-column-gap: 8px !important;
   }
 
   .arts-gallery-compact > div {
     margin-bottom: 8px !important;
     break-inside: avoid !important;
-  }
-
-  /* Força o espaçamento em todas as variações de layout masonry/columns */
-  [class*="columns-"] {
-    column-gap: 8px !important;
-  }
-
-  [class*="columns-"] > div {
-    margin-bottom: 8px !important;
-    display: inline-block !important;
-    width: 100% !important;
   }
   
   /* Estilos para grid no estilo Pinterest (masonry) */
