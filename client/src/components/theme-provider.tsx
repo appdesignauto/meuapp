@@ -33,6 +33,9 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
+    console.log("ThemeProvider useEffect: tema atual =", theme);
+    console.log("Classes antes da remoção:", root.className);
+
     root.classList.remove("light", "dark");
 
     if (theme === "system") {
@@ -41,18 +44,23 @@ export function ThemeProvider({
         ? "dark"
         : "light";
 
+      console.log("Tema do sistema detectado:", systemTheme);
       root.classList.add(systemTheme);
+      console.log("Classes após adicionar tema do sistema:", root.className);
       return;
     }
 
+    console.log("Adicionando tema:", theme);
     root.classList.add(theme);
+    console.log("Classes após adicionar tema:", root.className);
   }, [theme]);
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+    setTheme: (newTheme: Theme) => {
+      console.log("ThemeProvider: Mudando tema de", theme, "para", newTheme);
+      localStorage.setItem(storageKey, newTheme);
+      setTheme(newTheme);
     },
   };
 
