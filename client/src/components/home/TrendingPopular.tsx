@@ -78,14 +78,6 @@ const TrendingPopular = () => {
           </p>
         </div>
 
-        {/* Tab Header - Apenas visual */}
-        <div className="flex gap-2 mb-8">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-blue-600 text-white shadow-lg">
-            <Download size={16} />
-            Mais Baixados
-          </div>
-        </div>
-
         {/* Arts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {currentArts.map((art, index) => (
@@ -97,7 +89,7 @@ const TrendingPopular = () => {
               className="group"
             >
               <Link href={`/art/${art.id}`}>
-                <div className="relative bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                <div className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
                   {/* Imagem */}
                   <div className="relative aspect-video overflow-hidden">
                     <img
@@ -121,28 +113,20 @@ const TrendingPopular = () => {
                     </div>
                   </div>
 
-                  {/* Informações do card */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                  {/* Informações minimalistas */}
+                  <div className="p-3">
+                    <h3 className="font-medium text-gray-900 text-sm line-clamp-1">
                       {art.title}
                     </h3>
                     
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span className="bg-gray-100 px-2 py-1 rounded-full text-xs">
-                        {art.categoryName}
-                      </span>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <Download size={14} />
-                          <span>{art.downloadCount}</span>
-                        </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                      <span>{art.categoryName}</span>
+                      <div className="flex items-center gap-1">
+                        <Download size={12} />
+                        <span>{art.downloadCount}</span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                 </div>
               </Link>
             </motion.div>
