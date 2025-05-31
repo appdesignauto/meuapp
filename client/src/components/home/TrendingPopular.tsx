@@ -76,7 +76,7 @@ const TrendingPopular = () => {
         </div>
 
         {/* Arts Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
