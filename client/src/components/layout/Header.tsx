@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SHOW_SEARCHBAR_EVENT, HIDE_SEARCHBAR_EVENT } from '@/components/home/Hero';
 import { 
   DropdownMenu,
@@ -364,6 +365,11 @@ const Header = () => {
                 <Search className="h-4 w-4" />
               </Button>
             )}
+
+            {/* Alternador de tema */}
+            <div className="hidden md:flex">
+              <ThemeToggle />
+            </div>
 
             {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
               <Link href="/planos">
