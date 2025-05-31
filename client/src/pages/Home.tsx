@@ -68,6 +68,7 @@ const Home = () => {
           onCategorySelect={handleCategoryChange}
         />
       </div>
+      <TrendingPopular />
       <FeatureStats />
       <PremiumFeatures />
       <Testimonials />
