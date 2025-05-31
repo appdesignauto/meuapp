@@ -1290,14 +1290,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           a."isPremium",
           c.name as "categoryName",
           COUNT(d.id) as "downloadCount",
-          a."viewCount"
+          a.viewcount
         FROM arts a
         LEFT JOIN downloads d ON a.id = d."artId" 
           AND d."createdAt" >= NOW() - INTERVAL '7 days'
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
-        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a."viewCount"
-        ORDER BY COUNT(d.id) DESC, a."viewCount" DESC
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a.viewcount
+        ORDER BY COUNT(d.id) DESC, a.viewcount DESC
         LIMIT 6
       `);
 
@@ -1306,7 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: art.title,
         imageUrl: art.imageUrl,
         downloadCount: Number(art.downloadCount) || 0,
-        viewCount: art.viewCount || 0,
+        viewCount: art.viewcount || 0,
         categoryName: art.categoryName || 'Sem categoria',
         isPremium: art.isPremium
       }));
@@ -1331,13 +1331,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           a."isPremium",
           c.name as "categoryName",
           COUNT(d.id) as "downloadCount",
-          a."viewCount"
+          a.viewcount
         FROM arts a
         LEFT JOIN downloads d ON a.id = d."artId"
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
-        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a."viewCount"
-        ORDER BY COUNT(d.id) DESC, a."viewCount" DESC
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a.viewcount
+        ORDER BY COUNT(d.id) DESC, a.viewcount DESC
         LIMIT 6
       `);
 
@@ -1346,7 +1346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: art.title,
         imageUrl: art.imageUrl,
         downloadCount: Number(art.downloadCount) || 0,
-        viewCount: art.viewCount || 0,
+        viewCount: art.viewcount || 0,
         categoryName: art.categoryName || 'Sem categoria',
         isPremium: art.isPremium
       }));
@@ -1372,13 +1372,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           a."createdAt",
           c.name as "categoryName",
           COUNT(d.id) as "downloadCount",
-          a."viewCount"
+          a.viewcount
         FROM arts a
         LEFT JOIN downloads d ON a.id = d."artId"
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
           AND a."createdAt" >= NOW() - INTERVAL '7 days'
-        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", a."createdAt", c.name, a."viewCount"
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", a."createdAt", c.name, a.viewcount
         ORDER BY a."createdAt" DESC
         LIMIT 6
       `);
@@ -1388,7 +1388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: art.title,
         imageUrl: art.imageUrl,
         downloadCount: Number(art.downloadCount) || 0,
-        viewCount: art.viewCount || 0,
+        viewCount: art.viewcount || 0,
         categoryName: art.categoryName || 'Sem categoria',
         isPremium: art.isPremium,
         isNew: true
