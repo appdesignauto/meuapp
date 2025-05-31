@@ -888,44 +888,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Categories API with precise art counts and detailed stats
+  // Categories API with optimized single query
   app.get("/api/categories", async (req, res) => {
     try {
-      const categories = await storage.getCategories();
-      
-      // Para cada categoria, realizar uma busca precisa das artes com contagem
-      const enhancedCategories = await Promise.all(categories.map(async (category) => {
-        // Buscar todas as artes dessa categoria com limites altos para garantir precisão
-        const { arts, totalCount } = await storage.getArts(1, 1000, { category: category.id });
-        
-        // Se não há artes, retornamos com contagem zero e data atual
-        if (arts.length === 0) {
-          return {
-            ...category,
-            artCount: 0,
-            lastUpdate: new Date(),
-            formats: []
-          };
-        }
-        
-        // Ordenar por data de atualização e pegar a mais recente
-        const sortedArts = [...arts].sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-        
-        // Data da última atualização é a data da arte mais recente
-        const lastUpdate = sortedArts[0].updatedAt;
-        
-        // Coletar formatos únicos de artes nesta categoria
-        const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
-        
-        // Retornar categoria com informações extras completas
-        return {
-          ...category,
-          artCount: totalCount,
-          lastUpdate,
-          formats: uniqueFormats
-        };
+      // Query otimizada única com JOIN para evitar N+1 problem
+      const categoriesWithStats = await db
+        .select({
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+          description: categories.description,
+          createdAt: categories.createdAt,
+          updatedAt: categories.updatedAt,
+          artCount: sql<number>`COUNT(DISTINCT ${arts.id})`.as('art_count'),
+          lastUpdate: sql<Date>`MAX(${arts.updatedAt})`.as('last_update')
+        })
+        .from(categories)
+        .leftJoin(arts, eq(categories.id, arts.categoryId))
+        .groupBy(categories.id, categories.name, categories.slug, categories.description, categories.createdAt, categories.updatedAt)
+        .orderBy(asc(categories.name));
+
+      // Transformar resultado para formato esperado
+      const enhancedCategories = categoriesWithStats.map(category => ({
+        ...category,
+        artCount: Number(category.artCount) || 0,
+        lastUpdate: category.lastUpdate || category.updatedAt,
+        formats: [] // Simplificado por performance
       }));
       
       res.json(enhancedCategories);
@@ -2116,68 +2104,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Favorites API
-  // Estatísticas do usuário - versão revisada
+  // User stats API - optimized single query
   app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      console.log("[GET /api/users/stats] Buscando estatísticas para o usuário:", userId);
       
-      // Usar SQL bruto para evitar problemas com maiúsculas/minúsculas nos nomes das colunas
-      // Usar o Drizzle ORM diretamente para contar favoritos
-      const favoritesQuery = db.select({ count: sql<number>`count(*)` })
-        .from(favorites)
-        .where(eq(favorites.userId, userId));
-        
-      const favoritesResult = await favoritesQuery;
-      const totalFavorites = Number(favoritesResult[0]?.count) || 0;
-      console.log("[GET /api/users/stats] Total de favoritos:", totalFavorites);
-      
-      // Usar o Drizzle ORM diretamente para contar downloads
-      const downloadsQuery = db.select({ count: sql<number>`count(*)` })
-        .from(downloads)
-        .where(eq(downloads.userId, userId));
-        
-      const downloadsResult = await downloadsQuery;
-      const totalDownloads = Number(downloadsResult[0]?.count) || 0;
-      console.log("[GET /api/users/stats] Total de downloads:", totalDownloads);
-      
-      // Usar o Drizzle ORM diretamente para contar visualizações
-      const viewsQuery = db.select({ count: sql<number>`count(*)` })
-        .from(views)
-        .where(eq(views.userId, userId));
-        
-      const viewsResult = await viewsQuery;
-      const totalViews = Number(viewsResult[0]?.count) || 0;
-      console.log("[GET /api/users/stats] Total de views:", totalViews);
-      
-      // Buscar dados do usuário para obter o último login usando SQL bruto
-      const userResult = await db.execute(sql`
-        SELECT lastlogin, ultimologin FROM users WHERE id = ${userId}
+      // Query única otimizada que busca todas as estatísticas de uma vez
+      const statsResult = await db.execute(sql`
+        SELECT 
+          (SELECT COUNT(*) FROM favorites WHERE "userId" = ${userId}) as total_favorites,
+          (SELECT COUNT(*) FROM downloads WHERE "userId" = ${userId}) as total_downloads,
+          (SELECT COUNT(*) FROM views WHERE "userId" = ${userId}) as total_views,
+          (SELECT COALESCE(ultimologin, lastlogin) FROM users WHERE id = ${userId}) as last_login
       `);
       
-      // Usar lastlogin ou ultimologin, o que estiver disponível
-      const lastLogin = userResult.rows[0]?.lastlogin || userResult.rows[0]?.ultimologin || null;
-      
-      console.log("Dados do último login:", {
-        userData: userResult.rows[0],
-        lastLoginValue: lastLogin
-      });
-      
-      // Estatísticas para retornar com valores forçados como Number e último login
+      const row = statsResult.rows[0];
       const stats = {
-        totalFavorites: Number(totalFavorites),
-        totalDownloads: Number(totalDownloads),
-        totalViews: Number(totalViews),
-        lastLogin: lastLogin
+        totalFavorites: Number(row?.total_favorites) || 0,
+        totalDownloads: Number(row?.total_downloads) || 0,
+        totalViews: Number(row?.total_views) || 0,
+        lastLogin: row?.last_login || null
       };
       
-      console.log("[GET /api/users/stats] Retornando estatísticas atualizadas:", stats);
-      
-      // Retornar estatísticas
       res.json(stats);
     } catch (error) {
-      console.error("[GET /api/users/stats] Erro ao buscar estatísticas do usuário:", error);
+      console.error("Erro ao buscar estatísticas do usuário:", error);
       res.status(500).json({ message: "Erro ao buscar estatísticas do usuário" });
     }
   });

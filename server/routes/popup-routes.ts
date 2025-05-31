@@ -53,123 +53,58 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Obter um popup ativo para o usuário/sessão atual
+// Optimized popup active endpoint - single query approach
 router.get('/active', async (req, res) => {
   try {
     const { sessionId, currentPath } = req.query;
     const userId = req.isAuthenticated() ? req.user?.id : undefined;
     const userRole = req.isAuthenticated() ? req.user?.nivelacesso : 'visitante';
-    
-    // Criar sessionId para visitantes se não existir
     const currentSessionId = sessionId || uuidv4();
-    
-    // Obter data atual
     const now = new Date();
     
-    console.log('DEBUG - Verificando popups ativos:');
-    console.log('- Data atual:', now);
-    console.log('- Usuário logado:', userId ? 'Sim' : 'Não', 'ID:', userId);
-    console.log('- Nível de acesso:', userRole);
-    console.log('- Página atual:', currentPath);
+    // Single optimized query with all conditions
+    const validPopup = await db.execute(sql`
+      SELECT p.* 
+      FROM popups p
+      WHERE p."isActive" = true
+        AND p."startDate" <= ${now}
+        AND p."endDate" >= ${now}
+        AND (
+          (${userId !== undefined} AND p."showToLoggedUsers" = true) OR
+          (${userId === undefined} AND p."showToGuestUsers" = true) OR
+          (${userRole === 'premium'} AND p."showToPremiumUsers" = true)
+        )
+        AND (
+          p.pages IS NULL OR 
+          p.pages = '[]' OR 
+          ${currentPath ? `'${currentPath}' = ANY(p.pages)` : 'true'}
+        )
+        AND (
+          NOT p."showOnce" OR 
+          ${userId === undefined} OR
+          NOT EXISTS (
+            SELECT 1 FROM "popupViews" pv 
+            WHERE pv."popupId" = p.id AND pv."userId" = ${userId}
+          )
+        )
+      ORDER BY p."createdAt" DESC
+      LIMIT 1
+    `);
     
-    // Primeiro, buscar todos os popups ativos no banco
-    const allActivePopups = await db.query.popups.findMany({
-      where: eq(popups.isActive, true),
-      orderBy: [desc(popups.createdAt)],
-    });
-    
-    console.log('- Total de popups ativos no banco:', allActivePopups.length);
-    
-    if (allActivePopups.length > 0) {
-      // Verificar condições de data e segmentação para cada popup
-      allActivePopups.forEach(popup => {
-        console.log('Popup ID:', popup.id, 'Título:', popup.title);
-        console.log('- É ativo:', popup.isActive);
-        console.log('- Data de início:', popup.startDate, popup.startDate <= now ? 'VÁLIDA' : 'INVÁLIDA');
-        console.log('- Data de término:', popup.endDate, popup.endDate >= now ? 'VÁLIDA' : 'INVÁLIDA');
-        console.log('- Mostra para usuários logados:', popup.showToLoggedUsers);
-        console.log('- Mostra para visitantes:', popup.showToGuestUsers);
-        console.log('- Mostra para usuários premium:', popup.showToPremiumUsers);
-        console.log('- Páginas permitidas:', popup.pages ? popup.pages.join(', ') : 'Todas');
-        console.log('- Funções de usuário permitidas:', popup.userRoles ? popup.userRoles.join(', ') : 'Todas');
+    if (validPopup.rows.length > 0) {
+      return res.json({
+        hasActivePopup: true,
+        popup: validPopup.rows[0],
+        sessionId: currentSessionId
       });
     }
     
-    // Construir condições de filtro para seleção de popups
-    const conditions = and(
-      eq(popups.isActive, true),
-      lte(popups.startDate, now),
-      gte(popups.endDate, now),
-      // Verificar segmentação por tipo de usuário
-      or(
-        // Para usuários logados
-        userId ? eq(popups.showToLoggedUsers, true) : undefined,
-        // Para visitantes (não logados)
-        !userId ? eq(popups.showToGuestUsers, true) : undefined,
-        // Para usuários premium
-        userId && userRole === 'premium' ? eq(popups.showToPremiumUsers, true) : undefined
-      )
-    );
-    
-    // Buscar popups adequados para o usuário atual
-    const availablePopups = await db.query.popups.findMany({
-      where: conditions,
-      orderBy: [desc(popups.createdAt)],
-    });
-    
-    console.log('- Popups que passaram em todas as condições iniciais:', availablePopups.length);
-    
-    if (availablePopups.length === 0) {
-      return res.json({ hasActivePopup: false, sessionId: currentSessionId });
-    }
-    
-    // Filtrar ainda mais com base na página atual
-    const pageFilteredPopups = availablePopups.filter(popup => {
-      // Se o campo pages estiver vazio ou for null, mostrar em todas as páginas
-      if (!popup.pages || popup.pages.length === 0) {
-        return true;
-      }
-      
-      // Converter currentPath para string para comparação segura
-      const pathToCheck = currentPath?.toString() || 'home';
-      
-      // Verificar se a página atual está na lista de páginas permitidas
-      return popup.pages.includes(pathToCheck);
-    });
-    
-    console.log('- Popups que passaram no filtro de páginas:', pageFilteredPopups.length);
-    
-    if (pageFilteredPopups.length === 0) {
-      return res.json({ hasActivePopup: false, sessionId: currentSessionId });
-    }
-    
-    // Para cada popup disponível, verificar regras adicionais
-    for (const popup of pageFilteredPopups) {
-      // 1. Se popup é para ser mostrado apenas uma vez, verificar se já foi visto
-      if (popup.showOnce) {
-        if (userId) {
-          // Verificar se o usuário já viu este popup
-          const viewCount = await db
-            .select({ count: count() })
-            .from(popupViews)
-            .where(
-              and(
-                eq(popupViews.popupId, popup.id),
-                eq(popupViews.userId, userId)
-              )
-            );
-            
-          if (viewCount[0].count > 0) {
-            // Usuário já viu este popup, verificar próximo
-            continue;
-          }
-        } else if (sessionId) {
-          // Verificar se esta sessão já viu este popup
-          const viewCount = await db
-            .select({ count: count() })
-            .from(popupViews)
-            .where(
-              and(
+    res.json({ hasActivePopup: false, sessionId: currentSessionId });
+  } catch (error) {
+    console.error('Erro ao buscar popups ativos:', error);
+    res.status(500).json({ message: 'Erro ao buscar popups ativos' });
+  }
+});
                 eq(popupViews.popupId, popup.id),
                 eq(popupViews.sessionId, sessionId as string)
               )
