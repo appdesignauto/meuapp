@@ -35,15 +35,15 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
     
+    // Remove todas as classes e atributos de tema
     root.classList.remove("light", "dark");
+    root.removeAttribute("data-theme");
     
-    if (theme === "dark") {
-      root.setAttribute("data-theme", "dark");
-      root.classList.add("dark");
-    } else {
-      root.removeAttribute("data-theme");
-      root.classList.add("light");
-    }
+    // Aplica o tema correto usando data-theme para compatibilidade com nossas variáveis CSS
+    root.setAttribute("data-theme", theme);
+    
+    // Manter compatibilidade com classes também
+    root.classList.add(theme);
   }, [theme]);
 
   const value = {

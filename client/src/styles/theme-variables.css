@@ -206,3 +206,68 @@ input::placeholder, textarea::placeholder {
 .bg-gray-50 { background-color: var(--bg-secondary) !important; }
 .bg-gray-100 { background-color: var(--bg-tertiary) !important; }
 .bg-gray-900 { background-color: var(--bg-primary) !important; }
+
+/* ================================================================
+   COMPONENTES ESPECÍFICOS DO DESIGNAUTO
+   ================================================================ */
+
+/* Header e navegação */
+.header, .navbar, [class*="header"], [class*="nav"] {
+    background-color: var(--bg-elevated) !important;
+    border-color: var(--border-primary) !important;
+}
+
+/* Cards de arte e galeria */
+.art-card, .gallery-item, [class*="card"] {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-primary) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.art-card:hover, .gallery-item:hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-2px);
+}
+
+/* Sidebar e menu lateral */
+.sidebar, [class*="sidebar"] {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-primary) !important;
+}
+
+/* Comunidade e posts */
+.community-post, .post-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-primary) !important;
+}
+
+/* Filtros e controles */
+.filter-button, .category-filter {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-primary) !important;
+}
+
+.filter-button.active, .category-filter.active {
+    background-color: var(--designauto-primary) !important;
+    color: var(--text-inverse) !important;
+}
+
+/* Tailwind utility overrides */
+.bg-white { background-color: var(--bg-card) !important; }
+.bg-slate-50 { background-color: var(--bg-secondary) !important; }
+.bg-slate-100 { background-color: var(--bg-tertiary) !important; }
+.bg-blue-50 { background-color: var(--designauto-primary-light) !important; }
+
+.text-slate-600 { color: var(--text-secondary) !important; }
+.text-slate-500 { color: var(--text-tertiary) !important; }
+.text-slate-400 { color: var(--text-quaternary) !important; }
+.text-slate-900 { color: var(--text-primary) !important; }
+
+.border-slate-200 { border-color: var(--border-primary) !important; }
+.border-slate-300 { border-color: var(--border-secondary) !important; }
+
+/* Hover states */
+.hover\\:bg-gray-50:hover { background-color: var(--bg-hover) !important; }
+.hover\\:bg-blue-50:hover { background-color: var(--designauto-primary-light) !important; }
+.hover\\:text-blue-600:hover { color: var(--designauto-primary) !important; }
