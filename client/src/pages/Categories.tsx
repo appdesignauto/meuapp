@@ -15,7 +15,7 @@ interface EnhancedCategory extends Category {
   formats: string[];
 }
 
-type FilterType = 'all' | 'popular' | 'recent' | 'premium' | 'social';
+type FilterType = 'all' | 'popular' | 'recent';
 
 const Categories = () => {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -130,14 +130,7 @@ const Categories = () => {
           return updateDate > sevenDaysAgo;
         }
         return false;
-      case 'premium':
-        // Categorias que contêm artes premium
-        return !!category.formats?.includes('premium');
-      case 'social':
-        // Categorias mais adequadas para redes sociais
-        return category.slug.includes('social') || 
-               category.slug.includes('promocoes') || 
-               category.slug.includes('vendas');
+
       case 'all':
       default:
         return true;
@@ -224,24 +217,6 @@ const Categories = () => {
           >
             <Clock className="w-4 h-4 mr-1" />
             Atualizadas recentemente
-          </Badge>
-          
-          <Badge 
-            variant={activeFilter === 'premium' ? 'default' : 'outline'} 
-            className={`px-4 py-2 cursor-pointer text-sm transition-all ${activeFilter === 'premium' ? 'bg-purple-600' : 'hover:bg-purple-50'}`}
-            onClick={() => handleFilterChange('premium')}
-          >
-            <Sparkles className="w-4 h-4 mr-1" />
-            Premium
-          </Badge>
-          
-          <Badge 
-            variant={activeFilter === 'social' ? 'default' : 'outline'} 
-            className={`px-4 py-2 cursor-pointer text-sm transition-all ${activeFilter === 'social' ? 'bg-red-600' : 'hover:bg-red-50'}`}
-            onClick={() => handleFilterChange('social')}
-          >
-            <Bookmark className="w-4 h-4 mr-1" />
-            Redes sociais
           </Badge>
         </div>
       </div>
