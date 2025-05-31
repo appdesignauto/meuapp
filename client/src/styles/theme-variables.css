@@ -271,3 +271,99 @@ input::placeholder, textarea::placeholder {
 .hover\\:bg-gray-50:hover { background-color: var(--bg-hover) !important; }
 .hover\\:bg-blue-50:hover { background-color: var(--designauto-primary-light) !important; }
 .hover\\:text-blue-600:hover { color: var(--designauto-primary) !important; }
+
+/* ================================================================
+   OVERRIDES MAIS ESPECÍFICOS PARA GARANTIR CONSISTÊNCIA
+   ================================================================ */
+
+/* Força aplicação em todos os backgrounds brancos */
+[class*="bg-white"], 
+.bg-white,
+[style*="background-color: white"],
+[style*="background-color: #ffffff"],
+[style*="background-color: #fff"] {
+    background-color: var(--bg-card) !important;
+}
+
+/* Força aplicação em todos os textos escuros */
+[class*="text-gray-900"],
+[class*="text-slate-900"],
+[class*="text-black"],
+.text-gray-900,
+.text-slate-900,
+.text-black {
+    color: var(--text-primary) !important;
+}
+
+/* Força aplicação em todos os textos secundários */
+[class*="text-gray-600"],
+[class*="text-slate-600"],
+.text-gray-600,
+.text-slate-600 {
+    color: var(--text-secondary) !important;
+}
+
+/* Força aplicação em backgrounds secundários */
+[class*="bg-gray-50"],
+[class*="bg-slate-50"],
+.bg-gray-50,
+.bg-slate-50 {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Força aplicação em backgrounds terciários */
+[class*="bg-gray-100"],
+[class*="bg-slate-100"],
+.bg-gray-100,
+.bg-slate-100 {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* Override para containers principais */
+main, section, article, aside, .container {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Override para elementos de interface */
+button:not(.btn-primary), 
+.button:not(.btn-primary) {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-primary) !important;
+}
+
+/* Override específico para posts e cards da comunidade */
+[class*="post"], 
+[class*="card"], 
+[class*="item"],
+.post,
+.card,
+.item {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-primary) !important;
+}
+
+/* Override para elementos de lista */
+li, ul, ol, dl {
+    color: var(--text-primary) !important;
+}
+
+/* Override para spans e elementos inline */
+span, p, div, h1, h2, h3, h4, h5, h6 {
+    color: inherit !important;
+}
+
+/* Override específico para neutralizar estilos inline conflitantes */
+[data-theme="dark"] * {
+    color: inherit !important;
+}
+
+[data-theme="dark"] .text-white {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .bg-transparent {
+    background-color: transparent !important;
+}
