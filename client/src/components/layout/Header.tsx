@@ -50,7 +50,7 @@ import {
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
+
 
 // Componente para exibir o logo do site com base nas configurações
 type LogoImageProps = { 
@@ -365,9 +365,6 @@ const Header = () => {
                 <Search className="h-4 w-4" />
               </Button>
             )}
-
-            {/* Botão de alternância de modo escuro */}
-            <ThemeToggle />
 
             {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
               <Link href="/planos">

@@ -1,16 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-
-type Theme = "light" | "dark";
+import React, { createContext, useContext } from "react";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
-  defaultTheme?: Theme;
-  storageKey?: string;
 };
 
 type ThemeProviderState = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  theme: "light";
+  setTheme: (theme: "light") => void;
   toggleTheme: () => void;
 };
 
@@ -24,39 +20,13 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
-  storageKey = "designauto-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    // Remove todas as classes e atributos de tema
-    root.classList.remove("light", "dark");
-    root.removeAttribute("data-theme");
-    
-    // Aplica o tema correto usando data-theme para compatibilidade com nossas variáveis CSS
-    root.setAttribute("data-theme", theme);
-    
-    // Manter compatibilidade com classes também
-    root.classList.add(theme);
-  }, [theme]);
-
+  // Tema fixo em light - removendo toda lógica de dark mode
   const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
-    },
-    toggleTheme: () => {
-      const newTheme = theme === "light" ? "dark" : "light";
-      localStorage.setItem(storageKey, newTheme);
-      setTheme(newTheme);
-    },
+    theme: "light" as const,
+    setTheme: () => {}, // Função vazia - não permite mudança
+    toggleTheme: () => {}, // Função vazia - não permite mudança
   };
 
   return (
