@@ -888,31 +888,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Categories API - corrected column names
+  // Categories API - Optimized with single JOIN query
   app.get("/api/categories", async (req, res) => {
     try {
       const result = await db.execute(sql`
-        SELECT id, name, slug 
-        FROM categories 
-        ORDER BY name
+        SELECT 
+          c.id, 
+          c.name, 
+          c.slug,
+          COUNT(a.id) as art_count
+        FROM categories c
+        LEFT JOIN arts a ON c.id = a."categoryId"
+        GROUP BY c.id, c.name, c.slug
+        ORDER BY c.name
       `);
       
-      const categoriesWithCounts = await Promise.all(result.rows.map(async (category: any) => {
-        const countResult = await db.execute(sql`
-          SELECT COUNT(*) as count FROM arts WHERE "categoryId" = ${category.id}
-        `);
-        
-        return {
-          id: category.id,
-          name: category.name,
-          slug: category.slug,
-          description: category.description || "",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          artCount: Number(countResult.rows[0]?.count) || 0,
-          lastUpdate: new Date(),
-          formats: []
-        };
+      const categoriesWithCounts = result.rows.map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        artCount: Number(category.art_count) || 0,
+        lastUpdate: new Date(),
+        formats: []
       }));
       
       res.json(categoriesWithCounts);
