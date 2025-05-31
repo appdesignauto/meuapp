@@ -354,7 +354,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <ThemeProvider defaultTheme="light">
+        <ThemeProvider defaultTheme="system">
           <AuthProvider>
             <SupabaseAuthProvider>
               <Router>
