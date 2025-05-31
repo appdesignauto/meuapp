@@ -249,7 +249,7 @@ const Categories = () => {
       {/* Conteúdo principal - Grid de categorias */}
       <div className="container mx-auto px-4 pb-16">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse">
                 <Skeleton className="aspect-video w-full" />
@@ -296,7 +296,7 @@ const Categories = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {filteredCategories?.map((category) => {
               const imagePaths = getCategoryImagePaths(category);
               

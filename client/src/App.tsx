@@ -291,11 +291,6 @@ function AppRoutes() {
         component={WebhookLogsPage}
         roles={['admin']} 
       />
-      <ProtectedRoute 
-        path="/admin/dashboard-saas" 
-        component={DashboardSaas}
-        roles={['admin']} 
-      />
       <ProtectedRoute
         path="/admin/analytics"
         component={() => {
