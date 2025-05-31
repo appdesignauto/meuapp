@@ -206,15 +206,15 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                         )}
                       </div>
                       
-                      {/* Nome da categoria com estilo especial */}
-                      <div className="relative px-3 py-2 text-center">
-                        {/* Badge de categoria com estilo minimalista */}
-                        <div className={`absolute -top-[18px] left-1/2 transform -translate-x-1/2 rounded-md bg-gradient-to-r ${categoryColor} px-2 sm:px-3 py-[2px] sm:py-1`}>
+                      {/* Nome da categoria com estilo especial - espaço reduzido */}
+                      <div className="relative px-3 py-1 text-center">
+                        {/* Badge de categoria com estilo minimalista - reposicionada */}
+                        <div className={`absolute -top-[16px] left-1/2 transform -translate-x-1/2 rounded-md bg-gradient-to-r ${categoryColor} px-2 sm:px-3 py-[2px] sm:py-1`}>
                           <h3 className="text-[10px] sm:text-xs font-medium text-white">{category.name}</h3>
                         </div>
                         
-                        {/* Espaço para o nome da categoria */}
-                        <div className="h-2"></div>
+                        {/* Espaço mínimo para o nome da categoria */}
+                        <div className="h-1"></div>
                       </div>
                       
                       {/* Ícone "Ver" que aparece ao passar o mouse */}
