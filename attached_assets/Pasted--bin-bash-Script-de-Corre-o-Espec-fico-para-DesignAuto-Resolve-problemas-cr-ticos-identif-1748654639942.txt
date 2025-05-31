@@ -1,0 +1,435 @@
+#!/bin/bash
+
+# Script de Correção Específico para DesignAuto
+# Resolve problemas críticos identificados na análise
+
+echo "🚀 CORREÇÃO AUTOMÁTICA - PROJETO DESIGNAUTO"
+echo "==========================================="
+echo ""
+
+# Cores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Backup de segurança antes das correções
+create_backup() {
+    echo -e "${BLUE}📦 Criando backup de segurança...${NC}"
+    backup_dir="backup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    
+    # Backup dos arquivos importantes antes das mudanças
+    [ -f ".env" ] && cp .env "$backup_dir/"
+    [ -f ".gitignore" ] && cp .gitignore "$backup_dir/"
+    [ -f "package.json" ] && cp package.json "$backup_dir/"
+    
+    echo "✅ Backup criado em: $backup_dir"
+    echo ""
+}
+
+# 🔴 CRÍTICO: Proteger arquivo .env
+fix_env_security() {
+    echo -e "${RED}🔒 CORRIGINDO PROBLEMA CRÍTICO DE SEGURANÇA...${NC}"
+    
+    # Verificar se .env existe
+    if [ -f ".env" ]; then
+        echo "📄 Arquivo .env encontrado"
+        
+        # Verificar se .gitignore existe, senão criar
+        if [ ! -f ".gitignore" ]; then
+            echo "📝 Criando arquivo .gitignore"
+            touch .gitignore
+        fi
+        
+        # Adicionar .env ao .gitignore se não estiver lá
+        if ! grep -q "^\.env$" .gitignore 2>/dev/null; then
+            echo "" >> .gitignore
+            echo "# Environment variables" >> .gitignore
+            echo ".env" >> .gitignore
+            echo ".env.local" >> .gitignore
+            echo ".env.development.local" >> .gitignore
+            echo ".env.test.local" >> .gitignore
+            echo ".env.production.local" >> .gitignore
+            echo "✅ .env adicionado ao .gitignore"
+        else
+            echo "✅ .env já está protegido no .gitignore"
+        fi
+        
+        # Verificar se .env já foi commitado
+        if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo ""
+            echo -e "${YELLOW}⚠️  ATENÇÃO: .env já foi commitado no Git!${NC}"
+            echo "Execute manualmente:"
+            echo "git rm --cached .env"
+            echo "git commit -m 'Remove .env from tracking'"
+            echo ""
+        fi
+        
+        # Criar .env.example como template
+        if [ ! -f ".env.example" ]; then
+            echo "📋 Criando .env.example como template..."
+            sed 's/=.*/=/' .env > .env.example 2>/dev/null || echo "# Environment variables template" > .env.example
+            echo "✅ .env.example criado"
+        fi
+    else
+        echo "ℹ️  Arquivo .env não encontrado"
+    fi
+    echo ""
+}
+
+# 🟡 Remover arquivos desnecessários
+cleanup_unnecessary_files() {
+    echo -e "${YELLOW}🗑️  REMOVENDO ARQUIVOS DESNECESSÁRIOS...${NC}"
+    
+    files_removed=0
+    
+    # Remover arquivos .bak
+    bak_files=$(find . -name "*.bak" -type f ! -path "./node_modules/*" ! -path "./.git/*")
+    if [ ! -z "$bak_files" ]; then
+        echo "🔄 Removendo arquivos .bak:"
+        echo "$bak_files" | while read file; do
+            echo "   Removendo: $file"
+            rm -f "$file"
+        done
+        files_removed=$((files_removed + $(echo "$bak_files" | wc -l)))
+    fi
+    
+    # Remover logs antigos
+    old_logs=$(find . -name "*.log" -type f ! -path "./node_modules/*" ! -path "./.git/*" -mtime +7)
+    if [ ! -z "$old_logs" ]; then
+        echo "📜 Removendo logs antigos (>7 dias):"
+        echo "$old_logs" | while read file; do
+            echo "   Removendo: $file"
+            rm -f "$file"
+        done
+        files_removed=$((files_removed + $(echo "$old_logs" | wc -l)))
+    fi
+    
+    # Remover arquivos temporários
+    temp_files=$(find . \( -name "*.tmp" -o -name "*.temp" -o -name "*~" \) -type f ! -path "./node_modules/*" ! -path "./.git/*")
+    if [ ! -z "$temp_files" ]; then
+        echo "🗂️  Removendo arquivos temporários:"
+        echo "$temp_files" | while read file; do
+            echo "   Removendo: $file"
+            rm -f "$file"
+        done
+        files_removed=$((files_removed + $(echo "$temp_files" | wc -l)))
+    fi
+    
+    # Cache do TypeScript
+    if [ -d ".tsc-cache" ]; then
+        echo "🧹 Limpando cache TypeScript..."
+        rm -rf .tsc-cache
+        files_removed=$((files_removed + 1))
+    fi
+    
+    echo "✅ $files_removed arquivos/pastas removidos"
+    echo ""
+}
+
+# 🟡 Otimizar imagens grandes
+optimize_images() {
+    echo -e "${YELLOW}🖼️  ANALISANDO IMAGENS GRANDES...${NC}"
+    
+    # Encontrar imagens grandes em attached_assets
+    large_images=$(find ./attached_assets -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" \) -size +1M 2>/dev/null)
+    
+    if [ ! -z "$large_images" ]; then
+        echo "📸 Imagens grandes encontradas em attached_assets/:"
+        echo "$large_images" | while read img; do
+            size=$(du -h "$img" | cut -f1)
+            echo "   • $(basename "$img") - $size"
+        done
+        
+        echo ""
+        echo "💡 Recomendações para otimização:"
+        echo "   1. Use ferramentas como TinyPNG ou ImageOptim"
+        echo "   2. Considere WebP para melhor compressão"
+        echo "   3. Implemente lazy loading para imagens grandes"
+        echo "   4. Use CDN para servir assets estáticos"
+    else
+        echo "✅ Nenhuma imagem muito grande encontrada"
+    fi
+    echo ""
+}
+
+# 🟢 Análise de dependências
+analyze_dependencies() {
+    echo -e "${GREEN}📦 ANALISANDO DEPENDÊNCIAS...${NC}"
+    
+    if [ -f "package.json" ]; then
+        # Verificar se npm está disponível
+        if command -v npm &> /dev/null; then
+            echo "🔍 Verificando vulnerabilidades..."
+            npm audit --audit-level=moderate 2>/dev/null | head -20
+            
+            echo ""
+            echo "🧹 Para limpar dependências não utilizadas, execute:"
+            echo "   npm install --package-lock-only"
+            echo "   npx depcheck (para encontrar dependências não utilizadas)"
+        fi
+        
+        # Verificar packages duplicados no package.json
+        if command -v jq &> /dev/null; then
+            deps=$(jq -r '.dependencies // {} | keys[]' package.json 2>/dev/null)
+            dev_deps=$(jq -r '.devDependencies // {} | keys[]' package.json 2>/dev/null)
+            
+            duplicates=$(echo -e "$deps\n$dev_deps" | sort | uniq -d)
+            if [ ! -z "$duplicates" ]; then
+                echo "⚠️  Dependências duplicadas encontradas:"
+                echo "$duplicates" | sed 's/^/   • /'
+            fi
+        fi
+    fi
+    echo ""
+}
+
+# 🟢 Limpeza de console.log para produção
+cleanup_console_logs() {
+    echo -e "${GREEN}🐛 IDENTIFICANDO console.log PARA PRODUÇÃO...${NC}"
+    
+    # Procurar console.log em arquivos TypeScript/JavaScript
+    console_logs=$(find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) ! -path "./node_modules/*" ! -path "./.git/*" -exec grep -l "console\.log" {} \; 2>/dev/null)
+    
+    if [ ! -z "$console_logs" ]; then
+        total_logs=$(find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) ! -path "./node_modules/*" ! -path "./.git/*" -exec grep -c "console\.log" {} \; 2>/dev/null | awk '{sum += $1} END {print sum}')
+        
+        echo "📊 $total_logs console.log encontrados em:"
+        echo "$console_logs" | head -10 | sed 's/^/   • /'
+        
+        if [ $(echo "$console_logs" | wc -l) -gt 10 ]; then
+            echo "   ... e mais $(( $(echo "$console_logs" | wc -l) - 10 )) arquivos"
+        fi
+        
+        echo ""
+        echo "💡 Para remover automaticamente (CUIDADO!):"
+        echo "   find . -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' | xargs sed -i '/console\.log/d'"
+        echo ""
+        echo "⚠️  Recomendado: Revisar manualmente ou usar linter para remover"
+    else
+        echo "✅ Nenhum console.log encontrado"
+    fi
+    echo ""
+}
+
+# Atualizar .gitignore com melhores práticas
+update_gitignore() {
+    echo -e "${BLUE}📝 ATUALIZANDO .GITIGNORE...${NC}"
+    
+    # Template completo para projeto React/Node.js
+    gitignore_additions="
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build outputs
+build/
+dist/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+"
+
+    # Verificar quais linhas já existem
+    existing_lines=0
+    if [ -f ".gitignore" ]; then
+        existing_lines=$(wc -l < .gitignore)
+    fi
+    
+    # Adicionar apenas linhas que não existem
+    echo "$gitignore_additions" | while read line; do
+        if [ ! -z "$line" ] && [ "${line:0:1}" != "#" ]; then
+            if ! grep -Fxq "$line" .gitignore 2>/dev/null; then
+                echo "$line" >> .gitignore
+            fi
+        elif [ ! -z "$line" ] && [ "${line:0:1}" = "#" ]; then
+            echo "$line" >> .gitignore
+        fi
+    done
+    
+    new_lines=$(wc -l < .gitignore)
+    added_lines=$((new_lines - existing_lines))
+    
+    echo "✅ .gitignore atualizado (+$added_lines linhas)"
+    echo ""
+}
+
+# Gerar relatório de melhorias
+generate_report() {
+    echo -e "${GREEN}📋 RELATÓRIO DE CORREÇÕES APLICADAS${NC}"
+    echo "==================================="
+    echo ""
+    
+    echo "✅ CORREÇÕES REALIZADAS:"
+    echo "   • Arquivo .env protegido no .gitignore"
+    echo "   • Arquivos desnecessários removidos"
+    echo "   • .gitignore atualizado com melhores práticas"
+    echo "   • Análise de dependências executada"
+    echo "   • console.log identificados para revisão"
+    echo ""
+    
+    echo "📋 PRÓXIMOS PASSOS MANUAIS:"
+    echo "   1. Revisar e remover console.log para produção"
+    echo "   2. Executar 'npm audit fix' para corrigir vulnerabilidades"
+    echo "   3. Otimizar imagens grandes identificadas"
+    echo "   4. Verificar se .env foi commitado anteriormente"
+    echo ""
+    
+    echo "🔄 COMANDOS ÚTEIS PARA MANUTENÇÃO:"
+    echo "   npm run build          # Testar build"
+    echo "   npm audit              # Verificar segurança"
+    echo "   npx depcheck           # Dependências não utilizadas"
+    echo "   git status             # Verificar mudanças"
+    echo ""
+    
+    echo "⚡ DICAS DE PERFORMANCE:"
+    echo "   • Configure Webpack Bundle Analyzer"
+    echo "   • Implemente code splitting"
+    echo "   • Use lazy loading para componentes pesados"
+    echo "   • Configure cache HTTP para assets"
+    echo ""
+}
+
+# Verificação final
+final_verification() {
+    echo -e "${BLUE}🔍 VERIFICAÇÃO FINAL...${NC}"
+    
+    # Verificar se .env está no .gitignore
+    if grep -q "^\.env$" .gitignore 2>/dev/null; then
+        echo "✅ .env está protegido"
+    else
+        echo "❌ .env ainda não está protegido"
+    fi
+    
+    # Verificar arquivos grandes remanescentes
+    large_files=$(find . -type f -size +5M ! -path "./node_modules/*" ! -path "./.git/*" ! -path "./backup_*/*" 2>/dev/null | wc -l)
+    echo "📊 Arquivos grandes (>5MB): $large_files"
+    
+    # Status do Git
+    if command -v git &> /dev/null && git rev-parse --git-dir >/dev/null 2>&1; then
+        unstaged=$(git diff --name-only | wc -l)
+        staged=$(git diff --cached --name-only | wc -l)
+        echo "📝 Arquivos modificados: $unstaged não staged, $staged staged"
+    fi
+    
+    echo ""
+}
+
+# Executar todas as correções
+main() {
+    echo "Iniciando correções para o projeto DesignAuto..."
+    echo "Este script vai:"
+    echo "• Criar backup de segurança"
+    echo "• Corrigir problemas de segurança"
+    echo "• Limpar arquivos desnecessários"
+    echo "• Otimizar configurações"
+    echo ""
+    
+    read -p "Continuar? (y/N): " -n 1 -r
+    echo ""
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        create_backup
+        fix_env_security
+        cleanup_unnecessary_files
+        optimize_images
+        analyze_dependencies
+        cleanup_console_logs
+        update_gitignore
+        generate_report
+        final_verification
+        
+        echo -e "${GREEN}🎉 CORREÇÕES CONCLUÍDAS COM SUCESSO!${NC}"
+        echo "Verifique o relatório acima e execute os próximos passos manuais."
+    else
+        echo "Operação cancelada."
+    fi
+}
+
+# Executar se chamado diretamente
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
