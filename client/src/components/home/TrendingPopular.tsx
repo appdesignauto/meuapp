@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Download } from 'lucide-react';
+import { Download, TrendingUp } from 'lucide-react';
 import { Link } from 'wouter';
 
 interface Art {
@@ -71,6 +71,7 @@ const TrendingPopular = () => {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
+            <TrendingUp className="h-4 w-4 text-blue-600" />
             <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Top 6 - Artes em Alta</h2>
           </div>
         </div>
