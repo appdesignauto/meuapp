@@ -100,7 +100,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
             <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Categorias em destaque</h2>
           </div>
           <Link 
-            href="/arts" 
+            href="/categorias" 
             className="text-blue-600 hover:text-blue-500 font-medium text-[10px] sm:text-xs flex items-center px-2 py-1 transition-all"
           >
             Ver todos
