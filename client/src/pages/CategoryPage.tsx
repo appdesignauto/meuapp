@@ -697,7 +697,7 @@ export default function CategoryPage() {
         {isLoading ? (
           <div 
             className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
-            style={{ columnGap: '8px' }}
+            style={{ columnGap: '4px' }}
           >
             {Array.from({ length: 15 }).map((_, index) => (
               <div 
@@ -743,7 +743,7 @@ export default function CategoryPage() {
           <>
             <div 
               className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
-              style={{ columnGap: '8px' }}
+              style={{ columnGap: '4px' }}
             >
               {arts.map((art, index) => (
                 <div 
