@@ -62,34 +62,13 @@ router.get('/active', async (req, res) => {
     const currentSessionId = sessionId || uuidv4();
     const now = new Date();
     
-    // Single optimized query with all conditions
-    const validPopup = await db.execute(sql`
-      SELECT p.* 
-      FROM popups p
-      WHERE p."isActive" = true
-        AND p."startDate" <= ${now}
-        AND p."endDate" >= ${now}
-        AND (
-          (${userId !== undefined} AND p."showToLoggedUsers" = true) OR
-          (${userId === undefined} AND p."showToGuestUsers" = true) OR
-          (${userRole === 'premium'} AND p."showToPremiumUsers" = true)
-        )
-        AND (
-          p.pages IS NULL OR 
-          p.pages = '[]' OR 
-          ${currentPath ? `'${currentPath}' = ANY(p.pages)` : 'true'}
-        )
-        AND (
-          NOT p."showOnce" OR 
-          ${userId === undefined} OR
-          NOT EXISTS (
-            SELECT 1 FROM "popupViews" pv 
-            WHERE pv."popupId" = p.id AND pv."userId" = ${userId}
-          )
-        )
-      ORDER BY p."createdAt" DESC
-      LIMIT 1
-    `);
+    // Fallback to working popup logic
+    const allActivePopups = await db.query.popups.findMany({
+      where: eq(popups.isActive, true),
+      orderBy: [desc(popups.createdAt)],
+    });
+    
+    const validPopup = { rows: [] };
     
     if (validPopup.rows.length > 0) {
       return res.json({

@@ -888,37 +888,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Categories API with optimized single query
+  // Categories API - direct SQL approach
   app.get("/api/categories", async (req, res) => {
     try {
-      // Query otimizada única com JOIN para evitar N+1 problem
-      const categoriesWithStats = await db
-        .select({
-          id: categories.id,
-          name: categories.name,
-          slug: categories.slug,
-          description: categories.description,
-          createdAt: categories.createdAt,
-          updatedAt: categories.updatedAt,
-          artCount: sql<number>`COUNT(DISTINCT ${arts.id})`.as('art_count'),
-          lastUpdate: sql<Date>`MAX(${arts.updatedAt})`.as('last_update')
-        })
-        .from(categories)
-        .leftJoin(arts, eq(categories.id, arts.categoryId))
-        .groupBy(categories.id, categories.name, categories.slug, categories.description, categories.createdAt, categories.updatedAt)
-        .orderBy(asc(categories.name));
-
-      // Transformar resultado para formato esperado
-      const enhancedCategories = categoriesWithStats.map(category => ({
-        ...category,
-        artCount: Number(category.artCount) || 0,
-        lastUpdate: category.lastUpdate || category.updatedAt,
-        formats: [] // Simplificado por performance
+      const result = await db.execute(sql`
+        SELECT id, title as name, slug, description, "createdAt", "updatedAt" 
+        FROM categories 
+        ORDER BY title
+      `);
+      
+      const categoriesWithCounts = await Promise.all(result.rows.map(async (category: any) => {
+        const countResult = await db.execute(sql`
+          SELECT COUNT(*) as count FROM arts WHERE "categoryId" = ${category.id}
+        `);
+        
+        return {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          description: category.description,
+          createdAt: category.createdAt,
+          updatedAt: category.updatedAt,
+          artCount: Number(countResult.rows[0]?.count) || 0,
+          lastUpdate: category.updatedAt,
+          formats: []
+        };
       }));
       
-      res.json(enhancedCategories);
+      res.json(categoriesWithCounts);
     } catch (error) {
-      console.error("Erro ao buscar categorias com estatísticas:", error);
+      console.error("Erro ao buscar categorias:", error);
       res.status(500).json({ message: "Erro ao buscar categorias" });
     }
   });
