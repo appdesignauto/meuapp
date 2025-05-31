@@ -105,62 +105,6 @@ router.get('/active', async (req, res) => {
     res.status(500).json({ message: 'Erro ao buscar popups ativos' });
   }
 });
-                eq(popupViews.popupId, popup.id),
-                eq(popupViews.sessionId, sessionId as string)
-              )
-            );
-            
-          if (viewCount[0].count > 0) {
-            // Esta sessão já viu este popup, verificar próximo
-            continue;
-          }
-        }
-      }
-      
-      // 2. Verificar frequência (se frequency > 1)
-      if (popup.frequency && popup.frequency > 1) {
-        let viewCount = 0;
-        
-        if (userId) {
-          // Contar visualizações do usuário
-          const result = await db
-            .select({ count: count() })
-            .from(popupViews)
-            .where(eq(popupViews.userId, userId));
-            
-          viewCount = result[0].count;
-        } else if (sessionId) {
-          // Contar visualizações da sessão
-          const result = await db
-            .select({ count: count() })
-            .from(popupViews)
-            .where(eq(popupViews.sessionId, sessionId as string));
-            
-          viewCount = result[0].count;
-        }
-        
-        // Verificar se é a vez de mostrar este popup com base na frequência
-        const frequency = popup.frequency || 1; // Fallback para 1 se for null
-        if (viewCount % frequency !== 0) {
-          continue;
-        }
-      }
-      
-      // Popup válido para exibição, retornar
-      return res.json({
-        hasActivePopup: true,
-        popup,
-        sessionId: currentSessionId
-      });
-    }
-    
-    // Nenhum popup adequado encontrado
-    res.json({ hasActivePopup: false, sessionId: currentSessionId });
-  } catch (error) {
-    console.error('Erro ao buscar popups ativos:', error);
-    res.status(500).json({ message: 'Erro ao buscar popups ativos' });
-  }
-});
 
 // Criar novo popup
 router.post('/', upload.single('image'), async (req, res) => {
