@@ -745,13 +745,14 @@ export default function CategoryPage() {
               className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
               style={{ columnGap: '8px' }}
             >
-              {arts.map((art) => (
+              {arts.map((art, index) => (
                 <div 
                   key={art.id} 
-                  className="break-inside-avoid mb-3 xs:mb-4 transform hover:-translate-y-1 transition-transform duration-300"
+                  className="break-inside-avoid transform hover:-translate-y-1 transition-transform duration-300"
                   style={{ 
                     display: 'inline-block',
-                    width: '100%'
+                    width: '100%',
+                    marginBottom: '12px'
                   }}
                 >
                   <ArtCard 
