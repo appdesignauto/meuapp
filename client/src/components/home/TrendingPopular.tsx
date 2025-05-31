@@ -79,7 +79,7 @@ const TrendingPopular = () => {
         </div>
 
         {/* Arts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
@@ -89,9 +89,9 @@ const TrendingPopular = () => {
               className="group"
             >
               <Link href={`/art/${art.id}`}>
-                <div className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                   {/* Imagem */}
-                  <div className="relative aspect-video overflow-hidden">
+                  <div className="relative aspect-square overflow-hidden">
                     <img
                       src={art.imageUrl}
                       alt={art.title}
@@ -100,8 +100,8 @@ const TrendingPopular = () => {
                     />
                     
                     {/* Efeito "Em Alta" - mantido conforme solicitado */}
-                    <div className="absolute top-3 left-3">
-                      <div className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+                    <div className="absolute top-2 left-2">
+                      <div className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-full text-xs font-medium shadow-lg">
                         <motion.div
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 2, repeat: Infinity }}
@@ -113,16 +113,16 @@ const TrendingPopular = () => {
                     </div>
                   </div>
 
-                  {/* Informações minimalistas */}
-                  <div className="p-3">
-                    <h3 className="font-medium text-gray-900 text-sm line-clamp-1">
+                  {/* Informações compactas */}
+                  <div className="p-2">
+                    <h3 className="font-medium text-gray-900 text-xs line-clamp-1 mb-1">
                       {art.title}
                     </h3>
                     
-                    <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-                      <span>{art.categoryName}</span>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className="text-xs truncate">{art.categoryName}</span>
                       <div className="flex items-center gap-1">
-                        <Download size={12} />
+                        <Download size={10} />
                         <span>{art.downloadCount}</span>
                       </div>
                     </div>
