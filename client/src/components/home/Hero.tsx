@@ -132,7 +132,7 @@ const Hero = () => {
               <>
                 <Button 
                   className="bg-blue-600 text-white hover:bg-blue-700 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center shadow-md flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
-                  onClick={() => setLocation('/register')}
+                  onClick={() => setLocation('/auth?tab=register')}
                 >
                   Cadastre-se
                   <ChevronRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />

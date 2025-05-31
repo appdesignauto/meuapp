@@ -147,7 +147,7 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
             <div className="mt-6 space-y-3 px-1">
               <h3 className="text-xs font-medium text-neutral-500 mb-2 ml-1">CONTA</h3>
               <Link
-                href="/login"
+                href="/auth?tab=login"
                 className="flex justify-center items-center bg-blue-600 text-white font-medium rounded-lg py-3.5 px-4 hover:bg-blue-700 shadow-sm"
                 onClick={onClose}
               >
@@ -155,7 +155,7 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
                 Entrar na sua conta
               </Link>
               <Link
-                href="/register"
+                href="/auth?tab=register"
                 className="flex justify-center items-center bg-white text-blue-600 font-medium rounded-lg py-3.5 px-4 hover:bg-blue-50 border border-blue-200"
                 onClick={onClose}
               >
