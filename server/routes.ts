@@ -888,13 +888,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Categories API - direct SQL approach
+  // Categories API - corrected column names
   app.get("/api/categories", async (req, res) => {
     try {
       const result = await db.execute(sql`
-        SELECT id, title as name, slug, description, "createdAt", "updatedAt" 
+        SELECT id, name, slug 
         FROM categories 
-        ORDER BY title
+        ORDER BY name
       `);
       
       const categoriesWithCounts = await Promise.all(result.rows.map(async (category: any) => {
@@ -906,11 +906,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: category.id,
           name: category.name,
           slug: category.slug,
-          description: category.description,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
+          description: category.description || "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
           artCount: Number(countResult.rows[0]?.count) || 0,
-          lastUpdate: category.updatedAt,
+          lastUpdate: new Date(),
           formats: []
         };
       }));
