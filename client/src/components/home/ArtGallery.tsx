@@ -243,20 +243,21 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               style={{ columnGap: '8px' }}
             >
               <AnimatePresence>
-                {allArts.map((art) => (
+                {allArts.map((art, index) => (
                   <motion.div
                     key={art.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ 
                       duration: 0.4, 
-                      delay: 0.05 * (art.id % 8), // Escalonamento suave
-                      ease: [0.25, 0.1, 0.25, 1.0] // Curva de easing profissional
+                      delay: 0.05 * (index % 8), // Usa index em vez de art.id para consistência
+                      ease: [0.25, 0.1, 0.25, 1.0]
                     }}
-                    className="break-inside-avoid mb-3 xs:mb-4 transform hover:-translate-y-1 transition-transform duration-300"
+                    className="break-inside-avoid transform hover:-translate-y-1 transition-transform duration-300"
                     style={{ 
                       display: 'inline-block',
-                      width: '100%' 
+                      width: '100%',
+                      marginBottom: '12px' // Espaçamento fixo e consistente
                     }}
                   >
                     <ArtCard 
