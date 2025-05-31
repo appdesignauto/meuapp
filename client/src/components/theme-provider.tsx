@@ -22,37 +22,36 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "designauto-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
+  // Força sempre o tema light
+  const [theme] = useState<Theme>("light");
 
   useEffect(() => {
     const root = window.document.documentElement;
 
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-  }, [theme]);
+    // Remove qualquer classe de tema escuro e força light
+    root.classList.remove("dark", "system");
+    root.classList.add("light");
+    
+    // Limpa todas as possíveis chaves de tema no localStorage
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem("designauto-theme");
+    localStorage.removeItem("theme");
+    localStorage.removeItem("ui-theme");
+    
+    // Força atualização de propriedades CSS
+    root.style.colorScheme = "light";
+    document.body.style.backgroundColor = "white";
+    document.body.style.color = "rgb(17, 24, 39)";
+  }, [storageKey]);
 
   const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+    theme: "light" as Theme,
+    setTheme: () => {
+      // Não permite mudança de tema - sempre light
     },
   };
 
