@@ -136,9 +136,9 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   useEffect(() => {
     const forceGallerySpacing = () => {
       if (galleryRef.current) {
-        galleryRef.current.style.setProperty('column-gap', '4px', 'important');
-        galleryRef.current.style.setProperty('-webkit-column-gap', '4px', 'important');
-        galleryRef.current.style.setProperty('-moz-column-gap', '4px', 'important');
+        galleryRef.current.style.setProperty('column-gap', '8px', 'important');
+        galleryRef.current.style.setProperty('-webkit-column-gap', '8px', 'important');
+        galleryRef.current.style.setProperty('-moz-column-gap', '8px', 'important');
       }
     };
 
@@ -224,7 +224,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         {isLoading ? (
           <div 
             className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 space-y-0"
-            style={{ columnGap: '4px' }}
+            style={{ columnGap: '8px' }}
           >
             {Array.from({ length: 8 }).map((_, index) => (
               <div 
@@ -240,7 +240,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             <div 
               ref={galleryRef}
               className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 space-y-0"
-              style={{ columnGap: '4px' }}
+              style={{ columnGap: '8px' }}
             >
               <AnimatePresence>
                 {allArts.map((art, index) => (
@@ -257,7 +257,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                     style={{ 
                       display: 'inline-block',
                       width: '100%',
-                      marginBottom: '12px' // Espaçamento fixo e consistente
+                      marginBottom: '8px' // Espaçamento fixo e consistente
                     }}
                   >
                     <ArtCard 
