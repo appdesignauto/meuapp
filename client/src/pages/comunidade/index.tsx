@@ -260,7 +260,7 @@ const CommentItem: React.FC<{
     <div className="flex gap-2 mb-2">
       <UserAvatar user={comment.user} size="xs" linkToProfile={true} />
       <div className="flex-1">
-        <div className="bg-zinc-50 rounded-lg px-3 py-2 relative group">
+        <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2 relative group">
           <div className="flex justify-between items-start">
             <span className="font-medium text-xs">
               {comment.user.name || comment.user.username}
@@ -652,8 +652,8 @@ const PostCard: React.FC<{
     <Card 
       id={id}
       className={`mb-5 overflow-hidden ${isPinned 
-        ? 'border-2 border-amber-400 bg-amber-50/40 shadow-lg' 
-        : 'border-0 border-b border-b-zinc-200 sm:border-b-0 sm:border sm:border-zinc-100'
+        ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
+        : 'border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
       } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative`}>
       {/* Removido ícone de estrela sobreposto para evitar problemas de layout */}
       
@@ -670,7 +670,7 @@ const PostCard: React.FC<{
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500">{post.formattedDate}</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{post.formattedDate}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -685,7 +685,7 @@ const PostCard: React.FC<{
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="text-zinc-400 hover:text-zinc-500 h-8 w-8 flex items-center justify-center">
+              <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400 h-8 w-8 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
@@ -907,7 +907,7 @@ const PostCard: React.FC<{
                   {post.commentsCount > comments.length && !showAllComments && (
                     <button 
                       onClick={handleShowAllComments}
-                      className="text-xs text-zinc-500 mt-2 hover:underline cursor-pointer"
+                      className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 hover:underline cursor-pointer"
                     >
                       Ver {post.commentsCount === 1 
                         ? 'o comentário' 
@@ -951,7 +951,7 @@ const PostCard: React.FC<{
             </div>
           ) : (
             <div className="text-center p-4 space-y-2">
-              <p className="text-sm text-zinc-600">Faça login para comentar.</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">Faça login para comentar.</p>
               <Link href="/login">
                 <Button size="sm" variant="outline">Fazer Login</Button>
               </Link>
@@ -987,7 +987,7 @@ interface RankingUser {
 const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
 
   return (
-    <div className="flex items-center gap-3 p-3 border-b border-zinc-100 last:border-0">
+    <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
       <div className={cn(
         "flex items-center justify-center text-lg font-bold w-7 h-7 rounded-full shrink-0",
         user.rank <= 3 
@@ -996,7 +996,7 @@ const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
             : user.rank === 2
               ? "bg-gray-100 text-gray-800 border-gray-300"
               : "bg-orange-100 text-orange-800 border-orange-300"
-          : "bg-zinc-100 text-zinc-700"
+          : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
       )}>
         {user.rank}
       </div>
@@ -1401,7 +1401,7 @@ const CommunityPage: React.FC = () => {
       refreshIcon.classList.add('animate-spin');
       
       if (refreshButton) {
-        refreshButton.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200');
+        refreshButton.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
       }
       
       // Mostrar toast de "atualizando"
@@ -1454,7 +1454,8 @@ const CommunityPage: React.FC = () => {
         }
         
         if (refreshButton) {
-          refreshButton.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200');
+          refreshButton.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 
+            'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
           
           // Adicionar e remover classe de pulsar rapidamente para dar feedback visual
           refreshButton.classList.add('scale-105');
@@ -1644,36 +1645,36 @@ const CommunityPage: React.FC = () => {
                   
                   <div className="space-y-2 mt-4">
                     <h5 className="text-sm font-medium">Premiação Mensal:</h5>
-                    <p className="text-sm text-zinc-600">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
                       Todo mês, os 3 primeiros colocados do ranking recebem prêmios em dinheiro:
                     </p>
                     <div className="flex items-start gap-4 mt-2">
                       <div className="text-center">
-                        <div className="bg-amber-100 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
-                          <Trophy className="h-7 w-7 text-amber-600" />
+                        <div className="bg-amber-100 dark:bg-amber-900/30 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
+                          <Trophy className="h-7 w-7 text-amber-600 dark:text-amber-500" />
                         </div>
                         <div className="mt-1">
-                          <p className="font-semibold text-amber-600">1º Lugar</p>
+                          <p className="font-semibold text-amber-600 dark:text-amber-500">1º Lugar</p>
                           <p className="text-sm">R$ 300,00</p>
                         </div>
                       </div>
                       
                       <div className="text-center">
-                        <div className="bg-gray-100 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
-                          <Trophy className="h-7 w-7 text-gray-600" />
+                        <div className="bg-gray-100 dark:bg-gray-800 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
+                          <Trophy className="h-7 w-7 text-gray-600 dark:text-gray-400" />
                         </div>
                         <div className="mt-1">
-                          <p className="font-semibold text-gray-600">2º Lugar</p>
+                          <p className="font-semibold text-gray-600 dark:text-gray-400">2º Lugar</p>
                           <p className="text-sm">R$ 200,00</p>
                         </div>
                       </div>
                       
                       <div className="text-center">
-                        <div className="bg-amber-50 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
-                          <Trophy className="h-7 w-7 text-amber-800" />
+                        <div className="bg-amber-50 dark:bg-amber-900/20 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
+                          <Trophy className="h-7 w-7 text-amber-800 dark:text-amber-700" />
                         </div>
                         <div className="mt-1">
-                          <p className="font-semibold text-amber-800">3º Lugar</p>
+                          <p className="font-semibold text-amber-800 dark:text-amber-700">3º Lugar</p>
                           <p className="text-sm">R$ 100,00</p>
                         </div>
                       </div>
