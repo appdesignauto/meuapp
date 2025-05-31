@@ -441,9 +441,9 @@ const AuthPage = () => {
                       <Button 
                         type="submit" 
                         className="w-full"
-                        disabled={registerMutation.isPending}
+                        disabled={authLoading}
                       >
-                        {registerMutation.isPending ? (
+                        {authLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Criando conta...
