@@ -367,3 +367,211 @@ span, p, div, h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] .bg-transparent {
     background-color: transparent !important;
 }
+
+/* ================================================================
+   CORREÇÕES ESPECÍFICAS PARA COMPONENTES DO DESIGNAUTO
+   ================================================================ */
+
+/* NAVBAR E HEADER */
+[data-theme="dark"] .navbar,
+[data-theme="dark"] nav,
+[data-theme="dark"] header {
+    background-color: var(--bg-elevated) !important;
+    border-bottom: 1px solid var(--border-primary) !important;
+}
+
+[data-theme="dark"] .navbar .logo,
+[data-theme="dark"] .navbar h1,
+[data-theme="dark"] .navbar a {
+    color: var(--text-primary) !important;
+}
+
+/* SIDEBAR E NAVEGAÇÃO */
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .nav-sidebar,
+[data-theme="dark"] aside {
+    background-color: var(--bg-elevated) !important;
+    border-right: 1px solid var(--border-primary) !important;
+}
+
+[data-theme="dark"] .sidebar-item,
+[data-theme="dark"] .nav-item,
+[data-theme="dark"] .menu-item {
+    color: var(--text-secondary) !important;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .sidebar-item:hover,
+[data-theme="dark"] .nav-item:hover,
+[data-theme="dark"] .menu-item:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .sidebar-item.active,
+[data-theme="dark"] .nav-item.active,
+[data-theme="dark"] .menu-item.active {
+    background-color: var(--designauto-primary) !important;
+    color: var(--text-inverse) !important;
+}
+
+/* CARDS E CONTAINERS */
+[data-theme="dark"] .card,
+[data-theme="dark"] .post-card,
+[data-theme="dark"] .member-card,
+[data-theme="dark"] .widget,
+[data-theme="dark"] .panel {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-primary) !important;
+    box-shadow: var(--shadow-sm) !important;
+    border-radius: 12px;
+}
+
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .post-card:hover,
+[data-theme="dark"] .member-card:hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-2px);
+}
+
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-title {
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-primary) !important;
+}
+
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .card-content {
+    color: var(--text-secondary) !important;
+}
+
+/* POSTS E CONTEÚDO DA COMUNIDADE */
+[data-theme="dark"] .post,
+[data-theme="dark"] .post-item,
+[data-theme="dark"] .community-post {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+[data-theme="dark"] .post-header,
+[data-theme="dark"] .post-author {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .post-content,
+[data-theme="dark"] .post-text {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .post-meta,
+[data-theme="dark"] .post-time,
+[data-theme="dark"] .post-stats {
+    color: var(--text-tertiary) !important;
+}
+
+/* RANKINGS E LISTAS */
+[data-theme="dark"] .ranking-item,
+[data-theme="dark"] .member-item,
+[data-theme="dark"] .list-item {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+[data-theme="dark"] .ranking-item:hover,
+[data-theme="dark"] .member-item:hover,
+[data-theme="dark"] .list-item:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+/* FORMULÁRIOS E INPUTS */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .input {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border-primary) !important;
+    color: var(--text-primary) !important;
+    border-radius: 8px;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] .form-control:focus {
+    border-color: var(--designauto-primary) !important;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+    outline: none !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+/* BOTÕES */
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .button-secondary {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-primary) !important;
+}
+
+[data-theme="dark"] .btn-secondary:hover,
+[data-theme="dark"] .button-secondary:hover {
+    background-color: var(--bg-hover) !important;
+    border-color: var(--designauto-primary) !important;
+}
+
+/* BADGES E TAGS */
+[data-theme="dark"] .badge,
+[data-theme="dark"] .tag,
+[data-theme="dark"] .label {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 6px;
+}
+
+/* DROPDOWN E MODAIS */
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .modal,
+[data-theme="dark"] .popup,
+[data-theme="dark"] .tooltip {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-primary) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .dropdown-item,
+[data-theme="dark"] .modal-content {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+/* SCROLLBAR CUSTOMIZADA */
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
