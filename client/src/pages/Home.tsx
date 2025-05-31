@@ -5,6 +5,7 @@ import Hero from '@/components/home/Hero';
 import RecentDesigns from '@/components/home/RecentDesigns';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import ArtGallery from '@/components/home/ArtGallery';
+import TrendingPopular from '@/components/home/TrendingPopular';
 import PremiumFeatures from '@/components/home/PremiumFeatures';
 import Testimonials from '@/components/home/Testimonials';
 import CallToAction from '@/components/home/CallToAction';

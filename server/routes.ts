@@ -1277,6 +1277,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Artes em trending (mais baixadas nos últimos 7 dias)
+  app.get("/api/arts/trending", async (req, res) => {
+    try {
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      const result = await db.execute(sql`
+        SELECT 
+          a.id,
+          a.title,
+          a."imageUrl",
+          a."isPremium",
+          c.name as "categoryName",
+          COUNT(d.id) as "downloadCount",
+          a."viewCount"
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId" 
+          AND d."createdAt" >= NOW() - INTERVAL '7 days'
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a."viewCount"
+        ORDER BY COUNT(d.id) DESC, a."viewCount" DESC
+        LIMIT 6
+      `);
+
+      const arts = result.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        downloadCount: Number(art.downloadCount) || 0,
+        viewCount: art.viewCount || 0,
+        categoryName: art.categoryName || 'Sem categoria',
+        isPremium: art.isPremium
+      }));
+
+      res.json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar artes trending:", error);
+      res.status(500).json({ message: "Erro ao buscar artes em alta" });
+    }
+  });
+
+  // Artes mais populares (mais downloads de todos os tempos)
+  app.get("/api/arts/popular", async (req, res) => {
+    try {
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      const result = await db.execute(sql`
+        SELECT 
+          a.id,
+          a.title,
+          a."imageUrl",
+          a."isPremium",
+          c.name as "categoryName",
+          COUNT(d.id) as "downloadCount",
+          a."viewCount"
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId"
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a."viewCount"
+        ORDER BY COUNT(d.id) DESC, a."viewCount" DESC
+        LIMIT 6
+      `);
+
+      const arts = result.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        downloadCount: Number(art.downloadCount) || 0,
+        viewCount: art.viewCount || 0,
+        categoryName: art.categoryName || 'Sem categoria',
+        isPremium: art.isPremium
+      }));
+
+      res.json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar artes populares:", error);
+      res.status(500).json({ message: "Erro ao buscar artes populares" });
+    }
+  });
+
+  // Novidades da semana (artes mais recentes dos últimos 7 dias)
+  app.get("/api/arts/new", async (req, res) => {
+    try {
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      const result = await db.execute(sql`
+        SELECT 
+          a.id,
+          a.title,
+          a."imageUrl",
+          a."isPremium",
+          a."createdAt",
+          c.name as "categoryName",
+          COUNT(d.id) as "downloadCount",
+          a."viewCount"
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId"
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
+          AND a."createdAt" >= NOW() - INTERVAL '7 days'
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", a."createdAt", c.name, a."viewCount"
+        ORDER BY a."createdAt" DESC
+        LIMIT 6
+      `);
+
+      const arts = result.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        downloadCount: Number(art.downloadCount) || 0,
+        viewCount: art.viewCount || 0,
+        categoryName: art.categoryName || 'Sem categoria',
+        isPremium: art.isPremium,
+        isNew: true
+      }));
+
+      res.json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar novidades:", error);
+      res.status(500).json({ message: "Erro ao buscar novidades" });
+    }
+  });
+
   // Versão em português - Arte por ID (compatibilidade com frontend)
   app.get("/api/artes/:id", async (req, res) => {
     try {
