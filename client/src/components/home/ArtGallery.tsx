@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ArrowDown } from 'lucide-react';
+import { ArrowRight, ArrowDown, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
@@ -189,7 +189,10 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         <div className="flex flex-wrap items-center justify-between mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex w-full sm:w-auto items-center justify-between">
-              <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Artes em Destaque</h2>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Artes em Destaque</h2>
+              </div>
               <Link 
                 href="/artes" 
                 className="text-blue-600 hover:text-blue-500 font-medium text-[10px] sm:text-xs flex items-center px-2 py-1 transition-all sm:hidden"

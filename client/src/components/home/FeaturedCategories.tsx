@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter, Grid3X3 } from 'lucide-react';
 import { Category } from '@/types';
 
 interface FeaturedCategoriesProps {
@@ -97,6 +97,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
+            <Grid3X3 className="h-4 w-4 text-blue-600" />
             <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Categorias em destaque</h2>
           </div>
           <Link 

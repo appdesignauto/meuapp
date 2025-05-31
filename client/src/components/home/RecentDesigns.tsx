@@ -131,7 +131,8 @@ export default function RecentDesigns() {
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-blue-600" />
             <h2 className="sm:text-sm font-medium text-neutral-800 text-[15px]">Seus designs recentes</h2>
           </div>
           <div className="flex items-center gap-2">
