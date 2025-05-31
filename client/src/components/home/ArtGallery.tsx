@@ -186,8 +186,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   return (
     <section className="py-8 md:py-10 bg-gradient-to-b from-blue-50/50 to-white">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-4">
-          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center justify-between mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex w-full sm:w-auto items-center justify-between">
               <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Artes em Destaque</h2>
               <Link 
@@ -204,7 +204,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               </div>
             )}
             {onCategorySelect && (
-              <div className="w-full">
+              <div className="w-full mt-2">
                 <MinimalCategoryFilters
                   selectedCategory={categoryId}
                   onCategorySelect={onCategorySelect}
