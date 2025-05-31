@@ -1516,8 +1516,7 @@ export class DatabaseStorage implements IStorage {
           isactive, 
           ultimologin, 
           criadoem, 
-          atualizadoem,
-          role
+          atualizadoem
         ) 
         VALUES (
           ${username}, 
@@ -1536,8 +1535,7 @@ export class DatabaseStorage implements IStorage {
           ${isactive},
           ${now}, 
           ${now}, 
-          ${now},
-          ${role} /* Campo mantido para compatibilidade com código existente */
+          ${now}
         ) 
         RETURNING *
       `);
