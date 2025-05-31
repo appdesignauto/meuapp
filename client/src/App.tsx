@@ -8,7 +8,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
-import { ThemeProvider } from "@/hooks/useTheme";
+
 import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
@@ -355,19 +355,18 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <AuthProvider>
-            <SupabaseAuthProvider>
-              <Router>
-                <ScrollToTop />
-                <DynamicFavicon />
-                <AppLayout>
-                  <AppRoutes />
-                </AppLayout>
-              </Router>
-              <Toaster />
-              <PopupContainer />
-            </SupabaseAuthProvider>
-          </AuthProvider>
-        </ThemeProvider>
+          <SupabaseAuthProvider>
+            <Router>
+              <ScrollToTop />
+              <DynamicFavicon />
+              <AppLayout>
+                <AppRoutes />
+              </AppLayout>
+            </Router>
+            <Toaster />
+            <PopupContainer />
+          </SupabaseAuthProvider>
+        </AuthProvider>
       </HelmetProvider>
     </QueryClientProvider>
   );
