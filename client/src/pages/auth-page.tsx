@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -66,7 +66,7 @@ const AuthPage = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, login, register, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   // Form para login - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
@@ -106,20 +106,13 @@ const AuthPage = () => {
 
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
-      // Usando email diretamente para login
-      const loginData = {
-        username: values.email, // O backend espera o campo 'username' mas vai tratar como email
-        password: values.password,
-        rememberMe: values.rememberMe,
-      };
-      
       // Limpar mensagem de erro anterior
       setLoginError(null);
       
-      console.log("Enviando credenciais de login:", loginData);
-      const userData = await loginMutation.mutateAsync(loginData);
+      console.log("Enviando credenciais de login:", values);
+      await login(values.email, values.password);
       
-      // Redirecionar diretamente para a página principal, sem verificar emailconfirmed
+      // Redirecionar diretamente para a página principal
       setLocation("/");
     } catch (error: any) {
       // Capturar a mensagem de erro para exibir na interface
@@ -139,17 +132,14 @@ const AuthPage = () => {
       
       // Adicionar username gerado a partir do email
       const username = values.email.split('@')[0];
-      // Adicionar valores padrão para manter API compatível
-      // Não precisamos definir origemassinatura aqui, pois o backend já define automaticamente como "auto"
-      const userData = await registerMutation.mutateAsync({ 
-        ...registerData, 
+      
+      await register(
         username,
-        nivelacesso: "usuario", // Definir nível de acesso como "usuario" (gratuito)
-        role: "usuario", // Manter compatibilidade com campo legacy
-        plan: "free", // Plano gratuito por padrão
-        periodType: "mensal" // Período mensal por padrão
-        // O emailconfirmed será definido como true no servidor
-      });
+        values.password,
+        values.email,
+        values.name,
+        values.phone
+      );
       
       // Se o registro foi bem-sucedido, redirecionar diretamente para a página principal
       setLocation("/");
@@ -157,7 +147,6 @@ const AuthPage = () => {
       toast({
         title: "Conta criada com sucesso!",
         description: "Confira seu e-mail para mais informações.",
-        variant: "success",
       });
     } catch (error: any) {
       // Capturar a mensagem de erro para exibir na interface
@@ -261,9 +250,9 @@ const AuthPage = () => {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={loginMutation.isPending}
+                        disabled={authLoading}
                       >
-                        {loginMutation.isPending ? (
+                        {authLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Entrando...
