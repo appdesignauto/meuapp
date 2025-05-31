@@ -71,7 +71,7 @@ const TrendingPopular = () => {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Mais Baixados</h2>
+            <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Top 6 - Artes em Alta</h2>
           </div>
         </div>
 
