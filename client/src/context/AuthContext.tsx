@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         name,
         phone,
-        role: 'free', // Default role for new users
         origemassinatura: 'Auto Cadastro', // Indicando que o usuário se cadastrou pelo site
         nivelacesso: 'usuario', // Nível de acesso padrão
         isActive: true

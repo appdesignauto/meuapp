@@ -308,7 +308,6 @@ export function setupAuth(app: Express) {
         ...req.body,
         password: hashedPassword,
         nivelacesso: nivelAcesso, // Usar nivelacesso
-        role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
         origemassinatura: origemAssinatura, // Define origem como "auto"
         emailconfirmed: true, // Definir como true por padrão
