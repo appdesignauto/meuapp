@@ -66,16 +66,13 @@ const TrendingPopular = () => {
   }
 
   return (
-    <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4">
+    <section className="py-1 sm:py-2 md:py-4">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Trending & Popular
-          </h2>
-          <p className="text-gray-600">
-            Descubra os designs que estão fazendo sucesso
-          </p>
+        <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Mais Baixados</h2>
+          </div>
         </div>
 
         {/* Arts Grid */}
