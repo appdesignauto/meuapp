@@ -1,9 +1,32 @@
-/* Importar sistema de variáveis do modo escuro */
-@import './styles/theme-variables.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* FORÇAR TEMA CLARO - CORREÇÃO DEFINITIVA */
+html {
+  color-scheme: light !important;
+}
+
+html.dark {
+  color-scheme: light !important;
+}
+
+/* Garantir fundo branco sempre */
+html, body {
+  background-color: white !important;
+  color: rgb(17, 24, 39) !important;
+}
+
+/* Remover classes de tema escuro */
+html.dark {
+  background-color: white !important;
+  color: rgb(17, 24, 39) !important;
+}
+
+.dark {
+  background-color: white !important;
+  color: rgb(17, 24, 39) !important;
+}
 
 /* Força espaçamento de 8px em todas as vitrines de colunas com máxima especificidade */
 html body .columns-2,

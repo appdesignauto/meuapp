@@ -51,7 +51,6 @@ import {
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
 
-
 // Componente para exibir o logo do site com base nas configurações
 type LogoImageProps = { 
   siteSettings: any 
