@@ -39,10 +39,21 @@ export default function RelatedArts({
   // Loading state
   if (isLoading) {
     return (
-      <div className="pinterest-grid">
+      <div 
+        className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-4 vitrine-8px space-y-0"
+        style={{ 
+          columnGap: '8px'
+        }}
+      >
         {Array.from({ length: limit }).map((_, index) => (
-          <div key={`skeleton-${index}`} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
-            <Skeleton className="w-full aspect-square" />
+          <div 
+            key={`skeleton-${index}`} 
+            className="block overflow-hidden animate-pulse break-inside-avoid rounded-xl shadow-sm"
+            style={{ 
+              marginBottom: '8px'
+            }}
+          >
+            <div className={`${index % 3 === 0 ? 'aspect-[3/4]' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[1/1]')} bg-neutral-200 rounded-xl`} />
           </div>
         ))}
       </div>
@@ -60,18 +71,40 @@ export default function RelatedArts({
     );
   }
   
-  // Success state com layout Pinterest
+  // Success state com layout harmonioso igual à home
   return (
-    <div className="pinterest-grid">
-      {relatedArts.map((art: any) => (
-        <ArtCard 
-          key={`art-${art.id}`}
-          art={art}
-          onClick={() => setLocation(`/artes/${art.id}`)}
-          showEditAction={false}
-          showDesigner={false}
-          isSameGroup={currentGroupId !== null && art.groupId === currentGroupId}
-        />
+    <div 
+      className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-4 vitrine-8px space-y-0"
+      style={{ 
+        columnGap: '8px'
+      }}
+    >
+      {relatedArts.map((art: any, index: number) => (
+        <div 
+          key={`art-${art.id}`} 
+          className="break-inside-avoid group animate-fadeIn"
+          style={{
+            marginBottom: '8px',
+            animationDelay: `${index * 50}ms`,
+            pageBreakInside: 'avoid',
+            breakInside: 'avoid'
+          }}
+        >
+          <div className="relative transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/10 rounded-2xl overflow-hidden bg-white border border-gray-100/50 shadow-sm">
+            <div className="relative overflow-hidden">
+              <ArtCard 
+                art={art}
+                onClick={() => setLocation(`/artes/${art.id}`)}
+                showEditAction={false}
+                showDesigner={false}
+                isSameGroup={currentGroupId !== null && art.groupId === currentGroupId}
+              />
+            </div>
+            
+            {/* Overlay sutil no hover para melhor UX */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-300 rounded-2xl pointer-events-none" />
+          </div>
+        </div>
       ))}
     </div>
   );
