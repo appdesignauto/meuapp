@@ -1,5 +1,9 @@
+import { useState, useEffect } from 'react';
+
 // Re-export do provider para facilitar uso
 export { useTheme, ThemeProvider } from '@/components/providers/theme-provider';
+
+type Theme = 'light' | 'dark';
 
 export class DesignAutoThemeController {
   private storageKey = 'designauto-theme';
