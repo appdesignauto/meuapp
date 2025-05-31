@@ -11,6 +11,11 @@ import { useTheme } from "@/components/theme-provider"
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme()
 
+  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
+    console.log("Alterando tema para:", newTheme)
+    setTheme(newTheme)
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,7 +31,7 @@ export function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[140px]">
         <DropdownMenuItem 
-          onClick={() => setTheme("light")}
+          onClick={() => handleThemeChange("light")}
           className="cursor-pointer flex items-center gap-2"
         >
           <Sun className="h-4 w-4" />
@@ -34,7 +39,7 @@ export function ThemeToggle() {
           {theme === "light" && <span className="ml-auto text-xs">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => setTheme("dark")}
+          onClick={() => handleThemeChange("dark")}
           className="cursor-pointer flex items-center gap-2"
         >
           <Moon className="h-4 w-4" />
@@ -42,7 +47,7 @@ export function ThemeToggle() {
           {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => setTheme("system")}
+          onClick={() => handleThemeChange("system")}
           className="cursor-pointer flex items-center gap-2"
         >
           <Monitor className="h-4 w-4" />
