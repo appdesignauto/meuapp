@@ -652,8 +652,8 @@ const PostCard: React.FC<{
     <Card 
       id={id}
       className={`mb-5 overflow-hidden ${isPinned 
-        ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
-        : 'border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
+        ? 'border-2 border-amber-400 bg-amber-50/40 shadow-lg' 
+        : 'border-0 border-b border-b-zinc-200 sm:border-b-0 sm:border sm:border-zinc-100'
       } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative`}>
       {/* Removido ícone de estrela sobreposto para evitar problemas de layout */}
       
@@ -670,7 +670,7 @@ const PostCard: React.FC<{
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{post.formattedDate}</p>
+            <p className="text-xs text-zinc-500">{post.formattedDate}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -685,7 +685,7 @@ const PostCard: React.FC<{
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400 h-8 w-8 flex items-center justify-center">
+              <button className="text-zinc-400 hover:text-zinc-500 h-8 w-8 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
@@ -907,7 +907,7 @@ const PostCard: React.FC<{
                   {post.commentsCount > comments.length && !showAllComments && (
                     <button 
                       onClick={handleShowAllComments}
-                      className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 hover:underline cursor-pointer"
+                      className="text-xs text-zinc-500 mt-2 hover:underline cursor-pointer"
                     >
                       Ver {post.commentsCount === 1 
                         ? 'o comentário' 
@@ -951,7 +951,7 @@ const PostCard: React.FC<{
             </div>
           ) : (
             <div className="text-center p-4 space-y-2">
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Faça login para comentar.</p>
+              <p className="text-sm text-zinc-600">Faça login para comentar.</p>
               <Link href="/login">
                 <Button size="sm" variant="outline">Fazer Login</Button>
               </Link>
@@ -987,7 +987,7 @@ interface RankingUser {
 const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
 
   return (
-    <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+    <div className="flex items-center gap-3 p-3 border-b border-zinc-100 last:border-0">
       <div className={cn(
         "flex items-center justify-center text-lg font-bold w-7 h-7 rounded-full shrink-0",
         user.rank <= 3 
