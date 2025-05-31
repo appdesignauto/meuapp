@@ -2250,39 +2250,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Downloads API
+  // Downloads API - Otimizada com JOIN único
   app.get("/api/downloads", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const userDownloads = await storage.getDownloadsByUserId(userId);
       
-      // Enriquece os downloads com informações da arte
-      const enrichedDownloads = await Promise.all(
-        userDownloads.map(async (download) => {
-          try {
-            // Garantir que artId seja um número
-            const artId = Number(download.artId);
-            if (isNaN(artId)) {
-              console.error(`ID de arte inválido: ${download.artId}`);
-              return download;
-            }
-            
-            const art = await storage.getArtById(artId);
-            return {
-              ...download,
-              art
-            };
-          } catch (error) {
-            console.error(`Erro ao buscar arte ${download.artId} para download:`, error);
-            return download;
-          }
-        })
-      );
+      // Query otimizada com JOIN único
+      const downloadsResult = await db.execute(sql`
+        SELECT 
+          d.id,
+          d."userId",
+          d."artId", 
+          d."createdAt",
+          a.id as "art_id",
+          a.title as "art_title",
+          a."imageUrl" as "art_imageUrl",
+          a.format as "art_format",
+          a."fileType" as "art_fileType",
+          a."editUrl" as "art_editUrl",
+          a."isPremium" as "art_isPremium",
+          a."categoryId" as "art_categoryId"
+        FROM downloads d
+        INNER JOIN arts a ON d."artId" = a.id
+        WHERE d."userId" = ${userId}
+        ORDER BY d."createdAt" DESC
+        LIMIT 20
+      `);
       
-      // Filtrar downloads que não têm arte válida
-      const validDownloads = enrichedDownloads.filter(download => download.art);
+      // Mapear resultado para formato esperado
+      const downloads = downloadsResult.rows.map((row: any) => ({
+        id: row.id,
+        userId: row.userId,
+        artId: row.artId,
+        createdAt: row.createdAt,
+        art: {
+          id: row.art_id,
+          title: row.art_title,
+          imageUrl: row.art_imageUrl,
+          format: row.art_format,
+          fileType: row.art_fileType,
+          editUrl: row.art_editUrl,
+          isPremium: row.art_isPremium,
+          categoryId: row.art_categoryId
+        }
+      }));
       
-      res.json({ downloads: validDownloads, totalCount: validDownloads.length });
+      res.json({ downloads, totalCount: downloads.length });
     } catch (error) {
       console.error("Erro ao buscar downloads:", error);
       res.status(500).json({ message: "Erro ao buscar downloads" });

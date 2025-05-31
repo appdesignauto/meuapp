@@ -105,6 +105,8 @@ export default function RecentDesigns() {
   const { data: downloadsData, isLoading } = useQuery<{ downloads: RecentDesign[]; totalCount: number }>({
     queryKey: ['/api/downloads'],
     enabled: !!user?.id, // Só busca se o usuário estiver logado
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    gcTime: 10 * 60 * 1000, // Garbage collection após 10 minutos
   });
   
   // Se o usuário não estiver logado, não renderiza nada
@@ -183,6 +185,7 @@ export default function RecentDesigns() {
                       <img 
                         src={download.art.imageUrl} 
                         alt={download.art.title}
+                        loading="lazy"
                         className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                       />
                       {download.art.isPremium && (
@@ -220,6 +223,7 @@ export default function RecentDesigns() {
                   <img 
                     src={download.art.imageUrl} 
                     alt={download.art.title}
+                    loading="lazy"
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
                   {download.art.isPremium && (
