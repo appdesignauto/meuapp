@@ -132,7 +132,7 @@ export default function RecentDesigns() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
-            <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Seus designs recentes</h2>
+            <h2 className="sm:text-sm font-medium text-neutral-800 text-[15px]">Seus designs recentes</h2>
           </div>
           <div className="flex items-center gap-2">
             {/* Botões de navegação no mobile */}
@@ -210,7 +210,7 @@ export default function RecentDesigns() {
           </div>
         ) : (
           // Grade normal para desktop
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {recentDesigns.map((download: RecentDesign) => (
               <motion.div
                 key={download.id}
@@ -250,7 +250,7 @@ export default function RecentDesigns() {
                 </div>
               </motion.div>
             ))}
-          </div>
+          </div>)
         )}
       </div>
     </section>
