@@ -695,7 +695,13 @@ export default function CategoryPage() {
       <div className="container mx-auto px-4 pb-16">
         {/* Galeria de imagens estilo Pinterest */}
         {isLoading ? (
-          <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0 vitrine-8px">
+          <div 
+            className="vitrine-8px"
+            style={{
+              columnCount: window.innerWidth >= 1024 ? 5 : window.innerWidth >= 768 ? 4 : window.innerWidth >= 640 ? 3 : 2,
+              columnGap: '8px'
+            }}
+          >
             {Array.from({ length: 15 }).map((_, index) => (
               <div 
                 key={index} 
@@ -738,7 +744,13 @@ export default function CategoryPage() {
           </div>
         ) : (
           <>
-            <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0 vitrine-8px">
+            <div 
+              className="vitrine-8px"
+              style={{
+                columnCount: window.innerWidth >= 1024 ? 5 : window.innerWidth >= 768 ? 4 : window.innerWidth >= 640 ? 3 : 2,
+                columnGap: '8px'
+              }}
+            >
               {arts.map((art) => (
                 <div 
                   key={art.id} 
