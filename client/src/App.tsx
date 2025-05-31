@@ -77,13 +77,18 @@ function AppRoutes() {
       {/* Rotas públicas */}
       <Route path="/" component={Home} />
       {/* Rotas de autenticação */}
-      <Route path="/login" component={AuthPage} />
-      <Route path="/register" component={AuthPage} />
+      <Route path="/auth" component={AuthPage} />
       
-      {/* Rota legada para compatibilidade - redireciona para /login */}
-      <Route path="/auth">
+      {/* Rotas legadas para compatibilidade - redirecionam para /auth */}
+      <Route path="/login">
         {() => {
-          window.location.href = "/login";
+          window.location.href = "/auth?tab=login";
+          return null;
+        }}
+      </Route>
+      <Route path="/register">
+        {() => {
+          window.location.href = "/auth?tab=register";
           return null;
         }}
       </Route>
