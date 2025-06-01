@@ -226,7 +226,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         
         {isLoading ? (
           <div 
-            className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 space-y-0"
+            className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 space-y-0"
             style={{ columnGap: '8px' }}
           >
             {Array.from({ length: 8 }).map((_, index) => (
@@ -242,7 +242,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
           <>
             <div 
               ref={galleryRef}
-              className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 space-y-0"
+              className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 space-y-0"
               style={{ columnGap: '8px' }}
             >
               <AnimatePresence>
