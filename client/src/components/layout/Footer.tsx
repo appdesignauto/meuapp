@@ -23,9 +23,9 @@ const Footer = () => {
           </div>
 
           {/* Sections 2, 3, 4 with custom spacing */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 md:ml-24">
+          <div className="flex-1 flex flex-col md:flex-row" style={{ marginLeft: '6rem' }}>
             {/* Design Auto section */}
-            <div>
+            <div className="md:w-auto" style={{ marginRight: '1rem' }}>
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
               <ul className="space-y-2">
                 <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
@@ -35,7 +35,7 @@ const Footer = () => {
             </div>
 
             {/* Informativo */}
-            <div>
+            <div className="md:w-auto" style={{ marginRight: '1rem' }}>
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
               <ul className="space-y-2">
                 <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
@@ -45,7 +45,7 @@ const Footer = () => {
             </div>
 
             {/* Parceria */}
-            <div>
+            <div className="md:w-auto">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
               <ul className="space-y-2">
                 <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Torne-se um colaborador</Link></li>
