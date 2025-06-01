@@ -382,25 +382,16 @@ export default function PlanosPage() {
                 {/* Footer com Botão Modernizado */}
                 <CardFooter className="px-6 pb-6">
                   <Button 
-                    className={cn(
-                      "w-full h-12 text-base font-semibold transition-all duration-200 relative z-10",
-                      plano.destaque 
-                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl border-0" 
-                        : plano.id === "free" 
-                          ? "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300" 
-                          : "bg-blue-600 hover:bg-blue-700 text-white border-0",
-                      // Garantir que o texto seja sempre visível
-                      "!text-current"
-                    )} 
+                    className="w-full h-12 text-base font-semibold transition-all duration-200"
+                    style={{
+                      backgroundColor: plano.id === "free" ? "#f3f4f6" : "#2563eb",
+                      color: plano.id === "free" ? "#111827" : "#ffffff",
+                      border: plano.id === "free" ? "1px solid #d1d5db" : "none"
+                    }}
                     onClick={() => handleSubscribe(plano)}
                   >
-                    <span className={cn(
-                      "flex items-center justify-center w-full",
-                      plano.destaque ? "text-white" : plano.id === "free" ? "text-gray-900" : "text-white"
-                    )}>
-                      {plano.id === "free" ? "Começar Grátis" : "Escolher Plano"}
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </span>
+                    {plano.id === "free" ? "Começar Grátis" : "Escolher Plano"}
+                    <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
                 </CardFooter>
               </Card>
