@@ -25,7 +25,7 @@ const Footer = () => {
           {/* Sections 2, 3, 4 with custom spacing */}
           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-12 md:ml-16">
             {/* Design Auto section */}
-            <div className="pt-[0px] pb-[0px] pl-[48px] pr-[48px]">
+            <div className="pt-[0px] pb-[0px] pl-[0px] pr-[0px]">
               <h3 className="font-semibold text-gray-900 mb-3 text-sm">DESIGN AUTO</h3>
               <ul className="space-y-2">
                 <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
