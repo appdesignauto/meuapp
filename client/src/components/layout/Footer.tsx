@@ -8,22 +8,22 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       <div className="w-full px-4 py-12">
         {/* Main footer content */}
-        <div className="flex flex-col md:flex-row mb-8 items-start max-w-5xl mx-auto">
-          {/* Brand section with logo */}
-          <div className="md:w-64 mb-6 md:mb-0">
-            <div className="flex items-center gap-2 mb-3">
+        <div className="flex flex-col mb-8 max-w-5xl mx-auto">
+          {/* Brand section with logo - mobile centered */}
+          <div className="text-center md:text-left mb-8 md:mb-6 md:w-64">
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">DA</span>
               </div>
               <span className="font-bold text-base text-gray-900">DesignAuto</span>
             </div>
-            <p className="text-gray-600 text-xs leading-relaxed mb-3">
+            <p className="text-gray-600 text-xs leading-relaxed mb-3 max-w-sm mx-auto md:mx-0">
               Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design, oferecendo 
               recursos gráficos incríveis para inspirar criatividade.
             </p>
             
             {/* Email contact */}
-            <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-xs text-gray-600 mb-8 md:mb-0">
               <Mail className="w-4 h-4" />
               <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors">
                 suporte@designauto.com.br
@@ -31,35 +31,36 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Sections 2, 3, 4 with custom spacing */}
-          <div className="flex flex-col md:flex-row" style={{ marginLeft: '4rem' }}>
-            {/* Design Auto section */}
-            <div className="md:w-auto" style={{ marginRight: '3.5rem' }}>
-              <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
-              <ul className="space-y-2">
+          {/* Navigation sections - responsive grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-14 text-center md:text-left md:ml-16">
+            {/* EMPRESA section */}
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-xs">EMPRESA</h3>
+              <ul className="space-y-3">
                 <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
-                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Planos</Link></li>
-                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Dúvidas</Link></li>
+                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Tipos de licença</Link></li>
+                <li><Link href="/contato" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Entre em contato</Link></li>
+                <li><Link href="/oportunidades" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Oportunidades</Link></li>
               </ul>
             </div>
 
-            {/* Informativo */}
-            <div className="md:w-auto" style={{ marginRight: '3.5rem' }}>
-              <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
-              <ul className="space-y-2">
-                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
+            {/* TERMOS LEGAIS section */}
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-xs">TERMOS LEGAIS</h3>
+              <ul className="space-y-3">
+                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de serviço</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de privacidade</Link></li>
                 <li><ReportForm /></li>
               </ul>
             </div>
 
-            {/* Parceria */}
-            <div className="md:w-auto">
-              <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
-              <ul className="space-y-2">
-                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Torne-se um colaborador</Link></li>
-                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Solicitar afiliação</Link></li>
-                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Acionar o Suporte</Link></li>
+            {/* LINKS ÚTEIS section */}
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-xs">LINKS ÚTEIS</h3>
+              <ul className="space-y-3">
+                <li><Link href="/fotos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Encontrar Fotos</Link></li>
+                <li><Link href="/png" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Encontrar PNG</Link></li>
+                <li><Link href="/psd" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Encontrar PSD</Link></li>
               </ul>
             </div>
           </div>
