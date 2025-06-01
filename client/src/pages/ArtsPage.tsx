@@ -354,7 +354,10 @@ export default function ArtsPage() {
             >
               <SelectTrigger className="h-9 px-3 w-[140px] border-blue-200 bg-white">
                 <div className="flex items-center gap-2">
-                  <Filter className="h-3 w-3" />
+                  {sortBy === 'destaques' && <Star className="h-3 w-3" />}
+                  {sortBy === 'emalta' && <TrendingUp className="h-3 w-3" />}
+                  {sortBy === 'recentes' && <Clock className="h-3 w-3" />}
+                  {sortBy === 'antigos' && <Calendar className="h-3 w-3" />}
                   <SelectValue />
                 </div>
               </SelectTrigger>
