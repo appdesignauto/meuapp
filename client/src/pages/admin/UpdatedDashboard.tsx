@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
+import CollaborationRequestsManagement from '@/components/admin/CollaborationRequestsManagement';
+import AffiliateRequestsManagement from '@/components/admin/AffiliateRequestsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import SubscriptionDashboard from '@/components/admin/SubscriptionDashboard';
@@ -1312,6 +1314,26 @@ const AdminDashboard = () => {
                 >
                   <FlagIcon className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Gerenciar Reports</span>}
+                </button>
+                <button
+                  onClick={() => setActiveTab('collaboration-requests')}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'collaboration-requests' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  title="Gerenciar Colaboração"
+                >
+                  <Users className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Colaboração</span>}
+                </button>
+                <button
+                  onClick={() => setActiveTab('affiliate-requests')}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'affiliate-requests' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  title="Gerenciar Afiliação"
+                >
+                  <Award className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Afiliação</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -3098,6 +3120,14 @@ const AdminDashboard = () => {
             
             <TabsContent value="reports">
               <ReportsManagement />
+            </TabsContent>
+            
+            <TabsContent value="collaboration-requests">
+              <CollaborationRequestsManagement />
+            </TabsContent>
+            
+            <TabsContent value="affiliate-requests">
+              <AffiliateRequestsManagement />
             </TabsContent>
             
             <TabsContent value="arts">
