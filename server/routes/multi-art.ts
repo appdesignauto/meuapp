@@ -169,7 +169,7 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
         isPremium: artGroupData.isPremium,
         format: format.format,
         fileType: format.fileType,
-        isVisible: true, // Por padrão, visível
+        isVisible: format.fileType === 'imagens-png' ? false : true,
         designerid: req.user?.id || 1, // Usar ID do usuário logado ou padrão
         collectionId: defaultCollectionId,
         groupId: artGroupId // ID do grupo para vincular as artes relacionadas
@@ -454,7 +454,7 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
           isPremium: artGroupData.isPremium,
           format: format.format,
           fileType: format.fileType,
-          isVisible: true,
+          isVisible: format.fileType === 'imagens-png' ? false : true,
           designerid: req.user?.id || 1,
           collectionId: defaultCollectionId,
           groupId: groupId
