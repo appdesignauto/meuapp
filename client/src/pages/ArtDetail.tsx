@@ -1257,12 +1257,12 @@ export default function ArtDetail() {
       
       {/* Related Arts Section - Com animação */}
       <motion.div 
-        className="bg-white rounded-xl shadow-md p-6"
+        className="bg-white rounded-xl shadow-md px-3 py-6"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.5 }}
       >
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-6 px-3">
           <h2 className="text-lg font-bold text-gray-800 flex items-center whitespace-nowrap">
             <LayoutGrid className="h-5 w-5 text-blue-600 mr-2" />
             Artes relacionadas
@@ -1277,7 +1277,7 @@ export default function ArtDetail() {
           designerName={art?.designer?.name || art?.designer?.username || "Design Auto"}
         />
         
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center px-3">
           <Button 
             variant="ghost" 
             className="text-blue-600 flex items-center group"
