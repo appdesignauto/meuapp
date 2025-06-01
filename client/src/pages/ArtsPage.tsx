@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
-import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -109,7 +109,8 @@ export default function ArtsPage() {
 
   const arts = data?.arts || [];
   const totalCount = data?.totalCount || 0;
-  const hasMore = page * limit < totalCount;
+  const totalPages = Math.ceil(totalCount / limit);
+  const hasMore = page < totalPages;
 
   // Força o espaçamento correto na galeria após renderização
   useEffect(() => {
@@ -175,9 +176,17 @@ export default function ArtsPage() {
     localStorage.setItem('lastGalleryPage', currentUrl);
   }, [page, filters, search]);
 
-  const loadMore = () => {
-    if (!isFetching && hasMore) {
-      setPage(prevPage => prevPage + 1);
+  const goToPreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -548,33 +557,58 @@ export default function ArtsPage() {
               ))}
             </div>
             
-            {/* Carregamento de mais itens */}
-            {isFetching && page > 1 && (
-              <div className="flex justify-center my-8">
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="animate-spin h-5 w-5 text-blue-500" />
-                  <span className="text-neutral-500">Carregando mais designs...</span>
-                </div>
-              </div>
-            )}
-            
-            {/* Botão de carregar mais */}
-            {hasMore && !isFetching && (
-              <div className="flex justify-center mt-8">
-                <Button 
-                  onClick={loadMore}
+            {/* Botões de Paginação Modernos */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12 mb-8">
+                {/* Botão Página Anterior */}
+                <Button
+                  onClick={goToPreviousPage}
+                  disabled={page === 1 || isFetching}
                   variant="outline"
-                  className="rounded-full border-2 border-blue-300 px-8 py-6"
+                  className={`
+                    flex items-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200
+                    ${page === 1 || isFetching 
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:shadow-md'
+                    }
+                  `}
                 >
-                  Carregar mais designs
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Página anterior</span>
+                </Button>
+
+                {/* Indicador de página atual */}
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+                  <span className="text-sm text-blue-600 font-medium">
+                    Página {page} de {totalPages}
+                  </span>
+                </div>
+
+                {/* Botão Próxima Página */}
+                <Button
+                  onClick={goToNextPage}
+                  disabled={page === totalPages || isFetching}
+                  className={`
+                    flex items-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200
+                    ${page === totalPages || isFetching
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
+                    }
+                  `}
+                >
+                  <span>Próxima página</span>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
-            
-            {/* Mensagem de fim da lista */}
-            {!hasMore && arts.length > 0 && (
-              <div className="text-center mt-8 text-neutral-500">
-                <p>Você chegou ao fim da lista</p>
+
+            {/* Loading indicator para mudança de página */}
+            {isFetching && (
+              <div className="flex justify-center my-8">
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="animate-spin h-5 w-5 text-blue-500" />
+                  <span className="text-neutral-500">Carregando designs...</span>
+                </div>
               </div>
             )}
           </>
