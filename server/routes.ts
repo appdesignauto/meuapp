@@ -1,7 +1,7 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes, collaborationRequests, insertCollaborationRequestSchema, affiliateRequests, insertAffiliateRequestSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
@@ -7792,6 +7792,107 @@ app.use('/api/reports-v2', (req, res, next) => {
     } catch (error) {
       console.error("Erro ao buscar métricas do dashboard:", error);
       res.status(500).json({ message: "Erro ao buscar métricas do dashboard" });
+    }
+  });
+
+  // Rota para salvar solicitação de colaboração
+  app.post("/api/collaboration-request", async (req, res) => {
+    try {
+      const validatedData = insertCollaborationRequestSchema.parse(req.body);
+      
+      const [result] = await db.insert(collaborationRequests)
+        .values(validatedData)
+        .returning();
+        
+      console.log("Nova solicitação de colaboração salva:", result.id);
+      res.json({ 
+        success: true, 
+        message: "Solicitação de colaboração enviada com sucesso",
+        id: result.id 
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        console.error("Erro de validação na solicitação de colaboração:", validationError.message);
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: validationError.details 
+        });
+      }
+      
+      console.error("Erro ao salvar solicitação de colaboração:", error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor ao processar solicitação" 
+      });
+    }
+  });
+
+  // Rota para salvar solicitação de afiliação
+  app.post("/api/affiliate-request", async (req, res) => {
+    try {
+      const validatedData = insertAffiliateRequestSchema.parse(req.body);
+      
+      const [result] = await db.insert(affiliateRequests)
+        .values(validatedData)
+        .returning();
+        
+      console.log("Nova solicitação de afiliação salva:", result.id);
+      res.json({ 
+        success: true, 
+        message: "Solicitação de afiliação enviada com sucesso",
+        id: result.id 
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        console.error("Erro de validação na solicitação de afiliação:", validationError.message);
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: validationError.details 
+        });
+      }
+      
+      console.error("Erro ao salvar solicitação de afiliação:", error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor ao processar solicitação" 
+      });
+    }
+  });
+
+  // Rotas administrativas para listar as solicitações (apenas para admins)
+  app.get("/api/admin/collaboration-requests", flexibleAuth, async (req, res) => {
+    try {
+      // Verificar se o usuário é admin
+      if (!req.user || req.user.nivelacesso !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const requests = await db.select()
+        .from(collaborationRequests)
+        .orderBy(desc(collaborationRequests.createdAt));
+
+      res.json(requests);
+    } catch (error) {
+      console.error("Erro ao buscar solicitações de colaboração:", error);
+      res.status(500).json({ message: "Erro ao buscar solicitações" });
+    }
+  });
+
+  app.get("/api/admin/affiliate-requests", flexibleAuth, async (req, res) => {
+    try {
+      // Verificar se o usuário é admin
+      if (!req.user || req.user.nivelacesso !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const requests = await db.select()
+        .from(affiliateRequests)
+        .orderBy(desc(affiliateRequests.createdAt));
+
+      res.json(requests);
+    } catch (error) {
+      console.error("Erro ao buscar solicitações de afiliação:", error);
+      res.status(500).json({ message: "Erro ao buscar solicitações" });
     }
   });
 

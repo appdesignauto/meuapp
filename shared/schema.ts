@@ -905,6 +905,69 @@ export const popupViewsRelations = relations(popupViews, ({ one }) => ({
   }),
 }));
 
+// Tabela para solicitações de colaboração
+export const collaborationRequests = pgTable("collaborationRequests", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  portfolio: text("portfolio"),
+  socialMedia: text("socialMedia").notNull(),
+  experience: text("experience").notNull(),
+  designTools: text("designTools").notNull(),
+  categories: text("categories").notNull(),
+  motivation: text("motivation").notNull(),
+  availableTime: text("availableTime").notNull(),
+  termsAccepted: boolean("termsAccepted").notNull().default(false),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected, contacted
+  adminNotes: text("adminNotes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertCollaborationRequestSchema = createInsertSchema(collaborationRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  adminNotes: true,
+});
+
+export type CollaborationRequest = typeof collaborationRequests.$inferSelect;
+export type InsertCollaborationRequest = z.infer<typeof insertCollaborationRequestSchema>;
+
+// Tabela para solicitações de afiliação
+export const affiliateRequests = pgTable("affiliateRequests", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  company: text("company"),
+  website: text("website"),
+  socialMedia: text("socialMedia").notNull(),
+  audience: text("audience").notNull(),
+  niche: text("niche").notNull(),
+  experience: text("experience").notNull(),
+  promotionStrategy: text("promotionStrategy").notNull(),
+  motivation: text("motivation").notNull(),
+  termsAccepted: boolean("termsAccepted").notNull().default(false),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected, contacted
+  adminNotes: text("adminNotes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertAffiliateRequestSchema = createInsertSchema(affiliateRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  adminNotes: true,
+});
+
+export type AffiliateRequest = typeof affiliateRequests.$inferSelect;
+export type InsertAffiliateRequest = z.infer<typeof insertAffiliateRequestSchema>;
+
 // Community Likes (Curtidas em posts da comunidade)
 export const communityLikes = pgTable("communityLikes", {
   id: serial("id").primaryKey(),
