@@ -474,14 +474,18 @@ export default function ArtsPage() {
               </Select>
             </div>
 
-            {/* Segunda linha - Filtro de Ordenação com botões no mobile */}
+            {/* Segunda linha - Filtro de Ordenação minimalista no mobile */}
             <div className="flex justify-center">
-              <div className="flex gap-1 bg-gray-50 rounded-lg p-1">
+              <div className="flex gap-0.5 bg-white border border-gray-200 rounded-full p-0.5 shadow-sm">
                 <Button
                   variant={sortBy === 'destaques' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setSortBy('destaques')}
-                  className="h-8 px-2 text-xs"
+                  className={`h-7 px-2.5 text-xs rounded-full transition-all ${
+                    sortBy === 'destaques' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'bg-transparent text-gray-600 hover:bg-gray-50'
+                  }`}
                   disabled={isFiltersLoading}
                 >
                   <Star className="h-3 w-3 mr-1" />
@@ -491,7 +495,11 @@ export default function ArtsPage() {
                   variant={sortBy === 'emalta' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setSortBy('emalta')}
-                  className="h-8 px-2 text-xs"
+                  className={`h-7 px-2.5 text-xs rounded-full transition-all ${
+                    sortBy === 'emalta' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'bg-transparent text-gray-600 hover:bg-gray-50'
+                  }`}
                   disabled={isFiltersLoading}
                 >
                   <TrendingUp className="h-3 w-3 mr-1" />
@@ -501,7 +509,11 @@ export default function ArtsPage() {
                   variant={sortBy === 'recentes' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setSortBy('recentes')}
-                  className="h-8 px-2 text-xs"
+                  className={`h-7 px-2.5 text-xs rounded-full transition-all ${
+                    sortBy === 'recentes' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'bg-transparent text-gray-600 hover:bg-gray-50'
+                  }`}
                   disabled={isFiltersLoading}
                 >
                   <Clock className="h-3 w-3 mr-1" />
@@ -511,7 +523,11 @@ export default function ArtsPage() {
                   variant={sortBy === 'antigos' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setSortBy('antigos')}
-                  className="h-8 px-2 text-xs"
+                  className={`h-7 px-2.5 text-xs rounded-full transition-all ${
+                    sortBy === 'antigos' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'bg-transparent text-gray-600 hover:bg-gray-50'
+                  }`}
                   disabled={isFiltersLoading}
                 >
                   <Calendar className="h-3 w-3 mr-1" />
