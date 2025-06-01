@@ -359,15 +359,15 @@ export default function ArtsPage() {
           {/* Filtros para Mobile - Externos */}
           <div className="md:hidden space-y-3">
             {/* Filtros em uma linha */}
-            <div className="flex gap-1 overflow-x-auto">
+            <div className="flex gap-1.5">
               {/* Filtro por Categoria */}
               <Select
                 value={filters.categoryId?.toString() || "_all"}
                 onValueChange={handleCategoryChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 min-w-[85px] border-blue-200 bg-white text-xs flex-shrink-0">
-                  <span className="text-gray-700 truncate">Categorias</span>
+                <SelectTrigger className="h-9 px-2 w-[84px] border-blue-200 bg-white text-xs">
+                  <span className="text-gray-700">Categorias</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todas categorias</SelectItem>
@@ -385,8 +385,8 @@ export default function ArtsPage() {
                 onValueChange={handleFormatChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 min-w-[75px] border-blue-200 bg-white text-xs flex-shrink-0">
-                  <span className="text-gray-700 truncate">Formatos</span>
+                <SelectTrigger className="h-9 px-2 w-[73px] border-blue-200 bg-white text-xs">
+                  <span className="text-gray-700">Formatos</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todos formatos</SelectItem>
@@ -404,8 +404,8 @@ export default function ArtsPage() {
                 onValueChange={handleFileTypeChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 min-w-[60px] border-blue-200 bg-white text-xs flex-shrink-0">
-                  <span className="text-gray-700 truncate">Tipos</span>
+                <SelectTrigger className="h-9 px-2 w-[55px] border-blue-200 bg-white text-xs">
+                  <span className="text-gray-700">Tipos</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todos tipos</SelectItem>
@@ -423,8 +423,8 @@ export default function ArtsPage() {
                 onValueChange={handleLicenseChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 min-w-[65px] border-blue-200 bg-white text-xs flex-shrink-0">
-                  <span className="text-gray-700 truncate">Licença</span>
+                <SelectTrigger className="h-9 px-2 w-[63px] border-blue-200 bg-white text-xs">
+                  <span className="text-gray-700">Licença</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todas</SelectItem>
