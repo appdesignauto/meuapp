@@ -18,8 +18,9 @@ const Footer = () => {
               <span className="font-bold text-base text-gray-900">DesignAuto</span>
             </div>
             <p className="text-gray-600 text-sm sm:text-xs leading-relaxed mb-3">
-              Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design, oferecendo 
-              recursos gráficos incríveis para inspirar criatividade.
+              Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
+              <br />
+              Recursos gráficos incríveis para inspirar criatividade.
             </p>
             
             {/* Email contact */}
