@@ -49,6 +49,7 @@ export default function ArtsPage() {
     categoryId: null as number | null,
     formatId: null as number | null,
     fileTypeId: null as number | null,
+    isPremium: null as boolean | null,
   });
   const limit = 24; // Mais itens por página para galeria estilo Pinterest
 
@@ -76,6 +77,7 @@ export default function ArtsPage() {
     if (filters.categoryId) url.searchParams.append('categoryId', filters.categoryId.toString());
     if (filters.formatId) url.searchParams.append('formatId', filters.formatId.toString());
     if (filters.fileTypeId) url.searchParams.append('fileTypeId', filters.fileTypeId.toString());
+    if (filters.isPremium !== null) url.searchParams.append('isPremium', filters.isPremium.toString());
     if (search) url.searchParams.append('search', search);
     
     return url.pathname + url.search;
@@ -211,11 +213,20 @@ export default function ArtsPage() {
     }));
   };
 
+  const handleLicenseChange = (value: string) => {
+    setPage(1);
+    setFilters(prev => ({
+      ...prev,
+      isPremium: value === "_all" ? null : value === "premium"
+    }));
+  };
+
   const clearFilters = () => {
     setFilters({
       categoryId: null,
       formatId: null,
-      fileTypeId: null
+      fileTypeId: null,
+      isPremium: null
     });
     setSearch('');
   };
@@ -226,7 +237,7 @@ export default function ArtsPage() {
   };
 
   const isFiltersLoading = categoriesLoading || formatsLoading || fileTypesLoading;
-  const isAnyFilterActive = search || filters.categoryId || filters.formatId || filters.fileTypeId;
+  const isAnyFilterActive = search || filters.categoryId || filters.formatId || filters.fileTypeId || filters.isPremium !== null;
 
   return (
     <>
@@ -347,7 +358,7 @@ export default function ArtsPage() {
 
           {/* Filtros para Mobile - Externos */}
           <div className="md:hidden space-y-3">
-            {/* Filtros principais em linha */}
+            {/* Primeira linha de filtros */}
             <div className="flex flex-wrap gap-2">
               {/* Filtro por Categoria */}
               <Select
@@ -386,7 +397,10 @@ export default function ArtsPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
 
+            {/* Segunda linha de filtros */}
+            <div className="flex flex-wrap gap-2">
               {/* Filtro por Tipo de Arquivo */}
               <Select
                 value={filters.fileTypeId?.toString() || "_all"}
@@ -403,6 +417,22 @@ export default function ArtsPage() {
                       {fileType.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+
+              {/* Filtro por Licença */}
+              <Select
+                value={filters.isPremium === null ? "_all" : filters.isPremium ? "premium" : "free"}
+                onValueChange={handleLicenseChange}
+                disabled={isFiltersLoading}
+              >
+                <SelectTrigger className="h-9 px-3 w-[90px] border-blue-200 bg-white text-sm">
+                  <span className="text-gray-700">Licença</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">Todas</SelectItem>
+                  <SelectItem value="free">Grátis</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
                 </SelectContent>
               </Select>
             </div>
