@@ -42,6 +42,7 @@ const ArtsList = () => {
     categoryId?: number;
     search?: string;
     isVisible?: boolean;
+    fileType?: string;
   }>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingArt, setEditingArt] = useState<Art | null>(null);
@@ -59,6 +60,11 @@ const ArtsList = () => {
   // Fetch categories for filter dropdown
   const { data: categories } = useQuery<any[]>({
     queryKey: ['/api/categories'],
+  });
+
+  // Fetch file types for filter dropdown
+  const { data: fileTypes } = useQuery<any[]>({
+    queryKey: ['/api/fileTypes'],
   });
 
   // Delete art mutation
@@ -365,7 +371,7 @@ const ArtsList = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="search">Buscar por título</Label>
               <Input
@@ -396,6 +402,31 @@ const ArtsList = () => {
                   {categories?.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo</Label>
+              <Select
+                value={filter.fileType || ''}
+                onValueChange={(value) => 
+                  setFilter({ 
+                    ...filter, 
+                    fileType: value || undefined 
+                  })
+                }
+              >
+                <SelectTrigger id="tipo">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos</SelectItem>
+                  {fileTypes?.map((fileType) => (
+                    <SelectItem key={fileType.id} value={fileType.name}>
+                      {fileType.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -445,16 +476,14 @@ const ArtsList = () => {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="space-y-2 flex items-end">
-              <Button 
-                variant="secondary" 
-                className="w-full"
-                onClick={() => setFilter({})}
-              >
-                Limpar Filtros
-              </Button>
-            </div>
+          </div>
+          <div className="mt-4">
+            <Button 
+              variant="secondary" 
+              onClick={() => setFilter({})}
+            >
+              Limpar Filtros
+            </Button>
           </div>
         </CardContent>
       </Card>
