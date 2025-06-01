@@ -359,7 +359,7 @@ export default function ArtsPage() {
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_all">Todas</SelectItem>
+                  <SelectItem value="_all">Todas categorias</SelectItem>
                   {categories?.map((category: any) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
@@ -378,7 +378,7 @@ export default function ArtsPage() {
                   <SelectValue placeholder="Formato" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_all">Todos</SelectItem>
+                  <SelectItem value="_all">Todos formatos</SelectItem>
                   {formats?.map((format: any) => (
                     <SelectItem key={format.id} value={format.id.toString()}>
                       {format.name}
@@ -397,7 +397,7 @@ export default function ArtsPage() {
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_all">Todos</SelectItem>
+                  <SelectItem value="_all">Todos tipos</SelectItem>
                   {fileTypes?.map((fileType: any) => (
                     <SelectItem key={fileType.id} value={fileType.id.toString()}>
                       {fileType.name}
