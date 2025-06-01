@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +33,9 @@ interface Plano {
   destaque?: boolean;
   maxDownloads?: number;
   limitado?: boolean;
-  badgeText?: string;
+  badgeText?: string | null;
   cor?: string;
+  especial?: boolean;
 }
 
 export default function PlanosPage() {
@@ -130,8 +131,9 @@ export default function PlanosPage() {
         { nome: "Todas atualizações futuras", incluido: false }
       ],
       destaque: true,
-      badgeText: null,
-      cor: "bg-gradient-to-br from-amber-500 to-orange-600"
+      badgeText: "MELHOR OFERTA",
+      cor: "bg-gradient-to-br from-amber-500 to-orange-600",
+      especial: true
     },
     {
       id: "vitalicio",
@@ -163,9 +165,17 @@ export default function PlanosPage() {
     }
   ];
 
-  const planosVisiveis = tabAtiva === "todos" 
-    ? planos 
-    : planos.filter(plano => plano.destaque);
+  // Filtros de planos baseados na aba ativa
+  const planosVisiveis = useMemo(() => {
+    if (tabAtiva === "populares") {
+      // Na aba "Mais Populares", mostrar apenas planos mensal e anual centralizados
+      return planos.filter(plano => 
+        plano.nome.toLowerCase().includes('mensal') || 
+        plano.nome.toLowerCase().includes('anual')
+      );
+    }
+    return planos;
+  }, [planos, tabAtiva]);
 
   const handleSubscribe = (plano: Plano) => {
     if (!user) {
@@ -254,7 +264,12 @@ export default function PlanosPage() {
           </div>
 
           {/* Grid de Planos Responsivo e Moderno */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
+          <div className={cn(
+            "grid gap-6 max-w-7xl mx-auto px-4",
+            tabAtiva === "populares" 
+              ? "grid-cols-1 sm:grid-cols-2 max-w-4xl justify-center" 
+              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          )}>
             {planosVisiveis.map((plano) => (
               <Card 
                 key={plano.id}
