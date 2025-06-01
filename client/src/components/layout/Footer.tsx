@@ -9,7 +9,7 @@ const Footer = () => {
         {/* Main footer content */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 max-w-4xl mx-auto">
           {/* Brand section with logo */}
-          <div className="md:col-span-1">
+          <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">DA</span>
