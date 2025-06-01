@@ -35,7 +35,7 @@ const Footer = () => {
             </div>
 
             {/* Informativo */}
-            <div>
+            <div className="pl-[0px] pr-[0px] ml-[-53px] mr-[-53px]">
               <h3 className="font-semibold text-gray-900 mb-3 text-sm">INFORMATIVO</h3>
               <ul className="space-y-2">
                 <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
