@@ -227,23 +227,23 @@ export default function PlanosPage() {
         <div className="container px-4 md:px-6 max-w-7xl mx-auto">
           {/* Seletor de Planos Melhorado */}
           <div className="flex justify-center mb-8">
-            <div className="bg-white rounded-2xl p-1 shadow-lg border">
+            <div className="bg-white rounded-2xl p-1 shadow-lg border max-w-md w-full mx-4">
               <Tabs 
                 defaultValue="todos" 
                 value={tabAtiva} 
                 onValueChange={(val) => setTabAtiva(val as "todos" | "populares")}
                 className="w-full"
               >
-                <TabsList className="grid grid-cols-2 bg-transparent gap-1">
+                <TabsList className="grid grid-cols-2 bg-transparent gap-1 h-auto p-0">
                   <TabsTrigger 
                     value="todos" 
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white px-8 py-3 rounded-xl font-medium transition-all"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
                   >
                     Todos os Planos
                   </TabsTrigger>
                   <TabsTrigger 
                     value="populares"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white px-8 py-3 rounded-xl font-medium transition-all"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
                   >
                     Mais Populares
                   </TabsTrigger>
