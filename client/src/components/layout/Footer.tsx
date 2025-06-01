@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       <div className="w-full px-4 py-12">
         {/* Main footer content */}
-        <div className="flex flex-col md:flex-row mb-8 max-w-6xl mx-auto justify-center">
+        <div className="flex flex-col md:flex-row mb-8 max-w-6xl mx-auto justify-center items-start">
           {/* Brand section with logo */}
           <div className="md:w-64 mb-6 md:mb-0">
             <div className="flex items-center gap-2 mb-3">
@@ -23,7 +23,7 @@ const Footer = () => {
           </div>
 
           {/* Sections 2, 3, 4 with custom spacing */}
-          <div className="flex-1 flex flex-col md:flex-row" style={{ marginLeft: '6rem' }}>
+          <div className="flex flex-col md:flex-row" style={{ marginLeft: '4rem' }}>
             {/* Design Auto section */}
             <div className="md:w-auto" style={{ marginRight: '3.5rem' }}>
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
