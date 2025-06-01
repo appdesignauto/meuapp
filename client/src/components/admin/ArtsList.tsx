@@ -548,7 +548,7 @@ const ArtsList = () => {
                       <TableRow key={art.id}>
                         <TableCell className="font-medium">{art.id}</TableCell>
                         <TableCell>
-                          <div className="w-10 h-10 overflow-hidden rounded-md">
+                          <div className="w-16 h-16 overflow-hidden rounded-md">
                             <img 
                               src={art.imageUrl} 
                               alt={art.title} 
