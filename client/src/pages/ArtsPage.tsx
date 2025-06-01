@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
-import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2, ChevronLeft, ChevronRight, TrendingUp, Clock, Calendar, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -51,6 +51,7 @@ export default function ArtsPage() {
     fileType: null as string | null,
     isPremium: null as boolean | null,
   });
+  const [sortBy, setSortBy] = useState<'destaques' | 'emalta' | 'recentes' | 'antigos'>('destaques');
   const limit = 24; // Mais itens por página para galeria estilo Pinterest
 
   // Buscar categorias
@@ -73,6 +74,7 @@ export default function ArtsPage() {
     const url = new URL('/api/artes', window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('limit', limit.toString());
+    url.searchParams.append('sortBy', sortBy);
     
     if (filters.categoryId) url.searchParams.append('categoryId', filters.categoryId.toString());
     if (filters.formatId) url.searchParams.append('formatId', filters.formatId.toString());
@@ -86,7 +88,7 @@ export default function ArtsPage() {
   // Chave de consulta para React Query
   const queryKey = [
     '/api/artes',
-    { page, limit, ...filters, search }
+    { page, limit, ...filters, search, sortBy }
   ];
 
   // Buscar artes com filtros
@@ -170,7 +172,7 @@ export default function ArtsPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [filters, search]);
+  }, [filters, search, sortBy]);
   
   // Armazenar a URL atual para navegação de retorno
   useEffect(() => {
@@ -341,6 +343,46 @@ export default function ArtsPage() {
                     {fileType.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            {/* Filtro de Ordenação */}
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as 'destaques' | 'emalta' | 'recentes' | 'antigos')}
+              disabled={isFiltersLoading}
+            >
+              <SelectTrigger className="h-9 px-3 w-[140px] border-blue-200 bg-white">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-3 w-3" />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="destaques">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-3 w-3" />
+                    <span>Destaques</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="emalta">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-3 w-3" />
+                    <span>Em alta</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="recentes">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span>Recentes</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="antigos">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-3 w-3" />
+                    <span>Antigos</span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
 
