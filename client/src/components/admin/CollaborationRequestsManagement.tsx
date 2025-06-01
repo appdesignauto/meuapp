@@ -156,6 +156,15 @@ const CollaborationRequestsManagement = () => {
     setIsDetailsOpen(true);
   };
 
+  // Calcular contadores por status
+  const statusCounts = {
+    pending: requests.filter(r => r.status === 'pending').length,
+    contacted: requests.filter(r => r.status === 'contacted').length,
+    approved: requests.filter(r => r.status === 'approved').length,
+    rejected: requests.filter(r => r.status === 'rejected').length,
+    todos: requests.length
+  };
+
   // Filtrar solicitações com base na busca e aba ativa
   const filteredRequests = requests.filter((request: CollaborationRequest) => {
     const matchesSearch = !searchTerm || 
@@ -198,11 +207,11 @@ const CollaborationRequestsManagement = () => {
       {/* Tabs de status */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="pending">Pendentes</TabsTrigger>
-          <TabsTrigger value="contacted">Contatados</TabsTrigger>
-          <TabsTrigger value="approved">Aprovados</TabsTrigger>
-          <TabsTrigger value="rejected">Rejeitados</TabsTrigger>
-          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="pending">Pendentes ({statusCounts.pending})</TabsTrigger>
+          <TabsTrigger value="contacted">Contatados ({statusCounts.contacted})</TabsTrigger>
+          <TabsTrigger value="approved">Aprovados ({statusCounts.approved})</TabsTrigger>
+          <TabsTrigger value="rejected">Rejeitados ({statusCounts.rejected})</TabsTrigger>
+          <TabsTrigger value="todos">Todos ({statusCounts.todos})</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">
