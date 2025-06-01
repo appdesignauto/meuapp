@@ -21,9 +21,9 @@ interface AffiliateRequest {
   company?: string;
   website?: string;
   socialMedia: string;
-  audienceSize: string;
+  audience: string;
   niche: string;
-  affiliateExperience: string;
+  experience: string;
   promotionStrategy: string;
   motivation: string;
   status: 'pending' | 'approved' | 'rejected' | 'contacted';
@@ -255,10 +255,10 @@ const AffiliateRequestsManagement = () => {
                         <strong>Nicho:</strong> {request.niche}
                       </p>
                       <p className="text-sm text-gray-600">
-                        <strong>Tamanho da Audiência:</strong> {request.audienceSize}
+                        <strong>Tamanho da Audiência:</strong> {request.audience}
                       </p>
                       <p className="text-sm text-gray-600">
-                        <strong>Experiência como Afiliado:</strong> {request.affiliateExperience}
+                        <strong>Experiência como Afiliado:</strong> {request.experience}
                       </p>
                       <p className="text-sm text-gray-500">
                         Enviado em: {new Date(request.createdAt).toLocaleString('pt-BR')}
@@ -345,13 +345,13 @@ const AffiliateRequestsManagement = () => {
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Tamanho da Audiência</Label>
-                  <p className="text-sm mt-1 bg-gray-50 p-3 rounded-md">{currentRequest.audienceSize}</p>
+                  <p className="text-sm mt-1 bg-gray-50 p-3 rounded-md">{currentRequest.audience}</p>
                 </div>
               </div>
 
               <div>
                 <Label className="text-sm font-medium">Experiência como Afiliado</Label>
-                <p className="text-sm mt-1 bg-gray-50 p-3 rounded-md">{currentRequest.affiliateExperience}</p>
+                <p className="text-sm mt-1 bg-gray-50 p-3 rounded-md">{currentRequest.experience}</p>
               </div>
 
               <div>

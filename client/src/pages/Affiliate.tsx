@@ -79,11 +79,11 @@ const Affiliate = () => {
           phone: data.phone,
           company: data.company || undefined,
           website: data.website || undefined,
-          socialMedia: data.channels,
+          socialMedia: data.socialMedia,
           audience: data.audience,
           niche: data.niche,
           experience: data.experience,
-          promotionStrategy: data.strategy,
+          promotionStrategy: data.promotionStrategy,
           motivation: data.motivation,
           termsAccepted: data.terms
         }),
