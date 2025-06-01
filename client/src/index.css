@@ -28,7 +28,7 @@ html.dark {
   color: rgb(17, 24, 39) !important;
 }
 
-/* Força espaçamento de 8px em todas as vitrines de colunas com máxima especificidade */
+/* CORREÇÃO DEFINITIVA: Espaçamento consistente para vitrines */
 html body .columns-2,
 html body .columns-3,
 html body .columns-4,
@@ -38,22 +38,6 @@ html body div[class*="columns-"] {
   column-gap: 8px !important;
   -webkit-column-gap: 8px !important;
   -moz-column-gap: 8px !important;
-  gap: inherit !important;
-}
-
-/* Sobrescrever classes gap do Tailwind com especificidade máxima */
-html body .gap-2,
-html body .gap-3,
-html body .gap-4,
-html body .gap-6,
-html body .gap-8,
-html body div.gap-2,
-html body div.gap-3,
-html body div.gap-4,
-html body div.gap-6,
-html body div.gap-8 {
-  column-gap: 8px !important;
-  gap: inherit !important;
 }
 
 /* Classe utilitária para forçar espaçamento de 8px */
@@ -312,8 +296,7 @@ html body div.gap-8 {
     max-height: 90vh;
   }
 
-  /* SOLUÇÃO ROBUSTA FINAL - ESPAÇAMENTO VITRINE */
-  /* Usar seletor mais específico que o Tailwind */
+  /* ESPAÇAMENTO CONSISTENTE PARA TODAS AS VITRINES */
   html body div.columns-compact {
     column-gap: 8px !important;
     -webkit-column-gap: 8px !important;
@@ -444,13 +427,7 @@ html body div.gap-8 {
     break-inside: avoid !important;
   }
   
-  .columns-2 > *, .columns-3 > *, .columns-4 > *, .columns-5 > * {
-    margin-bottom: 0.5rem !important;
-  }
-  
-  .columns-2, .columns-3, .columns-4, .columns-5 {
-    column-gap: 0.5rem !important;
-  }
+  /* Removido - conflitava com o espaçamento principal */
   
   /* Melhoria na animação de hover para links */
   .link-hover {
