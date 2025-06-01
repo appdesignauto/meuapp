@@ -5,9 +5,9 @@ import { Link } from 'wouter';
 const Footer = () => {
   return (
     <footer className="bg-white border-t border-gray-200">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-12">
         {/* Main footer content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
           {/* Brand section with logo */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
@@ -54,25 +54,27 @@ const Footer = () => {
         </div>
 
         {/* Bottom section */}
-        <div className="flex flex-col md:flex-row justify-between items-center pt-4 border-t border-gray-200 gap-3">
-          <div className="text-gray-500 text-sm">
-            © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00 / DESIGNAUTO.COM.BR LTDA - CNPJ 34.612.751/0001-80
-          </div>
-          
-          {/* Social media icons */}
-          <div className="flex items-center gap-3">
-            <a href="https://instagram.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-500 transition-colors">
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a href="https://facebook.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
-              <Facebook className="w-5 h-5" />
-            </a>
-            <a href="https://youtube.com/@designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">
-              <Youtube className="w-5 h-5" />
-            </a>
-            <a href="https://twitter.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors">
-              <Twitter className="w-5 h-5" />
-            </a>
+        <div className="border-t border-gray-200 pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-4xl mx-auto">
+            <div className="text-gray-500 text-sm">
+              © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00 / DESIGNAUTO.COM.BR LTDA - CNPJ 34.612.751/0001-80
+            </div>
+            
+            {/* Social media icons */}
+            <div className="flex items-center gap-4">
+              <a href="https://instagram.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-500 transition-colors">
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a href="https://facebook.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a href="https://youtube.com/@designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">
+                <Youtube className="w-5 h-5" />
+              </a>
+              <a href="https://twitter.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
