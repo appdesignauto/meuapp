@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       <div className="w-full px-4 py-12">
         {/* Main footer content */}
-        <div className="flex flex-col md:flex-row mb-8 items-start" style={{ justifyContent: 'center', transform: 'translateX(-2rem)' }}>
+        <div className="flex flex-col md:flex-row mb-8 items-start max-w-5xl mx-auto">
           {/* Brand section with logo */}
           <div className="md:w-64 mb-6 md:mb-0">
             <div className="flex items-center gap-2 mb-3">
@@ -66,8 +66,8 @@ const Footer = () => {
 
         {/* Bottom section */}
         <div className="border-t border-gray-200 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-gray-500 text-xs text-center mt-[0px] mb-[0px] ml-[311px] mr-[311px]" style={{ marginLeft: '96px' }}>© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0</div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-5xl mx-auto">
+            <div className="text-gray-500 text-xs">© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0</div>
             
             {/* Social media icons */}
             <div className="flex items-center gap-4">
