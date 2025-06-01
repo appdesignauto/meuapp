@@ -499,6 +499,10 @@ export default function PlanosPage() {
                 size="lg" 
                 variant="outline" 
                 className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold"
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#ffffff"
+                }}
                 onClick={() => handleSubscribe(planos.find(p => p.destaque)!)}
               >
                 Ver Planos Premium
