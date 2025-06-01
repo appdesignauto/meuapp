@@ -406,11 +406,11 @@ const ArtsList = () => {
             <div className="space-y-2">
               <Label htmlFor="tipo">Tipo</Label>
               <Select
-                value={filter.fileType || ''}
+                value={filter.fileType || 'todos'}
                 onValueChange={(value) => 
                   setFilter({ 
                     ...filter, 
-                    fileType: value || undefined 
+                    fileType: value === 'todos' ? undefined : value 
                   })
                 }
               >
@@ -418,7 +418,7 @@ const ArtsList = () => {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   {fileTypes?.map((fileType) => (
                     <SelectItem key={fileType.id} value={fileType.name}>
                       {fileType.name}
