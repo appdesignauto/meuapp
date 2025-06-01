@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       <div className="container mx-auto px-4 py-12">
         {/* Main footer content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 max-w-5xl mx-auto">
           {/* Brand section with logo */}
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -55,7 +55,7 @@ const Footer = () => {
 
         {/* Bottom section */}
         <div className="border-t border-gray-200 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-5xl mx-auto">
             <div className="text-gray-500 text-sm">
               © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00 / DESIGNAUTO.COM.BR LTDA - CNPJ 34.612.751/0001-80
             </div>
