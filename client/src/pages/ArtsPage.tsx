@@ -355,7 +355,7 @@ export default function ArtsPage() {
                 onValueChange={handleCategoryChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[100px] border-blue-200 bg-white text-sm">
+                <SelectTrigger className="h-9 px-3 w-[90px] border-blue-200 bg-white text-sm">
                   <SelectValue placeholder="Categorias" />
                 </SelectTrigger>
                 <SelectContent>
@@ -374,7 +374,7 @@ export default function ArtsPage() {
                 onValueChange={handleFormatChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[90px] border-blue-200 bg-white text-sm">
+                <SelectTrigger className="h-9 px-3 w-[80px] border-blue-200 bg-white text-sm">
                   <SelectValue placeholder="Formatos" />
                 </SelectTrigger>
                 <SelectContent>
@@ -393,7 +393,7 @@ export default function ArtsPage() {
                 onValueChange={handleFileTypeChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[70px] border-blue-200 bg-white text-sm">
+                <SelectTrigger className="h-9 px-3 w-[65px] border-blue-200 bg-white text-sm">
                   <SelectValue placeholder="Tipos" />
                 </SelectTrigger>
                 <SelectContent>
