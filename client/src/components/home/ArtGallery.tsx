@@ -18,7 +18,7 @@ interface ArtGalleryProps {
 }
 
 const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtGalleryProps) => {
-  const initialLimit = 12; // Sempre mostra 12 itens inicialmente
+  const initialLimit = 20; // Sempre mostra 20 itens inicialmente
   const [, setLocation] = useLocation();
   const [loadCounter, setLoadCounter] = useState(0); // Contador para controlar redirecionamento
   const [allArts, setAllArts] = useState<any[]>([]); // Estado para armazenar todas as artes carregadas
@@ -229,7 +229,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
             style={{ columnGap: '8px' }}
           >
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length: 15 }).map((_, index) => (
               <div 
                 key={index} 
                 className="block overflow-hidden animate-pulse break-inside-avoid mb-3 xs:mb-4 rounded-xl shadow-sm"
