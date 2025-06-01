@@ -40,7 +40,7 @@ export default function RelatedArts({
   if (isLoading) {
     return (
       <div 
-        className="columns-2 xs:columns-3 sm:columns-3 md:columns-4 lg:columns-5 vitrine-8px space-y-0"
+        className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 vitrine-8px space-y-0"
         style={{ 
           columnGap: '8px'
         }}
@@ -74,7 +74,7 @@ export default function RelatedArts({
   // Success state com layout harmonioso igual à home
   return (
     <div 
-      className="columns-2 xs:columns-3 sm:columns-3 md:columns-4 lg:columns-5 vitrine-8px space-y-0"
+      className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 vitrine-8px space-y-0"
       style={{ 
         columnGap: '8px'
       }}
