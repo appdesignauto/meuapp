@@ -602,8 +602,8 @@ export default function ArtsPage() {
               </div>
             )}
 
-            {/* Loading indicator para mudança de página */}
-            {isFetching && (
+            {/* Loading indicator apenas durante mudança de página */}
+            {isFetching && page > 1 && (
               <div className="flex justify-center my-8">
                 <div className="flex items-center space-x-2">
                   <Loader2 className="animate-spin h-5 w-5 text-blue-500" />
