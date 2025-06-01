@@ -23,7 +23,7 @@ const Footer = () => {
           </div>
 
           {/* Sections 2, 3, 4 with custom spacing */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 md:ml-20">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 md:ml-24">
             {/* Design Auto section */}
             <div>
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
