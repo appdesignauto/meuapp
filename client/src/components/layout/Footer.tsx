@@ -31,35 +31,35 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Sections 2, 3, 4 with responsive layout */}
-          <div className="flex flex-col sm:flex-row w-full lg:ml-16 gap-6 sm:gap-8 lg:gap-14">
+          {/* Sections 2, 3, 4 with responsive layout - 3 columns */}
+          <div className="grid grid-cols-3 w-full lg:ml-16 gap-4 sm:gap-6 lg:gap-14">
             {/* Design Auto section */}
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">DESIGN AUTO</h3>
-              <ul className="space-y-2">
-                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
-                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Planos</Link></li>
-                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Dúvidas</Link></li>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs sm:text-sm uppercase tracking-wide">DESIGN AUTO</h3>
+              <ul className="space-y-1 sm:space-y-2">
+                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Sobre nós</Link></li>
+                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Planos</Link></li>
+                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Dúvidas</Link></li>
               </ul>
             </div>
 
             {/* Informativo */}
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">INFORMATIVO</h3>
-              <ul className="space-y-2">
-                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Política de Privacidade</Link></li>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs sm:text-sm uppercase tracking-wide">INFORMATIVO</h3>
+              <ul className="space-y-1 sm:space-y-2">
+                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Termos de Uso</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Política de Privacidade</Link></li>
                 <li><ReportForm /></li>
               </ul>
             </div>
 
             {/* Parceria */}
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">PARCERIA</h3>
-              <ul className="space-y-2">
-                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Torne-se um colaborador</Link></li>
-                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar afiliação</Link></li>
-                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Acionar o Suporte</Link></li>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs sm:text-sm uppercase tracking-wide">PARCERIA</h3>
+              <ul className="space-y-1 sm:space-y-2">
+                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Torne-se um colaborador</Link></li>
+                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Solicitar afiliação</Link></li>
+                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Acionar o Suporte</Link></li>
               </ul>
             </div>
           </div>
