@@ -44,6 +44,14 @@ import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
 import DashboardSaas from "@/pages/dashboard-saas";
 
+// Páginas do Footer
+import About from "@/pages/About";
+import FAQ from "@/pages/FAQ";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import Collaborator from "@/pages/Collaborator";
+import Affiliate from "@/pages/Affiliate";
+
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
 import PainelInicio from "@/pages/painel/PainelInicio";
@@ -158,6 +166,14 @@ function AppRoutes() {
       <Route path="/videoaulas" component={VideoaulasPage} />
       <Route path="/ferramentas" component={FerramentasPage} />
       <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
+      
+      {/* Páginas do Footer */}
+      <Route path="/sobre" component={About} />
+      <Route path="/duvidas" component={FAQ} />
+      <Route path="/termos" component={Terms} />
+      <Route path="/privacidade" component={Privacy} />
+      <Route path="/colaboradores" component={Collaborator} />
+      <Route path="/afiliacao" component={Affiliate} />
       <Route path="/suporte">
         {() => {
           const SuportePage = lazy(() => import("@/pages/suporte/index"));
