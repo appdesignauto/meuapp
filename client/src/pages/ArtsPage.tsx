@@ -345,133 +345,87 @@ export default function ArtsPage() {
             )}
           </div>
 
-          {/* Filtros para Mobile */}
-          <div className="md:hidden flex items-center justify-between">
-            {/* Botão para filtros mobile */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 border-blue-200">
-                  <Filter className="h-4 w-4" />
-                  <span>Filtros</span>
-                  {isAnyFilterActive && (
-                    <div className="bg-blue-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
-                      {Object.values(filters).filter(Boolean).length + (search ? 1 : 0)}
-                    </div>
-                  )}
+          {/* Filtros para Mobile - Externos */}
+          <div className="md:hidden space-y-3">
+            {/* Filtros principais em linha */}
+            <div className="flex flex-wrap gap-2">
+              {/* Filtro por Categoria */}
+              <Select
+                value={filters.categoryId?.toString() || "_all"}
+                onValueChange={handleCategoryChange}
+                disabled={isFiltersLoading}
+              >
+                <SelectTrigger className="h-9 px-3 w-[120px] border-blue-200 bg-white text-sm">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">Todas</SelectItem>
+                  {categories?.map((category: any) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Filtro por Formato */}
+              <Select
+                value={filters.formatId?.toString() || "_all"}
+                onValueChange={handleFormatChange}
+                disabled={isFiltersLoading}
+              >
+                <SelectTrigger className="h-9 px-3 w-[110px] border-blue-200 bg-white text-sm">
+                  <SelectValue placeholder="Formato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">Todos</SelectItem>
+                  {formats?.map((format: any) => (
+                    <SelectItem key={format.id} value={format.id.toString()}>
+                      {format.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Filtro por Tipo de Arquivo */}
+              <Select
+                value={filters.fileTypeId?.toString() || "_all"}
+                onValueChange={handleFileTypeChange}
+                disabled={isFiltersLoading}
+              >
+                <SelectTrigger className="h-9 px-3 w-[100px] border-blue-200 bg-white text-sm">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">Todos</SelectItem>
+                  {fileTypes?.map((fileType: any) => (
+                    <SelectItem key={fileType.id} value={fileType.id.toString()}>
+                      {fileType.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Linha inferior com botão limpar e contador */}
+            <div className="flex items-center justify-between">
+              {isAnyFilterActive && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-8 text-blue-600 px-3"
+                >
+                  Limpar filtros
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[90vh] rounded-t-xl">
-                <SheetHeader className="mb-4">
-                  <SheetTitle>Filtrar Designs</SheetTitle>
-                  <SheetDescription>
-                    Selecione os filtros para encontrar designs específicos
-                  </SheetDescription>
-                </SheetHeader>
-                
-                <div className="space-y-4">
-                  <Accordion type="single" collapsible className="w-full">
-                    {/* Filtro de Categorias */}
-                    <AccordionItem value="category">
-                      <AccordionTrigger className="text-base">Categorias</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="grid grid-cols-2 gap-2 pt-2">
-                          <Button 
-                            variant={filters.categoryId === null ? "default" : "outline"}
-                            className="justify-start"
-                            onClick={() => handleCategoryChange("_all")}
-                          >
-                            Todas
-                          </Button>
-                          
-                          {categories?.map((category: any) => (
-                            <Button 
-                              key={category.id}
-                              variant={filters.categoryId === category.id ? "default" : "outline"}
-                              className="justify-start"
-                              onClick={() => handleCategoryChange(category.id.toString())}
-                            >
-                              {category.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    
-                    {/* Filtro de Formatos */}
-                    <AccordionItem value="format">
-                      <AccordionTrigger className="text-base">Formatos</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="grid grid-cols-2 gap-2 pt-2">
-                          <Button 
-                            variant={filters.formatId === null ? "default" : "outline"}
-                            className="justify-start"
-                            onClick={() => handleFormatChange("_all")}
-                          >
-                            Todos
-                          </Button>
-                          
-                          {formats?.map((format: any) => (
-                            <Button 
-                              key={format.id}
-                              variant={filters.formatId === format.id ? "default" : "outline"}
-                              className="justify-start"
-                              onClick={() => handleFormatChange(format.id.toString())}
-                            >
-                              {format.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    
-                    {/* Filtro de Tipos de Arquivo */}
-                    <AccordionItem value="fileType">
-                      <AccordionTrigger className="text-base">Tipos de Arquivo</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="grid grid-cols-2 gap-2 pt-2">
-                          <Button 
-                            variant={filters.fileTypeId === null ? "default" : "outline"}
-                            className="justify-start"
-                            onClick={() => handleFileTypeChange("_all")}
-                          >
-                            Todos
-                          </Button>
-                          
-                          {fileTypes?.map((fileType: any) => (
-                            <Button 
-                              key={fileType.id}
-                              variant={filters.fileTypeId === fileType.id ? "default" : "outline"}
-                              className="justify-start"
-                              onClick={() => handleFileTypeChange(fileType.id.toString())}
-                            >
-                              {fileType.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                  
-                  {/* Limpar todos os filtros */}
-                  {isAnyFilterActive && (
-                    <Button 
-                      variant="outline" 
-                      onClick={clearFilters}
-                      className="w-full mt-4"
-                    >
-                      Limpar todos os filtros
-                    </Button>
-                  )}
+              )}
+
+              {/* Indicador de filtros ativos */}
+              {isAnyFilterActive && (
+                <div className="text-sm text-neutral-500">
+                  {totalCount} designs encontrados
                 </div>
-              </SheetContent>
-            </Sheet>
-            
-            {/* Indicador de filtros ativos */}
-            {isAnyFilterActive && (
-              <div className="text-sm text-neutral-500">
-                {totalCount} designs encontrados
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>
