@@ -57,7 +57,7 @@ const Footer = () => {
             <div>
               <h3 className="font-semibold text-gray-900 mb-3 text-xs sm:text-sm uppercase tracking-wide">PARCERIA</h3>
               <ul className="space-y-1 sm:space-y-2">
-                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Torne-se um colaborador</Link></li>
+                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Colaborador</Link></li>
                 <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Solicitar afiliação</Link></li>
                 <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-xs sm:text-sm transition-colors">Acionar o Suporte</Link></li>
               </ul>
