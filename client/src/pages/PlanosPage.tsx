@@ -253,29 +253,29 @@ export default function PlanosPage() {
           </div>
 
           {/* Grid de Planos Responsivo e Moderno */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
             {planosVisiveis.map((plano) => (
               <Card 
                 key={plano.id}
                 className={cn(
-                  "relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl",
+                  "relative transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col",
                   plano.destaque 
                     ? "border-2 border-blue-500 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50" 
                     : "border border-gray-200 hover:border-blue-300 bg-white"
                 )}
               >
-                {/* Badge de Destaque Melhorado */}
+                {/* Badge de Destaque Melhorado com melhor posicionamento */}
                 {plano.badgeText && (
-                  <div className="absolute -top-2 -right-2 z-10">
-                    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                  <div className="absolute -top-3 -right-3 z-10">
+                    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
                       {plano.badgeText}
                     </div>
                   </div>
                 )}
                 
                 {/* Header do Cartão Modernizado */}
-                <CardHeader className="pb-4 pt-6">
-                  <div className="text-center space-y-3">
+                <CardHeader className="pb-4 pt-8 px-6">
+                  <div className="text-center space-y-4">
                     {/* Ícone do Plano */}
                     <div className={cn(
                       "w-12 h-12 rounded-full mx-auto flex items-center justify-center",
@@ -291,30 +291,30 @@ export default function PlanosPage() {
                     </div>
                     
                     {/* Nome do Plano */}
-                    <CardTitle className="text-xl font-bold text-gray-900">{plano.nome}</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl font-bold text-gray-900">{plano.nome}</CardTitle>
                     
                     {/* Preço em Destaque */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {plano.id === "free" ? (
-                        <div className="text-3xl font-bold text-gray-900">Grátis</div>
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-900">Grátis</div>
                       ) : (
                         <div>
                           <div className="flex items-baseline justify-center">
-                            <span className="text-4xl font-bold text-gray-900">
+                            <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
                               R$ {plano.preco.toFixed(2).replace('.', ',')}
                             </span>
-                            <span className="text-gray-500 ml-1 text-sm">
+                            <span className="text-gray-500 ml-1 text-xs sm:text-sm">
                               {plano.tipo === "mensal" ? "/mês" : 
                                plano.tipo === "anual" ? "/ano" : ""}
                             </span>
                           </div>
                           
                           {plano.precoOriginal && (
-                            <div className="flex items-center justify-center">
+                            <div className="flex flex-col items-center justify-center space-y-2 mt-2">
                               <span className="text-sm text-gray-400 line-through">
                                 R$ {plano.precoOriginal.toFixed(2).replace('.', ',')}
                               </span>
-                              <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                              <span className="px-3 py-1.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
                                 Economize {Math.round((1 - plano.preco / plano.precoOriginal) * 100)}%
                               </span>
                             </div>
@@ -323,7 +323,7 @@ export default function PlanosPage() {
                       )}
                       
                       {/* Descrição do Tipo de Cobrança */}
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {plano.tipo === "mensal" ? "Cobrança mensal" :
                          plano.tipo === "anual" ? "Cobrança anual" :
                          plano.tipo === "vitalicio" ? "Pagamento único" : "Personalizado"}
