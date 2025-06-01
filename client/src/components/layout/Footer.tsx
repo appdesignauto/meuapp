@@ -59,9 +59,7 @@ const Footer = () => {
         {/* Bottom section */}
         <div className="border-t border-gray-200 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-5xl mx-auto">
-            <div className="text-gray-500 text-xs">
-              © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00 / DESIGNAUTO.COM.BR LTDA - CNPJ 34.612.751/0001-80
-            </div>
+            <div className="text-gray-500 text-xs text-center">© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0</div>
             
             {/* Social media icons */}
             <div className="flex items-center gap-4">
