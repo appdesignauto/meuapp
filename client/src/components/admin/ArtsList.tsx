@@ -320,12 +320,7 @@ const ArtsList = () => {
             
             // Passamos a arte original para manter o foco no formato que foi clicado
             // mas o dialog irá mostrar todas as artes do grupo
-            setEditingArt({
-              ...art,
-              groupArts: groupData.arts,
-              // Definimos o formato selecionado inicialmente baseado na arte que foi clicada
-              initialFormat: art.format
-            });
+            setEditingArt(art as any);
             setIsFormOpen(true);
             return;
           }
