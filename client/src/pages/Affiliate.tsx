@@ -68,8 +68,30 @@ const Affiliate = () => {
     setIsSubmitting(true);
     
     try {
-      // Simular envio do formulário
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('/api/affiliate-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          company: data.company || undefined,
+          website: data.website || undefined,
+          socialMedia: data.channels,
+          audience: data.audience,
+          niche: data.niche,
+          experience: data.experience,
+          promotionStrategy: data.strategy,
+          motivation: data.motivation,
+          termsAccepted: data.terms
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao enviar solicitação');
+      }
       
       setIsSubmitted(true);
       toast({

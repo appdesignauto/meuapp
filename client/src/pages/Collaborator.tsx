@@ -66,8 +66,29 @@ const Collaborator = () => {
     setIsSubmitting(true);
     
     try {
-      // Simular envio do formulário
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('/api/collaboration-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          portfolio: data.portfolio || undefined,
+          socialMedia: data.specialties,
+          experience: data.experience,
+          designTools: data.tools,
+          categories: data.specialties,
+          motivation: data.motivation,
+          availableTime: data.availability,
+          termsAccepted: data.terms
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao enviar solicitação');
+      }
       
       setIsSubmitted(true);
       toast({
