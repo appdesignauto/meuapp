@@ -226,7 +226,7 @@ export default function ArtsPage() {
     setFilters({
       categoryId: null,
       formatId: null,
-      fileTypeId: null,
+      fileType: null,
       isPremium: null
     });
     setSearch('');
@@ -238,7 +238,7 @@ export default function ArtsPage() {
   };
 
   const isFiltersLoading = categoriesLoading || formatsLoading || fileTypesLoading;
-  const isAnyFilterActive = search || filters.categoryId || filters.formatId || filters.fileTypeId || filters.isPremium !== null;
+  const isAnyFilterActive = search || filters.categoryId || filters.formatId || filters.fileType || filters.isPremium !== null;
 
   return (
     <>
@@ -327,7 +327,7 @@ export default function ArtsPage() {
 
             {/* Filtro por Tipo de Arquivo */}
             <Select
-              value={filters.fileTypeId?.toString() || "_all"}
+              value={filters.fileType || "_all"}
               onValueChange={handleFileTypeChange}
               disabled={isFiltersLoading}
             >
@@ -337,7 +337,7 @@ export default function ArtsPage() {
               <SelectContent>
                 <SelectItem value="_all">Todos tipos</SelectItem>
                 {fileTypes?.map((fileType: any) => (
-                  <SelectItem key={fileType.id} value={fileType.id.toString()}>
+                  <SelectItem key={fileType.id} value={fileType.slug}>
                     {fileType.name}
                   </SelectItem>
                 ))}
@@ -401,7 +401,7 @@ export default function ArtsPage() {
 
               {/* Filtro por Tipo de Arquivo */}
               <Select
-                value={filters.fileTypeId?.toString() || "_all"}
+                value={filters.fileType || "_all"}
                 onValueChange={handleFileTypeChange}
                 disabled={isFiltersLoading}
               >
@@ -411,7 +411,7 @@ export default function ArtsPage() {
                 <SelectContent>
                   <SelectItem value="_all">Todos tipos</SelectItem>
                   {fileTypes?.map((fileType: any) => (
-                    <SelectItem key={fileType.id} value={fileType.id.toString()}>
+                    <SelectItem key={fileType.id} value={fileType.slug}>
                       {fileType.name}
                     </SelectItem>
                   ))}
