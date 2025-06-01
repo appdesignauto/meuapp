@@ -1323,12 +1323,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
       
+      console.log("Buscando artes populares - excluindo tipo 'imagens-png'");
+      
       const result = await db.execute(sql`
         SELECT 
           a.id,
           a.title,
           a."imageUrl",
           a."isPremium",
+          a."fileType",
           c.name as "categoryName",
           COUNT(d.id) as "downloadCount",
           a.viewcount
@@ -1337,10 +1340,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
         AND a."fileType" != 'imagens-png'
-        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a.viewcount
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", a."fileType", c.name, a.viewcount
         ORDER BY COUNT(d.id) DESC, a.viewcount DESC
         LIMIT 6
       `);
+
+      console.log("Artes retornadas na vitrine:", result.rows.map(art => ({ id: art.id, fileType: art.fileType, title: art.title })));
 
       const arts = result.rows.map(art => ({
         id: art.id,
