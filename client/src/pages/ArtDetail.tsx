@@ -1282,17 +1282,8 @@ export default function ArtDetail() {
             variant="ghost" 
             className="text-blue-600 flex items-center group"
             onClick={() => {
-              // Redirecionar para a galeria com o termo de pesquisa preenchido
-              // Usamos o slug da categoria ou o nome da categoria, ou o título da arte para extrair palavras-chave
-              const searchTerm = art?.category?.name || 
-                                (art?.title && art.title.split(' ').filter((word: string) => word.length > 3)[0]) || 
-                                '';
-              
-              // Codificar o termo de pesquisa para URL
-              const encodedSearchTerm = encodeURIComponent(searchTerm);
-              
-              // Redirecionar para a página de artes com o termo de pesquisa como parâmetro
-              setLocation(`/arts?search=${encodedSearchTerm}`);
+              // Redirecionar para a página principal de artes mostrando todos os designs
+              setLocation('/artes');
             }}
           >
             Explorar mais artes
