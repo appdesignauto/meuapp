@@ -1979,6 +1979,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.fileTypeId = parseInt(req.query.fileTypeId as string);
       }
       
+      if (req.query.fileType) {
+        filters.fileType = req.query.fileType as string;
+      }
+      
       if (req.query.search) {
         filters.search = req.query.search as string;
       }

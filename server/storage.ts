@@ -252,6 +252,7 @@ interface ArtFilters {
   categoryId?: number | null;
   formatId?: number | null;
   fileTypeId?: number | null;
+  fileType?: string;
   search?: string;
   isPremium?: boolean;
   isVisible?: boolean;
@@ -1998,6 +1999,15 @@ export class DatabaseStorage implements IStorage {
             hasWhere = true;
           }
         }
+        
+        if (filters.fileType) {
+          if (hasWhere) {
+            query = sql`${query} AND "fileType" = ${filters.fileType}`;
+          } else {
+            query = sql`${query} WHERE "fileType" = ${filters.fileType}`;
+            hasWhere = true;
+          }
+        }
       }
       
       // Adicionar ordenação baseada no parâmetro sortBy e limite
@@ -2053,6 +2063,15 @@ export class DatabaseStorage implements IStorage {
             countQuery = sql`${countQuery} AND "isVisible" = ${sql.raw(condition)}`;
           } else {
             countQuery = sql`${countQuery} WHERE "isVisible" = ${sql.raw(condition)}`;
+            hasWhere = true;
+          }
+        }
+        
+        if (filters.fileType) {
+          if (hasWhere) {
+            countQuery = sql`${countQuery} AND "fileType" = ${filters.fileType}`;
+          } else {
+            countQuery = sql`${countQuery} WHERE "fileType" = ${filters.fileType}`;
             hasWhere = true;
           }
         }
