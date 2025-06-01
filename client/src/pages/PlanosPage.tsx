@@ -130,7 +130,7 @@ export default function PlanosPage() {
         { nome: "Todas atualizações futuras", incluido: false }
       ],
       destaque: true,
-      badgeText: "Mais popular",
+      badgeText: null,
       cor: "bg-gradient-to-br from-amber-500 to-orange-600"
     },
     {
@@ -158,7 +158,7 @@ export default function PlanosPage() {
         { nome: "Suporte via e-mail", incluido: true },
         { nome: "Todas atualizações futuras", incluido: true, destaque: true }
       ],
-      badgeText: "Melhor custo-benefício",
+      badgeText: null,
       cor: "bg-gradient-to-br from-emerald-500 to-green-600"
     }
   ];
