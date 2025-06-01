@@ -225,30 +225,31 @@ export default function PlanosPage() {
       {/* Planos - Design Moderno e Compacto */}
       <section className="w-full py-8 md:py-12">
         <div className="container px-4 md:px-6 max-w-7xl mx-auto">
-          {/* Seletor de Planos Melhorado */}
+          {/* Seletor de Planos Simplificado e Funcional */}
           <div className="flex justify-center mb-8">
-            <div className="bg-white rounded-2xl p-1 shadow-lg border max-w-md w-full mx-4">
-              <Tabs 
-                defaultValue="todos" 
-                value={tabAtiva} 
-                onValueChange={(val) => setTabAtiva(val as "todos" | "populares")}
-                className="w-full"
-              >
-                <TabsList className="grid grid-cols-2 bg-gray-100 gap-1 h-auto p-1">
-                  <TabsTrigger 
-                    value="todos" 
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-700 data-[state=inactive]:bg-transparent px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
-                  >
-                    Todos os Planos
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="populares"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-700 data-[state=inactive]:bg-transparent px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
-                  >
-                    Mais Populares
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+            <div className="bg-gray-100 rounded-2xl p-1 shadow-lg max-w-md w-full mx-4">
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  onClick={() => setTabAtiva("todos")}
+                  className={`px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap ${
+                    tabAtiva === "todos" 
+                      ? "bg-blue-600 text-white shadow-sm" 
+                      : "text-gray-700 hover:text-gray-900 hover:bg-white/50"
+                  }`}
+                >
+                  Todos os Planos
+                </button>
+                <button
+                  onClick={() => setTabAtiva("populares")}
+                  className={`px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap ${
+                    tabAtiva === "populares" 
+                      ? "bg-blue-600 text-white shadow-sm" 
+                      : "text-gray-700 hover:text-gray-900 hover:bg-white/50"
+                  }`}
+                >
+                  Mais Populares
+                </button>
+              </div>
             </div>
           </div>
 
