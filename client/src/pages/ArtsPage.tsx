@@ -51,7 +51,7 @@ export default function ArtsPage() {
     fileType: null as string | null,
     isPremium: null as boolean | null,
   });
-  const [sortBy, setSortBy] = useState<'destaques' | 'emalta' | 'recentes' | 'antigos'>('destaques');
+  const [sortBy, setSortBy] = useState<'destaques' | 'emalta' | 'recentes' | 'antigos'>('recentes');
   const limit = 24; // Mais itens por página para galeria estilo Pinterest
 
   // Buscar categorias
@@ -278,7 +278,7 @@ export default function ArtsPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       type="text"
-                      placeholder="Pesquisar designs..."
+                      placeholder="Pesquisar artes, imagens ou arquivos..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="w-full pl-10 pr-10 h-10 text-sm border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all duration-200"
@@ -305,7 +305,7 @@ export default function ArtsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Pesquisar designs..."
+                  placeholder="Pesquisar artes, imagens ou arquivos..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-10 h-10 text-sm border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all duration-200"
