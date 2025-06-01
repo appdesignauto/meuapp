@@ -48,7 +48,7 @@ export default function ArtsPage() {
   const [filters, setFilters] = useState({
     categoryId: null as number | null,
     formatId: null as number | null,
-    fileTypeId: null as number | null,
+    fileType: null as string | null,
     isPremium: null as boolean | null,
   });
   const limit = 24; // Mais itens por página para galeria estilo Pinterest
@@ -76,7 +76,7 @@ export default function ArtsPage() {
     
     if (filters.categoryId) url.searchParams.append('categoryId', filters.categoryId.toString());
     if (filters.formatId) url.searchParams.append('formatId', filters.formatId.toString());
-    if (filters.fileTypeId) url.searchParams.append('fileTypeId', filters.fileTypeId.toString());
+    if (filters.fileType) url.searchParams.append('fileType', filters.fileType);
     if (filters.isPremium !== null) url.searchParams.append('isPremium', filters.isPremium.toString());
     if (search) url.searchParams.append('search', search);
     
@@ -207,9 +207,10 @@ export default function ArtsPage() {
   };
 
   const handleFileTypeChange = (value: string) => {
+    setPage(1);
     setFilters(prev => ({
       ...prev,
-      fileTypeId: value && value !== "_all" ? parseInt(value) : null
+      fileType: value && value !== "_all" ? value : null
     }));
   };
 
