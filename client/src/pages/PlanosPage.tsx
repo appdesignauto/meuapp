@@ -177,6 +177,27 @@ export default function PlanosPage() {
     return planos;
   }, [planos, tabAtiva]);
 
+  // Função para navegar para cadastro (plano gratuito)
+  const handleStartFree = () => {
+    if (!user) {
+      navigate('/auth?redirect=planos');
+      return;
+    }
+    // Se já está logado, redireciona para a dashboard
+    navigate('/painel');
+  };
+
+  // Função para navegar para planos premium
+  const handleViewPremiumPlans = () => {
+    // Se já estamos na página de planos, apenas muda para aba populares
+    setTabAtiva("populares");
+    // Scroll suave para a seção de planos
+    const planosSection = document.querySelector('[data-section="planos"]');
+    if (planosSection) {
+      planosSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleSubscribe = (plano: Plano) => {
     if (!user) {
       navigate('/auth?redirect=planos');
@@ -233,7 +254,7 @@ export default function PlanosPage() {
       </section>
 
       {/* Planos - Design Moderno e Compacto */}
-      <section className="w-full py-8 md:py-12">
+      <section className="w-full py-8 md:py-12" data-section="planos">
         <div className="container px-4 md:px-6 max-w-7xl mx-auto">
           {/* Seletor de Planos Simplificado e Funcional */}
           <div className="flex justify-center mb-8">
@@ -491,19 +512,18 @@ export default function PlanosPage() {
               <Button 
                 size="lg" 
                 className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
-                onClick={() => handleSubscribe(planos.find(p => p.id === "free")!)}
+                onClick={handleStartFree}
               >
                 Começar Grátis Agora
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold"
+                className="border-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold text-[#3e57ea]"
                 style={{
-                  color: "#ffffff",
                   borderColor: "#ffffff"
                 }}
-                onClick={() => handleSubscribe(planos.find(p => p.destaque)!)}
+                onClick={handleViewPremiumPlans}
               >
                 Ver Planos Premium
               </Button>
