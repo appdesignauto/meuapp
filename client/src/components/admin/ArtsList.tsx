@@ -420,7 +420,7 @@ const ArtsList = () => {
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
                   {fileTypes?.map((fileType) => (
-                    <SelectItem key={fileType.id} value={fileType.name}>
+                    <SelectItem key={fileType.id} value={fileType.slug}>
                       {fileType.name}
                     </SelectItem>
                   ))}
