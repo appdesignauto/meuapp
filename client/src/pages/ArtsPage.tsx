@@ -361,10 +361,10 @@ export default function ArtsPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[90vh] rounded-t-xl">
-                <SheetHeader className="mb-6">
-                  <SheetTitle className="text-xl">Encontre o design perfeito</SheetTitle>
-                  <SheetDescription className="text-base text-gray-600">
-                    Use os filtros abaixo para encontrar exatamente o que você precisa
+                <SheetHeader className="mb-4">
+                  <SheetTitle>Filtrar Designs</SheetTitle>
+                  <SheetDescription>
+                    Selecione os filtros para encontrar designs específicos
                   </SheetDescription>
                 </SheetHeader>
                 
@@ -372,16 +372,15 @@ export default function ArtsPage() {
                   <Accordion type="single" collapsible className="w-full">
                     {/* Filtro de Categorias */}
                     <AccordionItem value="category">
-                      <AccordionTrigger className="text-base font-medium">Que tipo de design você precisa?</AccordionTrigger>
+                      <AccordionTrigger className="text-base">Categorias</AccordionTrigger>
                       <AccordionContent>
-                        <p className="text-sm text-gray-500 mb-3">Escolha a categoria do seu projeto</p>
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             variant={filters.categoryId === null ? "default" : "outline"}
                             className="justify-start"
                             onClick={() => handleCategoryChange("_all")}
                           >
-                            Ver todos
+                            Todas
                           </Button>
                           
                           {categories?.map((category: any) => (
@@ -400,16 +399,15 @@ export default function ArtsPage() {
                     
                     {/* Filtro de Formatos */}
                     <AccordionItem value="format">
-                      <AccordionTrigger className="text-base font-medium">Qual tamanho você precisa?</AccordionTrigger>
+                      <AccordionTrigger className="text-base">Formatos</AccordionTrigger>
                       <AccordionContent>
-                        <p className="text-sm text-gray-500 mb-3">Selecione o formato ideal para sua rede social</p>
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             variant={filters.formatId === null ? "default" : "outline"}
                             className="justify-start"
                             onClick={() => handleFormatChange("_all")}
                           >
-                            Todos os tamanhos
+                            Todos
                           </Button>
                           
                           {formats?.map((format: any) => (
@@ -428,16 +426,15 @@ export default function ArtsPage() {
                     
                     {/* Filtro de Tipos de Arquivo */}
                     <AccordionItem value="fileType">
-                      <AccordionTrigger className="text-base font-medium">Onde vai usar o design?</AccordionTrigger>
+                      <AccordionTrigger className="text-base">Tipos de Arquivo</AccordionTrigger>
                       <AccordionContent>
-                        <p className="text-sm text-gray-500 mb-3">Escolha a plataforma onde vai editar</p>
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             variant={filters.fileTypeId === null ? "default" : "outline"}
                             className="justify-start"
                             onClick={() => handleFileTypeChange("_all")}
                           >
-                            Todas as opções
+                            Todos
                           </Button>
                           
                           {fileTypes?.map((fileType: any) => (
