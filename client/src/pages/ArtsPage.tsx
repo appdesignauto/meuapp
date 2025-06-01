@@ -358,16 +358,16 @@ export default function ArtsPage() {
 
           {/* Filtros para Mobile - Externos */}
           <div className="md:hidden space-y-3">
-            {/* Primeira linha de filtros */}
-            <div className="flex flex-wrap gap-2">
+            {/* Filtros em uma linha */}
+            <div className="flex gap-1 overflow-x-auto">
               {/* Filtro por Categoria */}
               <Select
                 value={filters.categoryId?.toString() || "_all"}
                 onValueChange={handleCategoryChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[110px] border-blue-200 bg-white text-sm">
-                  <span className="text-gray-700">Categorias</span>
+                <SelectTrigger className="h-9 px-2 min-w-[85px] border-blue-200 bg-white text-xs flex-shrink-0">
+                  <span className="text-gray-700 truncate">Categorias</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todas categorias</SelectItem>
@@ -385,8 +385,8 @@ export default function ArtsPage() {
                 onValueChange={handleFormatChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[100px] border-blue-200 bg-white text-sm">
-                  <span className="text-gray-700">Formatos</span>
+                <SelectTrigger className="h-9 px-2 min-w-[75px] border-blue-200 bg-white text-xs flex-shrink-0">
+                  <span className="text-gray-700 truncate">Formatos</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todos formatos</SelectItem>
@@ -397,18 +397,15 @@ export default function ArtsPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            {/* Segunda linha de filtros */}
-            <div className="flex flex-wrap gap-2">
               {/* Filtro por Tipo de Arquivo */}
               <Select
                 value={filters.fileTypeId?.toString() || "_all"}
                 onValueChange={handleFileTypeChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[85px] border-blue-200 bg-white text-sm">
-                  <span className="text-gray-700">Tipos</span>
+                <SelectTrigger className="h-9 px-2 min-w-[60px] border-blue-200 bg-white text-xs flex-shrink-0">
+                  <span className="text-gray-700 truncate">Tipos</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todos tipos</SelectItem>
@@ -426,8 +423,8 @@ export default function ArtsPage() {
                 onValueChange={handleLicenseChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-3 w-[90px] border-blue-200 bg-white text-sm">
-                  <span className="text-gray-700">Licença</span>
+                <SelectTrigger className="h-9 px-2 min-w-[65px] border-blue-200 bg-white text-xs flex-shrink-0">
+                  <span className="text-gray-700 truncate">Licença</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">Todas</SelectItem>
