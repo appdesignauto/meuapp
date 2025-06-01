@@ -234,16 +234,16 @@ export default function PlanosPage() {
                 onValueChange={(val) => setTabAtiva(val as "todos" | "populares")}
                 className="w-full"
               >
-                <TabsList className="grid grid-cols-2 bg-transparent gap-1 h-auto p-0">
+                <TabsList className="grid grid-cols-2 bg-gray-100 gap-1 h-auto p-1">
                   <TabsTrigger 
                     value="todos" 
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-700 data-[state=inactive]:bg-transparent px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
                   >
                     Todos os Planos
                   </TabsTrigger>
                   <TabsTrigger 
                     value="populares"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-700 data-[state=inactive]:bg-transparent px-4 sm:px-6 lg:px-8 py-3 rounded-xl font-medium transition-all text-sm sm:text-base whitespace-nowrap"
                   >
                     Mais Populares
                   </TabsTrigger>
