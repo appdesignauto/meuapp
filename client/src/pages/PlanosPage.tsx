@@ -519,7 +519,7 @@ export default function PlanosPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold text-[#3e57ea]"
+                className="border-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold text-[#4256eb]"
                 style={{
                   borderColor: "#ffffff"
                 }}
