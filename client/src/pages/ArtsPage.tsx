@@ -366,7 +366,7 @@ export default function ArtsPage() {
                 onValueChange={handleCategoryChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 w-[84px] border-blue-200 bg-white text-xs">
+                <SelectTrigger className="h-9 px-2 w-[100px] border-blue-200 bg-white text-xs">
                   <span className="text-gray-700">Categorias</span>
                 </SelectTrigger>
                 <SelectContent>
@@ -385,7 +385,7 @@ export default function ArtsPage() {
                 onValueChange={handleFormatChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 w-[73px] border-blue-200 bg-white text-xs">
+                <SelectTrigger className="h-9 px-2 w-[87px] border-blue-200 bg-white text-xs">
                   <span className="text-gray-700">Formatos</span>
                 </SelectTrigger>
                 <SelectContent>
@@ -404,7 +404,7 @@ export default function ArtsPage() {
                 onValueChange={handleFileTypeChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 w-[55px] border-blue-200 bg-white text-xs">
+                <SelectTrigger className="h-9 px-2 w-[73px] border-blue-200 bg-white text-xs">
                   <span className="text-gray-700">Tipos</span>
                 </SelectTrigger>
                 <SelectContent>
@@ -423,7 +423,7 @@ export default function ArtsPage() {
                 onValueChange={handleLicenseChange}
                 disabled={isFiltersLoading}
               >
-                <SelectTrigger className="h-9 px-2 w-[63px] border-blue-200 bg-white text-xs">
+                <SelectTrigger className="h-9 px-2 w-[80px] border-blue-200 bg-white text-xs">
                   <span className="text-gray-700">Licença</span>
                 </SelectTrigger>
                 <SelectContent>
