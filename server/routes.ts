@@ -7896,5 +7896,81 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // Rota para atualizar status de solicitação de colaboração
+  app.patch("/api/admin/collaboration-requests/:id", flexibleAuth, async (req, res) => {
+    try {
+      // Verificar se o usuário é admin
+      if (!req.user || req.user.nivelacesso !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const id = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+
+      // Validar status
+      const validStatuses = ['pending', 'contacted', 'approved', 'rejected'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Status inválido" });
+      }
+
+      const [updatedRequest] = await db.update(collaborationRequests)
+        .set({ 
+          status, 
+          adminNotes,
+          updatedAt: new Date()
+        })
+        .where(eq(collaborationRequests.id, id))
+        .returning();
+
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Solicitação não encontrada" });
+      }
+
+      console.log(`Solicitação de colaboração ${id} atualizada para status: ${status}`);
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Erro ao atualizar solicitação de colaboração:", error);
+      res.status(500).json({ message: "Erro ao atualizar solicitação" });
+    }
+  });
+
+  // Rota para atualizar status de solicitação de afiliação
+  app.patch("/api/admin/affiliate-requests/:id", flexibleAuth, async (req, res) => {
+    try {
+      // Verificar se o usuário é admin
+      if (!req.user || req.user.nivelacesso !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const id = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+
+      // Validar status
+      const validStatuses = ['pending', 'contacted', 'approved', 'rejected'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Status inválido" });
+      }
+
+      const [updatedRequest] = await db.update(affiliateRequests)
+        .set({ 
+          status, 
+          adminNotes,
+          updatedAt: new Date()
+        })
+        .where(eq(affiliateRequests.id, id))
+        .returning();
+
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Solicitação não encontrada" });
+      }
+
+      console.log(`Solicitação de afiliação ${id} atualizada para status: ${status}`);
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Erro ao atualizar solicitação de afiliação:", error);
+      res.status(500).json({ message: "Erro ao atualizar solicitação" });
+    }
+  });
+
   return httpServer;
 }
