@@ -480,6 +480,51 @@ export default function ArtsPage() {
               </Select>
             </div>
 
+            {/* Segunda linha - Filtro de Ordenação */}
+            <div className="flex justify-center">
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as 'destaques' | 'emalta' | 'recentes' | 'antigos')}
+                disabled={isFiltersLoading}
+              >
+                <SelectTrigger className="h-9 px-3 w-[140px] border-blue-200 bg-white text-xs">
+                  <div className="flex items-center gap-2">
+                    {sortBy === 'destaques' && <Star className="h-3 w-3" />}
+                    {sortBy === 'emalta' && <TrendingUp className="h-3 w-3" />}
+                    {sortBy === 'recentes' && <Clock className="h-3 w-3" />}
+                    {sortBy === 'antigos' && <Calendar className="h-3 w-3" />}
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="destaques">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-3 w-3" />
+                      <span>Destaques</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="emalta">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>Em alta</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="recentes">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3" />
+                      <span>Recentes</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="antigos">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3" />
+                      <span>Antigos</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Linha inferior com botão limpar e contador */}
             <div className="flex items-center justify-between">
               {isAnyFilterActive && (

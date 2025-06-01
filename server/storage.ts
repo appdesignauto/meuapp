@@ -256,6 +256,7 @@ interface ArtFilters {
   search?: string;
   isPremium?: boolean;
   isVisible?: boolean;
+  sortBy?: string;
 }
 
 export class MemStorage implements IStorage {
@@ -2010,14 +2011,22 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
-      // Adicionar ordenação baseada no parâmetro sortBy e limite
-      if (filters?.sortBy === 'recent') {
-        query = sql`${query} ORDER BY "createdAt" DESC`;
-      } else if (filters?.sortBy === 'popular') {
+      // Adicionar ordenação baseada no parâmetro sortBy
+      if (filters?.sortBy === 'destaques') {
+        // Destaques: artes premium primeiro, depois por views
+        query = sql`${query} ORDER BY "isPremium" DESC, "viewcount" DESC, "createdAt" DESC`;
+      } else if (filters?.sortBy === 'emalta') {
+        // Em alta: ordenar por views (popularidade)
         query = sql`${query} ORDER BY "viewcount" DESC, "createdAt" DESC`;
-      } else {
-        // Ordenação padrão por data de criação
+      } else if (filters?.sortBy === 'recentes') {
+        // Recentes: mais novos primeiro
         query = sql`${query} ORDER BY "createdAt" DESC`;
+      } else if (filters?.sortBy === 'antigos') {
+        // Antigos: mais antigos primeiro
+        query = sql`${query} ORDER BY "createdAt" ASC`;
+      } else {
+        // Ordenação padrão por destaques
+        query = sql`${query} ORDER BY "isPremium" DESC, "viewcount" DESC, "createdAt" DESC`;
       }
       
       // Adicionar limite e offset (paginação)
