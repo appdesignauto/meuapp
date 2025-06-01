@@ -10,12 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand section */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DA</span>
-              </div>
-              <span className="font-bold text-lg text-gray-900">DesignAuto</span>
-            </div>
+            <h3 className="font-semibold text-gray-900 mb-4 text-sm">DESIGN AUTO</h3>
             <p className="text-gray-600 text-sm leading-relaxed mb-4">
               Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design, oferecendo 
               recursos gráficos incríveis para inspirar criatividade e 
@@ -23,34 +18,33 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Empresa */}
+          {/* Navegação Principal */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4 text-sm">EMPRESA</h3>
+            <h3 className="font-semibold text-gray-900 mb-4 text-sm">NAVEGAÇÃO</h3>
             <ul className="space-y-3">
               <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
-              <li><Link href="/licencas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Tipos de licença</Link></li>
-              <li><Link href="/contato" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Entre em contato</Link></li>
-              <li><Link href="/oportunidades" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Oportunidades</Link></li>
+              <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Planos</Link></li>
+              <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Dúvidas</Link></li>
             </ul>
           </div>
 
-          {/* Termos Legais */}
+          {/* Informativo */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4 text-sm">TERMOS LEGAIS</h3>
+            <h3 className="font-semibold text-gray-900 mb-4 text-sm">INFORMATIVO</h3>
             <ul className="space-y-3">
-              <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de serviço</Link></li>
-              <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Política de privacidade</Link></li>
+              <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
+              <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Política de Privacidade</Link></li>
               <li><ReportForm /></li>
             </ul>
           </div>
 
-          {/* Descubra */}
+          {/* Parceria */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4 text-sm">DESCUBRA</h3>
+            <h3 className="font-semibold text-gray-900 mb-4 text-sm">PARCERIA</h3>
             <ul className="space-y-3">
-              <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Preços</Link></li>
-              <li><Link href="/reembolso" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar reembolso</Link></li>
               <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Torne-se um colaborador</Link></li>
+              <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar afiliação</Link></li>
+              <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Acionar o Suporte</Link></li>
             </ul>
           </div>
         </div>

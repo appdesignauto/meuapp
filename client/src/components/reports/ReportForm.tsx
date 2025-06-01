@@ -216,12 +216,9 @@ const ReportForm = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="link" 
-          className="text-neutral-500 hover:text-primary text-sm font-normal"
-        >
-          Reportar problema
-        </Button>
+        <button className="text-gray-600 hover:text-blue-600 text-sm transition-colors text-left">
+          Denunciar arquivo
+        </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
