@@ -157,7 +157,7 @@ const AffiliateRequestsManagement = () => {
     setIsDetailsOpen(true);
   };
 
-  // Filtrar solicitações com base na busca
+  // Filtrar solicitações com base na busca e aba ativa
   const filteredRequests = requests.filter((request: AffiliateRequest) => {
     const matchesSearch = !searchTerm || 
       request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -165,7 +165,9 @@ const AffiliateRequestsManagement = () => {
       request.niche.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (request.company && request.company.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    return matchesSearch;
+    const matchesTab = activeTab === 'todos' || request.status === activeTab;
+    
+    return matchesSearch && matchesTab;
   });
 
   // Paginação

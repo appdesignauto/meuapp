@@ -156,14 +156,16 @@ const CollaborationRequestsManagement = () => {
     setIsDetailsOpen(true);
   };
 
-  // Filtrar solicitações com base na busca
+  // Filtrar solicitações com base na busca e aba ativa
   const filteredRequests = requests.filter((request: CollaborationRequest) => {
     const matchesSearch = !searchTerm || 
       request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.designTools.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch;
+    const matchesTab = activeTab === 'todos' || request.status === activeTab;
+    
+    return matchesSearch && matchesTab;
   });
 
   // Paginação
