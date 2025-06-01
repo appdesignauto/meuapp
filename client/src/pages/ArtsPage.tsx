@@ -480,49 +480,50 @@ export default function ArtsPage() {
               </Select>
             </div>
 
-            {/* Segunda linha - Filtro de Ordenação */}
+            {/* Segunda linha - Filtro de Ordenação com botões no mobile */}
             <div className="flex justify-center">
-              <Select
-                value={sortBy}
-                onValueChange={(value) => setSortBy(value as 'destaques' | 'emalta' | 'recentes' | 'antigos')}
-                disabled={isFiltersLoading}
-              >
-                <SelectTrigger className="h-9 px-3 w-[140px] border-blue-200 bg-white text-xs">
-                  <div className="flex items-center gap-2">
-                    {sortBy === 'destaques' && <Star className="h-3 w-3" />}
-                    {sortBy === 'emalta' && <TrendingUp className="h-3 w-3" />}
-                    {sortBy === 'recentes' && <Clock className="h-3 w-3" />}
-                    {sortBy === 'antigos' && <Calendar className="h-3 w-3" />}
-                    <SelectValue />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="destaques">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-3 w-3" />
-                      <span>Destaques</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="emalta">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>Em alta</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="recentes">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3 w-3" />
-                      <span>Recentes</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="antigos">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3" />
-                      <span>Antigos</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-1 bg-gray-50 rounded-lg p-1">
+                <Button
+                  variant={sortBy === 'destaques' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSortBy('destaques')}
+                  className="h-8 px-2 text-xs"
+                  disabled={isFiltersLoading}
+                >
+                  <Star className="h-3 w-3 mr-1" />
+                  Destaques
+                </Button>
+                <Button
+                  variant={sortBy === 'emalta' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSortBy('emalta')}
+                  className="h-8 px-2 text-xs"
+                  disabled={isFiltersLoading}
+                >
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Em Alta
+                </Button>
+                <Button
+                  variant={sortBy === 'recentes' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSortBy('recentes')}
+                  className="h-8 px-2 text-xs"
+                  disabled={isFiltersLoading}
+                >
+                  <Clock className="h-3 w-3 mr-1" />
+                  Recentes
+                </Button>
+                <Button
+                  variant={sortBy === 'antigos' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSortBy('antigos')}
+                  className="h-8 px-2 text-xs"
+                  disabled={isFiltersLoading}
+                >
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Antigos
+                </Button>
+              </div>
             </div>
 
             {/* Linha inferior com botão limpar e contador */}

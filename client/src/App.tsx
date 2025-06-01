@@ -159,6 +159,13 @@ function AppRoutes() {
       <Route path="/categorias" component={Categories} />
       <Route path="/categorias/:slug" component={CategoryPage} />
       <Route path="/artes" component={ArtsPage} />
+      {/* Rota de redirecionamento para manter compatibilidade com /arts */}
+      <Route path="/arts">
+        {() => {
+          window.location.href = "/artes";
+          return null;
+        }}
+      </Route>
       <Route path="/artes/:id" component={ArtDetail} />
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
