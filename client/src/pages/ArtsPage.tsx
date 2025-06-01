@@ -426,6 +426,7 @@ export default function ArtsPage() {
                   {totalCount} designs encontrados
                 </div>
               )}
+            </div>
           </div>
         </div>
       </div>
