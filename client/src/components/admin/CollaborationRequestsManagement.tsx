@@ -74,7 +74,7 @@ const CollaborationRequestsManagement = () => {
     }
   });
 
-  const requests = requestsData?.requests || [];
+  const requests = requestsData || [];
 
   // Mutation para atualizar status da solicitação
   const updateRequestMutation = useMutation({
