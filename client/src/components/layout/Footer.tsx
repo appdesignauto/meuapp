@@ -1,5 +1,5 @@
 import ReportForm from '../reports/ReportForm';
-import { Heart, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
+import { Heart, Instagram, Facebook, Youtube, Twitter, Mail } from 'lucide-react';
 import { Link } from 'wouter';
 
 const Footer = () => {
@@ -16,10 +16,18 @@ const Footer = () => {
               </div>
               <span className="font-bold text-base text-gray-900">DesignAuto</span>
             </div>
-            <p className="text-gray-600 text-xs leading-relaxed">
+            <p className="text-gray-600 text-xs leading-relaxed mb-3">
               Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design, oferecendo 
               recursos gráficos incríveis para inspirar criatividade.
             </p>
+            
+            {/* Email contact */}
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <Mail className="w-4 h-4" />
+              <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors">
+                suporte@designauto.com.br
+              </a>
+            </div>
           </div>
 
           {/* Sections 2, 3, 4 with custom spacing */}
