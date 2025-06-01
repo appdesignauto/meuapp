@@ -361,10 +361,10 @@ export default function ArtsPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[90vh] rounded-t-xl">
-                <SheetHeader className="mb-4">
-                  <SheetTitle>Filtrar Designs</SheetTitle>
-                  <SheetDescription>
-                    Selecione os filtros para encontrar designs específicos
+                <SheetHeader className="mb-6">
+                  <SheetTitle className="text-xl">Encontre o design perfeito</SheetTitle>
+                  <SheetDescription className="text-base text-gray-600">
+                    Use os filtros abaixo para encontrar exatamente o que você precisa
                   </SheetDescription>
                 </SheetHeader>
                 
@@ -372,15 +372,16 @@ export default function ArtsPage() {
                   <Accordion type="single" collapsible className="w-full">
                     {/* Filtro de Categorias */}
                     <AccordionItem value="category">
-                      <AccordionTrigger className="text-base">Categorias</AccordionTrigger>
+                      <AccordionTrigger className="text-base font-medium">Que tipo de design você precisa?</AccordionTrigger>
                       <AccordionContent>
+                        <p className="text-sm text-gray-500 mb-3">Escolha a categoria do seu projeto</p>
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             variant={filters.categoryId === null ? "default" : "outline"}
                             className="justify-start"
                             onClick={() => handleCategoryChange("_all")}
                           >
-                            Todas
+                            Ver todos
                           </Button>
                           
                           {categories?.map((category: any) => (
@@ -399,15 +400,16 @@ export default function ArtsPage() {
                     
                     {/* Filtro de Formatos */}
                     <AccordionItem value="format">
-                      <AccordionTrigger className="text-base">Formatos</AccordionTrigger>
+                      <AccordionTrigger className="text-base font-medium">Qual tamanho você precisa?</AccordionTrigger>
                       <AccordionContent>
+                        <p className="text-sm text-gray-500 mb-3">Selecione o formato ideal para sua rede social</p>
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             variant={filters.formatId === null ? "default" : "outline"}
                             className="justify-start"
                             onClick={() => handleFormatChange("_all")}
                           >
-                            Todos
+                            Todos os tamanhos
                           </Button>
                           
                           {formats?.map((format: any) => (
@@ -426,15 +428,16 @@ export default function ArtsPage() {
                     
                     {/* Filtro de Tipos de Arquivo */}
                     <AccordionItem value="fileType">
-                      <AccordionTrigger className="text-base">Tipos de Arquivo</AccordionTrigger>
+                      <AccordionTrigger className="text-base font-medium">Onde vai usar o design?</AccordionTrigger>
                       <AccordionContent>
+                        <p className="text-sm text-gray-500 mb-3">Escolha a plataforma onde vai editar</p>
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             variant={filters.fileTypeId === null ? "default" : "outline"}
                             className="justify-start"
                             onClick={() => handleFileTypeChange("_all")}
                           >
-                            Todos
+                            Todas as opções
                           </Button>
                           
                           {fileTypes?.map((fileType: any) => (
@@ -559,46 +562,53 @@ export default function ArtsPage() {
             
             {/* Botões de Paginação Modernos */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12 mb-8">
-                {/* Botão Página Anterior */}
-                <Button
-                  onClick={goToPreviousPage}
-                  disabled={page === 1 || isFetching}
-                  variant="outline"
-                  className={`
-                    flex items-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200
-                    ${page === 1 || isFetching 
-                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
-                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:shadow-md'
-                    }
-                  `}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span>Página anterior</span>
-                </Button>
-
-                {/* Indicador de página atual */}
-                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
-                  <span className="text-sm text-blue-600 font-medium">
-                    Página {page} de {totalPages}
-                  </span>
+              <div className="flex flex-col gap-4 mt-12 mb-8">
+                {/* Indicador de página atual - visível no mobile */}
+                <div className="flex justify-center">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+                    <span className="text-sm text-blue-600 font-medium">
+                      Página {page} de {totalPages}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Botão Próxima Página */}
-                <Button
-                  onClick={goToNextPage}
-                  disabled={page === totalPages || isFetching}
-                  className={`
-                    flex items-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200
-                    ${page === totalPages || isFetching
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
-                    }
-                  `}
-                >
-                  <span>Próxima página</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                {/* Botões de navegação - sempre na mesma linha */}
+                <div className="flex justify-center items-center gap-3">
+                  {/* Botão Página Anterior */}
+                  <Button
+                    onClick={goToPreviousPage}
+                    disabled={page === 1 || isFetching}
+                    variant="outline"
+                    className={`
+                      flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 text-sm
+                      ${page === 1 || isFetching 
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:shadow-md'
+                      }
+                    `}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden xs:inline">Página anterior</span>
+                    <span className="xs:hidden">Anterior</span>
+                  </Button>
+
+                  {/* Botão Próxima Página */}
+                  <Button
+                    onClick={goToNextPage}
+                    disabled={page === totalPages || isFetching}
+                    className={`
+                      flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 text-sm
+                      ${page === totalPages || isFetching
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
+                      }
+                    `}
+                  >
+                    <span className="hidden xs:inline">Próxima página</span>
+                    <span className="xs:hidden">Próxima</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
 
