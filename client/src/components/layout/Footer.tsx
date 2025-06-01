@@ -7,9 +7,9 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       <div className="w-full px-4 py-12">
         {/* Main footer content */}
-        <div className="flex flex-col md:flex-row mb-8 justify-center items-start">
+        <div className="flex flex-col md:flex-row mb-8 items-start" style={{ justifyContent: 'center', transform: 'translateX(-2rem)' }}>
           {/* Brand section with logo */}
-          <div className="md:w-64 mb-6 md:mb-0" style={{ marginLeft: '96px' }}>
+          <div className="md:w-64 mb-6 md:mb-0">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">DA</span>
