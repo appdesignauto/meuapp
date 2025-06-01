@@ -5,18 +5,18 @@ import { Link } from 'wouter';
 const Footer = () => {
   return (
     <footer className="bg-white border-t border-gray-200">
-      <div className="container mx-auto px-4 py-12">
+      <div className="w-full px-4 py-12">
         {/* Main footer content */}
-        <div className="flex flex-col md:flex-row mb-8 max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row mb-8 max-w-6xl mx-auto justify-center">
           {/* Brand section with logo */}
           <div className="md:w-64 mb-6 md:mb-0">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">DA</span>
               </div>
-              <span className="font-bold text-lg text-gray-900">DesignAuto</span>
+              <span className="font-bold text-base text-gray-900">DesignAuto</span>
             </div>
-            <p className="text-gray-600 text-sm leading-relaxed">
+            <p className="text-gray-600 text-xs leading-relaxed">
               Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design, oferecendo 
               recursos gráficos incríveis para inspirar criatividade.
             </p>
@@ -26,31 +26,31 @@ const Footer = () => {
           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-12 md:ml-16">
             {/* Design Auto section */}
             <div>
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">DESIGN AUTO</h3>
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
               <ul className="space-y-2">
-                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
-                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Planos</Link></li>
-                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Dúvidas</Link></li>
+                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
+                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Planos</Link></li>
+                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Dúvidas</Link></li>
               </ul>
             </div>
 
             {/* Informativo */}
-            <div className="pl-[0px] pr-[0px] ml-[-53px] mr-[-53px]">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">INFORMATIVO</h3>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
               <ul className="space-y-2">
-                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Política de Privacidade</Link></li>
+                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
                 <li><ReportForm /></li>
               </ul>
             </div>
 
             {/* Parceria */}
-            <div className="ml-[-58px] mr-[-58px]">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">PARCERIA</h3>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
               <ul className="space-y-2">
-                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Torne-se um colaborador</Link></li>
-                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar afiliação</Link></li>
-                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Acionar o Suporte</Link></li>
+                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Torne-se um colaborador</Link></li>
+                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Solicitar afiliação</Link></li>
+                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Acionar o Suporte</Link></li>
               </ul>
             </div>
           </div>
@@ -59,7 +59,7 @@ const Footer = () => {
         {/* Bottom section */}
         <div className="border-t border-gray-200 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-5xl mx-auto">
-            <div className="text-gray-500 text-sm">
+            <div className="text-gray-500 text-xs">
               © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00 / DESIGNAUTO.COM.BR LTDA - CNPJ 34.612.751/0001-80
             </div>
             
