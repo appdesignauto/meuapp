@@ -247,49 +247,76 @@ export default function ArtsPage() {
       {/* Cabeçalho com navegação */}
       <div className="bg-gradient-to-b from-blue-50 to-white py-6 border-b border-neutral-200">
         <div className="container mx-auto px-4">
-          {/* Cabeçalho limpo e moderno */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
-            <div className="flex-1">
-              <div className="flex items-center mb-3">
+          {/* Cabeçalho com design harmônico e UI/UX otimizado */}
+          <div className="mb-8">
+            {/* Seção principal do título */}
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center space-x-4">
                 <Button 
                   variant="ghost" 
-                  className="p-1 mr-3 hover:bg-blue-100 rounded-full transition-colors" 
+                  size="sm"
+                  className="h-10 w-10 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all duration-200" 
                   onClick={() => setLocation('/')}
                 >
-                  <ArrowLeft className="h-5 w-5 text-blue-600" />
+                  <ArrowLeft className="h-4 w-4 text-blue-600" />
                 </Button>
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-10 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
-                  <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-800 to-indigo-700 bg-clip-text text-transparent">
-                      Todos os Designs
-                    </h1>
-                    <p className="text-gray-600 text-base mt-1">
-                      Explore nossa coleção completa de templates profissionais
-                    </p>
-                  </div>
+                
+                <div className="space-y-1">
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
+                    Todos os Designs
+                  </h1>
+                  <p className="text-sm text-gray-500 max-w-md leading-relaxed">
+                    Explore nossa coleção completa de templates profissionais para impulsionar seu negócio
+                  </p>
                 </div>
+              </div>
+
+              {/* Barra de pesquisa otimizada */}
+              <div className="hidden sm:block w-80">
+                <form onSubmit={handleSearch} className="relative">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Pesquisar designs..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full pl-10 pr-10 h-10 text-sm border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all duration-200"
+                    />
+                    {search && (
+                      <Button 
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSearch('')}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                </form>
               </div>
             </div>
 
-            {/* Barra de pesquisa limpa */}
-            <div className="mt-4 sm:mt-0 sm:ml-6 w-full sm:w-80">
+            {/* Barra de pesquisa mobile */}
+            <div className="sm:hidden mb-4">
               <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
                   placeholder="Pesquisar designs..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-12 pr-10 h-11 rounded-xl border-gray-200 bg-white shadow-sm focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full pl-10 pr-10 h-10 text-sm border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all duration-200"
                 />
                 {search && (
                   <Button 
                     type="button"
-                    size="icon"
+                    size="sm"
                     variant="ghost"
                     onClick={() => setSearch('')}
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-lg hover:bg-gray-100"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
                   >
                     ×
                   </Button>
