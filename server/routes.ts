@@ -1336,6 +1336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN downloads d ON a.id = d."artId"
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
+        AND a."fileType" != 'imagens-png'
         GROUP BY a.id, a.title, a."imageUrl", a."isPremium", c.name, a.viewcount
         ORDER BY COUNT(d.id) DESC, a.viewcount DESC
         LIMIT 6
