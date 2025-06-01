@@ -352,9 +352,9 @@ export default function PlanosPage() {
                       <div className="pt-3 border-t border-gray-100">
                         <ul className="space-y-2">
                           {["Downloads ilimitados", "Modelos premium"].map((recurso, idx) => (
-                            <li key={idx} className="flex items-center opacity-50">
-                              <div className="w-5 h-5 rounded-full border-2 border-gray-300 mr-3 flex-shrink-0"></div>
-                              <span className="text-sm text-gray-400">{recurso}</span>
+                            <li key={idx} className="flex items-center opacity-40">
+                              <div className="w-5 h-5 rounded-full border-2 border-gray-400 mr-3 flex-shrink-0"></div>
+                              <span className="text-sm text-gray-500">{recurso}</span>
                             </li>
                           ))}
                         </ul>
