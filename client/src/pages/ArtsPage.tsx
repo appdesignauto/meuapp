@@ -247,68 +247,54 @@ export default function ArtsPage() {
       {/* Cabeçalho com navegação */}
       <div className="bg-gradient-to-b from-blue-50 to-white py-6 border-b border-neutral-200">
         <div className="container mx-auto px-4">
-          {/* Cabeçalho moderno e robusto */}
-          <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 border border-blue-100 rounded-2xl p-6 sm:p-8 mb-8 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center mb-3">
-                  <Button 
-                    variant="ghost" 
-                    className="p-1 mr-3 hover:bg-blue-100 rounded-full transition-colors" 
-                    onClick={() => setLocation('/')}
-                  >
-                    <ArrowLeft className="h-5 w-5 text-blue-600" />
-                  </Button>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+          {/* Cabeçalho limpo e moderno */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
+            <div className="flex-1">
+              <div className="flex items-center mb-3">
+                <Button 
+                  variant="ghost" 
+                  className="p-1 mr-3 hover:bg-blue-100 rounded-full transition-colors" 
+                  onClick={() => setLocation('/')}
+                >
+                  <ArrowLeft className="h-5 w-5 text-blue-600" />
+                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-10 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+                  <div>
                     <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-800 to-indigo-700 bg-clip-text text-transparent">
                       Todos os Designs
                     </h1>
-                  </div>
-                </div>
-                <p className="text-gray-600 text-base sm:text-lg max-w-2xl leading-relaxed ml-11">
-                  Explore nossa coleção completa de templates profissionais criados especialmente para impulsionar seu negócio e destacar sua marca
-                </p>
-                
-                {/* Estatísticas */}
-                <div className="flex items-center gap-6 mt-4 ml-11">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Atualizado diariamente</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Templates profissionais</span>
+                    <p className="text-gray-600 text-base mt-1">
+                      Explore nossa coleção completa de templates profissionais
+                    </p>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Barra de pesquisa melhorada */}
-              <div className="mt-6 sm:mt-0 sm:ml-6 w-full sm:w-80">
-                <form onSubmit={handleSearch} className="relative">
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Pesquisar designs..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-12 pr-4 h-12 rounded-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
-                    />
-                    {search && (
-                      <Button 
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setSearch('')}
-                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-lg hover:bg-gray-100"
-                      >
-                        ×
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </div>
+            {/* Barra de pesquisa limpa */}
+            <div className="mt-4 sm:mt-0 sm:ml-6 w-full sm:w-80">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Pesquisar designs..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-12 pr-10 h-11 rounded-xl border-gray-200 bg-white shadow-sm focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
+                />
+                {search && (
+                  <Button 
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setSearch('')}
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-lg hover:bg-gray-100"
+                  >
+                    ×
+                  </Button>
+                )}
+              </form>
             </div>
           </div>
 
