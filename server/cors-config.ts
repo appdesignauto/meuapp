@@ -105,14 +105,21 @@ export function configureCors(app: Express): void {
   // Configurar confiança no proxy reverso
   app.set('trust proxy', 1);
   
-  // Adicionar headers de segurança
+  // Adicionar headers de segurança e anti-cache
   app.use((req, res, next) => {
-    // Definir política de referrer
+    // Headers anti-cache para resolver problemas de cache em produção
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Last-Modified', new Date().toUTCString());
+    res.setHeader('ETag', `"${Date.now()}-${Math.random()}"`);
+    
+    // Política de referrer
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     
-    // Removendo CSP temporariamente para evitar bloqueio de imagens
-    // Sem CSP, todas as imagens funcionarão normalmente
-    // Em vez disso, mantemos apenas a política de referrer
+    // Headers para evitar cache de proxy/CDN
+    res.setHeader('Vary', 'Accept-Encoding, User-Agent, Authorization');
+    res.setHeader('X-Cache-Status', 'BYPASS');
     
     next();
   });

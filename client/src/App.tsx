@@ -16,6 +16,8 @@ import { measureWebVitals } from "./lib/measureWebVitals";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PageLoadingFallback } from "@/components/LoadingFallback";
 import { NetworkStatus } from "@/components/NetworkStatus";
+import { CacheIssueHandler } from "@/components/CacheIssueHandler";
+import { cacheManager } from "./lib/cacheManager";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -373,6 +375,9 @@ function AppRoutes() {
 function App() {
   // Inicializar métricas de Web Vitals quando o componente é montado
   useEffect(() => {
+    // Inicializar sistema de cache management para resolver problemas de cache em produção
+    cacheManager.initialize();
+    
     // Iniciar medição de métricas de performance
     measureWebVitals();
   }, []);
@@ -394,6 +399,7 @@ function App() {
                 <Toaster />
                 <PopupContainer />
                 <NetworkStatus />
+                <CacheIssueHandler />
               </SupabaseAuthProvider>
             </AuthProvider>
           </ThemeProvider>
