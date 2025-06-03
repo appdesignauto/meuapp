@@ -1,5 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { performanceMonitor } from "./performanceMonitor";
+import { cacheManager } from "./cacheManager";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -50,9 +51,7 @@ export async function apiRequest(
     method,
     credentials: "include",
     headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
+      ...cacheManager.getAntiCacheHeaders(),
       'X-Timestamp': timestamp.toString()
     }
   };
@@ -85,8 +84,8 @@ export async function apiRequest(
   }
   
   try {
-    // Usar a URL com parâmetros anti-cache
-    const res = await fetch(finalUrl, fetchOptions);
+    // Usar a URL com parâmetros anti-cache avançado
+    const res = await fetch(cacheManager.addCacheBuster(finalUrl), fetchOptions);
     const duration = performance.now() - startTime;
     performanceMonitor.recordRequestTime(`${method} ${url}`, duration);
     
@@ -140,13 +139,11 @@ export const getQueryFn: <T>(options: {
       
       console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
       
-      const res = await fetch(url.toString(), {
+      const res = await fetch(cacheManager.addCacheBuster(url.toString()), {
         credentials: "include",
         cache: "no-cache",
         headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0"
+          ...cacheManager.getAntiCacheHeaders()
         }
       });
 
