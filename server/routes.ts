@@ -3260,10 +3260,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.observacaoadmin = `${observacao} [${dataAtual}] Criado com senha padrão por ${user.username} (${user.nivelacesso}).`.trim();
       }
       
-      // Criptografar a senha
-      const salt = randomBytes(16).toString("hex");
-      const buf = await scryptAsync(senhaParaUsar, salt, 64) as Buffer;
-      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      // Criptografar a senha usando bcrypt (mesmo método do auth.ts)
+      const hashedPassword = await bcrypt.hash(senhaParaUsar, 10);
       
       // Nível de acesso padrão se não for especificado
       const userNivelAcesso = nivelacesso || "free";
