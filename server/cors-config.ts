@@ -68,9 +68,9 @@ export function configureCors(app: Express): void {
       // Verificar se é um domínio do Replit
       else if (REPLIT_DOMAINS.some(domain => origin.endsWith(domain))) {
         // Log apenas uma vez por sessão para evitar spam de logs
-        if (!global.replitDomainsLogged) {
+        if (!(global as any).replitDomainsLogged) {
           console.log(`Domínio Replit detectado e permitido: ${origin}`);
-          global.replitDomainsLogged = true;
+          (global as any).replitDomainsLogged = true;
         }
         callback(null, true);
       }

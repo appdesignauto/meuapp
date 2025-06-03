@@ -13,6 +13,8 @@ import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { PageLoadingFallback } from "@/components/LoadingFallback";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -105,7 +107,7 @@ function AppRoutes() {
         {() => {
           const ForgotPasswordPage = lazy(() => import("@/pages/password/forgot"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <ForgotPasswordPage />
             </Suspense>
           );
@@ -115,7 +117,7 @@ function AppRoutes() {
         {() => {
           const ResetPasswordPage = lazy(() => import("@/pages/password/reset"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <ResetPasswordPage />
             </Suspense>
           );
@@ -375,25 +377,27 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <ThemeProvider defaultTheme="light">
-          <AuthProvider>
-            <SupabaseAuthProvider>
-              <Router>
-                <ScrollToTop />
-                <DynamicFavicon />
-                <AppLayout>
-                  <AppRoutes />
-                </AppLayout>
-              </Router>
-              <Toaster />
-              <PopupContainer />
-            </SupabaseAuthProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </HelmetProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <ThemeProvider defaultTheme="light">
+            <AuthProvider>
+              <SupabaseAuthProvider>
+                <Router>
+                  <ScrollToTop />
+                  <DynamicFavicon />
+                  <AppLayout>
+                    <AppRoutes />
+                  </AppLayout>
+                </Router>
+                <Toaster />
+                <PopupContainer />
+              </SupabaseAuthProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
