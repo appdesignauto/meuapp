@@ -141,8 +141,7 @@ const AuthPage = () => {
         username,
         password: values.password,
         email: values.email,
-        name: values.name,
-        phone: values.phone
+        name: values.name
       });
     } catch (error: any) {
       // Capturar a mensagem de erro para exibir na interface
@@ -437,9 +436,9 @@ const AuthPage = () => {
                       <Button 
                         type="submit" 
                         className="w-full"
-                        disabled={authLoading}
+                        disabled={registerMutation.isPending}
                       >
-                        {authLoading ? (
+                        {registerMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Criando conta...
