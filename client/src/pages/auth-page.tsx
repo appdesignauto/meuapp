@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -66,7 +66,7 @@ const AuthPage = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
-  const { user, login, register, isLoading: authLoading } = useAuth();
+  const { user, loginMutation, registerMutation, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   // Form para login - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
@@ -110,10 +110,13 @@ const AuthPage = () => {
       setLoginError(null);
       
       console.log("Enviando credenciais de login:", values);
-      await login(values.email, values.password);
       
-      // Redirecionar diretamente para a página principal
-      setLocation("/");
+      // Usar a mutation correta do hook useAuth
+      loginMutation.mutate({
+        username: values.email, // Usando email como username
+        password: values.password,
+        rememberMe: values.rememberMe
+      });
     } catch (error: any) {
       // Capturar a mensagem de erro para exibir na interface
       if (error instanceof Error) {
@@ -133,20 +136,13 @@ const AuthPage = () => {
       // Adicionar username gerado a partir do email
       const username = values.email.split('@')[0];
       
-      await register(
+      // Usar a mutation correta do hook useAuth
+      registerMutation.mutate({
         username,
-        values.password,
-        values.email,
-        values.name,
-        values.phone
-      );
-      
-      // Se o registro foi bem-sucedido, redirecionar diretamente para a página principal
-      setLocation("/");
-      
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Confira seu e-mail para mais informações.",
+        password: values.password,
+        email: values.email,
+        name: values.name,
+        phone: values.phone
       });
     } catch (error: any) {
       // Capturar a mensagem de erro para exibir na interface
@@ -250,9 +246,9 @@ const AuthPage = () => {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={authLoading}
+                        disabled={loginMutation.isPending}
                       >
-                        {authLoading ? (
+                        {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Entrando...
