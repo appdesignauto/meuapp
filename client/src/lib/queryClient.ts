@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { performanceMonitor } from "./performanceMonitor";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -38,7 +39,7 @@ export async function apiRequest(
   data?: unknown | undefined,
   options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  // Adicionar timestamp para prevenir cache
+  const startTime = performance.now();
   const timestamp = Date.now();
   const finalUrl = url.includes('?') 
     ? `${url}&_t=${timestamp}` 
@@ -86,9 +87,16 @@ export async function apiRequest(
   try {
     // Usar a URL com parâmetros anti-cache
     const res = await fetch(finalUrl, fetchOptions);
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordRequestTime(`${method} ${url}`, duration);
+    
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
+    const duration = performance.now() - startTime;
+    performanceMonitor.recordRequestTime(`${method} ${url}`, duration);
+    performanceMonitor.recordError(error as Error, `Mutation: ${method} ${url}`);
+    
     // Tratamento robusto de erros de conectividade
     if (error instanceof TypeError && error.message.includes('fetch')) {
       console.error(`[API] Erro de conectividade para ${finalUrl}:`, error.message);
@@ -114,38 +122,49 @@ export const getQueryFn: <T>(options: {
     // Pegar a URL base e os parâmetros de consulta
     const endpoint = queryKey[0] as string;
     const params = queryKey[1] as Record<string, any> || {};
+    const startTime = performance.now();
     
-    // Construir URL com parâmetros de consulta
-    const url = new URL(endpoint, window.location.origin);
-    
-    // Adicionar parâmetros à URL
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.append(key, String(value));
-      }
-    });
-    
-    // Adicionar timestamp para evitar cache do navegador
-    url.searchParams.append('_cache_buster', Date.now().toString());
-    
-    console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
-    
-    const res = await fetch(url.toString(), {
-      credentials: "include",
-      cache: "no-cache", // Solicitar ao fetch para não usar o cache
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-      }
-    });
+    try {
+      // Construir URL com parâmetros de consulta
+      const url = new URL(endpoint, window.location.origin);
+      
+      // Adicionar parâmetros à URL
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          url.searchParams.append(key, String(value));
+        }
+      });
+      
+      // Adicionar timestamp para evitar cache do navegador
+      url.searchParams.append('_cache_buster', Date.now().toString());
+      
+      console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
+      
+      const res = await fetch(url.toString(), {
+        credentials: "include",
+        cache: "no-cache",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      const duration = performance.now() - startTime;
+      performanceMonitor.recordRequestTime(endpoint, duration);
+
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      performanceMonitor.recordRequestTime(endpoint, duration);
+      performanceMonitor.recordError(error as Error, `Query: ${endpoint}`);
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

@@ -134,7 +134,7 @@ function AppRoutes() {
         {() => {
           const EmailVerificationPage = lazy(() => import("@/pages/email/verify"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <EmailVerificationPage />
             </Suspense>
           );
@@ -151,7 +151,7 @@ function AppRoutes() {
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <SupabaseAuthPage />
             </Suspense>
           );
@@ -187,7 +187,7 @@ function AppRoutes() {
         {() => {
           const SuportePage = lazy(() => import("@/pages/suporte/index"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <SuportePage />
             </Suspense>
           );
@@ -204,7 +204,7 @@ function AppRoutes() {
         {() => {
           const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <VideoLessonPage />
             </Suspense>
           );
@@ -217,7 +217,7 @@ function AppRoutes() {
         {() => {
           const PostDetailPage = lazy(() => import("@/pages/comunidade/post/[id]"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <PostDetailPage />
             </Suspense>
           );
@@ -226,7 +226,7 @@ function AppRoutes() {
       <ProtectedRoute path="/comunidade/criar" component={() => {
           const CreatePostPage = lazy(() => import("@/pages/comunidade/criar"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <CreatePostPage />
             </Suspense>
           );
@@ -321,7 +321,7 @@ function AppRoutes() {
         component={() => {
           const AnalyticsPage = lazy(() => import("@/pages/admin/analytics"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <AnalyticsPage />
             </Suspense>
           );
@@ -333,7 +333,7 @@ function AppRoutes() {
         component={() => {
           const AppConfigPage = lazy(() => import("@/pages/admin/AppConfigPage"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <AppConfigPage />
             </Suspense>
           );
@@ -345,7 +345,7 @@ function AppRoutes() {
         component={() => {
           const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
           return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <AssinaturasPage />
             </Suspense>
           );
