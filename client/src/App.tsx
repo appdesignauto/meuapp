@@ -15,6 +15,7 @@ import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PageLoadingFallback } from "@/components/LoadingFallback";
+import { NetworkStatus } from "@/components/NetworkStatus";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -392,6 +393,7 @@ function App() {
                 </Router>
                 <Toaster />
                 <PopupContainer />
+                <NetworkStatus />
               </SupabaseAuthProvider>
             </AuthProvider>
           </ThemeProvider>
