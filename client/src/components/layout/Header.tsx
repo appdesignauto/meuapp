@@ -100,6 +100,10 @@ const Header = () => {
       return res.json();
     },
     enabled: !!user, // Só executa se o usuário estiver logado
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
   
   // Contador para forçar recarregamento das configurações
@@ -146,7 +150,7 @@ const Header = () => {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 1000 * 60 * 10, // 10 minutos - só busca dados novos após este período
-    cacheTime: 1000 * 60 * 20  // 20 minutos de cache
+    gcTime: 1000 * 60 * 20  // 20 minutos de cache
   });
   
   // Adicionar um listener global para a API de atualização de logo
@@ -616,7 +620,8 @@ const Header = () => {
               <div className="flex items-center space-x-2">
                 <Link href="/auth?tab=login">
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 h-9 rounded-full shadow-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 h-9 rounded-full shadow-sm transition-all duration-200 transform hover:scale-105 active:scale-95"
+                    disabled={false}
                   >
                     Entrar
                   </Button>
@@ -624,7 +629,8 @@ const Header = () => {
                 <Link href="/auth?tab=register" className="hidden sm:block">
                   <Button 
                     variant="ghost" 
-                    className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50"
+                    className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                    disabled={false}
                   >
                     Cadastre-se
                   </Button>
