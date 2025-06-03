@@ -152,16 +152,28 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: 10000, // Refetch a cada 10 segundos
+      refetchInterval: 30000, // Refetch a cada 30 segundos (menos agressivo)
       refetchOnWindowFocus: true, 
-      refetchOnMount: true, // Refetch sempre que um componente é montado
-      refetchOnReconnect: true, // Refetch quando a conexão é reestabelecida
-      staleTime: 0, // Dados sempre considerados obsoletos
-      retry: false,
-      gcTime: 1000, // Tempo de garbage collection de apenas 1 segundo
+      refetchOnMount: true, 
+      refetchOnReconnect: true, 
+      staleTime: 5000, // 5 segundos antes de considerar dados obsoletos
+      retry: (failureCount, error) => {
+        // Retry até 2 vezes para erros de rede
+        if (failureCount < 2 && error instanceof TypeError) {
+          return true;
+        }
+        return false;
+      },
+      gcTime: 5 * 60 * 1000, // 5 minutos de garbage collection
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Retry uma vez para erros de rede em mutations
+        if (failureCount < 1 && error instanceof TypeError) {
+          return true;
+        }
+        return false;
+      },
     },
   },
 });
