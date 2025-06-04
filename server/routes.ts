@@ -81,15 +81,30 @@ import { PrismaClient } from '@prisma/client';
 
 // Middleware de autenticação para administradores
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  console.log('[isAdmin] Verificando autenticação:', {
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user ? {
+      id: req.user.id,
+      email: req.user.email,
+      nivelacesso: req.user.nivelacesso
+    } : null,
+    sessionID: req.sessionID
+  });
+
   if (!req.isAuthenticated()) {
+    console.log('[isAdmin] Usuário não autenticado');
     return res.status(401).json({ message: "Não autenticado" });
   }
   
   const userLevel = req.user?.nivelacesso;
+  console.log('[isAdmin] Verificando nível de acesso:', userLevel);
+  
   if (userLevel !== 'admin' && userLevel !== 'designer_adm') {
+    console.log('[isAdmin] Acesso negado para nível:', userLevel);
     return res.status(403).json({ message: "Acesso negado - privilégios de administrador ou designer ADM necessários" });
   }
   
+  console.log('[isAdmin] Acesso liberado para:', userLevel);
   next();
 };
 
