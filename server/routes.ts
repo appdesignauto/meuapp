@@ -2691,7 +2691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin API - Create Category
-  app.post("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/categories", async (req, res) => {
     try {
       console.log('[CREATE CATEGORY] Iniciando processo de criação de categoria');
       console.log('[CREATE CATEGORY] Usuário autenticado:', req.isAuthenticated());
@@ -2700,6 +2700,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.user?.email,
         nivelacesso: req.user?.nivelacesso
       });
+
+      // Apenas usuários admin ou designer_adm podem criar categorias
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para criar categorias" });
+      }
 
       const newCategory = await storage.createCategory(req.body);
       res.status(201).json(newCategory);
@@ -2716,8 +2721,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin API - Update Category
-  app.put("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.put("/api/admin/categories/:id", async (req, res) => {
     try {
+      // Apenas usuários admin ou designer_adm podem atualizar categorias
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para atualizar categorias" });
+      }
+
       const id = parseInt(req.params.id);
       const updatedCategory = await storage.updateCategory(id, req.body);
       
@@ -2739,8 +2749,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin API - Delete Category
-  app.delete("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/categories/:id", async (req, res) => {
     try {
+      // Apenas usuários admin ou designer_adm podem excluir categorias
+      if (req.user?.nivelacesso !== 'admin' && req.user?.nivelacesso !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para excluir categorias" });
+      }
+
       const id = parseInt(req.params.id);
       const success = await storage.deleteCategory(id);
       
