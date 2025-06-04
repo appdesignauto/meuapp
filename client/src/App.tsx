@@ -13,11 +13,6 @@ import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { PageLoadingFallback } from "@/components/LoadingFallback";
-import { NetworkStatus } from "@/components/NetworkStatus";
-import { CacheIssueHandler } from "@/components/CacheIssueHandler";
-import { cacheManager } from "./lib/cacheManager";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -110,7 +105,7 @@ function AppRoutes() {
         {() => {
           const ForgotPasswordPage = lazy(() => import("@/pages/password/forgot"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <ForgotPasswordPage />
             </Suspense>
           );
@@ -120,7 +115,7 @@ function AppRoutes() {
         {() => {
           const ResetPasswordPage = lazy(() => import("@/pages/password/reset"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <ResetPasswordPage />
             </Suspense>
           );
@@ -137,7 +132,7 @@ function AppRoutes() {
         {() => {
           const EmailVerificationPage = lazy(() => import("@/pages/email/verify"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <EmailVerificationPage />
             </Suspense>
           );
@@ -154,7 +149,7 @@ function AppRoutes() {
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <SupabaseAuthPage />
             </Suspense>
           );
@@ -190,7 +185,7 @@ function AppRoutes() {
         {() => {
           const SuportePage = lazy(() => import("@/pages/suporte/index"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <SuportePage />
             </Suspense>
           );
@@ -207,7 +202,7 @@ function AppRoutes() {
         {() => {
           const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <VideoLessonPage />
             </Suspense>
           );
@@ -220,7 +215,7 @@ function AppRoutes() {
         {() => {
           const PostDetailPage = lazy(() => import("@/pages/comunidade/post/[id]"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <PostDetailPage />
             </Suspense>
           );
@@ -229,7 +224,7 @@ function AppRoutes() {
       <ProtectedRoute path="/comunidade/criar" component={() => {
           const CreatePostPage = lazy(() => import("@/pages/comunidade/criar"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <CreatePostPage />
             </Suspense>
           );
@@ -324,7 +319,7 @@ function AppRoutes() {
         component={() => {
           const AnalyticsPage = lazy(() => import("@/pages/admin/analytics"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <AnalyticsPage />
             </Suspense>
           );
@@ -336,7 +331,7 @@ function AppRoutes() {
         component={() => {
           const AppConfigPage = lazy(() => import("@/pages/admin/AppConfigPage"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <AppConfigPage />
             </Suspense>
           );
@@ -348,7 +343,7 @@ function AppRoutes() {
         component={() => {
           const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
           return (
-            <Suspense fallback={<PageLoadingFallback />}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <AssinaturasPage />
             </Suspense>
           );
@@ -375,37 +370,30 @@ function AppRoutes() {
 function App() {
   // Inicializar métricas de Web Vitals quando o componente é montado
   useEffect(() => {
-    // Inicializar sistema de cache management para resolver problemas de cache em produção
-    cacheManager.initialize();
-    
     // Iniciar medição de métricas de performance
     measureWebVitals();
   }, []);
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <ThemeProvider defaultTheme="light">
-            <AuthProvider>
-              <SupabaseAuthProvider>
-                <Router>
-                  <ScrollToTop />
-                  <DynamicFavicon />
-                  <AppLayout>
-                    <AppRoutes />
-                  </AppLayout>
-                </Router>
-                <Toaster />
-                <PopupContainer />
-                <NetworkStatus />
-                <CacheIssueHandler />
-              </SupabaseAuthProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </HelmetProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <ThemeProvider defaultTheme="light">
+          <AuthProvider>
+            <SupabaseAuthProvider>
+              <Router>
+                <ScrollToTop />
+                <DynamicFavicon />
+                <AppLayout>
+                  <AppRoutes />
+                </AppLayout>
+              </Router>
+              <Toaster />
+              <PopupContainer />
+            </SupabaseAuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 

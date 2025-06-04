@@ -1,9 +1,0 @@
-🔍 Processando webhook específico ID: 41
-🔄 Processando webhook ID: 41 automaticamente
-✅ Webhook encontrado: 41, Email: soguruscursos@gmail.com
-📋 Dados extraídos: Fernando Teste, soguruscursos@gmail.com, Plano: plano anual
-➕ Criando novo usuário para soguruscursos@gmail.com...
-Criando usuário com senha hash segura para soguruscursos@gmail.com
-✅ Usuário criado com ID: 99
-📝 Registrando nova assinatura para usuário 99...
-✅ Webhook 41 processado com sucesso!

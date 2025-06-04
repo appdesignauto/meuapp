@@ -62,13 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    retry: 1,
-    retryDelay: 500,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos - gcTime substitui cacheTime na v5
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: 'always',
   });
 
   const loginMutation = useMutation({
@@ -86,12 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: (user: User) => {
-      // Atualizar imediatamente o cache do usuário
       queryClient.setQueryData(['/api/user'], user);
-      
-      // Invalidar outras queries relacionadas para refresh rápido
-      queryClient.invalidateQueries({ queryKey: ['/api/users/stats'] });
-      
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${user.name || user.username}!`,

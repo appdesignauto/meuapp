@@ -1,6 +1,4 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { performanceMonitor } from "./performanceMonitor";
-import { cacheManager } from "./cacheManager";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -40,7 +38,7 @@ export async function apiRequest(
   data?: unknown | undefined,
   options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  const startTime = performance.now();
+  // Adicionar timestamp para prevenir cache
   const timestamp = Date.now();
   const finalUrl = url.includes('?') 
     ? `${url}&_t=${timestamp}` 
@@ -51,7 +49,9 @@ export async function apiRequest(
     method,
     credentials: "include",
     headers: {
-      ...cacheManager.getAntiCacheHeaders(),
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       'X-Timestamp': timestamp.toString()
     }
   };
@@ -84,18 +84,11 @@ export async function apiRequest(
   }
   
   try {
-    // Usar a URL com parâmetros anti-cache avançado
-    const res = await fetch(cacheManager.addCacheBuster(finalUrl), fetchOptions);
-    const duration = performance.now() - startTime;
-    performanceMonitor.recordRequestTime(`${method} ${url}`, duration);
-    
+    // Usar a URL com parâmetros anti-cache
+    const res = await fetch(finalUrl, fetchOptions);
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
-    const duration = performance.now() - startTime;
-    performanceMonitor.recordRequestTime(`${method} ${url}`, duration);
-    performanceMonitor.recordError(error as Error, `Mutation: ${method} ${url}`);
-    
     // Tratamento robusto de erros de conectividade
     if (error instanceof TypeError && error.message.includes('fetch')) {
       console.error(`[API] Erro de conectividade para ${finalUrl}:`, error.message);
@@ -121,75 +114,54 @@ export const getQueryFn: <T>(options: {
     // Pegar a URL base e os parâmetros de consulta
     const endpoint = queryKey[0] as string;
     const params = queryKey[1] as Record<string, any> || {};
-    const startTime = performance.now();
     
-    try {
-      // Construir URL com parâmetros de consulta
-      const url = new URL(endpoint, window.location.origin);
-      
-      // Adicionar parâmetros à URL
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-      
-      // Adicionar timestamp para evitar cache do navegador
-      url.searchParams.append('_cache_buster', Date.now().toString());
-      
-      console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
-      
-      const res = await fetch(cacheManager.addCacheBuster(url.toString()), {
-        credentials: "include",
-        cache: "no-cache",
-        headers: {
-          ...cacheManager.getAntiCacheHeaders()
-        }
-      });
-
-      const duration = performance.now() - startTime;
-      performanceMonitor.recordRequestTime(endpoint, duration);
-
-      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-        return null;
+    // Construir URL com parâmetros de consulta
+    const url = new URL(endpoint, window.location.origin);
+    
+    // Adicionar parâmetros à URL
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.append(key, String(value));
       }
+    });
+    
+    // Adicionar timestamp para evitar cache do navegador
+    url.searchParams.append('_cache_buster', Date.now().toString());
+    
+    console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
+    
+    const res = await fetch(url.toString(), {
+      credentials: "include",
+      cache: "no-cache", // Solicitar ao fetch para não usar o cache
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    });
 
-      await throwIfResNotOk(res);
-      return await res.json();
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      performanceMonitor.recordRequestTime(endpoint, duration);
-      performanceMonitor.recordError(error as Error, `Query: ${endpoint}`);
-      throw error;
+    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      return null;
     }
+
+    await throwIfResNotOk(res);
+    return await res.json();
   };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: 30000, // Refetch a cada 30 segundos (menos agressivo)
+      refetchInterval: 10000, // Refetch a cada 10 segundos
       refetchOnWindowFocus: true, 
-      refetchOnMount: true, 
-      refetchOnReconnect: true, 
-      staleTime: 5000, // 5 segundos antes de considerar dados obsoletos
-      retry: (failureCount, error) => {
-        // Retry até 2 vezes para erros de rede
-        if (failureCount < 2 && error instanceof TypeError) {
-          return true;
-        }
-        return false;
-      },
-      gcTime: 5 * 60 * 1000, // 5 minutos de garbage collection
+      refetchOnMount: true, // Refetch sempre que um componente é montado
+      refetchOnReconnect: true, // Refetch quando a conexão é reestabelecida
+      staleTime: 0, // Dados sempre considerados obsoletos
+      retry: false,
+      gcTime: 1000, // Tempo de garbage collection de apenas 1 segundo
     },
     mutations: {
-      retry: (failureCount, error) => {
-        // Retry uma vez para erros de rede em mutations
-        if (failureCount < 1 && error instanceof TypeError) {
-          return true;
-        }
-        return false;
-      },
+      retry: false,
     },
   },
 });

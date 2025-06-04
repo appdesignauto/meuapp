@@ -67,11 +67,7 @@ export function configureCors(app: Express): void {
       } 
       // Verificar se é um domínio do Replit
       else if (REPLIT_DOMAINS.some(domain => origin.endsWith(domain))) {
-        // Log apenas uma vez por sessão para evitar spam de logs
-        if (!(global as any).replitDomainsLogged) {
-          console.log(`Domínio Replit detectado e permitido: ${origin}`);
-          (global as any).replitDomainsLogged = true;
-        }
+        console.log(`Domínio Replit permitido: ${origin}`);
         callback(null, true);
       }
       else {
@@ -105,26 +101,14 @@ export function configureCors(app: Express): void {
   // Configurar confiança no proxy reverso
   app.set('trust proxy', 1);
   
-  // Adicionar headers de segurança com cache seletivo
+  // Adicionar headers de segurança
   app.use((req, res, next) => {
-    // Política de referrer
+    // Definir política de referrer
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     
-    // Headers anti-cache apenas para rotas de API, não para assets estáticos
-    if (req.path.startsWith('/api/')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Vary', 'Accept-Encoding, User-Agent, Authorization');
-      res.setHeader('X-Cache-Status', 'BYPASS');
-    } else {
-      // Permitir cache para assets estáticos (CSS, JS, imagens)
-      if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg)$/)) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 ano para assets
-      } else {
-        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hora para HTML
-      }
-    }
+    // Removendo CSP temporariamente para evitar bloqueio de imagens
+    // Sem CSP, todas as imagens funcionarão normalmente
+    // Em vez disso, mantemos apenas a política de referrer
     
     next();
   });
