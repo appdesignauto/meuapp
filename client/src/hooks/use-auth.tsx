@@ -62,12 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchInterval: false,
-    retry: 1,
-    retryDelay: 1000,
   });
 
   const loginMutation = useMutation({

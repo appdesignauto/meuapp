@@ -143,10 +143,10 @@ const Header = () => {
         return { logoUrl: '/images/logo.png' };
       }
     },
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    staleTime: 1000 * 60 * 30, // 30 minutos - só busca dados novos após este período
-    refetchInterval: false
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 1000 * 60 * 10, // 10 minutos - só busca dados novos após este período
+    cacheTime: 1000 * 60 * 20  // 20 minutos de cache
   });
   
   // Adicionar um listener global para a API de atualização de logo
@@ -220,7 +220,6 @@ const Header = () => {
   ];
 
   const toggleMobileMenu = () => {
-    console.log('Toggle mobile menu');
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
@@ -366,7 +365,7 @@ const Header = () => {
               </Button>
             )}
 
-            {user && user.nivelacesso && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
+            {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
               <Link href="/planos">
                 <Button 
                   variant="ghost" 
@@ -379,7 +378,7 @@ const Header = () => {
             )}
             
             {/* Link para painel administrativo - mostrado para admin, designer_adm e suporte */}
-            {user && ((user?.nivelacesso === 'admin') || (user?.nivelacesso === 'designer_adm') || (user?.nivelacesso === 'suporte')) && (
+            {user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'suporte') && (
               <Link href="/admin">
                 <Button 
                   variant="ghost" 
@@ -534,8 +533,8 @@ const Header = () => {
                         </div>
                         <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 font-medium">
                           {user.nivelacesso === 'premium' || user.tipoplano || 
-                           (user?.nivelacesso === 'admin') || (user?.nivelacesso === 'designer_adm') || 
-                           user.nivelacesso === 'designer' || (user?.nivelacesso === 'suporte')
+                           user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || 
+                           user.nivelacesso === 'designer' || user.nivelacesso === 'suporte'
                             ? '∞' 
                             : `${userStats?.totalDownloads || 0}/10`}
                         </span>
@@ -617,8 +616,7 @@ const Header = () => {
               <div className="flex items-center space-x-2">
                 <Link href="/auth?tab=login">
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 h-9 rounded-full shadow-sm transition-all duration-200 active:scale-95"
-                    style={{ pointerEvents: 'auto' }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 h-9 rounded-full shadow-sm"
                   >
                     Entrar
                   </Button>
@@ -626,8 +624,7 @@ const Header = () => {
                 <Link href="/auth?tab=register" className="hidden sm:block">
                   <Button 
                     variant="ghost" 
-                    className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 active:scale-95"
-                    style={{ pointerEvents: 'auto' }}
+                    className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50"
                   >
                     Cadastre-se
                   </Button>

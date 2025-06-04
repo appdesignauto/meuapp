@@ -3246,9 +3246,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Usar a senha fornecida pelo admin ou senha padrão se não fornecida
-      const senhaParaUsar = password || "designauto@123";
-      const usandoSenhaPadrao = !password;
+      // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
+      // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
+      const usandoSenhaPadrao = (user.nivelacesso === "admin" || user.nivelacesso === "support");
+      const senhaParaUsar = usandoSenhaPadrao ? "designauto@123" : password;
         
       console.log(`Usuário sendo criado por ${user.nivelacesso}, usando ${usandoSenhaPadrao ? "senha padrão 'designauto@123'" : "senha personalizada"}`);
       
@@ -3259,8 +3260,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.observacaoadmin = `${observacao} [${dataAtual}] Criado com senha padrão por ${user.username} (${user.nivelacesso}).`.trim();
       }
       
-      // Criptografar a senha usando bcrypt (mesmo método do auth.ts)
-      const hashedPassword = await bcrypt.hash(senhaParaUsar, 10);
+      // Criptografar a senha
+      const salt = randomBytes(16).toString("hex");
+      const buf = await scryptAsync(senhaParaUsar, salt, 64) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
       // Nível de acesso padrão se não for especificado
       const userNivelAcesso = nivelacesso || "free";
