@@ -2691,7 +2691,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin API - Create Category
-  app.post("/api/admin/categories", isAdmin, async (req, res) => {
+  app.post("/api/admin/categories", (req, res, next) => {
+    console.log('[CREATE CATEGORY] Iniciando processo de criação de categoria');
+    console.log('[CREATE CATEGORY] Usuário autenticado:', req.isAuthenticated());
+    console.log('[CREATE CATEGORY] Dados do usuário:', {
+      id: req.user?.id,
+      email: req.user?.email,
+      nivelacesso: req.user?.nivelacesso
+    });
+    next();
+  }, isAdmin, async (req, res) => {
     try {
       const newCategory = await storage.createCategory(req.body);
       res.status(201).json(newCategory);
