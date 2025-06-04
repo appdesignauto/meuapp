@@ -162,10 +162,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest('POST', '/api/logout');
+      // Clear user data immediately for responsive UI
+      queryClient.setQueryData(['/api/user'], null);
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        
+        clearTimeout(timeoutId);
+      } catch (error) {
+        // Even if logout fails, user is already cleared locally
+        console.warn('Logout request failed, but user cleared locally:', error);
+      }
     },
     onSuccess: () => {
-      queryClient.setQueryData(['/api/user'], null);
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -173,9 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error) => {
       toast({
-        title: "Falha ao desconectar",
-        description: error.message,
-        variant: "destructive",
+        title: "Logout realizado",
+        description: "Você foi desconectado localmente.",
       });
     },
   });

@@ -146,7 +146,7 @@ const Header = () => {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 1000 * 60 * 10, // 10 minutos - só busca dados novos após este período
-    cacheTime: 1000 * 60 * 20  // 20 minutos de cache
+    gcTime: 1000 * 60 * 20  // 20 minutos de cache
   });
   
   // Adicionar um listener global para a API de atualização de logo
@@ -365,7 +365,7 @@ const Header = () => {
               </Button>
             )}
 
-            {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
+            {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso || 'usuario') && !user.tipoplano && (
               <Link href="/planos">
                 <Button 
                   variant="ghost" 
