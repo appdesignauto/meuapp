@@ -37,6 +37,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos").optional(),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -79,6 +80,7 @@ const AuthPage = () => {
     defaultValues: {
       email: "",
       name: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -121,7 +123,8 @@ const AuthPage = () => {
       username: values.email.split('@')[0],
       email: values.email,
       password: values.password,
-      name: values.name
+      name: values.name,
+      phone: values.phone || undefined
     }, {
       onSuccess: () => {
         console.log("Registro bem-sucedido, redirecionando...");
@@ -282,6 +285,20 @@ const AuthPage = () => {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                               <Input type="email" placeholder="seu@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone (opcional)</FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="(11) 99999-9999" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
