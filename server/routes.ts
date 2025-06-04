@@ -3246,19 +3246,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
-      // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
-      const usandoSenhaPadrao = (user.nivelacesso === "admin" || user.nivelacesso === "support");
-      const senhaParaUsar = usandoSenhaPadrao ? "designauto@123" : password;
-        
-      console.log(`Usuário sendo criado por ${user.nivelacesso}, usando ${usandoSenhaPadrao ? "senha padrão 'designauto@123'" : "senha personalizada"}`);
-      
-      // Se estiver usando a senha padrão, registrar isso na observação do administrador
-      if (usandoSenhaPadrao) {
-        const dataAtual = new Date().toISOString().split('T')[0];
-        const observacao = req.body.observacaoadmin || '';
-        req.body.observacaoadmin = `${observacao} [${dataAtual}] Criado com senha padrão por ${user.username} (${user.nivelacesso}).`.trim();
+      // Validar se a senha foi fornecida no formulário
+      if (!password || password.trim() === '') {
+        return res.status(400).json({ 
+          message: "Senha é obrigatória para criar usuário" 
+        });
       }
+      
+      // Usar a senha definida no formulário (não mais senha padrão automática)
+      const senhaParaUsar = password;
+        
+      console.log(`Usuário sendo criado por ${user.nivelacesso} com senha personalizada definida no formulário`);
+      
+      // Registrar na observação do administrador quem criou o usuário
+      const dataAtual = new Date().toISOString().split('T')[0];
+      const observacao = req.body.observacaoadmin || '';
+      req.body.observacaoadmin = `${observacao} [${dataAtual}] Criado por ${user.username} (${user.nivelacesso}) via painel administrativo.`.trim();
       
       // Criptografar a senha
       const salt = randomBytes(16).toString("hex");

@@ -1845,17 +1845,15 @@ const UserManagement = () => {
                   <p className="text-sm text-red-500 mt-1">Senha é obrigatória</p>
                 )}
                 
-                {/* Alerta de senha padrão */}
-                {currentUser && (currentUser.nivelacesso === "admin" || currentUser.nivelacesso === "support") && (
-                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded-md p-2">
-                    <div className="flex items-start">
-                      <AlertTriangleIcon className="h-4 w-4 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
-                      <p className="text-xs text-amber-800">
-                        <span className="font-semibold">Nova regra:</span> Usuários criados por administradores ou suporte receberão a senha padrão <span className="font-mono bg-amber-100 px-1 rounded">designauto@123</span>
-                      </p>
-                    </div>
+                {/* Informação sobre senha personalizada */}
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
+                  <div className="flex items-start">
+                    <InfoIcon className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <p className="text-xs text-blue-800">
+                      A senha que você definir aqui será usada pelo usuário para fazer login.
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
               
               {/* Campos de nível e status */}
@@ -2090,17 +2088,15 @@ const UserManagement = () => {
                   </Button>
                 </div>
                 
-                {/* Alerta de senha padrão */}
-                {currentUser && (currentUser.nivelacesso === "admin" || currentUser.nivelacesso === "support") && selectedUser && currentUser.id !== selectedUser.id && (
-                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded-md p-2">
-                    <div className="flex items-start">
-                      <AlertTriangleIcon className="h-4 w-4 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
-                      <p className="text-xs text-amber-800">
-                        <span className="font-semibold">Nova regra:</span> Se você redefinir a senha deste usuário, ela será alterada para <span className="font-mono bg-amber-100 px-1 rounded">designauto@123</span>
-                      </p>
-                    </div>
+                {/* Informação sobre redefinição de senha */}
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
+                  <div className="flex items-start">
+                    <InfoIcon className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <p className="text-xs text-blue-800">
+                      Se você alterar a senha, o usuário precisará usar a nova senha para fazer login.
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
