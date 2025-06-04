@@ -366,7 +366,7 @@ const Header = () => {
               </Button>
             )}
 
-            {user && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
+            {user && user.nivelacesso && !['premium', 'admin', 'designer_adm', 'designer', 'suporte'].includes(user.nivelacesso) && !user.tipoplano && (
               <Link href="/planos">
                 <Button 
                   variant="ghost" 
