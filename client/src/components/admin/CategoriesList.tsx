@@ -52,10 +52,20 @@ const CategoriesList = () => {
   // Create/update category mutation
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (editingCategory) {
-        return apiRequest('PUT', `/api/admin/categories/${editingCategory.id}`, data);
-      } else {
-        return apiRequest('POST', '/api/admin/categories', data);
+      console.log('[FRONTEND] Iniciando mutation de categoria:', { editingCategory, data });
+      try {
+        if (editingCategory) {
+          console.log('[FRONTEND] Fazendo PUT para editar categoria');
+          return apiRequest('PUT', `/api/admin/categories/${editingCategory.id}`, data);
+        } else {
+          console.log('[FRONTEND] Fazendo POST para criar categoria');
+          const result = await apiRequest('POST', '/api/admin/categories', data);
+          console.log('[FRONTEND] Resultado do POST:', result);
+          return result;
+        }
+      } catch (error) {
+        console.error('[FRONTEND] Erro na mutation:', error);
+        throw error;
       }
     },
     onSuccess: () => {
