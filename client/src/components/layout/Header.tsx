@@ -143,10 +143,10 @@ const Header = () => {
         return { logoUrl: '/images/logo.png' };
       }
     },
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    staleTime: 1000 * 60 * 10, // 10 minutos - só busca dados novos após este período
-    cacheTime: 1000 * 60 * 20  // 20 minutos de cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 1000 * 60 * 30, // 30 minutos - só busca dados novos após este período
+    refetchInterval: false
   });
   
   // Adicionar um listener global para a API de atualização de logo
@@ -220,6 +220,7 @@ const Header = () => {
   ];
 
   const toggleMobileMenu = () => {
+    console.log('Toggle mobile menu');
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
@@ -378,7 +379,7 @@ const Header = () => {
             )}
             
             {/* Link para painel administrativo - mostrado para admin, designer_adm e suporte */}
-            {user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'suporte') && (
+            {user && ((user?.nivelacesso === 'admin') || (user?.nivelacesso === 'designer_adm') || (user?.nivelacesso === 'suporte')) && (
               <Link href="/admin">
                 <Button 
                   variant="ghost" 
@@ -533,8 +534,8 @@ const Header = () => {
                         </div>
                         <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 font-medium">
                           {user.nivelacesso === 'premium' || user.tipoplano || 
-                           user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || 
-                           user.nivelacesso === 'designer' || user.nivelacesso === 'suporte'
+                           (user?.nivelacesso === 'admin') || (user?.nivelacesso === 'designer_adm') || 
+                           user.nivelacesso === 'designer' || (user?.nivelacesso === 'suporte')
                             ? '∞' 
                             : `${userStats?.totalDownloads || 0}/10`}
                         </span>

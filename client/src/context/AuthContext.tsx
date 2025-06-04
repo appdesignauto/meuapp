@@ -24,7 +24,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is already logged in
     async function checkAuth() {
       try {
-        const res = await fetch('/api/user', { credentials: 'include' });
+        const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
+    const res = await fetch('/api/user', { 
+      credentials: 'include',
+      signal: controller.signal 
+    });
+    clearTimeout(timeoutId);
         if (res.ok) {
           const userData = await res.json();
           setUser(userData);
