@@ -30,6 +30,7 @@ type RegisterData = {
   email: string;
   password: string;
   name: string;
+  phone?: string;
   nivelacesso?: "usuario" | "premium" | "designer" | "designer_adm" | "suporte" | "admin";
   role?: "usuario" | "premium" | "designer" | "designer_adm" | "suporte" | "admin";
   plan?: "free" | "premium" | "enterprise";
