@@ -41,7 +41,7 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 
   const userRole = req.user?.nivelacesso;
   
-  if (userRole !== 'admin') {
+  if (userRole !== 'admin' && userRole !== 'designer_adm') {
     return res.status(403).json({ error: 'Acesso negado, apenas administradores podem realizar esta ação' });
   }
   
