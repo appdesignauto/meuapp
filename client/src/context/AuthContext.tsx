@@ -21,16 +21,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in with faster timeout
     async function checkAuth() {
       try {
-        const res = await fetch('/api/user', { credentials: 'include' });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const res = await fetch('/api/user', { 
+          credentials: 'include',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (res.ok) {
           const userData = await res.json();
           setUser(userData);
         }
-      } catch (error) {
-        console.error('Auth check failed:', error);
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error('Auth check failed:', error);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -96,21 +107,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // Clear user state immediately for responsive UI
+    setUser(null);
     setIsLoading(true);
+    
     try {
-      await apiRequest('POST', '/api/logout', {});
-      setUser(null);
+      // Set a timeout for the logout request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      
+      clearTimeout(timeoutId);
+      
       toast({
         title: "Logout bem-sucedido",
         description: "Você foi desconectado.",
       });
-    } catch (error) {
-      console.error('Logout failed:', error);
-      toast({
-        title: "Falha no logout",
-        description: "Não foi possível fazer logout. Tente novamente.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Logout failed:', error);
+        toast({
+          title: "Falha no logout",
+          description: "Você foi desconectado localmente.",
+        });
+      } else {
+        // Even if logout times out, user is already cleared locally
+        toast({
+          title: "Logout realizado",
+          description: "Você foi desconectado.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

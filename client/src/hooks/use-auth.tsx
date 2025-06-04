@@ -53,15 +53,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ['/api/user'],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', '/api/user');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const res = await fetch('/api/user', {
+          credentials: 'include',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (res.status === 401) {
           return null;
         }
+        if (!res.ok) {
+          throw new Error('Failed to fetch user');
+        }
         return await res.json();
       } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          console.warn('User fetch timed out');
+        }
         return null;
       }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const loginMutation = useMutation({
