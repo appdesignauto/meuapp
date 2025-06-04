@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -66,7 +66,7 @@ const AuthPage = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
-  const { user, login, register, isLoading: authLoading } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
 
   // Form para login - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
@@ -105,39 +105,33 @@ const AuthPage = () => {
   }
 
   const onLoginSubmit = async (values: LoginFormValues) => {
-    try {
-      // Limpar mensagem de erro anterior
-      setLoginError(null);
-      
-      console.log("Enviando credenciais de login:", values);
-      await login(values.email, values.password);
-      
-      // Redirecionar diretamente para a página principal
-      setLocation("/");
-    } catch (error: any) {
-      // Capturar a mensagem de erro para exibir na interface
-      if (error instanceof Error) {
-        setLoginError(error.message);
-      } else {
-        setLoginError("Erro ao fazer login. Tente novamente.");
+    setLoginError(null);
+    
+    loginMutation.mutate({
+      username: values.email,
+      password: values.password,
+      rememberMe: values.rememberMe
+    }, {
+      onSuccess: () => {
+        console.log("Login bem-sucedido, redirecionando...");
+        setLocation("/");
+      },
+      onError: (error: any) => {
+        console.error("Erro de login:", error);
+        setLoginError(error.message || "Erro ao fazer login");
       }
-    }
+    });
   };
 
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     const { confirmPassword, ...registerData } = values;
-    try {
-      // Limpar mensagem de erro anterior
-      setRegisterError(null);
-      
-      // Adicionar username gerado a partir do email
-      const username = values.email.split('@')[0];
-      
-      await register(
-        username,
-        values.password,
-        values.email,
-        values.name,
+    setRegisterError(null);
+    
+    registerMutation.mutate({
+      username: values.email.split('@')[0],
+      email: values.email,
+      password: values.password,
+      name: values.name,
         values.phone
       );
       
