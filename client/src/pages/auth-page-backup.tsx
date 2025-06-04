@@ -27,6 +27,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const loginSchema = z.object({
   email: z.string().email("Digite um email válido"),
@@ -37,6 +39,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  phone: z.string().optional(),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -48,14 +51,15 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const AuthPage = () => {
+  // Obter o parâmetro tab da URL, se existir
   const [activeTab, setActiveTab] = useState<string>(() => {
+    // Verificar se estamos no navegador (client-side)
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       return params.get('tab') || "login";
     }
     return "login";
   });
-  
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -65,6 +69,7 @@ const AuthPage = () => {
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
 
+  // Form para login - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -74,22 +79,27 @@ const AuthPage = () => {
     },
   });
 
+  // Form para registro - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
       name: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
   });
 
+  // Redirecionamento com useEffect para evitar erros de hooks
   useEffect(() => {
     if (user) {
       setLocation("/");
     }
   }, [user, setLocation]);
 
+  // Se o usuário já estiver logado, não renderizamos o resto do componente
+  // IMPORTANTE: este retorno ocorre APÓS chamar todos os hooks
   if (user) {
     return null;
   }
@@ -136,24 +146,22 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-white">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Bem-vindo ao DesignAuto</h2>
-            <p className="mt-2 text-gray-600">Acesse sua conta ou crie uma nova</p>
-          </div>
-
+      {/* Formulário */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+        <div className="max-w-md w-full">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="register">Cadastrar</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Cadastro</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Entrar na sua conta</CardTitle>
-                  <CardDescription>Digite suas credenciais para acessar</CardDescription>
+                  <CardTitle>Login</CardTitle>
+                  <CardDescription>
+                    Acesse sua conta para gerenciar suas artes e coleções
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
@@ -171,40 +179,41 @@ const AuthPage = () => {
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={loginForm.control}
                         name="password"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Senha</FormLabel>
-                            <FormControl>
-                              <div className="relative">
+                            <div className="relative">
+                              <FormControl>
                                 <Input 
                                   type={showLoginPassword ? "text" : "password"} 
-                                  placeholder="Sua senha" 
+                                  placeholder="******" 
                                   {...field} 
                                 />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  onClick={() => setShowLoginPassword(!showLoginPassword)}
-                                >
-                                  {showLoginPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
-                            </FormControl>
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowLoginPassword(!showLoginPassword)}
+                              >
+                                {showLoginPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showLoginPassword ? "Esconder senha" : "Mostrar senha"}
+                                </span>
+                              </Button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={loginForm.control}
                         name="rememberMe"
@@ -224,7 +233,6 @@ const AuthPage = () => {
                           </FormItem>
                         )}
                       />
-                      
                       <Button 
                         type="submit" 
                         className="w-full" 
@@ -240,6 +248,7 @@ const AuthPage = () => {
                         )}
                       </Button>
                       
+                      {/* Exibir mensagem de erro */}
                       {loginError && (
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                           <p className="text-sm text-red-600">{loginError}</p>
@@ -248,18 +257,43 @@ const AuthPage = () => {
                     </form>
                   </Form>
                 </CardContent>
+                <CardFooter className="flex flex-col items-center space-y-2">
+                  <div className="text-sm text-gray-500">
+                    <Link href="/password/forgot">
+                      <Button 
+                        variant="link" 
+                        className="p-0"
+                      >
+                        Esqueceu sua senha?
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Não tem uma conta?{" "}
+                    <Button 
+                      variant="link" 
+                      className="p-0" 
+                      onClick={() => setActiveTab("register")}
+                    >
+                      Cadastre-se
+                    </Button>
+                  </div>
+                </CardFooter>
               </Card>
             </TabsContent>
 
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>Criar nova conta</CardTitle>
-                  <CardDescription>Preencha os dados para se cadastrar</CardDescription>
+                  <CardTitle>Cadastro</CardTitle>
+                  <CardDescription>
+                    Crie sua conta para acessar todas as funcionalidades
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+
                       <FormField
                         control={registerForm.control}
                         name="name"
@@ -267,13 +301,12 @@ const AuthPage = () => {
                           <FormItem>
                             <FormLabel>Nome completo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu nome completo" {...field} />
+                              <Input placeholder="Seu Nome" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={registerForm.control}
                         name="email"
@@ -290,70 +323,107 @@ const AuthPage = () => {
                       
                       <FormField
                         control={registerForm.control}
-                        name="password"
+                        name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Senha</FormLabel>
+                            <FormLabel>Telefone</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  type={showRegisterPassword ? "text" : "password"} 
-                                  placeholder="Sua senha" 
-                                  {...field} 
+                              <div className="phone-input-container">
+                                <PhoneInput
+                                  international
+                                  defaultCountry="BR"
+                                  placeholder="(99) 99999-9999"
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  className="phone-input"
                                 />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                                >
-                                  {showRegisterPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </Button>
                               </div>
                             </FormControl>
+                            <FormDescription className="text-xs">
+                              Seu número de telefone com DDD
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Senha</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input 
+                                  type={showRegisterPassword ? "text" : "password"} 
+                                  placeholder="******" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                              >
+                                {showRegisterPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showRegisterPassword ? "Esconder senha" : "Mostrar senha"}
+                                </span>
+                              </Button>
+                            </div>
+                            <FormDescription className="text-xs">
+                              A senha deve ter pelo menos 6 caracteres
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={registerForm.control}
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Confirmar senha</FormLabel>
-                            <FormControl>
-                              <div className="relative">
+                            <div className="relative">
+                              <FormControl>
                                 <Input 
                                   type={showConfirmPassword ? "text" : "password"} 
-                                  placeholder="Confirme sua senha" 
+                                  placeholder="******" 
                                   {...field} 
                                 />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                >
-                                  {showConfirmPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
-                            </FormControl>
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              >
+                                {showConfirmPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showConfirmPassword ? "Esconder senha" : "Mostrar senha"}
+                                </span>
+                              </Button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      
 
+                      
+
+                      
                       <Button 
                         type="submit" 
                         className="w-full"
@@ -369,6 +439,7 @@ const AuthPage = () => {
                         )}
                       </Button>
 
+                      {/* Exibir mensagem de erro */}
                       {registerError && (
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                           <p className="text-sm text-red-600">{registerError}</p>
@@ -377,9 +448,66 @@ const AuthPage = () => {
                     </form>
                   </Form>
                 </CardContent>
+                <CardFooter className="flex flex-col items-center">
+                  <div className="text-sm text-gray-500">
+                    Já tem uma conta?{" "}
+                    <Button 
+                      variant="link" 
+                      className="p-0" 
+                      onClick={() => setActiveTab("login")}
+                    >
+                      Faça login
+                    </Button>
+                  </div>
+                </CardFooter>
               </Card>
             </TabsContent>
           </Tabs>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <div className="flex-1 bg-blue-600 p-8 lg:p-12 text-white hidden lg:flex flex-col justify-center">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-4xl font-bold mb-4">DesignAuto</h1>
+          <p className="text-xl mb-8">
+            Acesse milhares de designs exclusivos para o seu negócio automotivo
+          </p>
+          <div className="space-y-6">
+            <div className="flex items-start">
+              <div className="bg-blue-500 p-2 rounded-full mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium">Mais de 3.000 artes</h3>
+                <p className="text-blue-100">Acesse designs exclusivos criados por profissionais</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="bg-blue-500 p-2 rounded-full mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium">Totalmente editáveis</h3>
+                <p className="text-blue-100">Personalize facilmente com o Canva ou Google Drive</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="bg-blue-500 p-2 rounded-full mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium">Economia de tempo</h3>
+                <p className="text-blue-100">Crie campanhas em minutos, não em horas</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
