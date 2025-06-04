@@ -11,7 +11,7 @@ import { Request, Response, NextFunction } from 'express';
 
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
-  if (user && (user.role === 'admin' || user.nivelacesso === 'admin')) {
+  if (user && (user.role === 'admin' || user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm')) {
     return next();
   }
   return res.status(403).json({ message: 'Acesso negado. É necessário ser administrador.' });
