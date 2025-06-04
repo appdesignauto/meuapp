@@ -16,11 +16,21 @@ class CacheManager {
     return CacheManager.instance;
   }
 
-  // Adicionar parâmetros anti-cache a URLs
+  // Adicionar parâmetros anti-cache a URLs (apenas para APIs, não para assets)
   addCacheBuster(url: string): string {
-    const separator = url.includes('?') ? '&' : '?';
-    const timestamp = Date.now();
-    return `${url}${separator}_v=${this.cacheVersion}&_t=${timestamp}&_r=${Math.random()}`;
+    // Não aplicar cache busting para assets estáticos
+    if (url.match(/\.(css|js|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg)$/)) {
+      return url;
+    }
+    
+    // Aplicar cache busting apenas para APIs
+    if (url.includes('/api/')) {
+      const separator = url.includes('?') ? '&' : '?';
+      const timestamp = Date.now();
+      return `${url}${separator}_v=${this.cacheVersion}&_t=${timestamp}&_r=${Math.random()}`;
+    }
+    
+    return url;
   }
 
   // Limpar todos os caches do navegador

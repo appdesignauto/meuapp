@@ -105,21 +105,26 @@ export function configureCors(app: Express): void {
   // Configurar confiança no proxy reverso
   app.set('trust proxy', 1);
   
-  // Adicionar headers de segurança e anti-cache
+  // Adicionar headers de segurança com cache seletivo
   app.use((req, res, next) => {
-    // Headers anti-cache para resolver problemas de cache em produção
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Last-Modified', new Date().toUTCString());
-    res.setHeader('ETag', `"${Date.now()}-${Math.random()}"`);
-    
     // Política de referrer
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     
-    // Headers para evitar cache de proxy/CDN
-    res.setHeader('Vary', 'Accept-Encoding, User-Agent, Authorization');
-    res.setHeader('X-Cache-Status', 'BYPASS');
+    // Headers anti-cache apenas para rotas de API, não para assets estáticos
+    if (req.path.startsWith('/api/')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Vary', 'Accept-Encoding, User-Agent, Authorization');
+      res.setHeader('X-Cache-Status', 'BYPASS');
+    } else {
+      // Permitir cache para assets estáticos (CSS, JS, imagens)
+      if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 ano para assets
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hora para HTML
+      }
+    }
     
     next();
   });
