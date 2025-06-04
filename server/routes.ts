@@ -86,8 +86,8 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   }
   
   const userLevel = req.user?.nivelacesso;
-  if (userLevel !== 'admin') {
-    return res.status(403).json({ message: "Acesso negado - privilégios de administrador necessários" });
+  if (userLevel !== 'admin' && userLevel !== 'designer_adm') {
+    return res.status(403).json({ message: "Acesso negado - privilégios de administrador ou designer ADM necessários" });
   }
   
   next();
