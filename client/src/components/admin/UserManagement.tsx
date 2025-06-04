@@ -76,6 +76,7 @@ import {
   PaletteIcon,
   HeadphonesIcon,
   ShieldIcon,
+  InfoIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
