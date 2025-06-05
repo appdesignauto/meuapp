@@ -1933,169 +1933,130 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Abordagem utilizando sql.raw() para consultas SQL diretas
+      const startTime = Date.now();
       const offset = (page - 1) * limit;
       
-      // Construir a consulta base sem WHERE
-      const baseQuery = `
+      // Para a home page (sem filtros específicos), usar consulta otimizada
+      if (!filters || Object.keys(filters).length === 0 || (Object.keys(filters).length === 1 && filters.isVisible !== undefined)) {
+        console.log('[Performance] Usando consulta otimizada para vitrine da home');
+        
+        const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
+        
+        // Consulta otimizada com apenas campos essenciais
+        const optimizedQuery = sql`
+          SELECT 
+            id, 
+            "createdAt", 
+            title, 
+            "imageUrl", 
+            format, 
+            "isPremium",
+            "isVisible"
+          FROM arts 
+          WHERE "isVisible" = ${isVisibleFilter}
+          ORDER BY "createdAt" DESC 
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        
+        // Count otimizado
+        const countQuery = sql`
+          SELECT COUNT(*) as count 
+          FROM arts 
+          WHERE "isVisible" = ${isVisibleFilter}
+        `;
+        
+        const [result, countResult] = await Promise.all([
+          db.execute(optimizedQuery),
+          db.execute(countQuery)
+        ]);
+        
+        const totalCount = parseInt(countResult.rows[0].count as string);
+        const arts = result.rows as Art[];
+        
+        const endTime = Date.now();
+        console.log(`[Performance] Consulta vitrine executada em ${endTime - startTime}ms`);
+        
+        return { arts, totalCount };
+      }
+      
+      // Para filtros complexos, usar consulta completa
+      console.log('[Performance] Usando consulta completa com filtros');
+      
+      // Construir WHERE conditions
+      const whereConditions = [];
+      const params: any[] = [];
+      
+      if (filters.categoryId) {
+        whereConditions.push(`"categoryId" = $${params.length + 1}`);
+        params.push(filters.categoryId);
+      }
+      
+      if (filters.search) {
+        whereConditions.push(`title ILIKE $${params.length + 1}`);
+        params.push(`%${filters.search}%`);
+      }
+      
+      if (filters.isPremium !== undefined) {
+        whereConditions.push(`"isPremium" = $${params.length + 1}`);
+        params.push(filters.isPremium);
+      }
+      
+      if (filters.isVisible !== undefined) {
+        whereConditions.push(`"isVisible" = $${params.length + 1}`);
+        params.push(filters.isVisible);
+      }
+      
+      if (filters.fileType) {
+        whereConditions.push(`"fileType" = $${params.length + 1}`);
+        params.push(filters.fileType);
+      }
+      
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+      
+      // Determinar ordenação
+      let orderBy = 'ORDER BY "createdAt" DESC';
+      if (filters.sortBy === 'destaques') {
+        orderBy = 'ORDER BY "isPremium" DESC, "viewcount" DESC, "createdAt" DESC';
+      } else if (filters.sortBy === 'emalta') {
+        orderBy = 'ORDER BY "viewcount" DESC, "createdAt" DESC';
+      } else if (filters.sortBy === 'antigos') {
+        orderBy = 'ORDER BY "createdAt" ASC';
+      }
+      
+      // Consultas com parâmetros nomeados
+      const mainQuery = `
         SELECT 
-          id, 
-          "createdAt", 
-          "updatedAt", 
-          designerid, 
-          viewcount,
-          width, 
-          height, 
-          "isPremium",
-          "isVisible",
-          "categoryId", 
-          "collectionId", 
-          title, 
-          "imageUrl", 
-          format, 
-          "fileType", 
-          "editUrl", 
-          aspectratio
-        FROM arts
+          id, "createdAt", "updatedAt", designerid, viewcount,
+          width, height, "isPremium", "isVisible", "categoryId", 
+          "collectionId", title, "imageUrl", format, "fileType", 
+          "editUrl", aspectratio
+        FROM arts 
+        ${whereClause}
+        ${orderBy}
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
       `;
       
-      // Construir consulta usando a funcionalidade correta do Drizzle
-      let query = sql`${sql.raw(baseQuery)}`;
+      const countQueryStr = `SELECT COUNT(*) as count FROM arts ${whereClause}`;
       
-      // Adicionar filtros se existirem
-      if (filters) {
-        let hasWhere = false;
-        
-        if (filters.categoryId) {
-          query = sql`${query} WHERE "categoryId" = ${filters.categoryId}`;
-          hasWhere = true;
-        }
-        
-        if (filters.search) {
-          const searchTerm = `%${filters.search}%`;
-          if (hasWhere) {
-            query = sql`${query} AND title ILIKE ${searchTerm}`;
-          } else {
-            query = sql`${query} WHERE title ILIKE ${searchTerm}`;
-            hasWhere = true;
-          }
-        }
-        
-        if (filters.isPremium !== undefined) {
-          const condition = filters.isPremium ? 'TRUE' : 'FALSE';
-          if (hasWhere) {
-            query = sql`${query} AND "isPremium" = ${sql.raw(condition)}`;
-          } else {
-            query = sql`${query} WHERE "isPremium" = ${sql.raw(condition)}`;
-            hasWhere = true;
-          }
-        }
-        
-        if (filters.isVisible !== undefined) {
-          const condition = filters.isVisible ? 'TRUE' : 'FALSE';
-          if (hasWhere) {
-            query = sql`${query} AND "isVisible" = ${sql.raw(condition)}`;
-          } else {
-            query = sql`${query} WHERE "isVisible" = ${sql.raw(condition)}`;
-            hasWhere = true;
-          }
-        }
-        
-        if (filters.fileType) {
-          if (hasWhere) {
-            query = sql`${query} AND "fileType" = ${filters.fileType}`;
-          } else {
-            query = sql`${query} WHERE "fileType" = ${filters.fileType}`;
-            hasWhere = true;
-          }
-        }
-      }
+      params.push(limit, offset);
       
-      // Adicionar ordenação baseada no parâmetro sortBy
-      if (filters?.sortBy === 'destaques') {
-        // Destaques: artes premium primeiro, depois por views
-        query = sql`${query} ORDER BY "isPremium" DESC, "viewcount" DESC, "createdAt" DESC`;
-      } else if (filters?.sortBy === 'emalta') {
-        // Em alta: ordenar por views (popularidade)
-        query = sql`${query} ORDER BY "viewcount" DESC, "createdAt" DESC`;
-      } else if (filters?.sortBy === 'recentes') {
-        // Recentes: mais novos primeiro
-        query = sql`${query} ORDER BY "createdAt" DESC`;
-      } else if (filters?.sortBy === 'antigos') {
-        // Antigos: mais antigos primeiro
-        query = sql`${query} ORDER BY "createdAt" ASC`;
-      } else {
-        // Ordenação padrão para painel administrativo: sempre por data de criação (mais recentes primeiro)
-        query = sql`${query} ORDER BY "createdAt" DESC`;
-      }
+      const [result, countResult] = await Promise.all([
+        db.execute(sql.raw(mainQuery, params)),
+        db.execute(sql.raw(countQueryStr, params.slice(0, -2)))
+      ]);
       
-      // Adicionar limite e offset (paginação)
-      query = sql`${query} LIMIT ${limit} OFFSET ${offset}`;
-      
-      // Executar a consulta
-      const result = await db.execute(query);
-      
-      // Consulta para obter o total de registros
-      let countQuery = sql`SELECT COUNT(*) as count FROM arts`;
-      
-      if (filters) {
-        let hasWhere = false;
-        
-        if (filters.categoryId) {
-          countQuery = sql`${countQuery} WHERE "categoryId" = ${filters.categoryId}`;
-          hasWhere = true;
-        }
-        
-        if (filters.search) {
-          const searchTerm = `%${filters.search}%`;
-          if (hasWhere) {
-            countQuery = sql`${countQuery} AND title ILIKE ${searchTerm}`;
-          } else {
-            countQuery = sql`${countQuery} WHERE title ILIKE ${searchTerm}`;
-            hasWhere = true;
-          }
-        }
-        
-        if (filters.isPremium !== undefined) {
-          const condition = filters.isPremium ? 'TRUE' : 'FALSE';
-          if (hasWhere) {
-            countQuery = sql`${countQuery} AND "isPremium" = ${sql.raw(condition)}`;
-          } else {
-            countQuery = sql`${countQuery} WHERE "isPremium" = ${sql.raw(condition)}`;
-            hasWhere = true;
-          }
-        }
-        
-        if (filters.isVisible !== undefined) {
-          const condition = filters.isVisible ? 'TRUE' : 'FALSE';
-          if (hasWhere) {
-            countQuery = sql`${countQuery} AND "isVisible" = ${sql.raw(condition)}`;
-          } else {
-            countQuery = sql`${countQuery} WHERE "isVisible" = ${sql.raw(condition)}`;
-            hasWhere = true;
-          }
-        }
-        
-        if (filters.fileType) {
-          if (hasWhere) {
-            countQuery = sql`${countQuery} AND "fileType" = ${filters.fileType}`;
-          } else {
-            countQuery = sql`${countQuery} WHERE "fileType" = ${filters.fileType}`;
-            hasWhere = true;
-          }
-        }
-      }
-      
-      const countResult = await db.execute(countQuery);
       const totalCount = parseInt(countResult.rows[0].count as string);
       
-      // Mapear os resultados para o tipo Art com nomes em camelCase
+      // Mapear resultados
       const arts = result.rows.map(row => ({
         ...row,
         designerId: row.designerid,
         viewCount: row.viewcount,
         aspectRatio: row.aspectratio
       }));
+      
+      const endTime = Date.now();
+      console.log(`[Performance] Consulta com filtros executada em ${endTime - startTime}ms`);
       
       return {
         arts: arts as Art[],
