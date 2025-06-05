@@ -2025,8 +2025,8 @@ export class DatabaseStorage implements IStorage {
         // Antigos: mais antigos primeiro
         query = sql`${query} ORDER BY "createdAt" ASC`;
       } else {
-        // Ordenação padrão por destaques
-        query = sql`${query} ORDER BY "isPremium" DESC, "viewcount" DESC, "createdAt" DESC`;
+        // Ordenação padrão para painel administrativo: sempre por data de criação (mais recentes primeiro)
+        query = sql`${query} ORDER BY "createdAt" DESC`;
       }
       
       // Adicionar limite e offset (paginação)
@@ -2087,18 +2087,28 @@ export class DatabaseStorage implements IStorage {
       }
       
       const countResult = await db.execute(countQuery);
+      const totalCount = parseInt(countResult.rows[0].count as string);
       
-      // Mapear os resultados para o tipo Art com nomes em camelCase
-      const arts = result.rows.map(row => ({
-        ...row,
-        designerId: row.designerid,
-        viewCount: row.viewcount,
-        aspectRatio: row.aspectratio
-      }));
+      // Mapear os resultados para o tipo Art com nomes em camelCase e IDs sequenciais
+      const arts = result.rows.map((row, index) => {
+        // Calcular ID sequencial baseado na posição na ordenação global (mais recentes primeiro)
+        // Para a primeira página (page 1): IDs 1, 2, 3...
+        // Para a segunda página (page 2): IDs continuam sequencialmente
+        const sequentialId = (page - 1) * limit + index + 1;
+        
+        return {
+          ...row,
+          id: sequentialId, // Substituir ID do banco por ID sequencial
+          originalId: row.id, // Manter ID original para referências internas
+          designerId: row.designerid,
+          viewCount: row.viewcount,
+          aspectRatio: row.aspectratio
+        };
+      });
       
       return {
         arts: arts as Art[],
-        totalCount: parseInt(countResult.rows[0].count as string)
+        totalCount: totalCount
       };
     } catch (error) {
       console.error("Erro em getArts:", error);
