@@ -2493,8 +2493,19 @@ export class DatabaseStorage implements IStorage {
       // Adicionar logs para depuração
       console.log(`[createArt] Criando arte com groupId: ${art.groupId}`);
       
+      // Definir a data atual para createdAt e updatedAt
+      const now = new Date();
+      
       // Mapeando os nomes das propriedades para os nomes corretos das colunas
       const artData: any = { ...art };
+      
+      // Garantir que as datas sejam definidas corretamente
+      if (!artData.createdAt) {
+        artData.createdAt = now;
+      }
+      if (!artData.updatedAt) {
+        artData.updatedAt = now;
+      }
       
       // Se tiver designerId, precisamos renomear para designerid
       if (artData.designerId !== undefined) {
@@ -2518,7 +2529,9 @@ export class DatabaseStorage implements IStorage {
       console.log(`[createArt] Dados da arte antes da inserção:`, {
         title: artData.title,
         format: artData.format,
-        groupId: artData.groupId
+        groupId: artData.groupId,
+        createdAt: artData.createdAt,
+        updatedAt: artData.updatedAt
       });
       
       const [newArt] = await db.insert(arts).values(artData).returning();
