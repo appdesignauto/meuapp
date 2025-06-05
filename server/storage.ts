@@ -2091,14 +2091,14 @@ export class DatabaseStorage implements IStorage {
       
       // Mapear os resultados para o tipo Art com nomes em camelCase e IDs sequenciais
       const arts = result.rows.map((row, index) => {
-        // Calcular ID sequencial baseado na posição na ordenação global (mais recentes primeiro)
-        // Para a primeira página (page 1): IDs 1, 2, 3...
-        // Para a segunda página (page 2): IDs continuam sequencialmente
-        const sequentialId = (page - 1) * limit + index + 1;
+        // Calcular ID sequencial decrescente: arte mais recente = número maior
+        // Total de artes - posição atual + 1 = ID sequencial decrescente
+        // Ex: Se temos 82 artes, a mais recente será 82, a segunda mais recente será 81, etc.
+        const sequentialId = totalCount - ((page - 1) * limit + index);
         
         return {
           ...row,
-          id: sequentialId, // Substituir ID do banco por ID sequencial
+          id: sequentialId, // Substituir ID do banco por ID sequencial decrescente
           originalId: row.id, // Manter ID original para referências internas
           designerId: row.designerid,
           viewCount: row.viewcount,
