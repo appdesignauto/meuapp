@@ -2118,9 +2118,8 @@ export class DatabaseStorage implements IStorage {
   
   async getArtById(id: number): Promise<Art | undefined> {
     try {
-      // Usar SQL bruto para evitar problemas com nomes de colunas
-      // Incluir JOIN com categorias para obter dados da categoria diretamente
-      const result = await db.execute(sql`
+      // Primeiro, buscar todas as artes ordenadas por data de criação para mapear IDs sequenciais
+      const allArtsResult = await db.execute(sql`
         SELECT 
           a.id, 
           a."createdAt", 
@@ -2144,29 +2143,44 @@ export class DatabaseStorage implements IStorage {
           c.slug as "category_slug"
         FROM arts a
         LEFT JOIN categories c ON a."categoryId" = c.id
-        WHERE a.id = ${id}
+        ORDER BY a."createdAt" DESC
       `);
       
-      if (result.rows.length === 0) {
+      if (allArtsResult.rows.length === 0) {
         return undefined;
       }
       
-      // Mapear colunas minúsculas para camelCase
-      const row = result.rows[0];
+      // Encontrar a arte correspondente ao ID sequencial
+      const totalCount = allArtsResult.rows.length;
+      let targetArt = null;
+      
+      for (let i = 0; i < allArtsResult.rows.length; i++) {
+        const sequentialId = totalCount - i; // ID sequencial decrescente
+        if (sequentialId === id) {
+          targetArt = allArtsResult.rows[i];
+          break;
+        }
+      }
+      
+      if (!targetArt) {
+        return undefined;
+      }
       
       // Criar objeto categoria se existir
-      const category = row.category_id ? {
-        id: row.category_id,
-        name: row.category_name,
-        slug: row.category_slug
+      const category = targetArt.category_id ? {
+        id: targetArt.category_id,
+        name: targetArt.category_name,
+        slug: targetArt.category_slug
       } : null;
       
-      // Criar objeto arte com categoria embutida
+      // Criar objeto arte com categoria embutida e ID sequencial
       const art = {
-        ...row,
-        designerId: row.designerid,
-        viewCount: row.viewcount,
-        aspectRatio: row.aspectratio,
+        ...targetArt,
+        id: id, // Manter ID sequencial
+        originalId: targetArt.id, // Guardar ID original
+        designerId: targetArt.designerid,
+        viewCount: targetArt.viewcount,
+        aspectRatio: targetArt.aspectratio,
         category: category
       } as Art;
       
