@@ -64,7 +64,36 @@ html body div[class*="columns-"] {
   -moz-column-fill: balance !important;
 }
 
-/* Layout responsivo padrão - usa apenas Tailwind CSS */
+/* Layout responsivo força 2 colunas mobile - produção */
+[data-responsive-columns="true"] {
+  column-count: 2 !important;
+  -webkit-column-count: 2 !important;
+  -moz-column-count: 2 !important;
+}
+
+@media screen and (min-width: 640px) {
+  [data-responsive-columns="true"] {
+    column-count: 3 !important;
+    -webkit-column-count: 3 !important;
+    -moz-column-count: 3 !important;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  [data-responsive-columns="true"] {
+    column-count: 4 !important;
+    -webkit-column-count: 4 !important;
+    -moz-column-count: 4 !important;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  [data-responsive-columns="true"] {
+    column-count: 5 !important;
+    -webkit-column-count: 5 !important;
+    -moz-column-count: 5 !important;
+  }
+}
 
 /* Grid responsivo específico para 5 colunas - FORÇADO */
 .responsive-grid {
