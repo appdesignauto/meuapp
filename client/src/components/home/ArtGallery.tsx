@@ -7,7 +7,7 @@ import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/queryClient';
 import { createSeoUrl } from '@/lib/utils/slug';
-import MinimalCategoryFilters from './MinimalCategoryFilters';
+import AdvancedFilters from './AdvancedFilters';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ArtGalleryProps {
@@ -28,12 +28,18 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   const galleryRef = useRef<HTMLDivElement>(null); // Referência para a galeria principal
   const { user } = useAuth();
 
+  // Estados para os novos filtros
+  const [selectedSort, setSelectedSort] = useState<string>('recentes');
+  const [selectedPremiumFilter, setSelectedPremiumFilter] = useState<'all' | 'premium' | 'free'>('all');
+  const [localFormatId, setLocalFormatId] = useState<number | null>(formatId);
+  const [localFileTypeId, setLocalFileTypeId] = useState<number | null>(fileTypeId);
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
     setLoadCounter(0);
     setAllArts([]);
-  }, [categoryId, formatId, fileTypeId]);
+  }, [categoryId, localFormatId, localFileTypeId, selectedSort, selectedPremiumFilter]);
 
   // Build the URL with query parameters
   const getArtsUrl = (page: number) => {
@@ -42,8 +48,24 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     url.searchParams.append('limit', initialLimit.toString());
     
     if (categoryId) url.searchParams.append('categoryId', categoryId.toString());
-    if (formatId) url.searchParams.append('formatId', formatId.toString());
-    if (fileTypeId) url.searchParams.append('fileTypeId', fileTypeId.toString());
+    if (localFormatId) url.searchParams.append('formatId', localFormatId.toString());
+    if (localFileTypeId) url.searchParams.append('fileTypeId', localFileTypeId.toString());
+    
+    // Adicionar filtros de ordenação
+    if (selectedSort === 'populares') {
+      url.searchParams.append('sortBy', 'emalta');
+    } else if (selectedSort === 'todas') {
+      url.searchParams.append('sortBy', 'destaques');
+    } else {
+      url.searchParams.append('sortBy', 'recentes');
+    }
+    
+    // Adicionar filtros premium/free
+    if (selectedPremiumFilter === 'premium') {
+      url.searchParams.append('isPremium', 'true');
+    } else if (selectedPremiumFilter === 'free') {
+      url.searchParams.append('isPremium', 'false');
+    }
     
     // Adiciona explicitamente o filtro de visibilidade para TODOS os usuários na vitrine pública
     // Apenas no painel admin as artes ocultas devem aparecer
@@ -62,8 +84,10 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
       page: currentPage, 
       limit: initialLimit, 
       categoryId, 
-      formatId, 
-      fileTypeId,
+      formatId: localFormatId, 
+      fileTypeId: localFileTypeId,
+      sortBy: selectedSort === 'populares' ? 'emalta' : selectedSort === 'todas' ? 'destaques' : 'recentes',
+      isPremium: selectedPremiumFilter === 'premium' ? true : selectedPremiumFilter === 'free' ? false : undefined,
       // Na vitrine, sempre exibimos apenas artes visíveis, independente do nível de acesso do usuário
       isVisible: true
     }
@@ -208,9 +232,17 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             )}
             {onCategorySelect && (
               <div className="w-full mt-2">
-                <MinimalCategoryFilters
+                <AdvancedFilters
                   selectedCategory={categoryId}
+                  selectedFormat={localFormatId}
+                  selectedFileType={localFileTypeId}
+                  selectedSort={selectedSort}
+                  selectedPremiumFilter={selectedPremiumFilter}
                   onCategorySelect={onCategorySelect}
+                  onFormatSelect={setLocalFormatId}
+                  onFileTypeSelect={setLocalFileTypeId}
+                  onSortSelect={setSelectedSort}
+                  onPremiumFilterSelect={setSelectedPremiumFilter}
                 />
               </div>
             )}
