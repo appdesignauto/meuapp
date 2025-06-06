@@ -7,8 +7,6 @@ import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/queryClient';
 import { createSeoUrl } from '@/lib/utils/slug';
-import AdvancedFilters from './AdvancedFilters';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface ArtGalleryProps {
   categoryId: number | null;
@@ -28,18 +26,12 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   const galleryRef = useRef<HTMLDivElement>(null); // Referência para a galeria principal
   const { user } = useAuth();
 
-  // Estados para os novos filtros
-  const [selectedSort, setSelectedSort] = useState<string>('recentes');
-  const [selectedPremiumFilter, setSelectedPremiumFilter] = useState<'all' | 'premium' | 'free'>('all');
-  const [localFormatId, setLocalFormatId] = useState<number | null>(formatId);
-  const [localFileTypeId, setLocalFileTypeId] = useState<number | null>(fileTypeId);
-
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
     setLoadCounter(0);
     setAllArts([]);
-  }, [categoryId, localFormatId, localFileTypeId, selectedSort, selectedPremiumFilter]);
+  }, [categoryId, formatId, fileTypeId]);
 
   // Build the URL with query parameters
   const getArtsUrl = (page: number) => {
@@ -48,24 +40,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     url.searchParams.append('limit', initialLimit.toString());
     
     if (categoryId) url.searchParams.append('categoryId', categoryId.toString());
-    if (localFormatId) url.searchParams.append('formatId', localFormatId.toString());
-    if (localFileTypeId) url.searchParams.append('fileTypeId', localFileTypeId.toString());
-    
-    // Adicionar filtros de ordenação
-    if (selectedSort === 'populares') {
-      url.searchParams.append('sortBy', 'emalta');
-    } else if (selectedSort === 'todas') {
-      url.searchParams.append('sortBy', 'destaques');
-    } else {
-      url.searchParams.append('sortBy', 'recentes');
-    }
-    
-    // Adicionar filtros premium/free
-    if (selectedPremiumFilter === 'premium') {
-      url.searchParams.append('isPremium', 'true');
-    } else if (selectedPremiumFilter === 'free') {
-      url.searchParams.append('isPremium', 'false');
-    }
+    if (formatId) url.searchParams.append('formatId', formatId.toString());
+    if (fileTypeId) url.searchParams.append('fileTypeId', fileTypeId.toString());
     
     // Adiciona explicitamente o filtro de visibilidade para TODOS os usuários na vitrine pública
     // Apenas no painel admin as artes ocultas devem aparecer
@@ -74,9 +50,6 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     return url.pathname + url.search;
   };
 
-  // Verifica se o usuário é admin para aplicação dos filtros
-  const isAdmin = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || user?.nivelacesso === 'designer';
-  
   // Build query key based on filters including visibility
   const queryKey = [
     '/api/artes',
@@ -84,126 +57,52 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
       page: currentPage, 
       limit: initialLimit, 
       categoryId, 
-      formatId: localFormatId, 
-      fileTypeId: localFileTypeId,
-      sortBy: selectedSort === 'populares' ? 'emalta' : selectedSort === 'todas' ? 'destaques' : 'recentes',
-      isPremium: selectedPremiumFilter === 'premium' ? true : selectedPremiumFilter === 'free' ? false : undefined,
-      // Na vitrine, sempre exibimos apenas artes visíveis, independente do nível de acesso do usuário
-      isVisible: true
+      formatId, 
+      fileTypeId,
+      isVisible: true 
     }
   ];
-  
-  // Função para verificar se ainda há mais artes a serem carregadas
-  const checkHasMoreArts = useCallback((totalCount: number) => {
-    return (currentPage * initialLimit) < totalCount;
-  }, [currentPage, initialLimit]);
 
-  const { data, isLoading, isFetching } = useQuery<{
-    arts: any[];
-    totalCount: number;
-  }>({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey,
-    queryFn: async () => {
-      const res = await fetch(getArtsUrl(currentPage));
-      if (!res.ok) throw new Error('Erro ao carregar artes');
-      return res.json();
-    },
-    // Desabilita recargas automáticas para controlarmos manualmente
+    queryFn: () => fetch(getArtsUrl(currentPage)).then(res => res.json()),
+    enabled: true,
+    staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
-    refetchOnMount: currentPage === 1, // Carrega apenas na primeira montagem
-    staleTime: 30000, // Cache por 30 segundos
   });
 
-  // Função para pré-carregar as imagens
-  const preloadImages = useCallback((arts: any[]) => {
-    const promises = arts.map(art => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = resolve;
-        img.onerror = resolve; // Continue mesmo se falhar o carregamento
-        img.src = art.imageUrl;
-      });
-    });
-    
-    return Promise.all(promises);
-  }, []);
-
-  // Atualiza o estado das artes quando novos dados são carregados
+  // Process data when it arrives
   useEffect(() => {
     if (data?.arts) {
-      console.log(`Carregando página ${currentPage}, total de artes: ${data.totalCount}, hasMoreArts: ${checkHasMoreArts(data.totalCount)}`);
-      
-      // Pré-carrega as imagens antes de exibir
-      preloadImages(data.arts).then(() => {
-        if (currentPage === 1) {
-          // Se é a primeira página, apenas substitui as artes
-          setAllArts(data.arts);
-        } else {
-          // Se não, adiciona às artes existentes
-          setAllArts(prev => [...prev, ...data.arts]);
-        }
-        
-        // Atualiza o estado hasMoreArts após o carregamento
-        const moreArtsAvailable = checkHasMoreArts(data.totalCount);
-        setHasMoreArts(moreArtsAvailable);
-        console.log(`Após carregar página ${currentPage}, hasMoreArts atualizado para: ${moreArtsAvailable}`);
-      });
-    }
-  }, [data, currentPage, preloadImages, checkHasMoreArts]);
-
-  // Force re-fetch when filters or user authentication/role change
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-  }, [categoryId, formatId, fileTypeId, user?.nivelacesso]);
-
-  // Força o espaçamento correto na galeria da home
-  useEffect(() => {
-    const forceGallerySpacing = () => {
-      if (galleryRef.current) {
-        galleryRef.current.style.setProperty('column-gap', '8px', 'important');
-        galleryRef.current.style.setProperty('-webkit-column-gap', '8px', 'important');
-        galleryRef.current.style.setProperty('-moz-column-gap', '8px', 'important');
+      if (currentPage === 1) {
+        // First page, replace all
+        setAllArts(data.arts);
+      } else {
+        // Subsequent pages, append
+        setAllArts(prev => [...prev, ...data.arts]);
       }
-    };
+      
+      // Update hasMoreArts based on returned data
+      setHasMoreArts(data.arts.length === initialLimit);
+    }
+  }, [data, currentPage]);
 
-    forceGallerySpacing();
-    const timeoutId = setTimeout(forceGallerySpacing, 100);
-    return () => clearTimeout(timeoutId);
-  }, [allArts]);
-
+  // Load more function
   const loadMore = useCallback(() => {
-    if (isFetching) return;
-
-    // Se já clicou duas vezes (loadCounter = 2)
-    if (loadCounter >= 2) {
-      // Na terceira vez, redireciona para a página de artes com filtros
-      setLocation('/artes');
-      return;
-    }
-
-    // Na primeira e segunda vez, carrega mais artes
-    if (hasMoreArts) {
-      // Guardar a posição do botão para manter o scroll
-      const buttonPosition = loadMoreButtonRef.current?.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      
-      // Incrementa o contador e a página
-      setLoadCounter(prev => prev + 1);
+    if (!isFetching && hasMoreArts) {
       setCurrentPage(prev => prev + 1);
-      
-      // Começar a pré-carregar as próximas imagens imediatamente
-      // enquanto outras animações ainda estão acontecendo
-      
-      // Manter a posição do scroll após carregar
-      if (buttonPosition) {
-        // Usando setTimeout para garantir que o scroll aconteça após a renderização
-        setTimeout(() => {
-          window.scrollTo({
-            top: scrollY,
-            behavior: 'auto'
-          });
-        }, 100);
-      }
+      setLoadCounter(prev => prev + 1);
+    }
+  }, [isFetching, hasMoreArts]);
+
+  // Auto redirect to main arts page after several loads
+  useEffect(() => {
+    if (loadCounter >= 3 && !isLoading && !isFetching) {
+      // Só redireciona se não está carregando
+      const timer = setTimeout(() => {
+        setLocation('/artes');
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [loadCounter, hasMoreArts, isFetching, setLocation]);
 
@@ -228,22 +127,6 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             {categoryId && (
               <div className="bg-blue-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-md shadow-sm">
                 Filtrado por categoria
-              </div>
-            )}
-            {onCategorySelect && (
-              <div className="w-full mt-2">
-                <AdvancedFilters
-                  selectedCategory={categoryId}
-                  selectedFormat={localFormatId}
-                  selectedFileType={localFileTypeId}
-                  selectedSort={selectedSort}
-                  selectedPremiumFilter={selectedPremiumFilter}
-                  onCategorySelect={onCategorySelect}
-                  onFormatSelect={setLocalFormatId}
-                  onFileTypeSelect={setLocalFileTypeId}
-                  onSortSelect={setSelectedSort}
-                  onPremiumFilterSelect={setSelectedPremiumFilter}
-                />
               </div>
             )}
           </div>
@@ -277,90 +160,108 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
               style={{ columnGap: '8px' }}
             >
-              <AnimatePresence>
-                {allArts.map((art, index) => (
-                  <motion.div
-                    key={art.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ 
-                      duration: 0.4, 
-                      delay: 0.05 * (index % 8), // Usa index em vez de art.id para consistência
-                      ease: [0.25, 0.1, 0.25, 1.0]
-                    }}
-                    className="break-inside-avoid transform hover:-translate-y-1 transition-transform duration-300"
-                    style={{ 
-                      display: 'inline-block',
-                      width: '100%',
-                      marginBottom: '8px' // Espaçamento fixo e consistente
-                    }}
-                  >
-                    <ArtCard 
-                      art={art} 
-                      onClick={() => setLocation(`/artes/${createSeoUrl(art.id, art.title)}`)}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              {allArts.map((art, index) => (
+                <div 
+                  key={`${art.id}-${index}`}
+                  className="block overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 break-inside-avoid mb-3 xs:mb-4"
+                  onClick={() => {
+                    const artUrl = createSeoUrl(art.title, art.id);
+                    setLocation(`/artes/${artUrl}`);
+                  }}
+                >
+                  <ArtCard art={art} />
+                </div>
+              ))}
             </div>
             
-            {/* Load More Button - sempre visível, apenas desabilitado quando não há mais artes */}
-            {(
-              <motion.div 
-                className="flex justify-center mt-12"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                key="load-more-container"
-              >
-                <Button 
-                  ref={loadMoreButtonRef}
-                  variant="outline" 
-                  onClick={loadMore}
-                  disabled={isFetching || !hasMoreArts}
-                  className={`px-8 py-6 flex items-center rounded-full border-2 ${hasMoreArts ? 'border-blue-300 text-blue-600 hover:bg-blue-50' : 'border-gray-200 text-gray-400'} font-medium transform transition-all duration-300 hover:scale-105 active:scale-95`}
-                  id="load-more-button"
-                >
-                  {isFetching ? (
-                    <motion.span 
-                      className="flex items-center"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <svg className={`animate-spin -ml-1 mr-2 h-5 w-5 ${hasMoreArts ? 'text-blue-600' : 'text-gray-400'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Carregando...
-                    </motion.span>
-                  ) : (
-                    <motion.div 
-                      className="flex items-center"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <span className={hasMoreArts ? '' : 'text-gray-400'}>
-                        {!hasMoreArts 
-                          ? 'Não há mais designs'
-                          : (loadCounter === 0 
-                              ? 'Carregar mais designs' 
-                              : (loadCounter === 1 
-                                ? 'Carregar mais designs' 
-                                : 'Ver todos os designs'
-                              )
-                            )
-                        }
-                      </span>
-                      {hasMoreArts 
-                        ? (loadCounter < 2 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />)
-                        : null
-                      }
-                    </motion.div>
-                  )}
-                </Button>
-              </motion.div>
+            {/* Load More Button */}
+            {hasMoreArts && !isFetching && allArts.length > 0 && (
+              <div className="text-center mt-8">
+                {loadCounter >= 2 ? (
+                  <div className="space-y-4">
+                    <p className="text-neutral-600 text-sm">
+                      Você já carregou várias artes! Para ver todas as opções disponíveis, visite nossa galeria completa.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                      <Button 
+                        ref={loadMoreButtonRef}
+                        onClick={loadMore}
+                        variant="outline"
+                        className="min-w-[140px] flex items-center gap-2"
+                        disabled={isFetching}
+                      >
+                        {isFetching ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                            Carregando...
+                          </>
+                        ) : (
+                          <>
+                            <ArrowDown className="h-4 w-4" />
+                            Carregar mais
+                          </>
+                        )}
+                      </Button>
+                      <Link href="/artes">
+                        <Button className="min-w-[140px] flex items-center gap-2">
+                          <Star className="h-4 w-4" />
+                          Ver galeria completa
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <Button 
+                    ref={loadMoreButtonRef}
+                    onClick={loadMore}
+                    variant="outline"
+                    size="lg"
+                    className="min-w-[200px] flex items-center gap-2"
+                    disabled={isFetching}
+                  >
+                    {isFetching ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        Carregando mais artes...
+                      </>
+                    ) : (
+                      <>
+                        <ArrowDown className="h-4 w-4" />
+                        Carregar mais artes
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            {/* No More Arts Message */}
+            {!hasMoreArts && allArts.length > 0 && !isFetching && (
+              <div className="text-center mt-8">
+                <p className="text-neutral-600 text-sm mb-4">
+                  Você viu todas as artes disponíveis nesta categoria! Explore outras categorias ou visite nossa galeria completa.
+                </p>
+                <Link href="/artes">
+                  <Button className="min-w-[200px] flex items-center gap-2">
+                    <Star className="h-4 w-4" />
+                    Explorar galeria completa
+                  </Button>
+                </Link>
+              </div>
+            )}
+            
+            {/* No Arts Found */}
+            {allArts.length === 0 && !isLoading && (
+              <div className="text-center py-12">
+                <p className="text-neutral-600 text-lg mb-4">
+                  Nenhuma arte encontrada para os filtros selecionados.
+                </p>
+                <Link href="/artes">
+                  <Button variant="outline">
+                    Ver todas as artes
+                  </Button>
+                </Link>
+              </div>
             )}
           </>
         )}
