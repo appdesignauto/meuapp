@@ -22,8 +22,38 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
       });
     }
 
-    // Validar os dados recebidos usando o esquema ArtGroupSchema
-    const artGroupData = ArtGroupSchema.parse(req.body);
+    // Validar os dados recebidos - aceitar tanto formato de criação quanto edição
+    console.log('Dados recebidos para validação:', JSON.stringify(req.body, null, 2));
+    
+    // Verificar se o campo formats existe e é válido
+    if (!req.body.formats || !Array.isArray(req.body.formats) || req.body.formats.length === 0) {
+      return res.status(400).json({
+        message: 'Dados inválidos: o campo "formats" é obrigatório e deve ser um array não vazio'
+      });
+    }
+    
+    // Validar cada formato individualmente
+    for (const format of req.body.formats) {
+      if (!format.format || !format.title || !format.imageUrl || !format.editUrl || !format.fileType) {
+        return res.status(400).json({
+          message: 'Dados inválidos: cada formato deve ter os campos obrigatórios (format, title, imageUrl, editUrl, fileType)'
+        });
+      }
+    }
+    
+    // Validar categoryId
+    if (!req.body.categoryId || isNaN(parseInt(req.body.categoryId))) {
+      return res.status(400).json({
+        message: 'Dados inválidos: categoryId é obrigatório e deve ser um número válido'
+      });
+    }
+    
+    // Criar objeto com dados validados
+    const artGroupData = {
+      categoryId: parseInt(req.body.categoryId),
+      isPremium: req.body.isPremium || false,
+      formats: req.body.formats
+    };
     
     // Gerar um ID de grupo único para vincular as artes
     const artGroupId = uuidv4();
@@ -54,11 +84,11 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
       
       // Atualizar apenas a arte existente
       // Encontrar o formato correspondente nos dados enviados
-      console.log(`Formatos disponíveis:`, JSON.stringify(artGroupData.formats.map(f => f.format)));
+      console.log(`Formatos disponíveis:`, JSON.stringify(artGroupData.formats.map((f: any) => f.format)));
       console.log(`Procurando formato: ${existingFormat}`);
       
       // Se não encontrar o formato específico, usar o primeiro formato disponível
-      const formatToUpdate = artGroupData.formats.find(f => f.format === existingFormat) || artGroupData.formats[0];
+      const formatToUpdate = artGroupData.formats.find((f: any) => f.format === existingFormat) || artGroupData.formats[0];
       
       if (formatToUpdate) {
         console.log(`Formato selecionado para atualização: ${formatToUpdate.format}`);
@@ -74,7 +104,7 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
           isPremium: artGroupData.isPremium,
           fileType: formatToUpdate.fileType || artGroupData.formats[0].fileType,
           groupId: artGroupId,
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString()
         };
         
         // Atualizar a arte no banco
@@ -234,6 +264,180 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
     // Erro genérico
     return res.status(500).json({
       message: 'Erro ao processar o grupo de artes'
+    });
+  }
+});
+
+// Rota para editar/atualizar um grupo de artes existente
+router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin ou designer_adm
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm') {
+      return res.status(403).json({
+        message: 'Acesso negado. Você não tem permissão para editar artes.'
+      });
+    }
+
+    const { groupId } = req.params;
+    
+    // Validar os dados recebidos usando a mesma validação da criação
+    console.log('Dados recebidos para atualização:', JSON.stringify(req.body, null, 2));
+    
+    // Verificar se o campo formats existe e é válido
+    if (!req.body.formats || !Array.isArray(req.body.formats) || req.body.formats.length === 0) {
+      return res.status(400).json({
+        message: 'Dados inválidos: o campo "formats" é obrigatório e deve ser um array não vazio'
+      });
+    }
+    
+    // Validar cada formato individualmente
+    for (const format of req.body.formats) {
+      if (!format.format || !format.title || !format.imageUrl || !format.editUrl || !format.fileType) {
+        return res.status(400).json({
+          message: 'Dados inválidos: cada formato deve ter os campos obrigatórios (format, title, imageUrl, editUrl, fileType)'
+        });
+      }
+    }
+    
+    // Validar categoryId
+    if (!req.body.categoryId || isNaN(parseInt(req.body.categoryId))) {
+      return res.status(400).json({
+        message: 'Dados inválidos: categoryId é obrigatório e deve ser um número válido'
+      });
+    }
+    
+    // Criar objeto com dados validados
+    const artGroupData = {
+      categoryId: parseInt(req.body.categoryId),
+      isPremium: req.body.isPremium || false,
+      formats: req.body.formats
+    };
+
+    console.log(`Atualizando grupo de artes: ${groupId}`);
+
+    // Buscar artes existentes do grupo
+    const existingArtsResult = await db.execute(sql`
+      SELECT * FROM arts WHERE "groupId" = ${groupId}
+    `);
+    
+    const existingArts = existingArtsResult.rows || [];
+    
+    if (existingArts.length === 0) {
+      return res.status(404).json({
+        message: 'Grupo de artes não encontrado'
+      });
+    }
+
+    // Criar mapa dos formatos existentes para facilitar a atualização
+    const existingFormats = new Map();
+    existingArts.forEach((art: any) => {
+      existingFormats.set(art.format, art);
+    });
+
+    // Arrays para controle das operações
+    const updatedArts = [];
+    const newArts = [];
+    
+    // ID da coleção padrão (se necessário)
+    const defaultCollectionId = 1;
+    
+    // Atualizar artes existentes e criar novas quando necessário
+    for (const format of artGroupData.formats) {
+      // Verificar se esse formato já existe no grupo
+      const existingArt = existingFormats.get(format.format);
+      
+      if (existingArt) {
+        // Atualizar arte existente
+        const updateData = {
+          title: format.title,
+          description: format.description || '',
+          imageUrl: format.imageUrl,
+          previewUrl: format.previewUrl || null,
+          editUrl: format.editUrl,
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          fileType: format.fileType,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Realizar a atualização no banco de dados
+        const [updatedArt] = await db
+          .update(arts)
+          .set(updateData)
+          .where(eq(arts.id, existingArt.id))
+          .returning();
+        
+        updatedArts.push({
+          id: updatedArt.id,
+          format: format.format,
+          title: format.title,
+          action: 'updated'
+        });
+        
+        // Remover do mapa para rastrear o que foi atualizado
+        existingFormats.delete(format.format);
+      } else {
+        // Criar nova arte para o formato que não existia
+        const artData = {
+          title: format.title,
+          description: format.description || '',
+          imageUrl: format.imageUrl,
+          previewUrl: format.previewUrl || null,
+          editUrl: format.editUrl || null,
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          format: format.format,
+          fileType: format.fileType,
+          isVisible: format.fileType === 'imagens-png' ? false : true,
+          designerid: req.user?.id || 1,
+          collectionId: defaultCollectionId,
+          groupId: groupId
+        };
+
+        console.log(`Criando nova arte formato: ${format.format} para grupo ${groupId}`);
+
+        // Criar a arte no banco de dados
+        const newArt = await storage.createArt(artData);
+        
+        newArts.push({
+          id: newArt.id,
+          format: format.format,
+          title: format.title,
+          action: 'created'
+        });
+      }
+    }
+
+    // Remover artes que não estão mais no grupo (formatos removidos)
+    const removedArts = [];
+    for (const [format, art] of existingFormats) {
+      await db.delete(arts).where(eq(arts.id, art.id));
+      removedArts.push({
+        id: art.id,
+        format: format,
+        title: art.title,
+        action: 'removed'
+      });
+    }
+
+    // Retornar sucesso com informações das operações realizadas
+    return res.status(200).json({
+      message: 'Grupo de artes atualizado com sucesso',
+      groupId: groupId,
+      operations: {
+        updated: updatedArts,
+        created: newArts,
+        removed: removedArts
+      },
+      totalArts: updatedArts.length + newArts.length
+    });
+
+  } catch (error) {
+    console.error('Erro ao atualizar grupo de artes:', error);
+    
+    return res.status(500).json({
+      message: 'Erro ao processar a atualização do grupo de artes'
     });
   }
 });
