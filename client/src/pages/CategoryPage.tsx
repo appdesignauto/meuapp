@@ -727,7 +727,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2">
               {arts.map((art) => (
                 <div 
                   key={art.id} 

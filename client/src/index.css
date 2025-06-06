@@ -64,7 +64,36 @@ html body div[class*="columns-"] {
   -moz-column-fill: balance !important;
 }
 
-/* Layout responsivo limpo - apenas Tailwind Grid */
+/* Layout responsivo profissional - CSS Columns otimizado */
+.columns-2, .columns-3, .columns-4, .columns-5 {
+  column-gap: 8px;
+  column-fill: balance;
+}
+
+/* Força responsividade em produção */
+@media (max-width: 639px) {
+  .columns-2, .sm\:columns-3, .md\:columns-4, .lg\:columns-5 {
+    column-count: 2 !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .sm\:columns-3, .md\:columns-4, .lg\:columns-5 {
+    column-count: 3 !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .md\:columns-4, .lg\:columns-5 {
+    column-count: 4 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:columns-5 {
+    column-count: 5 !important;
+  }
+}
 
 /* Grid responsivo específico para 5 colunas - FORÇADO */
 .responsive-grid {
