@@ -304,23 +304,28 @@ const ArtsList = () => {
         console.log(`Verificando grupo para arte ${art.id} usando endpoint check-group`);
         
         // Verificar o groupId e obter todas as artes do grupo
-        // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
         const checkResponse = await apiRequest('GET', `/api/admin/arts/${art.id}/check-group`);
         const checkData = await checkResponse.json();
         
         if (checkData.groupId) {
           // Se confirmado que existe um grupo, buscamos todas as artes do grupo
           console.log(`Buscando artes do grupo: ${checkData.groupId}`);
-          // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
           const groupResponse = await apiRequest('GET', `/api/admin/arts/group/${checkData.groupId}`);
           const groupData = await groupResponse.json();
           
           if (groupData && groupData.arts && groupData.arts.length > 0) {
             console.log(`Grupo encontrado com ${groupData.arts.length} artes`);
             
-            // Passamos a arte original para manter o foco no formato que foi clicado
-            // mas o dialog irá mostrar todas as artes do grupo
-            setEditingArt(art as any);
+            // Criar o objeto editingArt com as informações do grupo
+            const editingArtWithGroup = {
+              ...art,
+              groupId: checkData.groupId,
+              groupArts: groupData.arts,
+              initialFormat: art.format // Para manter o foco no formato clicado
+            };
+            
+            console.log('Passando dados para SimpleFormMultiDialog:', editingArtWithGroup);
+            setEditingArt(editingArtWithGroup as any);
             setIsFormOpen(true);
             return;
           }
