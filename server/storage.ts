@@ -1979,63 +1979,87 @@ export class DatabaseStorage implements IStorage {
         return { arts, totalCount };
       }
       
-      // Para filtros complexos, usar consulta Drizzle nativa
-      console.log('[Performance] Usando consulta Drizzle com filtros');
+      // Para filtros complexos, construir query básica do banco
+      console.log('[Performance] Usando consulta básica com filtros');
       
-      // Construir condições WHERE usando Drizzle
-      const whereConditions = [];
+      // Query base usando Drizzle
+      let baseQuery = db.select().from(arts);
       
+      // Aplicar filtros condicionalmente
       if (filters.categoryId) {
-        whereConditions.push(eq(arts.categoryId, filters.categoryId));
+        baseQuery = baseQuery.where(eq(arts.categoryId, filters.categoryId));
       }
       
       if (filters.search) {
-        whereConditions.push(like(arts.title, `%${filters.search}%`));
+        const searchCondition = like(arts.title, `%${filters.search}%`);
+        baseQuery = filters.categoryId ? 
+          baseQuery.where(and(eq(arts.categoryId, filters.categoryId), searchCondition)) :
+          baseQuery.where(searchCondition);
       }
       
       if (filters.isPremium !== undefined) {
-        whereConditions.push(eq(arts.isPremium, filters.isPremium));
+        const premiumCondition = eq(arts.isPremium, filters.isPremium);
+        if (filters.categoryId || filters.search) {
+          // Precisa combinar com condições existentes
+          const existingConditions = [];
+          if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
+          if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
+          existingConditions.push(premiumCondition);
+          baseQuery = db.select().from(arts).where(and(...existingConditions));
+        } else {
+          baseQuery = baseQuery.where(premiumCondition);
+        }
       }
       
       if (filters.isVisible !== undefined) {
-        whereConditions.push(eq(arts.isVisible, filters.isVisible));
+        const visibleCondition = eq(arts.isVisible, filters.isVisible);
+        const existingConditions = [];
+        if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
+        if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
+        if (filters.isPremium !== undefined) existingConditions.push(eq(arts.isPremium, filters.isPremium));
+        existingConditions.push(visibleCondition);
+        baseQuery = db.select().from(arts).where(and(...existingConditions));
       }
       
       if (filters.fileType) {
-        whereConditions.push(eq(arts.fileType, filters.fileType));
-      }
-      
-      // Construir query base
-      let query = db.select().from(arts);
-      let countQuery = db.select({ count: count() }).from(arts);
-      
-      // Aplicar WHERE se houver condições
-      if (whereConditions.length > 0) {
-        const whereClause = whereConditions.length === 1 ? whereConditions[0] : and(...whereConditions);
-        query = query.where(whereClause);
-        countQuery = countQuery.where(whereClause);
+        const fileTypeCondition = eq(arts.fileType, filters.fileType);
+        const existingConditions = [];
+        if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
+        if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
+        if (filters.isPremium !== undefined) existingConditions.push(eq(arts.isPremium, filters.isPremium));
+        if (filters.isVisible !== undefined) existingConditions.push(eq(arts.isVisible, filters.isVisible));
+        existingConditions.push(fileTypeCondition);
+        baseQuery = db.select().from(arts).where(and(...existingConditions));
       }
       
       // Aplicar ordenação
       if (filters.sortBy === 'destaques') {
-        query = query.orderBy(desc(arts.isPremium), desc(arts.viewcount), desc(arts.createdAt));
+        baseQuery = baseQuery.orderBy(desc(arts.isPremium), desc(arts.viewcount), desc(arts.createdAt));
       } else if (filters.sortBy === 'emalta') {
-        query = query.orderBy(desc(arts.viewcount), desc(arts.createdAt));
+        baseQuery = baseQuery.orderBy(desc(arts.viewcount), desc(arts.createdAt));
       } else if (filters.sortBy === 'antigos') {
-        query = query.orderBy(arts.createdAt);
+        baseQuery = baseQuery.orderBy(arts.createdAt);
       } else {
-        query = query.orderBy(desc(arts.createdAt));
+        baseQuery = baseQuery.orderBy(desc(arts.createdAt));
       }
       
       // Aplicar paginação
-      query = query.limit(limit).offset(offset);
+      const result = await baseQuery.limit(limit).offset(offset);
       
-      // Executar consultas em paralelo
-      const [result, countResult] = await Promise.all([
-        query,
-        countQuery
-      ]);
+      // Contar total separadamente
+      let countQuery = db.select({ count: count() }).from(arts);
+      const countConditions = [];
+      if (filters.categoryId) countConditions.push(eq(arts.categoryId, filters.categoryId));
+      if (filters.search) countConditions.push(like(arts.title, `%${filters.search}%`));
+      if (filters.isPremium !== undefined) countConditions.push(eq(arts.isPremium, filters.isPremium));
+      if (filters.isVisible !== undefined) countConditions.push(eq(arts.isVisible, filters.isVisible));
+      if (filters.fileType) countConditions.push(eq(arts.fileType, filters.fileType));
       
+      if (countConditions.length > 0) {
+        countQuery = countQuery.where(and(...countConditions));
+      }
+      
+      const countResult = await countQuery;
       const totalCount = countResult[0]?.count || 0;
       
       // Mapear resultados
