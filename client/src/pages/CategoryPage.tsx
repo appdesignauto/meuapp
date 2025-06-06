@@ -608,48 +608,55 @@ export default function CategoryPage() {
         </div>
       </div>
       
-      {/* Filtros horizontais centralizados */}
+      {/* Filtros horizontais modernos */}
       <div className="container mx-auto px-4 mb-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl md:rounded-full shadow-sm border border-gray-100 p-1.5 flex flex-col md:flex-row items-center justify-between">
-            <div className="w-full md:w-auto flex-1 grid grid-cols-2 md:flex justify-center gap-2 mb-2 md:mb-0">
-              <Select 
-                value={filters.formatId?.toString() || "_all"} 
-                onValueChange={handleFormatChange}
-                defaultValue="_all"
-              >
-                <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
-                  <SelectValue placeholder="Formato" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">Todos os formatos</SelectItem>
-                  {formats?.map((format: any) => (
-                    <SelectItem key={format.id} value={format.id.toString()}>
-                      {format.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {/* Filtro de Formato */}
+              <div className="flex items-center space-x-3">
+                <Select 
+                  value={filters.formatId?.toString() || "_all"} 
+                  onValueChange={handleFormatChange}
+                  defaultValue="_all"
+                >
+                  <SelectTrigger className="w-48 h-11 border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <SelectValue placeholder="Todos os formatos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">Todos os formatos</SelectItem>
+                    {formats?.map((format: any) => (
+                      <SelectItem key={format.id} value={format.id.toString()}>
+                        {format.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select 
-                value={filters.fileTypeId?.toString() || "_all"} 
-                onValueChange={handleFileTypeChange}
-                defaultValue="_all"
-              >
-                <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">Todos os tipos</SelectItem>
-                  {fileTypes?.map((fileType: any) => (
-                    <SelectItem key={fileType.id} value={fileType.id.toString()}>
-                      {fileType.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Filtro de Tipo */}
+              <div className="flex items-center space-x-3">
+                <Select 
+                  value={filters.fileTypeId?.toString() || "_all"} 
+                  onValueChange={handleFileTypeChange}
+                  defaultValue="_all"
+                >
+                  <SelectTrigger className="w-48 h-11 border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <SelectValue placeholder="Todos os tipos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">Todos os tipos</SelectItem>
+                    {fileTypes?.map((fileType: any) => (
+                      <SelectItem key={fileType.id} value={fileType.id.toString()}>
+                        {fileType.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <div className="col-span-2 md:col-span-1">
+              {/* Filtro de Ordenação */}
+              <div className="flex items-center space-x-3">
                 <Select 
                   value={filters.sortBy || 'default'}
                   onValueChange={(value) => {
@@ -665,8 +672,8 @@ export default function CategoryPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
-                    <SelectValue placeholder="Ordenar" />
+                  <SelectTrigger className="w-48 h-11 border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <SelectValue placeholder="Ordenação" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="default">Ordenação padrão</SelectItem>
@@ -675,18 +682,19 @@ export default function CategoryPage() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Botão Limpar Filtros */}
+              {(filters.formatId || filters.fileTypeId || search) && (
+                <Button 
+                  variant="outline"
+                  size="lg" 
+                  onClick={clearFilters}
+                  className="h-11 px-6 rounded-xl border-gray-300 text-gray-600 hover:bg-gray-50"
+                >
+                  Limpar filtros
+                </Button>
+              )}
             </div>
-            
-            {(filters.formatId || filters.fileTypeId || search) && (
-              <Button 
-                variant="ghost"
-                size="sm" 
-                onClick={clearFilters}
-                className="w-full md:w-auto mb-1 md:mb-0 md:mr-2 text-xs text-blue-600"
-              >
-                Limpar filtros
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -696,7 +704,7 @@ export default function CategoryPage() {
         {/* Galeria de imagens estilo Pinterest */}
         {isLoading ? (
           <div 
-            className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
+            className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 xl:columns-5 space-y-0"
             style={{ columnGap: '8px' }}
           >
             {Array.from({ length: 15 }).map((_, index) => (
@@ -742,7 +750,7 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
+              className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 xl:columns-5 space-y-0"
               style={{ columnGap: '8px' }}
             >
               {arts.map((art, index) => (
