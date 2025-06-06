@@ -684,14 +684,13 @@ export default function CategoryPage() {
             </Select>
             
             {(filters.formatId || filters.fileTypeId || search) && (
-              <Button 
-                variant="ghost"
-                size="sm" 
+              <button 
                 onClick={clearFilters}
-                className="h-9 px-4 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm"
+                className="h-8 px-3 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all flex items-center gap-1.5"
               >
+                <X className="w-3 h-3" />
                 Limpar
-              </Button>
+              </button>
             )}
           </div>
         </div>
