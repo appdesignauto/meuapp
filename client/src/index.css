@@ -48,32 +48,34 @@ html body div[class*="columns-"] {
   gap: inherit !important;
 }
 
-/* FORÇAR 5 COLUNAS EXATAS EM DESKTOP */
-@media (min-width: 1024px) {
-  .columns-5 {
-    columns: 5 !important;
-    column-count: 5 !important;
-    -webkit-columns: 5 !important;
-    -webkit-column-count: 5 !important;
-    -moz-columns: 5 !important;
-    -moz-column-count: 5 !important;
-    column-width: auto !important;
-    -webkit-column-width: auto !important;
-    -moz-column-width: auto !important;
-  }
+/* FORÇA 5 COLUNAS DEFINITIVO - BASEADO NO ARTGALLERY.TSX */
+.lg\:columns-5 {
+  column-count: 5 !important;
+  -webkit-column-count: 5 !important;
+  -moz-column-count: 5 !important;
+  columns: 5 !important;
+  -webkit-columns: 5 !important;
+  -moz-columns: 5 !important;
+  column-width: auto !important;
+  -webkit-column-width: auto !important;
+  -moz-column-width: auto !important;
+  column-fill: balance !important;
+  -webkit-column-fill: balance !important;
+  -moz-column-fill: balance !important;
 }
 
-@media (min-width: 1280px) {
-  .columns-5 {
-    columns: 5 !important;
+/* Container específico para category page */
+@media (min-width: 1024px) {
+  .category-gallery.lg\:columns-5 {
     column-count: 5 !important;
-    -webkit-columns: 5 !important;
     -webkit-column-count: 5 !important;
-    -moz-columns: 5 !important;
     -moz-column-count: 5 !important;
+    columns: 5 !important;
+    -webkit-columns: 5 !important;
+    -moz-columns: 5 !important;
     column-width: auto !important;
-    -webkit-column-width: auto !important;
-    -moz-column-width: auto !important;
+    max-width: none !important;
+    width: 100% !important;
   }
 }
 
