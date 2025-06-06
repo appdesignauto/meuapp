@@ -662,30 +662,7 @@ export default function CategoryPage() {
               </SelectContent>
             </Select>
             
-            <Select 
-              value={filters.sortBy || 'default'}
-              onValueChange={(value) => {
-                if (value === 'default') {
-                  setFilters(prev => ({ ...prev, sortBy: null }));
-                  setActiveQuickFilter('all');
-                } else if (value === 'recent') {
-                  setFilters(prev => ({ ...prev, sortBy: 'recent' }));
-                  setActiveQuickFilter('recent');
-                } else if (value === 'popular') {
-                  setFilters(prev => ({ ...prev, sortBy: 'popular' }));
-                  setActiveQuickFilter('popular');
-                }
-              }}
-            >
-              <SelectTrigger className="w-24 h-8 border border-gray-200 rounded-md bg-transparent text-xs hover:border-gray-300 transition-all">
-                <SelectValue placeholder="Padrão" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">Padrão</SelectItem>
-                <SelectItem value="recent">Recentes</SelectItem>
-                <SelectItem value="popular">Populares</SelectItem>
-              </SelectContent>
-            </Select>
+
             
             {(filters.formatId || filters.fileTypeId || search) && (
               <button 
