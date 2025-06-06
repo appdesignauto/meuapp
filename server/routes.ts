@@ -6589,8 +6589,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas para redefinição de senha
   app.use('/api/password-reset', passwordResetRouter);
 
-  // Registrar rotas para artes multi-formato
-  app.use(multiArtRouter);
+  // Registrar rotas para artes multi-formato integradas diretamente
+  // Rota para editar uma arte individual (conversão para grupo)
+  app.put('/api/admin/arts/multi/:artId', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      console.log(`Tentativa de edição - Arte ID: ${req.params.artId}`);
+      console.log('Dados recebidos:', JSON.stringify(req.body, null, 2));
+      console.log('Usuário autenticado:', req.user?.username);
+      
+      const userRole = req.user?.nivelacesso;
+      console.log('Nível de acesso do usuário:', userRole);
+      
+      if (userRole !== 'admin' && userRole !== 'designer_adm') {
+        return res.status(403).json({
+          message: 'Erro na criação',
+          description: 'Acesso negado. Você não tem permissão para editar artes.'
+        });
+      }
+
+      const artId = parseInt(req.params.artId);
+      console.log(`Processando edição da arte ID: ${artId}`);
+
+      // Validação básica dos dados
+      if (!req.body.formats || !Array.isArray(req.body.formats) || req.body.formats.length === 0) {
+        return res.status(400).json({
+          message: 'Erro na criação',
+          description: 'Dados inválidos: formatos são obrigatórios'
+        });
+      }
+
+      // Buscar a arte existente
+      const existingArt = await storage.getArtById(artId);
+      if (!existingArt) {
+        return res.status(404).json({
+          message: 'Erro na criação',
+          description: 'Arte não encontrada'
+        });
+      }
+
+      console.log(`Arte encontrada: ${existingArt.title}, formato: ${existingArt.format}`);
+
+      // Gerar um novo groupId se a arte não tiver um
+      const { v4: uuidv4 } = await import('uuid');
+      const groupId = existingArt.groupId || uuidv4();
+      
+      // Encontrar o formato que corresponde à arte existente
+      const currentFormat = req.body.formats.find((f: any) => f.format === existingArt.format) || req.body.formats[0];
+      
+      // Atualizar a arte existente
+      const updateData = {
+        title: currentFormat.title,
+        description: currentFormat.description || '',
+        imageUrl: currentFormat.imageUrl,
+        editUrl: currentFormat.editUrl || '',
+        categoryId: parseInt(req.body.categoryId),
+        isPremium: req.body.isPremium || false,
+        fileType: currentFormat.fileType,
+        groupId: groupId
+      };
+
+      await db.update(arts)
+        .set(updateData)
+        .where(eq(arts.id, artId));
+
+      console.log(`Arte ${artId} atualizada com sucesso`);
+
+      // Criar novas artes para outros formatos (se houver)
+      const newArts = [];
+      for (const format of req.body.formats) {
+        if (format.format !== existingArt.format) {
+          const artData = {
+            title: format.title,
+            description: format.description || '',
+            imageUrl: format.imageUrl,
+            previewUrl: format.previewUrl || null,
+            editUrl: format.editUrl || '',
+            categoryId: parseInt(req.body.categoryId),
+            isPremium: req.body.isPremium || false,
+            format: format.format,
+            fileType: format.fileType,
+            isVisible: format.fileType === 'imagens-png' ? false : true,
+            designerid: req.user?.id || 1,
+            collectionId: 1,
+            groupId: groupId
+          };
+
+          const newArt = await storage.createArt(artData);
+          newArts.push(newArt);
+          console.log(`Nova arte criada: ${newArt.id} formato: ${format.format}`);
+        }
+      }
+
+      return res.status(200).json({
+        message: 'Arte atualizada com sucesso',
+        groupId: groupId,
+        updatedArt: artId,
+        newArts: newArts.map(art => ({ id: art.id, format: art.format }))
+      });
+
+    } catch (error) {
+      console.error('Erro ao editar arte:', error);
+      return res.status(500).json({
+        message: 'Erro na criação',
+        description: 'Falha ao processar a edição da arte'
+      });
+    }
+  });
   
   // Registrar rotas para diagnóstico de e-mail (administradores)
   app.use('/api/email-diagnostics', emailDiagnosticsRouter);
