@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Search, Filter, AlertCircle, Loader2, 
   LayoutGrid, LayoutList, Calendar, Star, Eye, Clock, Sparkles, 
-  BookMarked, ChevronRight, Info, Tag, FileImage
+  BookMarked, ChevronRight, Info, Tag, FileImage, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -558,63 +558,53 @@ export default function CategoryPage() {
         </div>
       )}
       
-      {/* Filtros Rápidos Minimalistas */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-wrap justify-center gap-2 mb-6">
-          <button 
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              activeQuickFilter === 'all' 
-                ? 'bg-gray-900 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+      {/* Filtros Rápidos */}
+      <div className="container mx-auto px-4 py-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+          <Badge 
+            variant={activeQuickFilter === 'all' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'all' ? 'bg-blue-600' : 'hover:bg-blue-50'}`}
             onClick={() => handleQuickFilterChange('all')}
           >
+            <Eye className="w-4 h-4 mr-1.5" />
             Todas
-          </button>
+          </Badge>
           
-          <button 
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              activeQuickFilter === 'popular' 
-                ? 'bg-gray-900 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+          <Badge 
+            variant={activeQuickFilter === 'popular' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'popular' ? 'bg-amber-600' : 'hover:bg-amber-50'}`}
             onClick={() => handleQuickFilterChange('popular')}
           >
+            <Star className="w-4 h-4 mr-1.5" />
             Mais populares
-          </button>
+          </Badge>
           
-          <button 
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              activeQuickFilter === 'recent' 
-                ? 'bg-gray-900 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+          <Badge 
+            variant={activeQuickFilter === 'recent' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'recent' ? 'bg-emerald-600' : 'hover:bg-emerald-50'}`}
             onClick={() => handleQuickFilterChange('recent')}
           >
+            <Clock className="w-4 h-4 mr-1.5" />
             Recentes
-          </button>
+          </Badge>
           
-          <button 
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              activeQuickFilter === 'premium' 
-                ? 'bg-gray-900 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+          <Badge 
+            variant={activeQuickFilter === 'premium' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'premium' ? 'bg-purple-600' : 'hover:bg-purple-50'}`}
             onClick={() => handleQuickFilterChange('premium')}
           >
+            <Sparkles className="w-4 h-4 mr-1.5" />
             Premium
-          </button>
+          </Badge>
           
-          <button 
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              activeQuickFilter === 'free' 
-                ? 'bg-gray-900 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+          <Badge 
+            variant={activeQuickFilter === 'free' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'free' ? 'bg-green-600' : 'hover:bg-green-50'}`}
             onClick={() => handleQuickFilterChange('free')}
           >
+            <Tag className="w-4 h-4 mr-1.5" />
             Grátis
-          </button>
+          </Badge>
         </div>
       </div>
       
@@ -747,8 +737,12 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-5 space-y-0"
-              style={{ columnGap: '8px' }}
+              className="responsive-grid"
+              style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '8px'
+              }}
             >
               {arts.map((art, index) => (
                 <div 
