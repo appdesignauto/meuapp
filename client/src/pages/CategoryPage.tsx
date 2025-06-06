@@ -558,66 +558,76 @@ export default function CategoryPage() {
         </div>
       )}
       
-      {/* Filtros Rápidos */}
-      <div className="container mx-auto px-4 py-4 mb-8">
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          <Badge 
-            variant={activeQuickFilter === 'all' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'all' ? 'bg-blue-600' : 'hover:bg-blue-50'}`}
+      {/* Filtros Rápidos Minimalistas */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          <button 
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeQuickFilter === 'all' 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
             onClick={() => handleQuickFilterChange('all')}
           >
-            <Eye className="w-4 h-4 mr-1.5" />
             Todas
-          </Badge>
+          </button>
           
-          <Badge 
-            variant={activeQuickFilter === 'popular' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'popular' ? 'bg-amber-600' : 'hover:bg-amber-50'}`}
+          <button 
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeQuickFilter === 'popular' 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
             onClick={() => handleQuickFilterChange('popular')}
           >
-            <Star className="w-4 h-4 mr-1.5" />
             Mais populares
-          </Badge>
+          </button>
           
-          <Badge 
-            variant={activeQuickFilter === 'recent' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'recent' ? 'bg-emerald-600' : 'hover:bg-emerald-50'}`}
+          <button 
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeQuickFilter === 'recent' 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
             onClick={() => handleQuickFilterChange('recent')}
           >
-            <Clock className="w-4 h-4 mr-1.5" />
             Recentes
-          </Badge>
+          </button>
           
-          <Badge 
-            variant={activeQuickFilter === 'premium' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'premium' ? 'bg-purple-600' : 'hover:bg-purple-50'}`}
+          <button 
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeQuickFilter === 'premium' 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
             onClick={() => handleQuickFilterChange('premium')}
           >
-            <Sparkles className="w-4 h-4 mr-1.5" />
             Premium
-          </Badge>
+          </button>
           
-          <Badge 
-            variant={activeQuickFilter === 'free' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'free' ? 'bg-green-600' : 'hover:bg-green-50'}`}
+          <button 
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeQuickFilter === 'free' 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
             onClick={() => handleQuickFilterChange('free')}
           >
-            <Tag className="w-4 h-4 mr-1.5" />
             Grátis
-          </Badge>
+          </button>
         </div>
       </div>
       
       {/* Filtros minimalistas e modernos */}
       <div className="container mx-auto px-4 mb-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-3 bg-white rounded-lg border border-gray-200 p-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex flex-wrap items-center justify-center gap-2 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
             <Select 
               value={filters.formatId?.toString() || "_all"} 
               onValueChange={handleFormatChange}
               defaultValue="_all"
             >
-              <SelectTrigger className="w-40 h-9 border-gray-200 rounded-lg bg-white text-sm hover:border-gray-300 transition-colors">
+              <SelectTrigger className="w-36 h-8 border-0 rounded-lg bg-white text-xs shadow-sm hover:shadow-md transition-all">
                 <SelectValue placeholder="Todos os formatos" />
               </SelectTrigger>
               <SelectContent>
@@ -635,7 +645,7 @@ export default function CategoryPage() {
               onValueChange={handleFileTypeChange}
               defaultValue="_all"
             >
-              <SelectTrigger className="w-40 h-9 border-gray-200 rounded-lg bg-white text-sm hover:border-gray-300 transition-colors">
+              <SelectTrigger className="w-32 h-8 border-0 rounded-lg bg-white text-xs shadow-sm hover:shadow-md transition-all">
                 <SelectValue placeholder="Todos os tipos" />
               </SelectTrigger>
               <SelectContent>
@@ -663,13 +673,13 @@ export default function CategoryPage() {
                 }
               }}
             >
-              <SelectTrigger className="w-40 h-9 border-gray-200 rounded-lg bg-white text-sm hover:border-gray-300 transition-colors">
-                <SelectValue placeholder="Mais recentes" />
+              <SelectTrigger className="w-28 h-8 border-0 rounded-lg bg-white text-xs shadow-sm hover:shadow-md transition-all">
+                <SelectValue placeholder="Ordenar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="default">Ordenação padrão</SelectItem>
-                <SelectItem value="recent">Mais recentes</SelectItem>
-                <SelectItem value="popular">Mais populares</SelectItem>
+                <SelectItem value="default">Padrão</SelectItem>
+                <SelectItem value="recent">Recentes</SelectItem>
+                <SelectItem value="popular">Populares</SelectItem>
               </SelectContent>
             </Select>
             
@@ -738,12 +748,8 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="responsive-grid"
-              style={{ 
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '8px'
-              }}
+              className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-5 space-y-0"
+              style={{ columnGap: '8px' }}
             >
               {arts.map((art, index) => (
                 <div 
