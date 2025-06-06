@@ -67,3 +67,14 @@ export interface Testimonial {
   rating: number;
   quote: string;
 }
+
+export interface ArtFilters {
+  categoryId?: number;
+  formatId?: number;
+  fileTypeId?: number;
+  search?: string;
+  isPremium?: boolean;
+  isVisible?: boolean;
+  sortBy?: string;
+  fileType?: string;
+}
