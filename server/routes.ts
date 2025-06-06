@@ -1965,7 +1965,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Usuário não é admin: mostrando apenas artes visíveis");
       } else {
         // Para admin sem filtro específico, vê todas as artes
-        console.log("Admin sem filtro: mostrando todas as artes");
+        filters.isVisible = true;
+        console.log("Filtro padrão aplicado: apenas artes visíveis");
       }
       
       console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`)
