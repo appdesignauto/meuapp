@@ -48,6 +48,35 @@ html body div[class*="columns-"] {
   gap: inherit !important;
 }
 
+/* FORÇAR 5 COLUNAS EXATAS EM DESKTOP */
+@media (min-width: 1024px) {
+  .columns-5 {
+    columns: 5 !important;
+    column-count: 5 !important;
+    -webkit-columns: 5 !important;
+    -webkit-column-count: 5 !important;
+    -moz-columns: 5 !important;
+    -moz-column-count: 5 !important;
+    column-width: auto !important;
+    -webkit-column-width: auto !important;
+    -moz-column-width: auto !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .columns-5 {
+    columns: 5 !important;
+    column-count: 5 !important;
+    -webkit-columns: 5 !important;
+    -webkit-column-count: 5 !important;
+    -moz-columns: 5 !important;
+    -moz-column-count: 5 !important;
+    column-width: auto !important;
+    -webkit-column-width: auto !important;
+    -moz-column-width: auto !important;
+  }
+}
+
 /* Grid responsivo específico para 5 colunas - FORÇADO */
 .responsive-grid {
   display: grid !important;
