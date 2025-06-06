@@ -149,7 +149,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               style={{ columnGap: '8px' }}
             >
               <AnimatePresence>
-                {allArts.map((art, index) => (
+                {data?.arts?.map((art, index) => (
                   <motion.div
                     key={art.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -176,7 +176,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             </div>
             
             {/* Ver mais artes link */}
-            {allArts.length > 0 && (
+            {data?.arts && data.arts.length > 0 && (
               <motion.div 
                 className="flex justify-center mt-12"
                 initial={{ opacity: 0 }}
