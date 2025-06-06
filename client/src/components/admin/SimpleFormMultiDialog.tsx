@@ -648,6 +648,37 @@ export default function SimpleFormMultiDialog({
               response = await apiRequest('PUT', `/api/admin/arts/group/${groupId}`, formattedData);
               const responseText = await response.clone().text();
               console.log('Resposta da API (grupo existente):', responseText);
+              
+              // Processar a resposta com sucesso
+              successMessage = "Grupo de artes atualizado com sucesso";
+              
+              const result = await response.json();
+              
+              toast({
+                title: successMessage,
+                description: "As alterações foram salvas no grupo de artes.",
+              });
+
+              // Resetar o formulário
+              step1Form.reset({
+                categoryId: '',
+                globalFileType: 'canva',
+                isPremium: true,
+                globalTitle: '',
+                globalDescription: '',
+                selectedFormats: []
+              });
+              
+              setFormatDetails({});
+              setImages({});
+              setStep(1);
+              onClose();
+              
+              // Invalidar a consulta para atualizar a lista de artes
+              queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+              setIsSubmitting(false);
+              return; // Sair da função após sucesso
+              
             } catch (error) {
               console.error('Erro ao atualizar grupo existente:', error);
               toast({
@@ -658,7 +689,6 @@ export default function SimpleFormMultiDialog({
               setIsSubmitting(false);
               return;
             }
-            return; // Não continuar com o fluxo original
           }
         }
         
@@ -671,6 +701,37 @@ export default function SimpleFormMultiDialog({
             response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
             const responseText = await response.clone().text();
             console.log('Resposta da API (grupo existente):', responseText);
+            
+            // Processar a resposta com sucesso
+            successMessage = "Grupo de artes atualizado com sucesso";
+            
+            const result = await response.json();
+            
+            toast({
+              title: successMessage,
+              description: "As alterações foram salvas no grupo de artes.",
+            });
+
+            // Resetar o formulário
+            step1Form.reset({
+              categoryId: '',
+              globalFileType: 'canva',
+              isPremium: true,
+              globalTitle: '',
+              globalDescription: '',
+              selectedFormats: []
+            });
+            
+            setFormatDetails({});
+            setImages({});
+            setStep(1);
+            onClose();
+            
+            // Invalidar a consulta para atualizar a lista de artes
+            queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+            setIsSubmitting(false);
+            return; // Sair da função após sucesso
+            
           } catch (error) {
             console.error('Erro ao atualizar grupo existente:', error);
             toast({
