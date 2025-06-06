@@ -3,7 +3,13 @@ import { storage } from '../storage';
 import { ArtGroupSchema } from '@shared/interfaces/art-groups';
 import { db } from '../db';
 import { arts } from '@shared/schema';
-import { isAdmin, isAuthenticated } from '../middlewares/auth';
+// Importar middleware de autenticação do arquivo principal
+const isAuthenticated = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Usuário não autenticado' });
+  }
+  next();
+};
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { v4 as uuidv4 } from 'uuid';
@@ -269,18 +275,34 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
 });
 
 // Rota para editar uma arte individual (conversão para grupo)
-router.put('/api/admin/arts/multi/:artId', isAuthenticated, async (req: Request, res: Response) => {
+router.put('/api/admin/arts/multi/:artId', async (req: Request, res: Response) => {
   try {
-    const userRole = req.user?.nivelacesso;
+    console.log(`Tentativa de edição - Arte ID: ${req.params.artId}`);
+    console.log('Dados recebidos:', JSON.stringify(req.body, null, 2));
+    console.log('Sessão:', req.session);
+    console.log('IsAuthenticated:', req.isAuthenticated?.());
+    console.log('Passport user:', req.user);
+    
+    // Verificação de autenticação mais robusta
+    if (!req.isAuthenticated?.() || !req.user) {
+      console.log('Falha na autenticação - usuário não logado');
+      return res.status(401).json({
+        error: 'Usuário não autenticado'
+      });
+    }
+
+    const userRole = (req.user as any)?.nivelacesso;
+    console.log('Nível de acesso do usuário:', userRole);
+    
     if (userRole !== 'admin' && userRole !== 'designer_adm') {
       return res.status(403).json({
-        message: 'Acesso negado. Você não tem permissão para editar artes.'
+        message: 'Erro na criação',
+        description: 'Acesso negado. Você não tem permissão para editar artes.'
       });
     }
 
     const artId = parseInt(req.params.artId);
-    console.log(`Editando arte individual ID: ${artId}`);
-    console.log('Dados recebidos:', JSON.stringify(req.body, null, 2));
+    console.log(`Processando edição da arte ID: ${artId}`);
 
     // Validação básica dos dados
     if (!req.body.formats || !Array.isArray(req.body.formats) || req.body.formats.length === 0) {
@@ -294,7 +316,8 @@ router.put('/api/admin/arts/multi/:artId', isAuthenticated, async (req: Request,
     const existingArt = await storage.getArtById(artId);
     if (!existingArt) {
       return res.status(404).json({
-        message: 'Arte não encontrada'
+        message: 'Erro na criação',
+        description: 'Arte não encontrada'
       });
     }
 
@@ -311,7 +334,7 @@ router.put('/api/admin/arts/multi/:artId', isAuthenticated, async (req: Request,
       title: currentFormat.title,
       description: currentFormat.description || '',
       imageUrl: currentFormat.imageUrl,
-      editUrl: currentFormat.editUrl,
+      editUrl: currentFormat.editUrl || '',
       categoryId: parseInt(req.body.categoryId),
       isPremium: req.body.isPremium || false,
       fileType: currentFormat.fileType,
@@ -333,13 +356,13 @@ router.put('/api/admin/arts/multi/:artId', isAuthenticated, async (req: Request,
           description: format.description || '',
           imageUrl: format.imageUrl,
           previewUrl: format.previewUrl || null,
-          editUrl: format.editUrl,
+          editUrl: format.editUrl || '',
           categoryId: parseInt(req.body.categoryId),
           isPremium: req.body.isPremium || false,
           format: format.format,
           fileType: format.fileType,
           isVisible: format.fileType === 'imagens-png' ? false : true,
-          designerid: req.user?.id || 1,
+          designerid: (req.user as any)?.id || 1,
           collectionId: 1,
           groupId: groupId
         };
@@ -361,7 +384,7 @@ router.put('/api/admin/arts/multi/:artId', isAuthenticated, async (req: Request,
     console.error('Erro ao editar arte:', error);
     return res.status(500).json({
       message: 'Erro na criação',
-      description: 'Falha ao criar o grupo de artes. Dados inválidos'
+      description: 'Falha ao processar a edição da arte'
     });
   }
 });

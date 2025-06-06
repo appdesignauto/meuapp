@@ -6609,9 +6609,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ferramenta de diagnóstico do Supabase Storage
   app.use(supabeDiagnosticsRouter);
   
-  // Registrar rotas para artes multi-formato
-  app.use(multiArtRouter);
-  
   // Registrar rota de teste para criar grupos de artes
   app.use(testCreateGroupRouter);
   
