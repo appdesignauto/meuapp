@@ -625,14 +625,14 @@ export default function CategoryPage() {
           </div>
           
           {/* Filtros Avançados */}
-          <div className="flex flex-wrap items-center justify-center gap-2 bg-gray-50/50 rounded-lg p-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <Select 
               value={filters.formatId?.toString() || "_all"} 
               onValueChange={handleFormatChange}
               defaultValue="_all"
             >
-              <SelectTrigger className="w-32 h-7 border-0 rounded-md bg-white text-xs shadow-sm hover:shadow-md transition-all">
-                <SelectValue placeholder="Formatos" />
+              <SelectTrigger className="w-40 h-8 border border-gray-200 rounded-md bg-transparent text-xs hover:border-gray-300 transition-all">
+                <SelectValue placeholder="Todos os formatos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">Todos os formatos</SelectItem>
@@ -649,8 +649,8 @@ export default function CategoryPage() {
               onValueChange={handleFileTypeChange}
               defaultValue="_all"
             >
-              <SelectTrigger className="w-28 h-7 border-0 rounded-md bg-white text-xs shadow-sm hover:shadow-md transition-all">
-                <SelectValue placeholder="Tipos" />
+              <SelectTrigger className="w-36 h-8 border border-gray-200 rounded-md bg-transparent text-xs hover:border-gray-300 transition-all">
+                <SelectValue placeholder="Todos os tipos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">Todos os tipos</SelectItem>
@@ -677,8 +677,8 @@ export default function CategoryPage() {
                 }
               }}
             >
-              <SelectTrigger className="w-24 h-7 border-0 rounded-md bg-white text-xs shadow-sm hover:shadow-md transition-all">
-                <SelectValue placeholder="Ordenar" />
+              <SelectTrigger className="w-24 h-8 border border-gray-200 rounded-md bg-transparent text-xs hover:border-gray-300 transition-all">
+                <SelectValue placeholder="Padrão" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default">Padrão</SelectItem>
@@ -690,7 +690,7 @@ export default function CategoryPage() {
             {(filters.formatId || filters.fileTypeId || search) && (
               <button 
                 onClick={clearFilters}
-                className="h-7 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-all flex items-center gap-1"
+                className="h-8 px-3 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-all flex items-center gap-1 border border-gray-200"
               >
                 <X className="w-3 h-3" />
                 Limpar
