@@ -752,7 +752,7 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5"
+              className="category-gallery columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5"
               style={{
                 columnGap: '8px'
               }}

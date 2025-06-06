@@ -64,8 +64,22 @@ html body div[class*="columns-"] {
   -moz-column-fill: balance !important;
 }
 
-/* Container específico para category page */
+/* FORÇA 5 COLUNAS NA CATEGORIA - PREENCHE LARGURA TOTAL */
 @media (min-width: 1024px) {
+  .category-gallery {
+    column-count: 5 !important;
+    -webkit-column-count: 5 !important;
+    -moz-column-count: 5 !important;
+    columns: 5 !important;
+    -webkit-columns: 5 !important;
+    -moz-columns: 5 !important;
+    column-width: auto !important;
+    -webkit-column-width: auto !important;
+    -moz-column-width: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
   .category-gallery.lg\:columns-5 {
     column-count: 5 !important;
     -webkit-column-count: 5 !important;
