@@ -63,7 +63,7 @@ export default function CategoryPage() {
     sortBy: null as 'recent' | 'popular' | null,
   });
   const [showCategoryInfo, setShowCategoryInfo] = useState(false);
-  const limit = 12;
+  const limit = 1000; // Carrega todas as artes da categoria
   
   // Função para obter o esquema de cores específico da categoria
   const getCategoryColorScheme = (slug: string): { primary: string, gradient: string, light: string, darkBg: string } => {
@@ -774,27 +774,6 @@ export default function CategoryPage() {
                 </div>
               ))}
             </div>
-            
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="flex justify-center mt-12">
-                <Button 
-                  variant="outline" 
-                  onClick={loadMore}
-                  disabled={isFetching}
-                  className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
-                >
-                  {isFetching ? (
-                    <span className="flex items-center">
-                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                      Carregando...
-                    </span>
-                  ) : (
-                    <span>Carregar mais artes</span>
-                  )}
-                </Button>
-              </div>
-            )}
           </>
         )}
       </div>
