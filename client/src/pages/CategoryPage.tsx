@@ -727,16 +727,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <>
-            <div 
-              className="space-y-0"
-              style={{
-                columnCount: 2,
-                columnGap: '8px',
-                width: '100%',
-                columnFill: 'balance'
-              }}
-              data-responsive-columns="true"
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
               {arts.map((art) => (
                 <div 
                   key={art.id} 
