@@ -738,8 +738,8 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
-              style={{ columnGap: '8px' }}
+              className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-5 space-y-0"
+              style={{ columnGap: '8px', columnFill: 'balance' }}
             >
               {arts.map((art, index) => (
                 <div 
