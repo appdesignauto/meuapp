@@ -573,67 +573,66 @@ export default function CategoryPage() {
         </div>
       )}
       
-      {/* Filtros Rápidos */}
-      <div className="container mx-auto px-4 py-4 mb-8">
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          <Badge 
-            variant={activeQuickFilter === 'all' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'all' ? 'bg-blue-600' : 'hover:bg-blue-50'}`}
-            onClick={() => handleQuickFilterChange('all')}
-          >
-            <Eye className="w-4 h-4 mr-1.5" />
-            Todas
-          </Badge>
+      {/* Filtros Compactos e Harmônicos */}
+      <div className="container mx-auto px-4 mb-6">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+          {/* Quick Filters */}
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            <Badge 
+              variant={activeQuickFilter === 'all' ? 'default' : 'outline'} 
+              className={`px-3 py-1.5 cursor-pointer text-xs font-medium transition-all ${activeQuickFilter === 'all' ? 'bg-blue-600' : 'hover:bg-blue-50'}`}
+              onClick={() => handleQuickFilterChange('all')}
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Todas
+            </Badge>
+            
+            <Badge 
+              variant={activeQuickFilter === 'popular' ? 'default' : 'outline'} 
+              className={`px-3 py-1.5 cursor-pointer text-xs font-medium transition-all ${activeQuickFilter === 'popular' ? 'bg-amber-600' : 'hover:bg-amber-50'}`}
+              onClick={() => handleQuickFilterChange('popular')}
+            >
+              <Star className="w-3 h-3 mr-1" />
+              Mais populares
+            </Badge>
+            
+            <Badge 
+              variant={activeQuickFilter === 'recent' ? 'default' : 'outline'} 
+              className={`px-3 py-1.5 cursor-pointer text-xs font-medium transition-all ${activeQuickFilter === 'recent' ? 'bg-emerald-600' : 'hover:bg-emerald-50'}`}
+              onClick={() => handleQuickFilterChange('recent')}
+            >
+              <Clock className="w-3 h-3 mr-1" />
+              Recentes
+            </Badge>
+            
+            <Badge 
+              variant={activeQuickFilter === 'premium' ? 'default' : 'outline'} 
+              className={`px-3 py-1.5 cursor-pointer text-xs font-medium transition-all ${activeQuickFilter === 'premium' ? 'bg-purple-600' : 'hover:bg-purple-50'}`}
+              onClick={() => handleQuickFilterChange('premium')}
+            >
+              <Sparkles className="w-3 h-3 mr-1" />
+              Premium
+            </Badge>
+            
+            <Badge 
+              variant={activeQuickFilter === 'free' ? 'default' : 'outline'} 
+              className={`px-3 py-1.5 cursor-pointer text-xs font-medium transition-all ${activeQuickFilter === 'free' ? 'bg-green-600' : 'hover:bg-green-50'}`}
+              onClick={() => handleQuickFilterChange('free')}
+            >
+              <Tag className="w-3 h-3 mr-1" />
+              Grátis
+            </Badge>
+          </div>
           
-          <Badge 
-            variant={activeQuickFilter === 'popular' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'popular' ? 'bg-amber-600' : 'hover:bg-amber-50'}`}
-            onClick={() => handleQuickFilterChange('popular')}
-          >
-            <Star className="w-4 h-4 mr-1.5" />
-            Mais populares
-          </Badge>
-          
-          <Badge 
-            variant={activeQuickFilter === 'recent' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'recent' ? 'bg-emerald-600' : 'hover:bg-emerald-50'}`}
-            onClick={() => handleQuickFilterChange('recent')}
-          >
-            <Clock className="w-4 h-4 mr-1.5" />
-            Recentes
-          </Badge>
-          
-          <Badge 
-            variant={activeQuickFilter === 'premium' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'premium' ? 'bg-purple-600' : 'hover:bg-purple-50'}`}
-            onClick={() => handleQuickFilterChange('premium')}
-          >
-            <Sparkles className="w-4 h-4 mr-1.5" />
-            Premium
-          </Badge>
-          
-          <Badge 
-            variant={activeQuickFilter === 'free' ? 'default' : 'outline'} 
-            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'free' ? 'bg-green-600' : 'hover:bg-green-50'}`}
-            onClick={() => handleQuickFilterChange('free')}
-          >
-            <Tag className="w-4 h-4 mr-1.5" />
-            Grátis
-          </Badge>
-        </div>
-      </div>
-      
-      {/* Filtros minimalistas e modernos */}
-      <div className="container mx-auto px-4 mb-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-2 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
+          {/* Filtros Avançados */}
+          <div className="flex flex-wrap items-center justify-center gap-2 bg-gray-50/50 rounded-lg p-2">
             <Select 
               value={filters.formatId?.toString() || "_all"} 
               onValueChange={handleFormatChange}
               defaultValue="_all"
             >
-              <SelectTrigger className="w-36 h-8 border-0 rounded-lg bg-white text-xs shadow-sm hover:shadow-md transition-all">
-                <SelectValue placeholder="Todos os formatos" />
+              <SelectTrigger className="w-32 h-7 border-0 rounded-md bg-white text-xs shadow-sm hover:shadow-md transition-all">
+                <SelectValue placeholder="Formatos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">Todos os formatos</SelectItem>
@@ -650,8 +649,8 @@ export default function CategoryPage() {
               onValueChange={handleFileTypeChange}
               defaultValue="_all"
             >
-              <SelectTrigger className="w-32 h-8 border-0 rounded-lg bg-white text-xs shadow-sm hover:shadow-md transition-all">
-                <SelectValue placeholder="Todos os tipos" />
+              <SelectTrigger className="w-28 h-7 border-0 rounded-md bg-white text-xs shadow-sm hover:shadow-md transition-all">
+                <SelectValue placeholder="Tipos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">Todos os tipos</SelectItem>
@@ -678,7 +677,7 @@ export default function CategoryPage() {
                 }
               }}
             >
-              <SelectTrigger className="w-28 h-8 border-0 rounded-lg bg-white text-xs shadow-sm hover:shadow-md transition-all">
+              <SelectTrigger className="w-24 h-7 border-0 rounded-md bg-white text-xs shadow-sm hover:shadow-md transition-all">
                 <SelectValue placeholder="Ordenar" />
               </SelectTrigger>
               <SelectContent>
@@ -691,7 +690,7 @@ export default function CategoryPage() {
             {(filters.formatId || filters.fileTypeId || search) && (
               <button 
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all flex items-center gap-1.5"
+                className="h-7 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-all flex items-center gap-1"
               >
                 <X className="w-3 h-3" />
                 Limpar
