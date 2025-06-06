@@ -1984,72 +1984,40 @@ export class DatabaseStorage implements IStorage {
       // Para filtros complexos, construir query básica do banco
       console.log('[Performance] Usando consulta básica com filtros');
       
-      // Query base usando Drizzle
-      let baseQuery = db.select().from(arts);
+      // Construir todas as condições primeiro
+      const conditions = [];
       
-      // Aplicar filtros condicionalmente
       if (filters.categoryId) {
-        baseQuery = baseQuery.where(eq(arts.categoryId, filters.categoryId));
+        conditions.push(eq(arts.categoryId, filters.categoryId));
       }
       
       if (filters.search) {
-        const searchCondition = like(arts.title, `%${filters.search}%`);
-        baseQuery = filters.categoryId ? 
-          baseQuery.where(and(eq(arts.categoryId, filters.categoryId), searchCondition)) :
-          baseQuery.where(searchCondition);
+        conditions.push(like(arts.title, `%${filters.search}%`));
       }
       
       if (filters.isPremium !== undefined) {
-        const premiumCondition = eq(arts.isPremium, filters.isPremium);
-        if (filters.categoryId || filters.search) {
-          // Precisa combinar com condições existentes
-          const existingConditions = [];
-          if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
-          if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
-          existingConditions.push(premiumCondition);
-          baseQuery = db.select().from(arts).where(and(...existingConditions));
-        } else {
-          baseQuery = baseQuery.where(premiumCondition);
-        }
+        conditions.push(eq(arts.isPremium, filters.isPremium));
       }
       
       if (filters.isVisible !== undefined) {
-        const visibleCondition = eq(arts.isVisible, filters.isVisible);
-        const existingConditions = [];
-        if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
-        if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
-        if (filters.isPremium !== undefined) existingConditions.push(eq(arts.isPremium, filters.isPremium));
-        existingConditions.push(visibleCondition);
-        baseQuery = db.select().from(arts).where(and(...existingConditions));
+        conditions.push(eq(arts.isVisible, filters.isVisible));
       }
       
       if (filters.formatId) {
         const format = await this.getFormatById(filters.formatId);
         if (format) {
-          const formatCondition = eq(arts.format, format.name);
-          const existingConditions = [];
-          if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
-          if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
-          if (filters.isPremium !== undefined) existingConditions.push(eq(arts.isPremium, filters.isPremium));
-          if (filters.isVisible !== undefined) existingConditions.push(eq(arts.isVisible, filters.isVisible));
-          existingConditions.push(formatCondition);
-          baseQuery = db.select().from(arts).where(and(...existingConditions));
+          conditions.push(sql`LOWER(${arts.format}) = LOWER(${format.name})`);
         }
       }
       
       if (filters.fileType) {
-        const fileTypeCondition = eq(arts.fileType, filters.fileType);
-        const existingConditions = [];
-        if (filters.categoryId) existingConditions.push(eq(arts.categoryId, filters.categoryId));
-        if (filters.search) existingConditions.push(like(arts.title, `%${filters.search}%`));
-        if (filters.isPremium !== undefined) existingConditions.push(eq(arts.isPremium, filters.isPremium));
-        if (filters.isVisible !== undefined) existingConditions.push(eq(arts.isVisible, filters.isVisible));
-        if (filters.formatId) {
-          const format = await this.getFormatById(filters.formatId);
-          if (format) existingConditions.push(eq(arts.format, format.name));
-        }
-        existingConditions.push(fileTypeCondition);
-        baseQuery = db.select().from(arts).where(and(...existingConditions));
+        conditions.push(eq(arts.fileType, filters.fileType));
+      }
+      
+      // Aplicar todas as condições de uma vez
+      let baseQuery = db.select().from(arts);
+      if (conditions.length > 0) {
+        baseQuery = baseQuery.where(and(...conditions));
       }
       
       // Aplicar ordenação
