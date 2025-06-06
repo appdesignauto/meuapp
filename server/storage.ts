@@ -1951,7 +1951,8 @@ export class DatabaseStorage implements IStorage {
             "imageUrl", 
             format, 
             "isPremium",
-            "isVisible"
+            "isVisible",
+            "groupId"
           FROM arts 
           WHERE "isVisible" = ${isVisibleFilter}
           ORDER BY "createdAt" DESC 
