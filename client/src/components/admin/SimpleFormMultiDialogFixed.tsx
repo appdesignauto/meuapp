@@ -525,11 +525,16 @@ export default function SimpleFormMultiDialog({
 
       // Verificar se estamos editando ou criando
       if (isEditing && editingArt) {
-        console.log('Modo de edição ativado para arte:', editingArt);
-        console.log('Dados a serem enviados:', formattedData);
-        
-        // Para edição de arte individual, sempre usar a rota específica
-        response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
+        // Adicionar ID da arte existente para edição
+        if (editingArt.groupId) {
+          // Se tem groupId, atualizar o grupo inteiro
+          formattedData.groupId = editingArt.groupId;
+          response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+        } else {
+          // Se não tem groupId, mas estamos adicionando múltiplos formatos a uma arte existente
+          formattedData.artId = editingArt.id;
+          response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
+        }
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
