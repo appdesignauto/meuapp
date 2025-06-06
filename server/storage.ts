@@ -1979,76 +1979,67 @@ export class DatabaseStorage implements IStorage {
         return { arts, totalCount };
       }
       
-      // Para filtros complexos, usar consulta completa
-      console.log('[Performance] Usando consulta completa com filtros');
+      // Para filtros complexos, usar consulta Drizzle nativa
+      console.log('[Performance] Usando consulta Drizzle com filtros');
       
-      // Construir WHERE conditions
+      // Construir condições WHERE usando Drizzle
       const whereConditions = [];
-      const params: any[] = [];
       
       if (filters.categoryId) {
-        whereConditions.push(`"categoryId" = $${params.length + 1}`);
-        params.push(filters.categoryId);
+        whereConditions.push(eq(arts.categoryId, filters.categoryId));
       }
       
       if (filters.search) {
-        whereConditions.push(`title ILIKE $${params.length + 1}`);
-        params.push(`%${filters.search}%`);
+        whereConditions.push(like(arts.title, `%${filters.search}%`));
       }
       
       if (filters.isPremium !== undefined) {
-        whereConditions.push(`"isPremium" = $${params.length + 1}`);
-        params.push(filters.isPremium);
+        whereConditions.push(eq(arts.isPremium, filters.isPremium));
       }
       
       if (filters.isVisible !== undefined) {
-        whereConditions.push(`"isVisible" = $${params.length + 1}`);
-        params.push(filters.isVisible);
+        whereConditions.push(eq(arts.isVisible, filters.isVisible));
       }
       
       if (filters.fileType) {
-        whereConditions.push(`"fileType" = $${params.length + 1}`);
-        params.push(filters.fileType);
+        whereConditions.push(eq(arts.fileType, filters.fileType));
       }
       
-      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+      // Construir query base
+      let query = db.select().from(arts);
+      let countQuery = db.select({ count: count() }).from(arts);
       
-      // Determinar ordenação
-      let orderBy = 'ORDER BY "createdAt" DESC';
+      // Aplicar WHERE se houver condições
+      if (whereConditions.length > 0) {
+        const whereClause = whereConditions.length === 1 ? whereConditions[0] : and(...whereConditions);
+        query = query.where(whereClause);
+        countQuery = countQuery.where(whereClause);
+      }
+      
+      // Aplicar ordenação
       if (filters.sortBy === 'destaques') {
-        orderBy = 'ORDER BY "isPremium" DESC, "viewcount" DESC, "createdAt" DESC';
+        query = query.orderBy(desc(arts.isPremium), desc(arts.viewcount), desc(arts.createdAt));
       } else if (filters.sortBy === 'emalta') {
-        orderBy = 'ORDER BY "viewcount" DESC, "createdAt" DESC';
+        query = query.orderBy(desc(arts.viewcount), desc(arts.createdAt));
       } else if (filters.sortBy === 'antigos') {
-        orderBy = 'ORDER BY "createdAt" ASC';
+        query = query.orderBy(arts.createdAt);
+      } else {
+        query = query.orderBy(desc(arts.createdAt));
       }
       
-      // Consultas com parâmetros nomeados
-      const mainQuery = `
-        SELECT 
-          id, "createdAt", "updatedAt", designerid, viewcount,
-          width, height, "isPremium", "isVisible", "categoryId", 
-          "collectionId", title, "imageUrl", format, "fileType", 
-          "editUrl", aspectratio
-        FROM arts 
-        ${whereClause}
-        ${orderBy}
-        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
-      `;
+      // Aplicar paginação
+      query = query.limit(limit).offset(offset);
       
-      const countQueryStr = `SELECT COUNT(*) as count FROM arts ${whereClause}`;
-      
-      params.push(limit, offset);
-      
+      // Executar consultas em paralelo
       const [result, countResult] = await Promise.all([
-        db.execute(sql.raw(mainQuery, params)),
-        db.execute(sql.raw(countQueryStr, params.slice(0, -2)))
+        query,
+        countQuery
       ]);
       
-      const totalCount = parseInt(countResult.rows[0].count as string);
+      const totalCount = countResult[0]?.count || 0;
       
       // Mapear resultados
-      const arts = result.rows.map(row => ({
+      const artsResult = result.map(row => ({
         ...row,
         designerId: row.designerid,
         viewCount: row.viewcount,
@@ -2059,7 +2050,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Performance] Consulta com filtros executada em ${endTime - startTime}ms`);
       
       return {
-        arts: arts as Art[],
+        arts: artsResult as Art[],
         totalCount: totalCount
       };
     } catch (error) {
