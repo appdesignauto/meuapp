@@ -728,9 +728,22 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="category-gallery columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5"
+              className="category-gallery"
               style={{
-                columnGap: '8px'
+                columnCount: window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 5,
+                columnGap: '8px',
+                width: '100%',
+                display: 'block'
+              }}
+              ref={(el) => {
+                if (el) {
+                  const updateLayout = () => {
+                    const cols = window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 5;
+                    el.style.columnCount = cols.toString();
+                  };
+                  updateLayout();
+                  window.addEventListener('resize', updateLayout);
+                }
               }}
             >
               {arts.map((art) => (

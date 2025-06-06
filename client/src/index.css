@@ -64,13 +64,16 @@ html body div[class*="columns-"] {
   -moz-column-fill: balance !important;
 }
 
-/* FORÇA RESPONSIVO CATEGORIA - MOBILE: 2 COLUNAS, DESKTOP: 5 COLUNAS */
-.category-gallery,
-.category-gallery.columns-2,
-.category-gallery.columns-3,
-.category-gallery.columns-4,
-.category-gallery.columns-5,
-.category-gallery.lg\:columns-5 {
+/* FORÇA RESPONSIVO CATEGORIA V2 - MOBILE: 2 COLUNAS, DESKTOP: 5 COLUNAS */
+.category-gallery {
+  display: block !important;
+  column-fill: balance !important;
+  -webkit-column-fill: balance !important;
+  -moz-column-fill: balance !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  
+  /* FORÇA 2 COLUNAS EM MOBILE POR PADRÃO */
   column-count: 2 !important;
   -webkit-column-count: 2 !important;
   -moz-column-count: 2 !important;
@@ -80,8 +83,6 @@ html body div[class*="columns-"] {
   column-width: auto !important;
   -webkit-column-width: auto !important;
   -moz-column-width: auto !important;
-  width: 100% !important;
-  max-width: 100% !important;
 }
 
 /* FORÇA 2 COLUNAS EM MOBILE - MÁXIMA PRIORIDADE */
