@@ -423,7 +423,7 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
           categoryId: artGroupData.categoryId,
           isPremium: artGroupData.isPremium,
           fileType: format.fileType,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date()
         };
         
         // Realizar a atualização no banco de dados
@@ -449,7 +449,7 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
           description: format.description || '',
           imageUrl: format.imageUrl,
           previewUrl: format.previewUrl || null,
-          editUrl: format.editUrl || null,
+          editUrl: format.editUrl || '',
           categoryId: artGroupData.categoryId,
           isPremium: artGroupData.isPremium,
           format: format.format,
