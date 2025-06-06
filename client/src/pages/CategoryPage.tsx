@@ -738,8 +738,12 @@ export default function CategoryPage() {
         ) : (
           <>
             <div 
-              className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-5 space-y-0"
-              style={{ columnGap: '8px', columnFill: 'balance' }}
+              className="responsive-grid"
+              style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '8px'
+              }}
             >
               {arts.map((art, index) => (
                 <div 

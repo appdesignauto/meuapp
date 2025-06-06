@@ -48,6 +48,37 @@ html body div[class*="columns-"] {
   gap: inherit !important;
 }
 
+/* Grid responsivo específico para 5 colunas */
+.responsive-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
 /* Animações para popups */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
