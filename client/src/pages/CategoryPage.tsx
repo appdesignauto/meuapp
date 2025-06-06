@@ -328,6 +328,21 @@ export default function CategoryPage() {
     setActiveQuickFilter('all');
   };
 
+  // Sistema de aspect ratios dinâmicos para encaixes responsivos profissionais
+  const getAspectRatio = (index: number) => {
+    const patterns = [
+      'aspect-1',        // Quadrado
+      'aspect-[4/5]',    // Retrato
+      'aspect-[9/16]',   // Stories vertical
+      'aspect-[3/4]',    // Retrato clássico
+      'aspect-[5/4]',    // Paisagem suave
+      'aspect-[16/9]',   // Paisagem wide
+      'aspect-[2/3]',    // Retrato alto
+      'aspect-[3/2]'     // Paisagem média
+    ];
+    return patterns[index % patterns.length];
+  };
+
   // Get the appropriate color scheme based on the category slug
   const colorScheme = slug ? getCategoryColorScheme(slug) : getCategoryColorScheme('default');
   
@@ -691,15 +706,15 @@ export default function CategoryPage() {
         {/* Galeria de imagens estilo Pinterest */}
         {isLoading ? (
           <div 
-            className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
+            className="category-gallery columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 space-y-0"
             style={{ columnGap: '8px' }}
           >
             {Array.from({ length: 15 }).map((_, index) => (
               <div 
                 key={index} 
-                className="block overflow-hidden animate-pulse break-inside-avoid mb-4 rounded-xl shadow-sm"
+                className="block overflow-hidden animate-pulse break-inside-avoid mb-3 xs:mb-4 rounded-xl shadow-sm"
               >
-                <div className={`${index % 3 === 0 ? 'aspect-[3/4]' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[1/1]')} bg-neutral-200 rounded-xl`} />
+                <div className={`${index % 3 === 0 ? 'aspect-1' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[9/16]')} bg-neutral-200 rounded-xl`} />
               </div>
             ))}
           </div>
@@ -744,11 +759,18 @@ export default function CategoryPage() {
                 <div 
                   key={art.id} 
                   className="block overflow-hidden break-inside-avoid mb-3 xs:mb-4 rounded-xl transform hover:-translate-y-1 transition-transform duration-300"
+                  style={{ 
+                    display: 'inline-block',
+                    width: '100%',
+                    marginBottom: '8px'
+                  }}
                 >
-                  <ArtCard 
-                    art={art} 
-                    onClick={() => setLocation(`/artes/${art.id}`)}
-                  />
+                  <div className={`${getAspectRatio(index)} w-full overflow-hidden rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-300`}>
+                    <ArtCard 
+                      art={art} 
+                      onClick={() => setLocation(`/artes/${art.id}`)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
