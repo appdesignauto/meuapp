@@ -64,7 +64,32 @@ html body div[class*="columns-"] {
   -moz-column-fill: balance !important;
 }
 
-/* FORÇA 5 COLUNAS NA CATEGORIA - PREENCHE LARGURA TOTAL */
+/* RESPONSIVO CATEGORIA - MOBILE: 2 COLUNAS, DESKTOP: 5 COLUNAS */
+.category-gallery {
+  column-count: 2 !important;
+  -webkit-column-count: 2 !important;
+  -moz-column-count: 2 !important;
+  columns: 2 !important;
+  -webkit-columns: 2 !important;
+  -moz-columns: 2 !important;
+  column-width: auto !important;
+  -webkit-column-width: auto !important;
+  -moz-column-width: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+@media (min-width: 768px) {
+  .category-gallery {
+    column-count: 3 !important;
+    -webkit-column-count: 3 !important;
+    -moz-column-count: 3 !important;
+    columns: 3 !important;
+    -webkit-columns: 3 !important;
+    -moz-columns: 3 !important;
+  }
+}
+
 @media (min-width: 1024px) {
   .category-gallery {
     column-count: 5 !important;

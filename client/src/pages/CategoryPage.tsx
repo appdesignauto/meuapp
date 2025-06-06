@@ -575,7 +575,7 @@ export default function CategoryPage() {
       
       {/* Filtros Compactos e Harmônicos */}
       <div className="container mx-auto px-4 mb-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <div className="max-w-4xl mx-auto">
           {/* Quick Filters */}
           <div className="flex flex-wrap justify-center gap-2 mb-4">
             <Badge 
