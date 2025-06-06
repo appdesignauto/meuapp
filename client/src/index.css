@@ -64,8 +64,13 @@ html body div[class*="columns-"] {
   -moz-column-fill: balance !important;
 }
 
-/* RESPONSIVO CATEGORIA - MOBILE: 2 COLUNAS, DESKTOP: 5 COLUNAS */
-.category-gallery {
+/* FORÇA RESPONSIVO CATEGORIA - MOBILE: 2 COLUNAS, DESKTOP: 5 COLUNAS */
+.category-gallery,
+.category-gallery.columns-2,
+.category-gallery.columns-3,
+.category-gallery.columns-4,
+.category-gallery.columns-5,
+.category-gallery.lg\:columns-5 {
   column-count: 2 !important;
   -webkit-column-count: 2 !important;
   -moz-column-count: 2 !important;
@@ -77,6 +82,28 @@ html body div[class*="columns-"] {
   -moz-column-width: auto !important;
   width: 100% !important;
   max-width: 100% !important;
+}
+
+/* FORÇA 2 COLUNAS EM MOBILE - MÁXIMA PRIORIDADE */
+@media (max-width: 767px) {
+  .category-gallery,
+  .category-gallery.columns-2,
+  .category-gallery.columns-3,
+  .category-gallery.columns-4,
+  .category-gallery.columns-5,
+  .category-gallery.lg\:columns-5,
+  .category-gallery.md\:columns-3,
+  .category-gallery.xl\:columns-5 {
+    column-count: 2 !important;
+    -webkit-column-count: 2 !important;
+    -moz-column-count: 2 !important;
+    columns: 2 !important;
+    -webkit-columns: 2 !important;
+    -moz-columns: 2 !important;
+    column-width: auto !important;
+    -webkit-column-width: auto !important;
+    -moz-column-width: auto !important;
+  }
 }
 
 @media (min-width: 768px) {
