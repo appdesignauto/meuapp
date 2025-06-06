@@ -48,22 +48,22 @@ html body div[class*="columns-"] {
   gap: inherit !important;
 }
 
-/* Grid responsivo específico para 5 colunas */
+/* Grid responsivo específico para 5 colunas - FORÇADO */
 .responsive-grid {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(2, 1fr);
+  display: grid !important;
+  gap: 8px !important;
+  grid-template-columns: repeat(2, 1fr) !important;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 480px) {
   .responsive-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr) !important;
   }
 }
 
 @media (min-width: 768px) {
   .responsive-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
@@ -74,6 +74,12 @@ html body div[class*="columns-"] {
 }
 
 @media (min-width: 1280px) {
+  .responsive-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+@media (min-width: 1536px) {
   .responsive-grid {
     grid-template-columns: repeat(5, 1fr) !important;
   }
