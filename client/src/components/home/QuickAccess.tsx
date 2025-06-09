@@ -77,9 +77,7 @@ const QuickAccess = () => {
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Zap className="h-5 w-5 text-blue-600" />
-            </div>
+            <Zap className="h-6 w-6 text-blue-600" />
             <h2 className="text-2xl font-bold text-gray-900">
               Acesso Rápido
             </h2>
