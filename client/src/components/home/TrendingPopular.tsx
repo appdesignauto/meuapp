@@ -76,15 +76,21 @@ const TrendingPopular = () => {
           </div>
         </div>
 
-        {/* Arts Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        {/* Arts Grid - Estilo Netflix no mobile */}
+        <div className="md:grid md:grid-cols-3 lg:grid-cols-6 md:gap-6 
+                        overflow-x-auto md:overflow-visible 
+                        flex md:block 
+                        gap-4 md:gap-6 
+                        pb-4 md:pb-0 
+                        scrollbar-hide
+                        snap-x snap-mandatory">
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group"
+              className="group flex-shrink-0 md:flex-shrink w-[280px] md:w-auto snap-start"
             >
               <Link href={`/art/${art.id}`}>
                 <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">

@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Netflix-style scrollbar hide */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* FORÇAR TEMA CLARO - CORREÇÃO DEFINITIVA */
 html {
   color-scheme: light !important;
