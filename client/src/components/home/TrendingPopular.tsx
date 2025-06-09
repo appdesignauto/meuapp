@@ -78,14 +78,14 @@ const TrendingPopular = () => {
 
         {/* Container principal com indicador */}
         <div className="relative">
-          {/* Arts Grid - Estilo Netflix no mobile */}
-          <div className="md:grid md:grid-cols-3 lg:grid-cols-6 md:gap-6 
-                          overflow-x-auto md:overflow-visible 
-                          flex md:block 
+          {/* Arts Grid - Netflix style on mobile, 6-column grid on desktop */}
+          <div className="overflow-x-auto md:overflow-visible 
+                          flex md:grid 
+                          md:grid-cols-6 
                           gap-4 md:gap-6 
                           pb-4 md:pb-0 
                           scrollbar-hide
-                          snap-x snap-mandatory">
+                          snap-x snap-mandatory md:snap-none">
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
