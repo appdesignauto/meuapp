@@ -103,16 +103,24 @@ const TrendingPopular = () => {
                       loading="lazy"
                     />
                     
-                    {/* Efeito "Em Alta" - mantido conforme solicitado */}
-                    <div className="absolute top-2 left-2">
-                      <div className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-full text-xs font-medium shadow-lg">
+                    {/* Badge "Em Alta" - Design moderno e minimalista */}
+                    <div className="absolute top-3 left-3 z-10">
+                      <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm text-gray-900 px-2.5 py-1 rounded-lg text-xs font-medium shadow-sm border border-gray-100/50">
                         <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            rotate: [0, 5, -5, 0]
+                          }}
+                          transition={{ 
+                            duration: 3, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                          className="text-orange-500"
                         >
-                          🔥
+                          <TrendingUp size={12} />
                         </motion.div>
-                        Em alta
+                        <span className="font-semibold">Em Alta</span>
                       </div>
                     </div>
                   </div>
