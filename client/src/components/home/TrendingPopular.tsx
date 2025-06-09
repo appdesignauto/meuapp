@@ -78,12 +78,12 @@ const TrendingPopular = () => {
             </div>
           </div>
           <div className="animate-pulse">
-            <div className="hidden md:grid md:grid-cols-6 md:gap-4">
+            <div className="hidden sm:grid sm:grid-cols-6 sm:gap-2 md:gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="bg-gray-200 rounded-lg aspect-square"></div>
               ))}
             </div>
-            <div className="md:hidden flex gap-4 overflow-hidden">
+            <div className="sm:hidden flex gap-4 overflow-hidden">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="bg-gray-200 rounded-lg aspect-square w-[280px] flex-shrink-0"></div>
               ))}
@@ -107,8 +107,8 @@ const TrendingPopular = () => {
 
         {/* Container principal com indicador */}
         <div className="relative">
-          {/* Desktop: 6 cards in one row | Mobile: horizontal scroll */}
-          <div className="hidden md:grid md:grid-cols-6 md:gap-4">
+          {/* Desktop: 6 cards in one row (visible on screens 640px+) */}
+          <div className="hidden sm:grid sm:grid-cols-6 sm:gap-2 md:gap-4">
             {currentArts.map((art, index) => (
               <motion.div
                 key={art.id}
@@ -156,8 +156,8 @@ const TrendingPopular = () => {
             ))}
           </div>
 
-          {/* Mobile: Netflix-style horizontal scroll */}
-          <div className="md:hidden overflow-x-auto flex gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+          {/* Mobile: Netflix-style horizontal scroll (only on small screens) */}
+          <div className="sm:hidden overflow-x-auto flex gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
             {currentArts.map((art, index) => (
               <motion.div
                 key={art.id}
@@ -220,7 +220,7 @@ const TrendingPopular = () => {
           </div>
           
           {/* Indicador de mais conteúdo no mobile */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent md:hidden flex items-center justify-center pointer-events-none">
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent sm:hidden flex items-center justify-center pointer-events-none">
             <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60"></div>
           </div>
         </div>
