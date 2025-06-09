@@ -145,9 +145,8 @@ const TrendingPopular = () => {
             </div>
           </div>
 
-          {/* Desktop: 6 Column Grid - Force display for debugging */}
-          <div className="hidden md:block bg-red-100 border-2 border-red-500 p-4">
-            <div className="text-red-700 text-sm mb-2">DESKTOP GRID CONTAINER</div>
+          {/* Desktop: 6 Column Grid */}
+          <div className="hidden md:block">
             <div className="grid grid-cols-6 gap-6">
               {currentArts.map((art, index) => (
                 <motion.div
