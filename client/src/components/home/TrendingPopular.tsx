@@ -89,7 +89,7 @@ const TrendingPopular = () => {
                   transition={{ delay: index * 0.1 }}
                   className="group flex-shrink-0 w-[280px] snap-start"
                 >
-                  <Link href={`/art/${art.id}`}>
+                  <Link href={`/artes/${art.id}`}>
                     <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                       <div className="relative aspect-square overflow-hidden">
                         <img
@@ -156,7 +156,7 @@ const TrendingPopular = () => {
                   transition={{ delay: index * 0.1 }}
                   className="group"
                 >
-                  <Link href={`/art/${art.id}`}>
+                  <Link href={`/artes/${art.id}`}>
                     <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                       <div className="relative aspect-square overflow-hidden">
                         <img
