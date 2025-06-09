@@ -81,10 +81,10 @@ const QuickAccess = () => {
               <Zap className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800">
                 Acesso Rápido
               </h2>
-              <p className="text-gray-600 text-sm mt-1">
+              <p className="text-gray-600 text-xs mt-1">
                 Principais funcionalidades ao seu alcance
               </p>
             </div>
