@@ -67,7 +67,7 @@ const TrendingPopular = () => {
 
   return (
     <section className="py-1 sm:py-2 md:py-4 bg-gradient-to-b from-white to-blue-50/40">
-      <div className="container mx-auto px-3 sm:px-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -79,13 +79,13 @@ const TrendingPopular = () => {
         {/* Container principal com indicador */}
         <div className="relative">
           {/* Arts Grid - Netflix style on mobile, 6-column grid on desktop */}
-          <div className="overflow-x-auto md:overflow-visible 
-                          flex md:grid 
-                          md:grid-cols-6 
-                          gap-4 md:gap-6 
-                          pb-4 md:pb-0 
+          <div className="overflow-x-auto lg:overflow-visible 
+                          flex lg:grid 
+                          lg:grid-cols-6
+                          gap-4 lg:gap-4
+                          pb-4 lg:pb-0 
                           scrollbar-hide
-                          snap-x snap-mandatory md:snap-none">
+                          snap-x snap-mandatory lg:snap-none">
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
@@ -148,7 +148,7 @@ const TrendingPopular = () => {
           </div>
           
           {/* Indicador de mais conteúdo no mobile */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent md:hidden flex items-center justify-center pointer-events-none">
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent lg:hidden flex items-center justify-center pointer-events-none">
             <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60"></div>
           </div>
         </div>
