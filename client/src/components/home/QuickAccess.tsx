@@ -1,37 +1,29 @@
 import { Link } from 'wouter';
 import { 
-  LayoutDashboard, 
-  Heart, 
-  Download, 
+  Image, 
+  Grid3X3, 
   Users, 
   PlayCircle, 
-  Settings, 
-  PenTool,
-  Zap
+  Scissors,
+  Clock,
+  Heart
 } from 'lucide-react';
 
 const QuickAccess = () => {
   const quickAccessItems = [
     {
-      icon: LayoutDashboard,
-      label: 'Painel',
-      href: '/painel',
-      description: 'Acesse seu dashboard completo',
+      icon: Image,
+      label: 'Artes',
+      href: '/artes',
+      description: 'Explore todas as artes',
       color: 'bg-blue-50 text-blue-600 hover:bg-blue-100'
     },
     {
-      icon: Heart,
-      label: 'Favoritos',
-      href: '/painel/favoritas',
-      description: 'Suas artes salvas',
-      color: 'bg-red-50 text-red-600 hover:bg-red-100'
-    },
-    {
-      icon: Download,
-      label: 'Downloads',
-      href: '/painel/downloads',
-      description: 'Histórico de downloads',
-      color: 'bg-green-50 text-green-600 hover:bg-green-100'
+      icon: Grid3X3,
+      label: 'Categorias',
+      href: '/categorias',
+      description: 'Navegue por categorias',
+      color: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
     },
     {
       icon: Users,
@@ -42,31 +34,31 @@ const QuickAccess = () => {
     },
     {
       icon: PlayCircle,
-      label: 'Videoaulas',
+      label: 'Tutoriais',
       href: '/videoaulas',
-      description: 'Tutoriais exclusivos',
+      description: 'Aprenda com videoaulas',
       color: 'bg-orange-50 text-orange-600 hover:bg-orange-100'
     },
     {
-      icon: PenTool,
-      label: 'Ferramentas',
+      icon: Scissors,
+      label: 'Removedor de Fundo',
       href: '/ferramentas',
-      description: 'Recursos de design',
-      color: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+      description: 'Remova fundos facilmente',
+      color: 'bg-green-50 text-green-600 hover:bg-green-100'
     },
     {
-      icon: Settings,
-      label: 'Perfil',
-      href: '/painel/perfil',
-      description: 'Configurações da conta',
-      color: 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+      icon: Clock,
+      label: 'Meus Designs Recentes',
+      href: '/painel/downloads',
+      description: 'Seus downloads recentes',
+      color: 'bg-amber-50 text-amber-600 hover:bg-amber-100'
     },
     {
-      icon: Zap,
-      label: 'Premium',
-      href: '/painel/assinatura',
-      description: 'Gerencie sua assinatura',
-      color: 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
+      icon: Heart,
+      label: 'Favoritas',
+      href: '/painel/favoritas',
+      description: 'Suas artes favoritas',
+      color: 'bg-red-50 text-red-600 hover:bg-red-100'
     }
   ];
 
@@ -75,20 +67,16 @@ const QuickAccess = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-3">
-            <Zap className="h-4 w-4" />
-            Acesso Premium
-          </div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
             Acesso Rápido
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Navegue facilmente pelas principais funcionalidades da sua conta premium
+            Navegue facilmente pelas principais funcionalidades da plataforma
           </p>
         </div>
 
-        {/* Grid de ícones */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        {/* Grid de ícones - otimizado para 7 itens */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-6xl mx-auto">
           {quickAccessItems.map((item, index) => {
             const Icon = item.icon;
             return (

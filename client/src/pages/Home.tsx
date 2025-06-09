@@ -11,6 +11,7 @@ import PremiumFeatures from '@/components/home/PremiumFeatures';
 import Testimonials from '@/components/home/Testimonials';
 import CallToAction from '@/components/home/CallToAction';
 import FeatureStats from '@/components/home/FeatureStats';
+import QuickAccess from '@/components/home/QuickAccess';
 
 const Home = () => {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -88,6 +89,10 @@ const Home = () => {
         />
       </div>
       <TrendingPopular />
+      
+      {/* Seção de acesso rápido apenas para usuários premium */}
+      {isPremiumUser && <QuickAccess />}
+      
       <FeatureStats />
       
       {/* Seções promocionais apenas para usuários não-premium */}
