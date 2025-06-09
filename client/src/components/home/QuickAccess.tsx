@@ -76,7 +76,7 @@ const QuickAccess = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Zap className="h-5 w-5 text-blue-600" />
             </div>
@@ -84,6 +84,9 @@ const QuickAccess = () => {
               Acesso Rápido
             </h2>
           </div>
+          <p className="text-gray-600 text-sm ml-11">
+            Principais funcionalidades ao seu alcance
+          </p>
         </div>
 
         {/* Grid de ícones - otimizado para 8 itens */}
