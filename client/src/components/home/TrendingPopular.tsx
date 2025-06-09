@@ -76,14 +76,16 @@ const TrendingPopular = () => {
           </div>
         </div>
 
-        {/* Arts Grid - Estilo Netflix no mobile */}
-        <div className="md:grid md:grid-cols-3 lg:grid-cols-6 md:gap-6 
-                        overflow-x-auto md:overflow-visible 
-                        flex md:block 
-                        gap-4 md:gap-6 
-                        pb-4 md:pb-0 
-                        scrollbar-hide
-                        snap-x snap-mandatory">
+        {/* Container principal com indicador */}
+        <div className="relative">
+          {/* Arts Grid - Estilo Netflix no mobile */}
+          <div className="md:grid md:grid-cols-3 lg:grid-cols-6 md:gap-6 
+                          overflow-x-auto md:overflow-visible 
+                          flex md:block 
+                          gap-4 md:gap-6 
+                          pb-4 md:pb-0 
+                          scrollbar-hide
+                          snap-x snap-mandatory">
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
@@ -143,6 +145,12 @@ const TrendingPopular = () => {
               </Link>
             </motion.div>
           ))}
+          </div>
+          
+          {/* Indicador de mais conteúdo no mobile */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent md:hidden flex items-center justify-center pointer-events-none">
+            <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60"></div>
+          </div>
         </div>
       </div>
     </section>

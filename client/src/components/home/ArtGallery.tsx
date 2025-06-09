@@ -185,7 +185,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               >
                 <Link 
                   href="/artes"
-                  className="inline-flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium text-sm rounded-lg hover:bg-blue-50 transition-all duration-200"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
                 >
                   Ver todas as artes
                   <ArrowRight className="ml-2 h-4 w-4" />
