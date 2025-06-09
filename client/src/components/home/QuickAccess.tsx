@@ -75,12 +75,9 @@ const QuickAccess = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">
             Acesso Rápido
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Navegue facilmente pelas principais funcionalidades da plataforma
-          </p>
         </div>
 
         {/* Grid de ícones - otimizado para 8 itens */}
