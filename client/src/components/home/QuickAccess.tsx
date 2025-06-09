@@ -75,17 +75,18 @@ const QuickAccess = () => {
     <section className="py-12 bg-gradient-to-b from-white to-gray-50/30">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Zap className="h-5 w-5 text-blue-600" />
             </div>
-            <div>
-              <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-                Acesso Rápido
-              </h2>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Acesso Rápido
+            </h2>
           </div>
+          <p className="text-sm text-gray-500 max-w-md mx-auto">
+            Explore todas as funcionalidades da sua conta premium
+          </p>
         </div>
 
         {/* Grid de ícones - organizados em 2 blocos de 4 */}
