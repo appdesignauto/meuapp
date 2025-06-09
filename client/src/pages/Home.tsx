@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import useScrollTop from '@/hooks/useScrollTop';
+import { useAuth } from '@/hooks/use-auth';
 import Hero from '@/components/home/Hero';
 import RecentDesigns from '@/components/home/RecentDesigns';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
@@ -15,10 +16,28 @@ const Home = () => {
   // Garantir rolagem para o topo ao navegar para esta página
   useScrollTop();
   
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null);
   const [selectedFileType, setSelectedFileType] = useState<number | null>(null);
   const [location] = useLocation();
+
+  // Função para verificar se o usuário tem acesso premium
+  const userHasPremiumAccess = () => {
+    if (!user) return false;
+    
+    return user.tipoplano === 'mensal' || 
+           user.tipoplano === 'anual' || 
+           user.tipoplano === 'vitalicio' || 
+           user.tipoplano === 'personalizado' || 
+           user.acessovitalicio || 
+           user.nivelacesso === 'admin' || 
+           user.nivelacesso === 'designer_adm' ||
+           user.nivelacesso === 'designer' ||
+           user.nivelacesso === 'suporte';
+  };
+
+  const isPremiumUser = userHasPremiumAccess();
 
   // Processar parâmetros da URL para aplicar filtros
   useEffect(() => {
@@ -70,9 +89,15 @@ const Home = () => {
       </div>
       <TrendingPopular />
       <FeatureStats />
-      <PremiumFeatures />
-      <Testimonials />
-      <CallToAction />
+      
+      {/* Seções promocionais apenas para usuários não-premium */}
+      {!isPremiumUser && (
+        <>
+          <PremiumFeatures />
+          <Testimonials />
+          <CallToAction />
+        </>
+      )}
     </>
   );
 };
