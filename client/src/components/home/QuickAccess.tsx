@@ -88,34 +88,67 @@ const QuickAccess = () => {
           </div>
         </div>
 
-        {/* Grid de ícones - otimizado para 8 itens */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 max-w-7xl mx-auto">
-          {quickAccessItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <Link key={index} href={item.href}>
-                <div className="group relative bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  {/* Ícone */}
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 transition-colors duration-200 ${item.color}`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  
-                  {/* Label */}
-                  <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
-                    {item.label}
-                  </h3>
-                  
-                  {/* Description */}
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    {item.description}
-                  </p>
+        {/* Grid de ícones - organizados em 2 blocos de 4 */}
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Primeiro bloco - 4 ícones */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {quickAccessItems.slice(0, 4).map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <Link key={index} href={item.href}>
+                  <div className="group relative bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    {/* Ícone */}
+                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 transition-colors duration-200 ${item.color}`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    
+                    {/* Label */}
+                    <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
+                      {item.label}
+                    </h3>
+                    
+                    {/* Description */}
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {item.description}
+                    </p>
 
-                  {/* Hover effect */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                </div>
-              </Link>
-            );
-          })}
+                    {/* Hover effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          
+          {/* Segundo bloco - 4 ícones */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {quickAccessItems.slice(4, 8).map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <Link key={index + 4} href={item.href}>
+                  <div className="group relative bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    {/* Ícone */}
+                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 transition-colors duration-200 ${item.color}`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    
+                    {/* Label */}
+                    <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
+                      {item.label}
+                    </h3>
+                    
+                    {/* Description */}
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {item.description}
+                    </p>
+
+                    {/* Hover effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         {/* Call to action adicional */}
