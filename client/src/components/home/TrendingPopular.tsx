@@ -148,7 +148,7 @@ const TrendingPopular = () => {
           {/* Desktop: 6 Column Grid */}
           <div className="hidden md:block bg-blue-100 border-2 border-blue-500 p-4">
             <div className="text-blue-700 text-sm mb-2">DESKTOP: 6 COLUMN GRID</div>
-            <div className="grid grid-cols-6 gap-4">
+            <div className="grid grid-cols-6 gap-4 w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
               {currentArts.map((art, index) => (
                 <motion.div
                   key={art.id}
@@ -156,6 +156,7 @@ const TrendingPopular = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="group"
+                  style={{ width: '100%', maxWidth: '200px', minWidth: '150px' }}
                 >
                   <Link href={`/artes/${art.id}`}>
                     <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
