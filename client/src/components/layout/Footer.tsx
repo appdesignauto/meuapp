@@ -32,10 +32,10 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Sections layout - mobile: all in one row centered, desktop: original */}
-          <div className="flex flex-row md:flex-row justify-center md:justify-start md:ml-16 gap-8 md:gap-0">
+          {/* Sections 2, 3, 4 with custom spacing */}
+          <div className="flex flex-row md:flex-row justify-center md:justify-start gap-8 md:gap-0 md:ml-16">
             {/* Design Auto section */}
-            <div className="md:w-auto md:mr-14 flex-1 md:flex-none">
+            <div className="md:w-auto flex-1 md:flex-none md:mr-14">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
               <ul className="space-y-2">
                 <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
@@ -45,7 +45,7 @@ const Footer = () => {
             </div>
 
             {/* Informativo */}
-            <div className="md:w-auto md:mr-14 flex-1 md:flex-none">
+            <div className="md:w-auto flex-1 md:flex-none md:mr-14">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
               <ul className="space-y-2">
                 <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
