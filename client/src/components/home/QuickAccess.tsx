@@ -98,24 +98,24 @@ const QuickAccess = () => {
               const Icon = item.icon;
               return (
                 <Link key={index} href={item.href}>
-                  <div className="group relative bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-md cursor-pointer">
+                  <div className="group relative bg-white/80 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer">
                     {/* Ícone */}
-                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 transition-colors duration-200 ${item.color}`}>
-                      <Icon className="h-6 w-6" />
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 transition-colors duration-200 ${item.color}`}>
+                      <Icon className="h-5 w-5" />
                     </div>
                     
                     {/* Label */}
-                    <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
+                    <h3 className="font-medium text-gray-800 text-sm mb-1 group-hover:text-gray-900">
                       {item.label}
                     </h3>
                     
                     {/* Description */}
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <p className="text-xs text-gray-500 leading-snug">
                       {item.description}
                     </p>
 
                     {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/10 group-hover:to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   </div>
                 </Link>
               );
@@ -128,24 +128,24 @@ const QuickAccess = () => {
               const Icon = item.icon;
               return (
                 <Link key={index + 4} href={item.href}>
-                  <div className="group relative bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-md cursor-pointer">
+                  <div className="group relative bg-white/80 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer">
                     {/* Ícone */}
-                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3 transition-colors duration-200 ${item.color}`}>
-                      <Icon className="h-6 w-6" />
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 transition-colors duration-200 ${item.color}`}>
+                      <Icon className="h-5 w-5" />
                     </div>
                     
                     {/* Label */}
-                    <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
+                    <h3 className="font-medium text-gray-800 text-sm mb-1 group-hover:text-gray-900">
                       {item.label}
                     </h3>
                     
                     {/* Description */}
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <p className="text-xs text-gray-500 leading-snug">
                       {item.description}
                     </p>
 
                     {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/10 group-hover:to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   </div>
                 </Link>
               );
