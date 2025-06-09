@@ -19,7 +19,7 @@ interface ApiResponse {
 }
 
 const TrendingPopular = () => {
-  const { data: popularData, isLoading } = useQuery<ApiResponse>({
+  const { data: popularData, isLoading, error } = useQuery<ApiResponse>({
     queryKey: ['/api/arts/popular']
   });
 
@@ -43,7 +43,8 @@ const TrendingPopular = () => {
     );
   }
 
-  if (currentArts.length === 0) {
+  // Only show "no results" if we're not loading AND have confirmed no data
+  if (!isLoading && currentArts.length === 0) {
     return (
       <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="container mx-auto px-4">
@@ -58,6 +59,34 @@ const TrendingPopular = () => {
               <Download size={48} className="mx-auto mb-4 opacity-50" />
               <p>Nenhum design encontrado</p>
               <p className="text-sm">Não há designs disponíveis nesta categoria no momento.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  // Show loading state or empty section if still loading
+  if (isLoading || currentArts.length === 0) {
+    return (
+      <section className="py-1 sm:py-2 md:py-4 bg-gradient-to-b from-white to-blue-50/40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Top 6 - Artes em Alta</h2>
+            </div>
+          </div>
+          <div className="animate-pulse">
+            <div className="hidden md:grid md:grid-cols-6 md:gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-gray-200 rounded-lg aspect-square"></div>
+              ))}
+            </div>
+            <div className="md:hidden flex gap-4 overflow-hidden">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-gray-200 rounded-lg aspect-square w-[280px] flex-shrink-0"></div>
+              ))}
             </div>
           </div>
         </div>
