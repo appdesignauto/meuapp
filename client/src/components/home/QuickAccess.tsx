@@ -7,7 +7,8 @@ import {
   Scissors,
   Clock,
   Heart,
-  KeyRound
+  KeyRound,
+  Zap
 } from 'lucide-react';
 
 const QuickAccess = () => {
@@ -74,10 +75,15 @@ const QuickAccess = () => {
     <section className="py-12 bg-gradient-to-b from-white to-gray-50/30">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">
-            Acesso Rápido
-          </h2>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Zap className="h-5 w-5 text-blue-600" />
+            </div>
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+              Acesso Rápido
+            </h2>
+          </div>
         </div>
 
         {/* Grid de ícones - otimizado para 8 itens */}
