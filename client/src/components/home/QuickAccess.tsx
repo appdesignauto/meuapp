@@ -84,9 +84,6 @@ const QuickAccess = () => {
               <h2 className="text-lg md:text-xl font-semibold text-gray-800">
                 Acesso Rápido
               </h2>
-              <p className="text-gray-600 text-xs mt-1">
-                Principais funcionalidades ao seu alcance
-              </p>
             </div>
           </div>
         </div>
