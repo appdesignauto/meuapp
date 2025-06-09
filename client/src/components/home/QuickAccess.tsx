@@ -6,7 +6,8 @@ import {
   PlayCircle, 
   Scissors,
   Clock,
-  Heart
+  Heart,
+  KeyRound
 } from 'lucide-react';
 
 const QuickAccess = () => {
@@ -59,6 +60,13 @@ const QuickAccess = () => {
       href: '/painel/favoritas',
       description: 'Suas artes favoritas',
       color: 'bg-red-50 text-red-600 hover:bg-red-100'
+    },
+    {
+      icon: KeyRound,
+      label: 'Alterar Senha',
+      href: '/painel/perfil',
+      description: 'Atualize sua senha',
+      color: 'bg-slate-50 text-slate-600 hover:bg-slate-100'
     }
   ];
 
@@ -75,8 +83,8 @@ const QuickAccess = () => {
           </p>
         </div>
 
-        {/* Grid de ícones - otimizado para 7 itens */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-6xl mx-auto">
+        {/* Grid de ícones - otimizado para 8 itens */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 max-w-7xl mx-auto">
           {quickAccessItems.map((item, index) => {
             const Icon = item.icon;
             return (
