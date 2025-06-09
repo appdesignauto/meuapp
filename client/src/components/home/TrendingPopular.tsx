@@ -145,64 +145,67 @@ const TrendingPopular = () => {
             </div>
           </div>
 
-          {/* Desktop: 6 Column Grid */}
-          <div className="hidden md:grid md:grid-cols-6 md:gap-6">
-            {currentArts.map((art, index) => (
-              <motion.div
-                key={art.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group"
-              >
-                <Link href={`/art/${art.id}`}>
-                  <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                    <div className="relative aspect-square overflow-hidden">
-                      <img
-                        src={art.imageUrl}
-                        alt={art.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                      
-                      <div className="absolute top-3 left-3 z-10">
-                        <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm text-gray-900 px-2.5 py-1 rounded-lg text-xs font-medium shadow-sm border border-gray-100/50">
-                          <motion.div
-                            animate={{ 
-                              scale: [1, 1.1, 1],
-                              rotate: [0, 5, -5, 0]
-                            }}
-                            transition={{ 
-                              duration: 3, 
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }}
-                            className="text-orange-500"
-                          >
-                            <TrendingUp size={12} />
-                          </motion.div>
-                          <span className="font-semibold">Em Alta</span>
+          {/* Desktop: 6 Column Grid - Force display for debugging */}
+          <div className="hidden md:block bg-red-100 border-2 border-red-500 p-4">
+            <div className="text-red-700 text-sm mb-2">DESKTOP GRID CONTAINER</div>
+            <div className="grid grid-cols-6 gap-6">
+              {currentArts.map((art, index) => (
+                <motion.div
+                  key={art.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="group"
+                >
+                  <Link href={`/art/${art.id}`}>
+                    <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="relative aspect-square overflow-hidden">
+                        <img
+                          src={art.imageUrl}
+                          alt={art.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                        
+                        <div className="absolute top-3 left-3 z-10">
+                          <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm text-gray-900 px-2.5 py-1 rounded-lg text-xs font-medium shadow-sm border border-gray-100/50">
+                            <motion.div
+                              animate={{ 
+                                scale: [1, 1.1, 1],
+                                rotate: [0, 5, -5, 0]
+                              }}
+                              transition={{ 
+                                duration: 3, 
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                              className="text-orange-500"
+                            >
+                              <TrendingUp size={12} />
+                            </motion.div>
+                            <span className="font-semibold">Em Alta</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="p-2">
-                      <h3 className="font-medium text-gray-900 text-xs line-clamp-1 mb-1">
-                        {art.title}
-                      </h3>
-                      
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span className="text-xs truncate">{art.categoryName}</span>
-                        <div className="flex items-center gap-1">
-                          <Download size={10} />
-                          <span>{art.downloadCount}</span>
+                      <div className="p-2">
+                        <h3 className="font-medium text-gray-900 text-xs line-clamp-1 mb-1">
+                          {art.title}
+                        </h3>
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span className="text-xs truncate">{art.categoryName}</span>
+                          <div className="flex items-center gap-1">
+                            <Download size={10} />
+                            <span>{art.downloadCount}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
