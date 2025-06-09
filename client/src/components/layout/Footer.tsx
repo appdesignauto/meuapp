@@ -32,33 +32,30 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Mobile: Organized layout, Desktop: normal layout */}
-          <div className="flex flex-col md:flex-row w-full md:ml-16">
-            {/* DESIGN AUTO and INFORMATIVO side by side on mobile */}
-            <div className="flex flex-row justify-start gap-12 md:gap-14 mb-6 md:mb-0 w-full">
-              {/* Design Auto section */}
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
-                <ul className="space-y-2">
-                  <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
-                  <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Planos</Link></li>
-                  <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Dúvidas</Link></li>
-                </ul>
-              </div>
-
-              {/* Informativo */}
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
-                <ul className="space-y-2">
-                  <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
-                  <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
-                  <li><ReportForm /></li>
-                </ul>
-              </div>
+          {/* Sections layout - mobile: all in one row centered, desktop: original */}
+          <div className="flex flex-row md:flex-row justify-center md:justify-start md:ml-16 gap-8 md:gap-0">
+            {/* Design Auto section */}
+            <div className="md:w-auto md:mr-14 flex-1 md:flex-none">
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
+              <ul className="space-y-2">
+                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
+                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Planos</Link></li>
+                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Dúvidas</Link></li>
+              </ul>
             </div>
 
-            {/* Parceria - Left aligned below on mobile */}
-            <div className="text-left w-full md:w-auto">
+            {/* Informativo */}
+            <div className="md:w-auto md:mr-14 flex-1 md:flex-none">
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
+              <ul className="space-y-2">
+                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
+                <li><ReportForm /></li>
+              </ul>
+            </div>
+
+            {/* Parceria */}
+            <div className="md:w-auto flex-1 md:flex-none">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
               <ul className="space-y-2">
                 <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Colaborador</Link></li>
