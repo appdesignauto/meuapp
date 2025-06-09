@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Download, TrendingUp } from 'lucide-react';
@@ -22,6 +22,19 @@ const TrendingPopular = () => {
   const { data: popularData, isLoading } = useQuery<ApiResponse>({
     queryKey: ['/api/arts/popular']
   });
+  
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    
+    checkIsDesktop();
+    window.addEventListener('resize', checkIsDesktop);
+    
+    return () => window.removeEventListener('resize', checkIsDesktop);
+  }, []);
 
   const currentArts = popularData?.arts || [];
 
@@ -78,21 +91,23 @@ const TrendingPopular = () => {
 
         {/* Container principal com indicador */}
         <div className="relative">
-          {/* Arts Grid - Estilo Netflix no mobile, Grid 6 colunas no desktop */}
-          <div className="md:grid md:grid-cols-6 md:gap-4 lg:gap-6
-                          overflow-x-auto md:overflow-visible 
-                          flex md:block 
-                          gap-4 md:gap-4 lg:gap-6
-                          pb-4 md:pb-0 
-                          scrollbar-hide
-                          snap-x snap-mandatory">
+          {/* Arts Grid - Mobile: horizontal scroll, Desktop: 6 columns grid */}
+          <div 
+            className={isDesktop 
+              ? "grid grid-cols-6 gap-6" 
+              : "flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
+            }
+          >
           {currentArts.map((art, index) => (
             <motion.div
               key={art.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group flex-shrink-0 md:flex-shrink w-[280px] md:w-auto snap-start"
+              className={isDesktop 
+                ? "group" 
+                : "group flex-shrink-0 w-[280px] snap-start"
+              }
             >
               <Link href={`/art/${art.id}`}>
                 <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
@@ -148,9 +163,11 @@ const TrendingPopular = () => {
           </div>
           
           {/* Indicador de mais conteúdo no mobile */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent md:hidden flex items-center justify-center pointer-events-none">
-            <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60"></div>
-          </div>
+          {!isDesktop && (
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent flex items-center justify-center pointer-events-none">
+              <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60"></div>
+            </div>
+          )}
         </div>
       </div>
     </section>
