@@ -86,7 +86,7 @@ const QuickAccess = () => {
             </h2>
           </div>
           <p className="text-sm text-gray-500 max-w-md mx-auto">
-            Explore todas as funcionalidades da sua conta premium
+            Acesse rapidamente suas ferramentas favoritas
           </p>
         </div>
 
@@ -122,12 +122,7 @@ const QuickAccess = () => {
           </div>
         </div>
 
-          {/* Call to action adicional */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-gray-500">
-              Explore todas as funcionalidades da sua conta premium
-            </p>
-          </div>
+
         </div>
       </div>
     </section>
