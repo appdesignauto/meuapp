@@ -35,9 +35,9 @@ const Footer = () => {
           {/* Mobile: Organized layout, Desktop: normal layout */}
           <div className="flex flex-col md:flex-row w-full md:ml-16">
             {/* DESIGN AUTO and INFORMATIVO side by side on mobile */}
-            <div className="flex flex-row justify-center md:justify-start gap-12 md:gap-14 mb-6 md:mb-0 w-full">
+            <div className="flex flex-row justify-start gap-12 md:gap-14 mb-6 md:mb-0 w-full">
               {/* Design Auto section */}
-              <div className="text-center md:text-left">
+              <div className="text-left">
                 <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
                 <ul className="space-y-2">
                   <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
@@ -47,7 +47,7 @@ const Footer = () => {
               </div>
 
               {/* Informativo */}
-              <div className="text-center md:text-left">
+              <div className="text-left">
                 <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
                 <ul className="space-y-2">
                   <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
@@ -57,8 +57,8 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Parceria - Centralized below on mobile */}
-            <div className="text-center md:text-left w-full md:w-auto">
+            {/* Parceria - Left aligned below on mobile */}
+            <div className="text-left w-full md:w-auto">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
               <ul className="space-y-2">
                 <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Colaborador</Link></li>
