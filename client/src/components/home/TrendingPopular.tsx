@@ -79,7 +79,7 @@ const TrendingPopular = () => {
         {/* Container principal com indicador */}
         <div className="relative">
           {/* Desktop: 6 cards in one row | Mobile: horizontal scroll */}
-          <div className="hidden lg:grid lg:grid-cols-6 lg:gap-4">
+          <div className="hidden md:grid md:grid-cols-6 md:gap-4">
             {currentArts.map((art, index) => (
               <motion.div
                 key={art.id}
@@ -128,7 +128,7 @@ const TrendingPopular = () => {
           </div>
 
           {/* Mobile: Netflix-style horizontal scroll */}
-          <div className="lg:hidden overflow-x-auto flex gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+          <div className="md:hidden overflow-x-auto flex gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
             {currentArts.map((art, index) => (
               <motion.div
                 key={art.id}
@@ -191,7 +191,7 @@ const TrendingPopular = () => {
           </div>
           
           {/* Indicador de mais conteúdo no mobile */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent lg:hidden flex items-center justify-center pointer-events-none">
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-50/80 to-transparent md:hidden flex items-center justify-center pointer-events-none">
             <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60"></div>
           </div>
         </div>
