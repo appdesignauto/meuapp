@@ -93,11 +93,10 @@ const Home = () => {
       {/* Seção de acesso rápido apenas para usuários premium */}
       {isPremiumUser && <QuickAccess />}
       
-      <FeatureStats />
-      
       {/* Seções promocionais apenas para usuários não-premium */}
       {!isPremiumUser && (
         <>
+          <FeatureStats />
           <PremiumFeatures />
           <Testimonials />
           <CallToAction />

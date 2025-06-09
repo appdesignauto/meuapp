@@ -72,9 +72,12 @@ const QuickAccess = () => {
   ];
 
   return (
-    <section className="py-12 bg-gradient-to-b from-white to-gray-50/30">
-      <div className="container mx-auto px-4">
-        {/* Header */}
+    <section className="py-16 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/40 relative overflow-hidden">
+      {/* Efeito de fundo sutil */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+      <div className="relative">
+        <div className="container mx-auto px-4">
+          {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Zap className="h-6 w-6 text-blue-600" />
@@ -150,11 +153,12 @@ const QuickAccess = () => {
           </div>
         </div>
 
-        {/* Call to action adicional */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
-            Explore todas as funcionalidades da sua conta premium
-          </p>
+          {/* Call to action adicional */}
+          <div className="text-center mt-8">
+            <p className="text-sm text-gray-500">
+              Explore todas as funcionalidades da sua conta premium
+            </p>
+          </div>
         </div>
       </div>
     </section>
