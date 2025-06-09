@@ -89,7 +89,7 @@ const QuickAccess = () => {
         </div>
 
         {/* Grid de ícones - organizados em 2 blocos de 4 */}
-        <div className="max-w-4xl space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Primeiro bloco - 4 ícones */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {quickAccessItems.slice(0, 4).map((item, index) => {
