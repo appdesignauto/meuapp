@@ -66,7 +66,7 @@ const TrendingPopular = () => {
   }
 
   return (
-    <section className="py-1 sm:py-2 md:py-4 bg-gradient-to-b from-transparent to-blue-50/30">
+    <section className="py-1 sm:py-2 md:py-4 bg-gradient-to-b from-white to-blue-50/40">
       <div className="container mx-auto px-3 sm:px-4">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">

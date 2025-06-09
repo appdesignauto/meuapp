@@ -90,44 +90,13 @@ const QuickAccess = () => {
           </p>
         </div>
 
-        {/* Grid de ícones - organizados em 2 blocos de 4 */}
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Primeiro bloco - 4 ícones */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {quickAccessItems.slice(0, 4).map((item, index) => {
+        {/* Grid de ícones - 2 linhas de 4 ícones cada */}
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {quickAccessItems.map((item, index) => {
               const Icon = item.icon;
               return (
                 <Link key={index} href={item.href}>
-                  <div className="group relative bg-white/80 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer">
-                    {/* Ícone */}
-                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 transition-colors duration-200 ${item.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    
-                    {/* Label */}
-                    <h3 className="font-medium text-gray-800 text-sm mb-1 group-hover:text-gray-900">
-                      {item.label}
-                    </h3>
-                    
-                    {/* Description */}
-                    <p className="text-xs text-gray-500 leading-snug">
-                      {item.description}
-                    </p>
-
-                    {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/10 group-hover:to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-          
-          {/* Segundo bloco - 4 ícones */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {quickAccessItems.slice(4, 8).map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <Link key={index + 4} href={item.href}>
                   <div className="group relative bg-white/80 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer">
                     {/* Ícone */}
                     <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 transition-colors duration-200 ${item.color}`}>
