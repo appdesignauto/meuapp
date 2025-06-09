@@ -78,22 +78,65 @@ const TrendingPopular = () => {
 
         {/* Container principal com indicador */}
         <div className="relative">
-          {/* Arts Grid - Netflix style on mobile, 6-column grid on desktop */}
-          <div className="overflow-x-auto lg:overflow-visible 
-                          flex lg:grid 
-                          lg:grid-cols-6
-                          gap-4 lg:gap-4
-                          pb-4 lg:pb-0 
-                          scrollbar-hide
-                          snap-x snap-mandatory lg:snap-none">
-          {currentArts.map((art, index) => (
-            <motion.div
-              key={art.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group flex-shrink-0 md:flex-shrink w-[280px] md:w-auto snap-start"
-            >
+          {/* Desktop: 6 cards in one row | Mobile: horizontal scroll */}
+          <div className="hidden lg:grid lg:grid-cols-6 lg:gap-4">
+            {currentArts.map((art, index) => (
+              <motion.div
+                key={art.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group"
+              >
+                <Link href={`/art/${art.id}`}>
+                  <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                    {/* Imagem */}
+                    <div className="relative aspect-square overflow-hidden">
+                      <img 
+                        src={art.imageUrl} 
+                        alt={art.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      
+                      {/* Badge "Em Alta" */}
+                      <div className="absolute top-2 left-2">
+                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm bg-opacity-90 shadow-lg border border-white/20">
+                          <TrendingUp className="inline w-3 h-3 mr-1" />
+                          Em Alta
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Conteúdo */}
+                    <div className="p-3">
+                      <h3 className="font-medium text-gray-900 text-sm mb-2 line-clamp-2 min-h-[2.5rem] leading-tight">
+                        {art.title}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="text-xs truncate">{art.categoryName}</span>
+                        <div className="flex items-center gap-1">
+                          <Download size={10} />
+                          <span>{art.downloadCount}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Mobile: Netflix-style horizontal scroll */}
+          <div className="lg:hidden overflow-x-auto flex gap-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+            {currentArts.map((art, index) => (
+              <motion.div
+                key={art.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group flex-shrink-0 w-[280px] snap-start"
+              >
               <Link href={`/art/${art.id}`}>
                 <div className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                   {/* Imagem */}
