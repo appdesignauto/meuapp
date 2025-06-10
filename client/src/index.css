@@ -80,6 +80,34 @@ section {
   color: rgb(17, 24, 39) !important;
 }
 
+/* FORÇAR LAYOUT FLEXBOX SEMPRE */
+#root {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  background-color: white !important;
+}
+
+/* GARANTIR QUE O FOOTER NUNCA SEJA REMOVIDO DO DOM */
+footer:not(:last-child) {
+  display: block !important;
+}
+
+/* CRITICAL CSS PARA FOOTER */
+body::after {
+  content: "";
+  display: block;
+  height: 0;
+  clear: both;
+}
+
+/* FORÇAR VISIBILIDADE ABSOLUTA DO FOOTER */
+[data-component="footer"], footer[data-testid], .footer-container {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* Estabilizar cores específicas dos componentes */
 section[class*="bg-gray-50"] {
   background-color: rgb(249, 250, 251) !important;

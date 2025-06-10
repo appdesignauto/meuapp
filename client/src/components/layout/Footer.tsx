@@ -5,7 +5,10 @@ import { Link } from 'wouter';
 const Footer = () => {
   return (
     <footer 
-      className="bg-white border-t border-gray-200 w-full"
+      id="main-footer"
+      data-component="footer"
+      data-testid="main-footer"
+      className="bg-white border-t border-gray-200 w-full footer-container"
       style={{
         display: 'block',
         visibility: 'visible',
@@ -13,7 +16,8 @@ const Footer = () => {
         backgroundColor: 'white',
         borderTop: '1px solid rgb(229, 231, 235)',
         position: 'relative',
-        zIndex: 10
+        zIndex: 10,
+        minHeight: '200px'
       }}
     >
       <div className="w-full px-4 py-12" style={{ backgroundColor: 'white' }}>

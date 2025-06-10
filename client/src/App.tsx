@@ -14,8 +14,7 @@ import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import RobustLayout from "@/components/layout/RobustLayout";
 import Home from "@/pages/Home";
 import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
@@ -62,23 +61,7 @@ import PainelDownloads from "@/pages/painel/PainelDownloads";
 import PainelAssinatura from "@/pages/painel/PainelAssinatura";
 import PainelPerfil from "@/pages/painel/PainelPerfil";
 
-// Componente para decidir se mostra o layout padrão
-function AppLayout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
-  
-  // Não mostrar o layout padrão para páginas administrativas ou do painel
-  if (location.startsWith('/admin') || location.startsWith('/painel')) {
-    return <>{children}</>;
-  }
-  
-  return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <Header />
-      <main className="flex-1 bg-white">{children}</main>
-      <Footer />
-    </div>
-  );
-}
+// Layout removido - usando RobustLayout diretamente
 
 function AppRoutes() {
   return (
@@ -383,9 +366,9 @@ function App() {
               <Router>
                 <ScrollToTop />
                 <DynamicFavicon />
-                <AppLayout>
+                <RobustLayout>
                   <AppRoutes />
-                </AppLayout>
+                </RobustLayout>
               </Router>
               <Toaster />
               <PopupContainer />
