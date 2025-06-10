@@ -56,7 +56,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative bg-gradient-to-b from-[#e8f0fb] to-white py-6 sm:py-8 md:py-14 pb-4 md:pb-6 overflow-hidden">
+    <section className="relative bg-gradient-to-b from-[#e8f0fb] to-white pt-2 pb-4 md:pb-6 overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute -left-20 bottom-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl"></div>
