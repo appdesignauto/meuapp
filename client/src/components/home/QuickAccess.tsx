@@ -72,9 +72,9 @@ const QuickAccess = () => {
   ];
 
   return (
-    <section className="py-16 bg-gray-50 relative overflow-hidden">
+    <section className="py-16 bg-gradient-to-br from-blue-50/60 via-blue-100/40 to-indigo-100/50 relative overflow-hidden">
       {/* Efeito de fundo sutil */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-white/50 to-blue-50/30"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       <div className="relative">
         <div className="container mx-auto px-4">
           {/* Header */}

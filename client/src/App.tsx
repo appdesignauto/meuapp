@@ -8,13 +8,14 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
-// Theme provider removido para estabilidade
+import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 
-import RobustLayout from "@/components/layout/RobustLayout";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
 import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
@@ -48,7 +49,7 @@ import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
-import Collaborator from "@/pages/CollaboratorLight";
+import Collaborator from "@/pages/Collaborator";
 import Affiliate from "@/pages/Affiliate";
 
 // Páginas do Painel do Usuário
@@ -61,7 +62,23 @@ import PainelDownloads from "@/pages/painel/PainelDownloads";
 import PainelAssinatura from "@/pages/painel/PainelAssinatura";
 import PainelPerfil from "@/pages/painel/PainelPerfil";
 
-// Layout removido - usando RobustLayout diretamente
+// Componente para decidir se mostra o layout padrão
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
+  
+  // Não mostrar o layout padrão para páginas administrativas ou do painel
+  if (location.startsWith('/admin') || location.startsWith('/painel')) {
+    return <>{children}</>;
+  }
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
+  );
+}
 
 function AppRoutes() {
   return (
@@ -360,21 +377,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <div className="bg-white min-h-screen">
+        <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <SupabaseAuthProvider>
               <Router>
                 <ScrollToTop />
                 <DynamicFavicon />
-                <RobustLayout>
+                <AppLayout>
                   <AppRoutes />
-                </RobustLayout>
+                </AppLayout>
               </Router>
               <Toaster />
               <PopupContainer />
             </SupabaseAuthProvider>
           </AuthProvider>
-        </div>
+        </ThemeProvider>
       </HelmetProvider>
     </QueryClientProvider>
   );

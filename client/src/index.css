@@ -2,71 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS FORÇADO PARA GARANTIR QUE O RODAPÉ NUNCA DESAPAREÇA */
-footer.designauto-footer,
-.designauto-footer,
-footer[class*="footer"],
-#footer,
-.footer {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  width: 100% !important;
-  min-height: 200px !important;
-  background-color: white !important;
-  border-top: 1px solid rgb(229, 231, 235) !important;
-  z-index: 9999 !important;
-  margin-top: auto !important;
-}
-
-/* Garantir que o layout flex funcione corretamente */
-#root-layout,
-.min-h-screen {
-  min-height: 100vh !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-#main-content {
-  flex: 1 1 auto !important;
-}
-
-/* Prevenir que qualquer elemento oculte o footer */
-* {
-  z-index: auto !important;
-}
-
-footer.designauto-footer {
-  z-index: 9999 !important;
-}
-
-/* Garantir responsividade */
-@media (max-width: 768px) {
-  footer.designauto-footer {
-    min-height: 150px !important;
-  }
-}
-
-/* Forçar visibilidade em dispositivos móveis */
-@media (max-width: 640px) {
-  footer.designauto-footer {
-    display: block !important;
-    visibility: visible !important;
-  }
-}
-
-/* Prevenir conflitos com outros frameworks CSS */
-footer.designauto-footer * {
-  box-sizing: border-box !important;
-}
-
-/* Garantir que nenhum overflow oculte o footer */
-body, html, #root {
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-}
-
 /* Netflix-style scrollbar hide */
 @layer utilities {
   .scrollbar-hide {
@@ -79,281 +14,30 @@ body, html, #root {
   }
 }
 
-/* TEMA ESTÁVEL - CORREÇÃO DEFINITIVA */
+/* FORÇAR TEMA CLARO - CORREÇÃO DEFINITIVA */
 html {
-  color-scheme: light;
-  background-color: white !important;
+  color-scheme: light !important;
 }
 
+html.dark {
+  color-scheme: light !important;
+}
+
+/* Garantir fundo branco sempre */
 html, body {
   background-color: white !important;
   color: rgb(17, 24, 39) !important;
 }
 
-/* Prevenir alternância de temas */
-* {
-  color-scheme: light;
-}
-
-/* Garantir estabilidade visual ABSOLUTA */
-.bg-white {
-  background-color: white !important;
-}
-
-.bg-gray-50 {
-  background-color: rgb(249, 250, 251) !important;
-}
-
-.bg-gradient-to-br {
-  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)) !important;
-}
-
-.bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important;
-}
-
-/* FORÇA FOOTER SEMPRE VISÍVEL */
-footer {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background-color: white !important;
-  border-top: 1px solid rgb(229, 231, 235) !important;
-  position: relative !important;
-  z-index: 10 !important;
-  width: 100% !important;
-}
-
-/* PREVINE QUALQUER INTERFERÊNCIA NO LAYOUT */
-.min-h-screen {
-  background-color: white !important;
-}
-
-/* ESTABILIZA TODAS AS SEÇÕES */
-section {
-  position: relative !important;
-}
-
-/* FORÇA ESTABILIDADE EM COMPONENTES DINÂMICOS */
-[data-theme], [class*="theme"] {
-  background-color: inherit !important;
-}
-
-/* REMOVE QUALQUER CONFLITO DE TEMA ESCURO */
-.dark, [data-theme="dark"], .theme-dark {
+/* Remover classes de tema escuro */
+html.dark {
   background-color: white !important;
   color: rgb(17, 24, 39) !important;
 }
 
-/* FORÇAR LAYOUT FLEXBOX SEMPRE */
-#root {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 100vh !important;
+.dark {
   background-color: white !important;
-}
-
-/* GARANTIR QUE O FOOTER NUNCA SEJA REMOVIDO DO DOM */
-footer:not(:last-child) {
-  display: block !important;
-}
-
-/* CRITICAL CSS PARA FOOTER */
-body::after {
-  content: "";
-  display: block;
-  height: 0;
-  clear: both;
-}
-
-/* FORÇAR VISIBILIDADE ABSOLUTA DO FOOTER */
-[data-component="footer"], footer[data-testid], .footer-container, .designauto-footer {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background-color: white !important;
-  border-top: 1px solid rgb(229, 231, 235) !important;
-  position: relative !important;
-  z-index: 10 !important;
-  min-height: 200px !important;
-}
-
-/* SELETOR ULTRA ESPECÍFICO PARA FOOTER */
-footer.designauto-footer {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background-color: white !important;
-}
-
-/* GARANTIR QUE NADA SOBRESCREVA O FOOTER */
-* + footer.designauto-footer {
-  display: block !important;
-}
-
-/* BACKUP ADICIONAL COM ALTA ESPECIFICIDADE */
-html body footer.designauto-footer {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* CORREÇÃO ESPECÍFICA PARA DESKTOP - FORÇA MÁXIMA */
-@media (min-width: 768px) {
-  footer.designauto-footer {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 9999 !important;
-    background-color: white !important;
-    border-top: 1px solid rgb(229, 231, 235) !important;
-    width: 100% !important;
-    min-height: 250px !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-top: 48px !important;
-    padding-bottom: 48px !important;
-    clear: both !important;
-    box-sizing: border-box !important;
-    transform: none !important;
-    clip: none !important;
-    clip-path: none !important;
-  }
-  
-  /* Garantir que o footer nunca seja escondido por overflow */
-  footer.designauto-footer * {
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-  
-  /* Forçar container do layout no desktop */
-  #root-layout {
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: visible !important;
-  }
-  
-  /* Garantir que o main não oculte o footer */
-  #main-content {
-    flex: 1 1 auto !important;
-    overflow: visible !important;
-    max-height: none !important;
-  }
-  
-  /* Prevenir qualquer problema de viewport ou overflow */
-  html {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    height: auto !important;
-  }
-  
-  body {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    min-height: 100vh !important;
-    height: auto !important;
-  }
-  
-  /* Forçar visibilidade em qualquer container pai */
-  div:has(footer.designauto-footer) {
-    overflow: visible !important;
-    height: auto !important;
-    max-height: none !important;
-  }
-}
-
-/* CACHE BUSTER - FORÇA ATUALIZAÇÃO */
-footer.designauto-footer::before {
-  content: "";
-  display: block;
-  width: 1px;
-  height: 1px;
-  background: transparent;
-}
-
-/* BACKUP FOOTER PARA EMERGÊNCIA NO DESKTOP */
-@media (min-width: 768px) {
-  body::after {
-    content: "© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA";
-    display: block;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 20px;
-    text-align: center;
-    font-size: 12px;
-    color: #6b7280;
-    z-index: 10000;
-  }
-  
-  /* Esconder backup quando footer principal estiver visível */
-  body:has(.designauto-footer[style*="display: block"]) body::after {
-    display: none;
-  }
-}
-
-/* FORÇA ABSOLUTA PARA DESKTOP - LAST RESORT */
-@media screen and (min-width: 768px) {
-  footer.designauto-footer,
-  footer[data-component="footer"],
-  .footer-container {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 9999 !important;
-    background-color: white !important;
-    border-top: 1px solid rgb(229, 231, 235) !important;
-    width: 100% !important;
-    min-height: 250px !important;
-    margin: 0 !important;
-    padding: 48px 16px !important;
-    clear: both !important;
-    transform: none !important;
-    clip: auto !important;
-    overflow: visible !important;
-    box-sizing: border-box !important;
-  }
-}
-
-/* Estabilizar cores específicas dos componentes */
-section[class*="bg-gray-50"] {
-  background-color: rgb(249, 250, 251) !important;
-}
-
-footer[class*="bg-white"] {
-  background-color: white !important;
-}
-
-/* Forçar espaçamento harmonioso no rodapé desktop */
-@media (min-width: 768px) {
-  .md\:space-x-16 > * + * {
-    margin-left: 4rem !important;
-  }
-}
-
-/* Prevenir mudanças de background em hover/transições */
-.bg-white\/80:hover {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* Forçar estabilidade em gradientes */
-.from-blue-50\/30 {
-  --tw-gradient-from: rgba(239, 246, 255, 0.3) !important;
-}
-
-.via-white\/50 {
-  --tw-gradient-to: transparent !important;
-  --tw-gradient-via: rgba(255, 255, 255, 0.5) !important;
-}
-
-.to-blue-50\/30 {
-  --tw-gradient-to: rgba(239, 246, 255, 0.3) !important;
+  color: rgb(17, 24, 39) !important;
 }
 
 /* CORREÇÃO DEFINITIVA: Espaçamento consistente para vitrines */
@@ -887,54 +571,3 @@ html body div[class*="columns-"] {
   }
 }
 /* Cache buster: 1748646572 */
-
-/* FORÇA TOTAL DESKTOP FOOTER - SOLUÇÃO DEFINITIVA */
-@media screen and (min-width: 768px) {
-  footer.designauto-footer,
-  footer[data-component="footer"],
-  .footer-container,
-  footer {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 9999 !important;
-    background-color: white !important;
-    border-top: 1px solid rgb(229, 231, 235) !important;
-    width: 100% !important;
-    min-height: 250px !important;
-    margin: 0 !important;
-    padding: 48px 16px !important;
-    clear: both !important;
-    transform: none !important;
-    clip: auto !important;
-    overflow: visible !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* Backup footer fixo */
-  body::before {
-    content: "";
-    display: block;
-    height: 250px;
-    width: 100%;
-    background: transparent;
-    position: relative;
-    z-index: 1;
-  }
-  
-  /* Layout garantido */
-  #root-layout {
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: visible !important;
-  }
-  
-  #main-content {
-    flex: 1 1 auto !important;
-    overflow: visible !important;
-  }
-}
-
-/* CACHE BUSTER 1749527406735 */

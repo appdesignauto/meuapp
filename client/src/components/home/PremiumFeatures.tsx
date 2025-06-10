@@ -18,31 +18,31 @@ const PremiumFeatures = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white bg-opacity-10 p-8 rounded-xl backdrop-blur-sm">
-            <div className="text-white mb-4 bg-blue-500 w-16 h-16 rounded-lg flex items-center justify-center">
-              <UnlockKeyhole className="h-8 w-8" />
+            <div className="text-secondary-500 text-3xl mb-4">
+              <UnlockKeyhole className="h-10 w-10" />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-white">Acesso Ilimitado</h3>
-            <p className="text-white/80">
+            <h3 className="text-xl font-semibold mb-2">Acesso Ilimitado</h3>
+            <p className="text-primary-foreground/80">
               Mais de 3.000 artes disponíveis para download sem restrições de quantidade.
             </p>
           </div>
           
           <div className="bg-white bg-opacity-10 p-8 rounded-xl backdrop-blur-sm">
-            <div className="text-white mb-4 bg-green-500 w-16 h-16 rounded-lg flex items-center justify-center">
-              <Edit className="h-8 w-8" />
+            <div className="text-secondary-500 text-3xl mb-4">
+              <Edit className="h-10 w-10" />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-white">Edição Personalizada</h3>
-            <p className="text-white/80">
+            <h3 className="text-xl font-semibold mb-2">Edição Personalizada</h3>
+            <p className="text-primary-foreground/80">
               Acesse e edite as artes diretamente no Canva ou Google Drive com um clique.
             </p>
           </div>
           
           <div className="bg-white bg-opacity-10 p-8 rounded-xl backdrop-blur-sm">
-            <div className="text-white mb-4 bg-purple-500 w-16 h-16 rounded-lg flex items-center justify-center">
-              <Calendar className="h-8 w-8" />
+            <div className="text-secondary-500 text-3xl mb-4">
+              <Calendar className="h-10 w-10" />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-white">Prioridade de Acesso</h3>
-            <p className="text-white/80">
+            <h3 className="text-xl font-semibold mb-2">Prioridade de Acesso</h3>
+            <p className="text-primary-foreground/80">
               Acesse novas artes e coleções antes de todos os outros usuários.
             </p>
           </div>
