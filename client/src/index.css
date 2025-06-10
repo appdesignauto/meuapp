@@ -102,7 +102,32 @@ body::after {
 }
 
 /* FORÇAR VISIBILIDADE ABSOLUTA DO FOOTER */
-[data-component="footer"], footer[data-testid], .footer-container {
+[data-component="footer"], footer[data-testid], .footer-container, .designauto-footer {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: white !important;
+  border-top: 1px solid rgb(229, 231, 235) !important;
+  position: relative !important;
+  z-index: 10 !important;
+  min-height: 200px !important;
+}
+
+/* SELETOR ULTRA ESPECÍFICO PARA FOOTER */
+footer.designauto-footer {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: white !important;
+}
+
+/* GARANTIR QUE NADA SOBRESCREVA O FOOTER */
+* + footer.designauto-footer {
+  display: block !important;
+}
+
+/* BACKUP ADICIONAL COM ALTA ESPECIFICIDADE */
+html body footer.designauto-footer {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
