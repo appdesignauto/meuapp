@@ -1,4 +1,3 @@
-import ReportForm from '../reports/ReportForm';
 import { Heart, Instagram, Mail, MessageCircle } from 'lucide-react';
 import { SiTiktok, SiPinterest } from 'react-icons/si';
 import { Link } from 'wouter';
@@ -49,7 +48,7 @@ const Footer = () => {
               <ul className="space-y-2">
                 <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
                 <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
-                <li><ReportForm /></li>
+                <li><Link href="/denunciar" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Denunciar arquivo</Link></li>
               </ul>
             </div>
 
@@ -104,7 +103,7 @@ const Footer = () => {
                 <ul className="space-y-2">
                   <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
                   <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
-                  <li><ReportForm /></li>
+                  <li><Link href="/denunciar" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Denunciar arquivo</Link></li>
                 </ul>
               </div>
 
