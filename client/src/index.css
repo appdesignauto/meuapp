@@ -2,6 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS FORÇADO PARA GARANTIR QUE O RODAPÉ NUNCA DESAPAREÇA */
+footer.designauto-footer,
+.designauto-footer,
+footer[class*="footer"],
+#footer,
+.footer {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  min-height: 200px !important;
+  background-color: white !important;
+  border-top: 1px solid rgb(229, 231, 235) !important;
+  z-index: 9999 !important;
+  margin-top: auto !important;
+}
+
+/* Garantir que o layout flex funcione corretamente */
+#root-layout,
+.min-h-screen {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#main-content {
+  flex: 1 1 auto !important;
+}
+
+/* Prevenir que qualquer elemento oculte o footer */
+* {
+  z-index: auto !important;
+}
+
+footer.designauto-footer {
+  z-index: 9999 !important;
+}
+
+/* Garantir responsividade */
+@media (max-width: 768px) {
+  footer.designauto-footer {
+    min-height: 150px !important;
+  }
+}
+
+/* Forçar visibilidade em dispositivos móveis */
+@media (max-width: 640px) {
+  footer.designauto-footer {
+    display: block !important;
+    visibility: visible !important;
+  }
+}
+
+/* Prevenir conflitos com outros frameworks CSS */
+footer.designauto-footer * {
+  box-sizing: border-box !important;
+}
+
+/* Garantir que nenhum overflow oculte o footer */
+body, html, #root {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
 /* Netflix-style scrollbar hide */
 @layer utilities {
   .scrollbar-hide {
