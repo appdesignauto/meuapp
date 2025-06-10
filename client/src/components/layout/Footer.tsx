@@ -126,7 +126,7 @@ const Footer = () => {
             <div className="text-gray-500 text-xs text-center md:text-left">© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0</div>
             
             {/* Social media icons - Centralized on mobile */}
-            <div className="flex items-center gap-4 justify-center md:justify-end md:mr-16">
+            <div className="flex items-center gap-4 justify-center md:justify-end">
               <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-500 transition-colors">
                 <MessageCircle className="w-5 h-5" />
               </a>
