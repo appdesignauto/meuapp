@@ -48,7 +48,7 @@ import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
-import Collaborator from "@/pages/Collaborator";
+import Collaborator from "@/pages/CollaboratorLight";
 import Affiliate from "@/pages/Affiliate";
 
 // Páginas do Painel do Usuário
