@@ -3,14 +3,9 @@ import { SiTiktok, SiPinterest } from 'react-icons/si';
 import { Link } from 'wouter';
 
 const Footer = () => {
-  const timestamp = Date.now();
-  
-  // Footer simples sem event listeners para melhor performance
-
   return (
     <footer 
       className="designauto-footer bg-white border-t border-gray-200 w-full"
-      data-timestamp={timestamp}
       style={{
         display: 'block',
         visibility: 'visible',
@@ -42,10 +37,46 @@ const Footer = () => {
                 Recursos gráficos incríveis para inspirar criatividade.
               </p>
               
-              <div className="flex items-center gap-2 text-xs text-gray-600">
+              <div className="flex items-center gap-2 text-xs text-gray-600 mb-4">
                 <Mail className="w-4 h-4" />
                 <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors">
                   suporte@designauto.com.br
+                </a>
+              </div>
+              
+              {/* Social Media Icons */}
+              <div className="flex gap-3">
+                <a 
+                  href="https://www.instagram.com/designauto.oficial/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <Instagram className="w-4 h-4 text-white" />
+                </a>
+                <a 
+                  href="https://www.tiktok.com/@designauto.oficial" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-black rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <SiTiktok className="w-4 h-4 text-white" />
+                </a>
+                <a 
+                  href="https://br.pinterest.com/designautooficial/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <SiPinterest className="w-4 h-4 text-white" />
+                </a>
+                <a 
+                  href="https://wa.me/5511999999999" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <MessageCircle className="w-4 h-4 text-white" />
                 </a>
               </div>
             </div>
@@ -134,29 +165,49 @@ const Footer = () => {
                 </ul>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Bottom section - Centralized on mobile */}
-        <div className="border-t border-gray-200 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-5xl mx-auto">
-            <div className="text-gray-500 text-xs text-center md:text-left">© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0</div>
-            
-            {/* Social media icons - Centralized on mobile */}
-            <div className="flex items-center gap-4 justify-center md:justify-end">
-              <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-500 transition-colors">
-                <MessageCircle className="w-5 h-5" />
+            {/* Mobile Social Media */}
+            <div className="flex justify-center gap-3 mt-6">
+              <a 
+                href="https://www.instagram.com/designauto.oficial/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+              >
+                <Instagram className="w-4 h-4 text-white" />
               </a>
-              <a href="https://instagram.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-500 transition-colors">
-                <Instagram className="w-5 h-5" />
+              <a 
+                href="https://www.tiktok.com/@designauto.oficial" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 bg-black rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+              >
+                <SiTiktok className="w-4 h-4 text-white" />
               </a>
-              <a href="https://tiktok.com/@designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black transition-colors">
-                <SiTiktok className="w-5 h-5" />
+              <a 
+                href="https://br.pinterest.com/designautooficial/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+              >
+                <SiPinterest className="w-4 h-4 text-white" />
               </a>
-              <a href="https://pinterest.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-600 transition-colors">
-                <SiPinterest className="w-5 h-5" />
+              <a 
+                href="https://wa.me/5511999999999" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+              >
+                <MessageCircle className="w-4 h-4 text-white" />
               </a>
             </div>
+          </div>
+
+          {/* Copyright section */}
+          <div className="border-t border-gray-200 pt-6 text-center">
+            <p className="text-gray-500 text-xs">
+              © 2024 DesignAuto. Todos os direitos reservados.
+            </p>
           </div>
         </div>
       </div>
