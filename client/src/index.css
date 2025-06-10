@@ -14,30 +14,64 @@
   }
 }
 
-/* FORÇAR TEMA CLARO - CORREÇÃO DEFINITIVA */
+/* TEMA ESTÁVEL - CORREÇÃO DEFINITIVA */
 html {
-  color-scheme: light !important;
+  color-scheme: light;
 }
 
-html.dark {
-  color-scheme: light !important;
-}
-
-/* Garantir fundo branco sempre */
 html, body {
-  background-color: white !important;
-  color: rgb(17, 24, 39) !important;
+  background-color: white;
+  color: rgb(17, 24, 39);
 }
 
-/* Remover classes de tema escuro */
-html.dark {
-  background-color: white !important;
-  color: rgb(17, 24, 39) !important;
+/* Prevenir alternância de temas */
+* {
+  color-scheme: light;
 }
 
-.dark {
+/* Garantir estabilidade visual */
+.bg-white {
   background-color: white !important;
-  color: rgb(17, 24, 39) !important;
+}
+
+.bg-gray-50 {
+  background-color: rgb(249, 250, 251) !important;
+}
+
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)) !important;
+}
+
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important;
+}
+
+/* Estabilizar cores específicas dos componentes */
+section[class*="bg-gray-50"] {
+  background-color: rgb(249, 250, 251) !important;
+}
+
+footer[class*="bg-white"] {
+  background-color: white !important;
+}
+
+/* Prevenir mudanças de background em hover/transições */
+.bg-white\/80:hover {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Forçar estabilidade em gradientes */
+.from-blue-50\/30 {
+  --tw-gradient-from: rgba(239, 246, 255, 0.3) !important;
+}
+
+.via-white\/50 {
+  --tw-gradient-to: transparent !important;
+  --tw-gradient-via: rgba(255, 255, 255, 0.5) !important;
+}
+
+.to-blue-50\/30 {
+  --tw-gradient-to: rgba(239, 246, 255, 0.3) !important;
 }
 
 /* CORREÇÃO DEFINITIVA: Espaçamento consistente para vitrines */
