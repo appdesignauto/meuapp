@@ -16,25 +16,47 @@ const RobustLayout = ({ children }: RobustLayoutProps) => {
   
   return (
     <div 
+      id="root-layout"
       className="min-h-screen flex flex-col bg-white"
       style={{
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        width: '100%',
+        overflow: 'visible'
       }}
     >
       <Header />
       <main 
+        id="main-content"
         className="flex-1 bg-white"
         style={{
           flex: '1 1 auto',
-          backgroundColor: 'white'
+          backgroundColor: 'white',
+          width: '100%',
+          overflow: 'visible'
         }}
       >
         {children}
       </main>
       <Footer />
+      
+      {/* Footer de emergência para desktop - só aparece se o principal falhar */}
+      <div 
+        className="desktop-footer-fallback hidden md:block"
+        style={{
+          display: 'none',
+          backgroundColor: 'white',
+          borderTop: '1px solid rgb(229, 231, 235)',
+          padding: '48px 16px',
+          textAlign: 'center',
+          fontSize: '12px',
+          color: 'rgb(107, 114, 128)'
+        }}
+      >
+        © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA
+      </div>
     </div>
   );
 };

@@ -1,10 +1,66 @@
 import { Heart, Instagram, Mail, MessageCircle } from 'lucide-react';
 import { SiTiktok, SiPinterest } from 'react-icons/si';
 import { Link } from 'wouter';
+import { useEffect } from 'react';
 
 const Footer = () => {
+  const timestamp = Date.now();
+  
+  useEffect(() => {
+    // Força total de visibilidade do footer no desktop
+    const forceFooterDisplay = () => {
+      const footers = document.querySelectorAll('.designauto-footer');
+      footers.forEach((footer) => {
+        const el = footer as HTMLElement;
+        if (window.innerWidth >= 768) {
+          Object.assign(el.style, {
+            display: 'block',
+            visibility: 'visible',
+            opacity: '1',
+            position: 'relative',
+            zIndex: '9999',
+            backgroundColor: 'white',
+            borderTop: '1px solid rgb(229, 231, 235)',
+            width: '100%',
+            minHeight: '250px',
+            marginTop: '0',
+            marginBottom: '0',
+            clear: 'both'
+          });
+        }
+      });
+    };
+
+    forceFooterDisplay();
+    setTimeout(forceFooterDisplay, 50);
+    setTimeout(forceFooterDisplay, 200);
+    setTimeout(forceFooterDisplay, 1000);
+    
+    window.addEventListener('resize', forceFooterDisplay);
+    window.addEventListener('scroll', forceFooterDisplay);
+    
+    return () => {
+      window.removeEventListener('resize', forceFooterDisplay);
+      window.removeEventListener('scroll', forceFooterDisplay);
+    };
+  }, []);
+
   return (
-    <footer className="designauto-footer bg-white border-t border-gray-200 w-full">
+    <footer 
+      className="designauto-footer bg-white border-t border-gray-200 w-full"
+      data-timestamp={timestamp}
+      style={{
+        display: 'block',
+        visibility: 'visible',
+        opacity: 1,
+        position: 'relative',
+        zIndex: 9999,
+        backgroundColor: 'white',
+        borderTop: '1px solid rgb(229, 231, 235)',
+        width: '100%',
+        minHeight: '250px'
+      }}
+    >
       <div className="w-full px-4 py-12 bg-white">
         {/* Main footer content - Desktop grid layout */}
         <div className="max-w-5xl mx-auto bg-white">

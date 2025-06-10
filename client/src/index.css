@@ -133,6 +133,100 @@ html body footer.designauto-footer {
   opacity: 1 !important;
 }
 
+/* CORREÇÃO ESPECÍFICA PARA DESKTOP - FORÇA MÁXIMA */
+@media (min-width: 768px) {
+  footer.designauto-footer {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 9999 !important;
+    background-color: white !important;
+    border-top: 1px solid rgb(229, 231, 235) !important;
+    width: 100% !important;
+    min-height: 250px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+    clear: both !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+    clip: none !important;
+    clip-path: none !important;
+  }
+  
+  /* Garantir que o footer nunca seja escondido por overflow */
+  footer.designauto-footer * {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Forçar container do layout no desktop */
+  #root-layout {
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible !important;
+  }
+  
+  /* Garantir que o main não oculte o footer */
+  #main-content {
+    flex: 1 1 auto !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  
+  /* Prevenir qualquer problema de viewport ou overflow */
+  html {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  
+  body {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    min-height: 100vh !important;
+    height: auto !important;
+  }
+  
+  /* Forçar visibilidade em qualquer container pai */
+  div:has(footer.designauto-footer) {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
+/* CACHE BUSTER - FORÇA ATUALIZAÇÃO */
+footer.designauto-footer::before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+}
+
+/* BACKUP FOOTER PARA EMERGÊNCIA NO DESKTOP */
+@media (min-width: 768px) {
+  body::after {
+    content: "© DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA";
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    z-index: 10000;
+  }
+}
+
 /* Estabilizar cores específicas dos componentes */
 section[class*="bg-gray-50"] {
   background-color: rgb(249, 250, 251) !important;
