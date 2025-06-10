@@ -481,7 +481,7 @@ const AuthPage = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-medium">Mais de 3.000 artes</h3>
+                <h3 className="text-lg font-medium">Mais de 300 artes</h3>
                 <p className="text-blue-100">Acesse designs exclusivos criados por profissionais</p>
               </div>
             </div>
