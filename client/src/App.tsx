@@ -8,7 +8,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
-import { ThemeProvider } from "@/components/theme-provider";
+// Theme provider removido para estabilidade
 import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
@@ -72,9 +72,9 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-white">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-white">{children}</main>
       <Footer />
     </div>
   );
@@ -377,7 +377,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <ThemeProvider defaultTheme="light">
+        <div className="bg-white min-h-screen">
           <AuthProvider>
             <SupabaseAuthProvider>
               <Router>
@@ -391,7 +391,7 @@ function App() {
               <PopupContainer />
             </SupabaseAuthProvider>
           </AuthProvider>
-        </ThemeProvider>
+        </div>
       </HelmetProvider>
     </QueryClientProvider>
   );

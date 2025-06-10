@@ -4,10 +4,21 @@ import { Link } from 'wouter';
 
 const Footer = () => {
   return (
-    <footer className="bg-white border-t border-gray-200">
-      <div className="w-full px-4 py-12">
+    <footer 
+      className="bg-white border-t border-gray-200 w-full"
+      style={{
+        display: 'block',
+        visibility: 'visible',
+        opacity: 1,
+        backgroundColor: 'white',
+        borderTop: '1px solid rgb(229, 231, 235)',
+        position: 'relative',
+        zIndex: 10
+      }}
+    >
+      <div className="w-full px-4 py-12" style={{ backgroundColor: 'white' }}>
         {/* Main footer content - Desktop grid layout */}
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto" style={{ backgroundColor: 'white' }}>
           {/* Desktop Layout */}
           <div className="hidden md:grid md:grid-cols-4 md:gap-16 mb-8">
             {/* Brand section */}

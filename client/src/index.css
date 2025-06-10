@@ -17,11 +17,12 @@
 /* TEMA ESTÁVEL - CORREÇÃO DEFINITIVA */
 html {
   color-scheme: light;
+  background-color: white !important;
 }
 
 html, body {
-  background-color: white;
-  color: rgb(17, 24, 39);
+  background-color: white !important;
+  color: rgb(17, 24, 39) !important;
 }
 
 /* Prevenir alternância de temas */
@@ -29,7 +30,7 @@ html, body {
   color-scheme: light;
 }
 
-/* Garantir estabilidade visual */
+/* Garantir estabilidade visual ABSOLUTA */
 .bg-white {
   background-color: white !important;
 }
@@ -44,6 +45,39 @@ html, body {
 
 .bg-gradient-to-r {
   background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important;
+}
+
+/* FORÇA FOOTER SEMPRE VISÍVEL */
+footer {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: white !important;
+  border-top: 1px solid rgb(229, 231, 235) !important;
+  position: relative !important;
+  z-index: 10 !important;
+  width: 100% !important;
+}
+
+/* PREVINE QUALQUER INTERFERÊNCIA NO LAYOUT */
+.min-h-screen {
+  background-color: white !important;
+}
+
+/* ESTABILIZA TODAS AS SEÇÕES */
+section {
+  position: relative !important;
+}
+
+/* FORÇA ESTABILIDADE EM COMPONENTES DINÂMICOS */
+[data-theme], [class*="theme"] {
+  background-color: inherit !important;
+}
+
+/* REMOVE QUALQUER CONFLITO DE TEMA ESCURO */
+.dark, [data-theme="dark"], .theme-dark {
+  background-color: white !important;
+  color: rgb(17, 24, 39) !important;
 }
 
 /* Estabilizar cores específicas dos componentes */
