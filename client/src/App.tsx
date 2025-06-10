@@ -48,8 +48,8 @@ import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
-// Collaborator moved to lazy loading for better performance
-// Affiliate moved to lazy loading for better performance
+import Collaborator from "@/pages/Collaborator";
+import Affiliate from "@/pages/Affiliate";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -162,26 +162,8 @@ function AppRoutes() {
       <Route path="/duvidas" component={FAQ} />
       <Route path="/termos" component={Terms} />
       <Route path="/privacidade" component={Privacy} />
-      <Route path="/colaboradores">
-        {() => {
-          const CollaboratorPage = lazy(() => import("@/pages/Collaborator"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <CollaboratorPage />
-            </Suspense>
-          );
-        }}
-      </Route>
-      <Route path="/afiliacao">
-        {() => {
-          const AffiliatePage = lazy(() => import("@/pages/Affiliate"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <AffiliatePage />
-            </Suspense>
-          );
-        }}
-      </Route>
+      <Route path="/colaboradores" component={Collaborator} />
+      <Route path="/afiliacao" component={Affiliate} />
       <Route path="/suporte">
         {() => {
           const SuportePage = lazy(() => import("@/pages/suporte/index"));
