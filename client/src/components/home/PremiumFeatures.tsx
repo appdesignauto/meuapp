@@ -23,7 +23,7 @@ const PremiumFeatures = () => {
             </div>
             <h3 className="text-xl font-semibold mb-2">Acesso Ilimitado</h3>
             <p className="text-primary-foreground/80">
-              Mais de 3.000 artes disponíveis para download sem restrições de quantidade.
+              Mais de 300 artes disponíveis para download sem restrições de quantidade.
             </p>
           </div>
           
