@@ -55,6 +55,13 @@ footer[class*="bg-white"] {
   background-color: white !important;
 }
 
+/* Forçar espaçamento harmonioso no rodapé desktop */
+@media (min-width: 768px) {
+  .md\:space-x-16 > * + * {
+    margin-left: 4rem !important;
+  }
+}
+
 /* Prevenir mudanças de background em hover/transições */
 .bg-white\/80:hover {
   background-color: rgba(255, 255, 255, 0.9) !important;

@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       <div className="w-full px-4 py-12">
         {/* Main footer content */}
-        <div className="flex flex-col md:flex-row mb-8 items-start max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row mb-8 items-start">
           {/* Brand section with logo - Centralized on mobile */}
           <div className="md:w-64 mb-6 md:mb-0 w-full md:text-left text-center">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
@@ -32,10 +32,10 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Sections 2, 3, 4 with custom spacing */}
-          <div className="flex flex-row md:flex-row justify-center md:justify-start gap-8 md:gap-0 md:ml-16">
+          {/* Desktop: Single row layout with proper spacing */}
+          <div className="hidden md:flex md:flex-row md:space-x-16 md:ml-16">
             {/* Design Auto section */}
-            <div className="md:w-auto flex-1 md:flex-none md:mr-14">
+            <div className="md:w-auto">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
               <ul className="space-y-2">
                 <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
@@ -45,7 +45,7 @@ const Footer = () => {
             </div>
 
             {/* Informativo */}
-            <div className="md:w-auto flex-1 md:flex-none md:mr-14">
+            <div className="md:w-auto">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
               <ul className="space-y-2">
                 <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
@@ -55,7 +55,40 @@ const Footer = () => {
             </div>
 
             {/* Parceria */}
-            <div className="md:w-auto flex-1 md:flex-none">
+            <div className="md:w-auto">
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
+              <ul className="space-y-2">
+                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Colaborador</Link></li>
+                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Solicitar afiliação</Link></li>
+                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Acionar o Suporte</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Mobile: Centralized 3 blocks layout */}
+          <div className="flex md:hidden flex-row justify-center gap-8 w-full">
+            {/* Design Auto section */}
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">DESIGN AUTO</h3>
+              <ul className="space-y-2">
+                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Sobre nós</Link></li>
+                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Planos</Link></li>
+                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Dúvidas</Link></li>
+              </ul>
+            </div>
+
+            {/* Informativo */}
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-3 text-xs">INFORMATIVO</h3>
+              <ul className="space-y-2">
+                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Termos de Uso</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Política de Privacidade</Link></li>
+                <li><ReportForm /></li>
+              </ul>
+            </div>
+
+            {/* Parceria */}
+            <div className="flex-1">
               <h3 className="font-semibold text-gray-900 mb-3 text-xs">PARCERIA</h3>
               <ul className="space-y-2">
                 <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-xs transition-colors">Colaborador</Link></li>
