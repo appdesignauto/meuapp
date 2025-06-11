@@ -170,10 +170,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                     
                     {/* Informações da categoria */}
                     <div className="p-4">
-                      <h3 className="font-medium text-gray-900 mb-1">{category.categoryName}</h3>
-                      <p className="text-sm text-gray-500">
-                        {category.sampleArts.length > 0 ? `${category.sampleArts.length} artes disponíveis` : 'Em breve'}
-                      </p>
+                      <h3 className="font-medium text-gray-900">{category.categoryName}</h3>
                     </div>
                   </div>
                 </div>

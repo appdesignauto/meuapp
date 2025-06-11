@@ -4,7 +4,7 @@ import useScrollTop from '@/hooks/useScrollTop';
 import { useAuth } from '@/hooks/use-auth';
 import Hero from '@/components/home/Hero';
 import RecentDesigns from '@/components/home/RecentDesigns';
-import FeaturedCategories from '@/components/home/FeaturedCategories';
+import FeaturedCategories from '@/components/home/FeaturedCategoriesVariant1';
 import ArtGallery from '@/components/home/ArtGallery';
 import TrendingPopular from '@/components/home/TrendingPopular';
 import PremiumFeatures from '@/components/home/PremiumFeatures';
