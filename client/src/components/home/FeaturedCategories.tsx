@@ -243,14 +243,20 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                       {/* Imagens em Grid 2x2 */}
                       <div className="aspect-square relative">
                         <div className="grid grid-cols-2 h-full">
-                          {imagePaths.map((path, i) => (
+                          {category.sampleArts.slice(0, 4).map((art, i) => (
                             <div key={i} className="overflow-hidden border-[1.5px] border-white">
                               <img 
-                                src={path} 
-                                alt="" 
+                                src={art.imageUrl} 
+                                alt={art.title} 
                                 className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
                                 loading="lazy"
                               />
+                            </div>
+                          ))}
+                          {/* Fill empty slots if less than 4 images */}
+                          {Array.from({ length: Math.max(0, 4 - category.sampleArts.length) }).map((_, i) => (
+                            <div key={`empty-${i}`} className="bg-gray-100 border-[1.5px] border-white flex items-center justify-center">
+                              <div className="text-gray-400 text-xs">Em breve</div>
                             </div>
                           ))}
                         </div>
