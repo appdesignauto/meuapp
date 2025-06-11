@@ -1938,15 +1938,52 @@ export class DatabaseStorage implements IStorage {
       
       // Para a home page (sem filtros específicos), usar consulta otimizada
       if (!filters || Object.keys(filters).length === 0 || (Object.keys(filters).length === 1 && filters.isVisible !== undefined)) {
-        console.log('[Performance] Usando consulta otimizada para vitrine da home');
+        console.log(`[Performance] Usando consulta otimizada para vitrine da home - limit: ${limit}, tipo: ${typeof limit}`);
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Para categorias featured, buscar artes de todas as categorias
-        // Usar limit maior para garantir representação de todas as categorias
-        const adjustedLimit = Math.max(limit, 100); // Mínimo 100 artes para categorias
+        // Para "Designs Profissionais" (limit=20), buscar apenas as 20 artes mais recentes
+        if (limit === 20) {
+          console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais');
+          const optimizedQuery = sql`
+            SELECT 
+              id, 
+              "createdAt", 
+              title, 
+              "imageUrl", 
+              format, 
+              "fileType",
+              "isPremium",
+              "isVisible",
+              "groupId",
+              "categoryId"
+            FROM arts 
+            WHERE "isVisible" = ${isVisibleFilter}
+            ORDER BY "createdAt" DESC
+            LIMIT ${limit}
+          `;
+          
+          const countQuery = sql`
+            SELECT COUNT(*) as count 
+            FROM arts 
+            WHERE "isVisible" = ${isVisibleFilter}
+          `;
+          
+          const [result, countResult] = await Promise.all([
+            db.execute(optimizedQuery),
+            db.execute(countQuery)
+          ]);
+          
+          const totalCount = parseInt(countResult.rows[0].count as string);
+          const arts = result.rows as Art[];
+          
+          const endTime = Date.now();
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes`);
+          
+          return { arts, totalCount };
+        }
         
-        // Para componente de categorias, buscar artes de todas as categorias
+        // Para categorias featured, buscar artes de todas as categorias
         // Usar estratégia que garante representação de todas as categorias
         const optimizedQuery = sql`
           WITH category_arts AS (
