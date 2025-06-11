@@ -178,7 +178,7 @@ function FavoriteCard({ favorite, isPremium, onRemove, isRemoving }: FavoriteCar
         )}
       </div>
       <div className="p-3 flex flex-col flex-grow">
-        <h3 className="font-semibold text-sm truncate">{art.title}</h3>
+        <h3 className="font-semibold text-sm truncate whitespace-nowrap overflow-hidden text-ellipsis">{art.title}</h3>
         <div className="flex items-center mt-1 text-xs text-muted-foreground">
           <span>{art.format}</span>
           <span className="mx-1">•</span>
