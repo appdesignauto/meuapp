@@ -1942,10 +1942,31 @@ export class DatabaseStorage implements IStorage {
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Para "Designs Profissionais" (limit=20), buscar apenas as 20 artes mais recentes
+        // Para "Designs Profissionais" (limit=20), buscar apenas as 20 artes mais recentes sem duplicatas
         if (limit === 20) {
           console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais');
           const optimizedQuery = sql`
+            WITH ranked_arts AS (
+              SELECT 
+                id, 
+                "createdAt", 
+                title, 
+                "imageUrl", 
+                format, 
+                "fileType",
+                "isPremium",
+                "isVisible",
+                "groupId",
+                "categoryId",
+                ROW_NUMBER() OVER (
+                  PARTITION BY "groupId" 
+                  ORDER BY 
+                    CASE WHEN format = 'cartaz' THEN 1 ELSE 2 END,
+                    "createdAt" DESC
+                ) as rn
+              FROM arts 
+              WHERE "isVisible" = ${isVisibleFilter}
+            )
             SELECT 
               id, 
               "createdAt", 
@@ -1957,8 +1978,8 @@ export class DatabaseStorage implements IStorage {
               "isVisible",
               "groupId",
               "categoryId"
-            FROM arts 
-            WHERE "isVisible" = ${isVisibleFilter}
+            FROM ranked_arts 
+            WHERE rn = 1
             ORDER BY "createdAt" DESC
             LIMIT ${limit}
           `;
