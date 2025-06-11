@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -138,27 +138,53 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-white">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+      {/* Background decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2"></div>
+      </div>
+
+      <div className="relative flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Bem-vindo ao DesignAuto</h2>
-            <p className="mt-2 text-gray-600">Acesse sua conta ou crie uma nova</p>
+          {/* Header com logo e título */}
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg flex items-center justify-center transform hover:scale-105 transition-transform duration-200">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Bem-vindo ao DesignAuto</h2>
+              <p className="text-gray-600">Acesse sua conta ou crie uma nova</p>
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="register">Cadastrar</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-12 bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm">
+              <TabsTrigger 
+                value="login" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white font-medium transition-all duration-200"
+              >
+                Entrar
+              </TabsTrigger>
+              <TabsTrigger 
+                value="register"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white font-medium transition-all duration-200"
+              >
+                Cadastrar
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Entrar na sua conta</CardTitle>
-                  <CardDescription>Digite suas credenciais para acessar</CardDescription>
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-2xl font-bold text-center text-gray-900">Entrar na sua conta</CardTitle>
+                  <CardDescription className="text-center text-gray-600">Digite suas credenciais para acessar</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
@@ -166,9 +192,17 @@ const AuthPage = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="seu@email.com" {...field} />
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <Input 
+                                  type="email" 
+                                  placeholder="seu@email.com" 
+                                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                  {...field} 
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -180,19 +214,21 @@ const AuthPage = () => {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Senha</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Senha</FormLabel>
                             <FormControl>
                               <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                 <Input 
                                   type={showLoginPassword ? "text" : "password"} 
                                   placeholder="Sua senha" 
+                                  className="pl-10 pr-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                                   {...field} 
                                 />
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                                   onClick={() => setShowLoginPassword(!showLoginPassword)}
                                 >
                                   {showLoginPassword ? (
@@ -230,12 +266,12 @@ const AuthPage = () => {
                       
                       <Button 
                         type="submit" 
-                        className="w-full" 
+                        className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" 
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             Entrando...
                           </>
                         ) : (
@@ -255,12 +291,12 @@ const AuthPage = () => {
             </TabsContent>
 
             <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Criar nova conta</CardTitle>
-                  <CardDescription>Preencha os dados para se cadastrar</CardDescription>
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-2xl font-bold text-center text-gray-900">Criar nova conta</CardTitle>
+                  <CardDescription className="text-center text-gray-600">Preencha os dados para se cadastrar</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                       <FormField
