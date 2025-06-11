@@ -966,8 +966,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           SELECT id, title, "imageUrl" FROM distinct_groups
         `);
 
-        console.log(`[Sample Arts] Query executada para ${category.name}, objeto completo:`, categoryArts);
-
         // Mapear os resultados da query para o formato esperado
         const queryRows = categoryArts.rows || [];
         const formattedArts = queryRows.map((row: any) => ({
@@ -976,8 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           imageUrl: row.imageUrl
         }));
 
-        console.log(`[Sample Arts] Rows extraídas:`, queryRows.length);
-        console.log(`[Sample Arts] Artes formatadas:`, formattedArts.length);
+        console.log(`[Sample Arts] ${category.name}: ${formattedArts.length} artes únicas por groupId`);
         
         results.push({
           categoryId: category.id,
