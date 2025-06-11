@@ -9,8 +9,8 @@ const Footer = () => {
       <div className="w-full px-4 py-6 md:py-12">
         <div className="max-w-6xl mx-auto">
           
-          {/* Mobile Layout */}
-          <div className="md:hidden mb-6">
+          {/* Mobile Layout - Only visible on small screens */}
+          <div className="block sm:block md:!hidden mb-6">
             {/* Brand and contact - Mobile */}
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-3">
@@ -62,10 +62,18 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Desktop Layout */}
-          <div className="hidden md:grid md:grid-cols-4 gap-8 mb-8">
+          {/* Desktop Layout - Only visible on medium screens and up */}
+          <div className="!hidden md:!grid lg:!grid xl:!grid 2xl:!grid grid-cols-4 gap-8 mb-8" style={{display: 'none'}} data-desktop-footer>
+            <style jsx>{`
+              @media (min-width: 768px) {
+                [data-desktop-footer] {
+                  display: grid !important;
+                }
+              }
+            `}</style>
+            
             {/* Brand section - Desktop */}
-            <div>
+            <div className="col-span-1">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">DA</span>
@@ -87,7 +95,7 @@ const Footer = () => {
             </div>
 
             {/* Design Auto section - Desktop */}
-            <div>
+            <div className="col-span-1">
               <h3 className="font-semibold text-gray-900 mb-4 text-sm">DESIGN AUTO</h3>
               <ul className="space-y-3">
                 <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
@@ -97,7 +105,7 @@ const Footer = () => {
             </div>
 
             {/* Informativo section - Desktop */}
-            <div>
+            <div className="col-span-1">
               <h3 className="font-semibold text-gray-900 mb-4 text-sm">INFORMATIVO</h3>
               <ul className="space-y-3">
                 <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
@@ -107,7 +115,7 @@ const Footer = () => {
             </div>
 
             {/* Parceria section - Desktop */}
-            <div>
+            <div className="col-span-1">
               <h3 className="font-semibold text-gray-900 mb-4 text-sm">PARCERIA</h3>
               <ul className="space-y-3">
                 <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Colaborador</Link></li>
