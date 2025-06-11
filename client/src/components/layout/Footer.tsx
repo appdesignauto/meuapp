@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="max-w-6xl mx-auto">
           
           {/* Mobile Layout - Only visible on small screens */}
-          <div className="block sm:block md:!hidden mb-6">
+          <div className="md:hidden mb-6">
             {/* Brand and contact - Mobile */}
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-3">
@@ -63,14 +63,7 @@ const Footer = () => {
           </div>
 
           {/* Desktop Layout - Only visible on medium screens and up */}
-          <div className="!hidden md:!grid lg:!grid xl:!grid 2xl:!grid grid-cols-4 gap-8 mb-8" style={{display: 'none'}} data-desktop-footer>
-            <style jsx>{`
-              @media (min-width: 768px) {
-                [data-desktop-footer] {
-                  display: grid !important;
-                }
-              }
-            `}</style>
+          <div className="hidden md:grid grid-cols-4 gap-8 mb-8">
             
             {/* Brand section - Desktop */}
             <div className="col-span-1">
