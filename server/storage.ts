@@ -1993,28 +1993,72 @@ export class DatabaseStorage implements IStorage {
             db.execute(sql`SELECT COUNT(*) as count FROM arts WHERE "isVisible" = ${isVisibleFilter}`)
           ]);
           
-          // Intercalar os resultados para criar alternância
-          const cartazArts = cartazResult.rows as Art[];
-          const storiesArts = storiesResult.rows as Art[];
-          const otherArts = otherResult.rows as Art[];
+          // Criar pool de todas as artes e organizar por data
+          const allArts = [
+            ...(cartazResult.rows as Art[]),
+            ...(storiesResult.rows as Art[]),
+            ...(otherResult.rows as Art[])
+          ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           
-          const alternatedArts: Art[] = [];
-          const maxLength = Math.max(cartazArts.length, storiesArts.length, otherArts.length);
+          // Algoritmo de espaçamento profissional que evita agrupamento visual
+          const groupMap = new Map<string, Art[]>();
           
-          for (let i = 0; i < maxLength && alternatedArts.length < limit; i++) {
-            if (cartazArts[i] && alternatedArts.length < limit) alternatedArts.push(cartazArts[i]);
-            if (storiesArts[i] && alternatedArts.length < limit) alternatedArts.push(storiesArts[i]);
-            if (otherArts[i] && alternatedArts.length < limit) alternatedArts.push(otherArts[i]);
+          // Organizar artes por grupo
+          allArts.forEach(art => {
+            if (!art.groupId) return;
+            if (!groupMap.has(art.groupId)) {
+              groupMap.set(art.groupId, []);
+            }
+            groupMap.get(art.groupId)!.push(art);
+          });
+          
+          const distributedArts: Art[] = [];
+          const SPACING_MINIMUM = 4; // Espaço mínimo entre artes do mesmo grupo
+          
+          // Primeira fase: distribuir uma arte de cada grupo
+          const groupKeys = Array.from(groupMap.keys());
+          for (const groupId of groupKeys) {
+            if (distributedArts.length >= limit) break;
+            const groupArts = groupMap.get(groupId)!;
+            if (groupArts.length > 0) {
+              distributedArts.push(groupArts.shift()!);
+            }
           }
           
-          // Ordenar por data de criação para manter ordem cronológica geral
-          alternatedArts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          // Segunda fase: adicionar artes restantes com espaçamento forçado
+          while (distributedArts.length < limit) {
+            let artAdded = false;
+            
+            for (const groupId of groupKeys) {
+              if (distributedArts.length >= limit) break;
+              
+              const groupArts = groupMap.get(groupId)!;
+              if (groupArts.length === 0) continue;
+              
+              // Verificar se o último índice do grupo está distante o suficiente
+              const lastGroupIndex = distributedArts.map((art, index) => 
+                art.groupId === groupId ? index : -1
+              ).filter(index => index !== -1).pop();
+              
+              if (lastGroupIndex === undefined || 
+                  (distributedArts.length - lastGroupIndex) >= SPACING_MINIMUM) {
+                distributedArts.push(groupArts.shift()!);
+                artAdded = true;
+                break; // Adicionar apenas uma arte por iteração
+              }
+            }
+            
+            // Se não conseguiu adicionar com espaçamento, parar para evitar loop
+            if (!artAdded) break;
+          }
+          
+          const alternatedArts = distributedArts;
           
           const totalCount = parseInt(countResult.rows[0].count as string);
           const arts = alternatedArts.slice(0, limit);
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância`);
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com espaçamento automático`);
           
           return { arts, totalCount };
         }
