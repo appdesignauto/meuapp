@@ -58,25 +58,49 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     if (!categories || !artsData?.arts) return [];
 
     const arts = artsData.arts.filter(art => art.format === 'cartaz' && art.imageUrl);
+    console.log('Artes filtradas para categorias:', arts.length);
     
     return categories.map(category => {
       // Filtrar artes desta categoria
       const categoryArts = arts.filter(art => art.categoryId === category.id);
+      console.log(`Categoria ${category.name}: ${categoryArts.length} artes encontradas`);
       
-      // Agrupar por groupId e pegar uma arte de cada grupo (máximo 4)
-      const seenGroups = new Set();
-      const sampleArts = categoryArts
-        .filter(art => {
-          if (!art.groupId || seenGroups.has(art.groupId)) return false;
-          seenGroups.add(art.groupId);
-          return true;
-        })
-        .slice(0, 4)
-        .map(art => ({
-          id: art.id.toString(),
-          title: art.title,
-          imageUrl: art.imageUrl
-        }));
+      // Se não há artes específicas da categoria, pegar artes gerais como fallback
+      let sampleArts = [];
+      
+      if (categoryArts.length > 0) {
+        // Agrupar por groupId e pegar uma arte de cada grupo (máximo 4)
+        const seenGroups = new Set();
+        sampleArts = categoryArts
+          .filter(art => {
+            if (!art.groupId || seenGroups.has(art.groupId)) return false;
+            seenGroups.add(art.groupId);
+            return true;
+          })
+          .slice(0, 4)
+          .map(art => ({
+            id: art.id.toString(),
+            title: art.title,
+            imageUrl: art.imageUrl
+          }));
+      } else {
+        // Fallback: usar artes gerais agrupadas por groupId
+        const seenGroups = new Set();
+        sampleArts = arts
+          .filter(art => {
+            if (!art.groupId || seenGroups.has(art.groupId)) return false;
+            seenGroups.add(art.groupId);
+            return true;
+          })
+          .slice(0, 4)
+          .map(art => ({
+            id: art.id.toString(),
+            title: art.title,
+            imageUrl: art.imageUrl
+          }));
+      }
+
+      console.log(`Categoria ${category.name}: ${sampleArts.length} artes de exemplo`);
 
       return {
         categoryId: category.id,
