@@ -950,21 +950,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const category of categoriesResult) {
         console.log(`[Sample Arts] Processando categoria: ${category.name} (ID: ${category.id})`);
         
-        // Buscar até 4 artes mais recentes desta categoria
-        const categoryArts = await db
-          .select({
-            id: arts.id,
-            title: arts.title,
-            imageUrl: arts.imageUrl
-          })
-          .from(arts)
-          .where(and(
-            eq(arts.categoryId, category.id),
-            eq(arts.isVisible, true),
-            isNotNull(arts.imageUrl)
-          ))
-          .orderBy(desc(arts.createdAt))
-          .limit(4);
+        // Query SQL otimizada para buscar uma arte de cada grupo diferente
+        const categoryArts = await db.execute(sql`
+          WITH distinct_groups AS (
+            SELECT DISTINCT ON ("groupId") 
+              id, title, "imageUrl", "groupId"
+            FROM arts 
+            WHERE "categoryId" = ${category.id} 
+              AND "isVisible" = true 
+              AND "imageUrl" IS NOT NULL 
+              AND "groupId" IS NOT NULL
+            ORDER BY "groupId", "createdAt" DESC
+            LIMIT 4
+          )
+          SELECT id, title, "imageUrl" FROM distinct_groups
+        `);
+
+        console.log(`[Sample Arts] Query executada para ${category.name}, resultados:`, categoryArts.rows.length);
 
         console.log(`[Sample Arts] Encontradas ${categoryArts.length} artes para ${category.name}`);
         
