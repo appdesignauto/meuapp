@@ -1942,10 +1942,12 @@ export class DatabaseStorage implements IStorage {
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Para "Designs Profissionais" (limit=20), buscar apenas as 20 artes mais recentes
+        // Para "Designs Profissionais" (limit=20), buscar artes com algoritmo de espaçamento inteligente
         if (limit === 20) {
-          console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais');
-          const optimizedQuery = sql`
+          console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais com espaçamento inteligente');
+          
+          // Buscar mais artes para ter opções de espaçamento (aproximadamente 60 artes)
+          const expandedQuery = sql`
             SELECT 
               id, 
               "createdAt", 
@@ -1960,7 +1962,7 @@ export class DatabaseStorage implements IStorage {
             FROM arts 
             WHERE "isVisible" = ${isVisibleFilter}
             ORDER BY "createdAt" DESC
-            LIMIT ${limit}
+            LIMIT 60
           `;
           
           const countQuery = sql`
@@ -1970,17 +1972,20 @@ export class DatabaseStorage implements IStorage {
           `;
           
           const [result, countResult] = await Promise.all([
-            db.execute(optimizedQuery),
+            db.execute(expandedQuery),
             db.execute(countQuery)
           ]);
           
           const totalCount = parseInt(countResult.rows[0].count as string);
-          const arts = result.rows as Art[];
+          const allArts = result.rows as Art[];
+          
+          // Aplicar algoritmo de espaçamento inteligente por groupId
+          const spacedArts = this.applyIntelligentSpacing(allArts, limit);
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes`);
+          console.log(`[Performance] Consulta "Designs Profissionais" com espaçamento executada em ${endTime - startTime}ms - ${spacedArts.length} artes organizadas`);
           
-          return { arts, totalCount };
+          return { arts: spacedArts, totalCount };
         }
         
         // Para categorias featured, buscar artes de todas as categorias
