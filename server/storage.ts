@@ -1948,7 +1948,7 @@ export class DatabaseStorage implements IStorage {
         if (limit === 20) {
           console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais com espaçamento inteligente');
           
-          // Buscar mais artes para ter opções de espaçamento (aproximadamente 60 artes)
+          // Buscar mais artes para ter opções de espaçamento e diversidade de formatos (aproximadamente 120 artes)
           const expandedQuery = sql`
             SELECT 
               id, 
@@ -1964,7 +1964,7 @@ export class DatabaseStorage implements IStorage {
             FROM arts 
             WHERE "isVisible" = ${isVisibleFilter}
             ORDER BY "createdAt" DESC
-            LIMIT 60
+            LIMIT 120
           `;
           
           const countQuery = sql`
@@ -1981,60 +1981,95 @@ export class DatabaseStorage implements IStorage {
           const totalCount = parseInt(countResult.rows[0].count as string);
           const allArts = result.rows as Art[];
           
-          // Aplicar algoritmo de espaçamento inteligente para evitar duplicidade visual
+          // Aplicar algoritmo de espaçamento inteligente para evitar duplicidade visual e alternar formatos
           console.log(`[IntelligentSpacing] Iniciando com ${allArts.length} artes, objetivo: ${limit}`);
           
           const spacedResult: Art[] = [];
           const groupMap = new Map<string, Art[]>();
+          const formatMap = new Map<string, Art[]>();
           
-          // Organizar artes por groupId
+          // Organizar artes por groupId e por formato
           allArts.forEach(art => {
             const groupId = art.groupId || `single-${art.id}`;
             if (!groupMap.has(groupId)) {
               groupMap.set(groupId, []);
             }
             groupMap.get(groupId)!.push(art);
+            
+            const format = art.format || 'Desconhecido';
+            if (!formatMap.has(format)) {
+              formatMap.set(format, []);
+            }
+            formatMap.get(format)!.push(art);
           });
           
-          console.log(`[IntelligentSpacing] Encontrados ${groupMap.size} grupos únicos`);
+          console.log(`[IntelligentSpacing] Encontrados ${groupMap.size} grupos únicos e ${formatMap.size} formatos diferentes`);
           
-          // Priorizar uma arte de cada grupo primeiro
-          const sortedGroups = Array.from(groupMap.entries())
-            .map(([groupId, groupArts]) => ({
-              groupId,
-              arts: groupArts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            }))
-            .sort((a, b) => new Date(b.arts[0].createdAt).getTime() - new Date(a.arts[0].createdAt).getTime());
+          // Preparar rotação de formatos para alternância
+          const availableFormats = Array.from(formatMap.keys());
+          const formatRotation = [...availableFormats, ...availableFormats, ...availableFormats]; // Triplicar para garantir ciclo completo
           
-          // Primeira fase: uma arte de cada grupo
-          for (const { arts: groupArts } of sortedGroups) {
-            if (spacedResult.length < limit) {
-              spacedResult.push(groupArts[0]);
+          // Priorizar alternância entre os dois formatos principais: stories e cartaz
+          const mainFormats = ['stories', 'cartaz'];
+          const usedGroups = new Set<string>();
+          
+          // Primeira fase: Alternar estritamente entre stories e cartaz
+          for (let i = 0; i < limit; i++) {
+            const targetFormat = mainFormats[i % mainFormats.length];
+            const artsOfFormat = formatMap.get(targetFormat) || [];
+            
+            // Buscar uma arte deste formato que não seja de um grupo já usado
+            const candidateArt = artsOfFormat
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .find(art => {
+                const groupId = art.groupId || `single-${art.id}`;
+                return !usedGroups.has(groupId);
+              });
+            
+            if (candidateArt) {
+              spacedResult.push(candidateArt);
+              const groupId = candidateArt.groupId || `single-${candidateArt.id}`;
+              usedGroups.add(groupId);
+              console.log(`[IntelligentSpacing] Adicionada arte ${candidateArt.id} (${targetFormat}) do grupo ${groupId} na posição ${spacedResult.length}`);
+            } else {
+              // Se não encontrou do formato desejado, buscar de outros formatos
+              const remainingArts = allArts
+                .filter(art => {
+                  const groupId = art.groupId || `single-${art.id}`;
+                  return !usedGroups.has(groupId);
+                })
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+              
+              if (remainingArts.length > 0) {
+                const fallbackArt = remainingArts[0];
+                spacedResult.push(fallbackArt);
+                const groupId = fallbackArt.groupId || `single-${fallbackArt.id}`;
+                usedGroups.add(groupId);
+                console.log(`[IntelligentSpacing] Fallback: adicionada arte ${fallbackArt.id} (${fallbackArt.format}) do grupo ${groupId}`);
+              }
             }
           }
           
-          // Segunda fase: preencher restante mantendo variedade
-          let groupIndex = 0;
-          while (spacedResult.length < limit && groupIndex < sortedGroups.length) {
-            for (const { arts: groupArts } of sortedGroups) {
+          // Segunda fase: Preencher restante se necessário, mantendo variedade
+          if (spacedResult.length < limit) {
+            const remainingArts = allArts
+              .filter(art => !spacedResult.some(used => used.id === art.id))
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            
+            for (const art of remainingArts) {
               if (spacedResult.length >= limit) break;
-              
-              const usedFromGroup = spacedResult.filter(art => 
-                (art.groupId || `single-${art.id}`) === (groupArts[0].groupId || `single-${groupArts[0].id}`)
-              ).length;
-              
-              if (usedFromGroup < groupArts.length) {
-                const nextArt = groupArts[usedFromGroup];
-                if (!spacedResult.some(existing => existing.id === nextArt.id)) {
-                  spacedResult.push(nextArt);
-                }
-              }
+              spacedResult.push(art);
+              console.log(`[IntelligentSpacing] Preenchimento: adicionada arte ${art.id} (${art.format})`);
             }
-            groupIndex++;
           }
           
           const finalArts = spacedResult.slice(0, limit);
-          console.log(`[IntelligentSpacing] Finalizado com ${finalArts.length} artes organizadas sem duplicidade visual`);
+          const formatStats = finalArts.reduce((acc, art) => {
+            acc[art.format || 'Desconhecido'] = (acc[art.format || 'Desconhecido'] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          console.log(`[IntelligentSpacing] Finalizado com ${finalArts.length} artes organizadas:`, formatStats);
           
           const endTime = Date.now();
           console.log(`[Performance] Consulta "Designs Profissionais" com espaçamento executada em ${endTime - startTime}ms - ${finalArts.length} artes organizadas`);
