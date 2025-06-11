@@ -1938,14 +1938,12 @@ export class DatabaseStorage implements IStorage {
       const startTime = Date.now();
       const offset = (page - 1) * limit;
       
-      // Detectar se é painel administrativo usando o marcador específico
-      const isAdminPanel = filters && filters.isAdminPanel === true;
+      // Detectar se é painel administrativo - qualquer limite >= 20 deve usar ordenação cronológica
+      const isLargeQuery = limit >= 20;
       
-      console.log(`[DEBUG] isAdminPanel: ${isAdminPanel}, filters:`, filters);
-      
-      // Para a home page (sem filtros específicos), usar consulta otimizada
-      // EXCETO no painel administrativo - sempre usar ordenação cronológica simples
-      if (!isAdminPanel && (!filters || Object.keys(filters).length === 0 || (Object.keys(filters).length === 1 && filters.isVisible !== undefined))) {
+      // Para a home page (consultas pequenas), usar consulta otimizada
+      // Para consultas grandes (painel administrativo), usar ordenação cronológica
+      if (!isLargeQuery && (!filters || Object.keys(filters).length === 0 || (Object.keys(filters).length === 1 && filters.isVisible !== undefined))) {
         console.log(`[Performance] Usando consulta otimizada para vitrine da home - limit: ${limit}, tipo: ${typeof limit}`);
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;

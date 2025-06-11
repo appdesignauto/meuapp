@@ -73,12 +73,9 @@ router.get('/api/artes', async (req: Request, res: Response) => {
     
     // Verificar se um filtro de visibilidade está sendo aplicado
     if (req.query.isVisible !== undefined) {
-      // Marcar como painel administrativo
-      filters.isAdminPanel = true;
-      
       // Se for 'all', não aplicamos filtro - admin verá todas as artes
       if (req.query.isVisible === 'all') {
-        // Não aplicamos filtro
+        // Não aplicamos filtro específico
         console.log("Filtro 'all' selecionado: mostrando todas as artes");
       } else {
         // Se o filtro for true ou false, aplicamos essa condição específica
