@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import InputMask from "react-input-mask";
@@ -49,6 +49,19 @@ const registerSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+const countries = [
+  { code: "+55", flag: "🇧🇷", name: "Brasil", mask: "(99) 99999-9999" },
+  { code: "+1", flag: "🇺🇸", name: "Estados Unidos", mask: "(999) 999-9999" },
+  { code: "+54", flag: "🇦🇷", name: "Argentina", mask: "(999) 999-9999" },
+  { code: "+56", flag: "🇨🇱", name: "Chile", mask: "(9) 9999-9999" },
+  { code: "+57", flag: "🇨🇴", name: "Colômbia", mask: "(999) 999-9999" },
+  { code: "+51", flag: "🇵🇪", name: "Peru", mask: "(999) 999-999" },
+  { code: "+598", flag: "🇺🇾", name: "Uruguai", mask: "(99) 999-999" },
+  { code: "+595", flag: "🇵🇾", name: "Paraguai", mask: "(999) 999-999" },
+  { code: "+34", flag: "🇪🇸", name: "Espanha", mask: "(999) 999-999" },
+  { code: "+351", flag: "🇵🇹", name: "Portugal", mask: "(999) 999-999" }
+];
+
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -63,6 +76,7 @@ const AuthPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]); // Brasil como padrão
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
@@ -351,13 +365,34 @@ const AuthPage = () => {
                             <FormLabel className="text-gray-700 font-medium">Telefone (opcional)</FormLabel>
                             <FormControl>
                               <div className="flex">
-                                <div className="flex items-center bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg px-3">
-                                  <span className="text-lg mr-1">🇧🇷</span>
-                                  <span className="text-gray-600 text-sm font-medium">+55</span>
-                                </div>
+                                <Select 
+                                  value={selectedCountry.code} 
+                                  onValueChange={(value) => {
+                                    const country = countries.find(c => c.code === value) || countries[0];
+                                    setSelectedCountry(country);
+                                  }}
+                                >
+                                  <SelectTrigger className="w-24 h-12 border-r-0 rounded-r-none border-gray-300 focus:border-blue-500">
+                                    <div className="flex items-center space-x-1">
+                                      <span>{selectedCountry.flag}</span>
+                                      <ChevronDown className="h-4 w-4" />
+                                    </div>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {countries.map((country) => (
+                                      <SelectItem key={country.code} value={country.code}>
+                                        <div className="flex items-center space-x-2">
+                                          <span>{country.flag}</span>
+                                          <span>{country.code}</span>
+                                          <span className="text-sm text-gray-500">{country.name}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <div className="flex-1 relative">
                                   <InputMask
-                                    mask="(99) 99999-9999"
+                                    mask={selectedCountry.mask}
                                     value={field.value}
                                     onChange={field.onChange}
                                     maskChar={null}
@@ -366,7 +401,7 @@ const AuthPage = () => {
                                       <Input
                                         {...inputProps}
                                         type="tel"
-                                        placeholder="(11) 99999-9999"
+                                        placeholder={selectedCountry.mask.replace(/9/g, '9')}
                                         className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-l-none rounded-r-lg border-l-0"
                                       />
                                     )}
