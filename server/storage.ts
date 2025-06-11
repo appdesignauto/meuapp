@@ -1942,7 +1942,11 @@ export class DatabaseStorage implements IStorage {
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Consulta otimizada com apenas campos essenciais
+        // Para categorias featured, buscar artes de todas as categorias
+        // Usar limit maior para garantir representação de todas as categorias
+        const adjustedLimit = Math.max(limit, 100); // Mínimo 100 artes para categorias
+        
+        // Consulta otimizada com campos essenciais incluindo categoryId
         const optimizedQuery = sql`
           SELECT 
             id, 
@@ -1953,11 +1957,12 @@ export class DatabaseStorage implements IStorage {
             "fileType",
             "isPremium",
             "isVisible",
-            "groupId"
+            "groupId",
+            "categoryId"
           FROM arts 
           WHERE "isVisible" = ${isVisibleFilter}
           ORDER BY "createdAt" DESC 
-          LIMIT ${limit} OFFSET ${offset}
+          LIMIT ${adjustedLimit} OFFSET ${offset}
         `;
         
         // Count otimizado
