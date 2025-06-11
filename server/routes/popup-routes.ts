@@ -62,22 +62,63 @@ router.get('/active', async (req, res) => {
     const currentSessionId = sessionId || uuidv4();
     const now = new Date();
     
-    // Fallback to working popup logic
+    console.log(`[POPUP DEBUG] Buscando popups ativos para usuário ${userId || 'visitante'}, página: ${currentPath}`);
+    
+    // Buscar todos os popups ativos
     const allActivePopups = await db.query.popups.findMany({
-      where: eq(popups.isActive, true),
+      where: and(
+        eq(popups.isActive, true),
+        lte(popups.startDate, now),
+        gte(popups.endDate, now)
+      ),
       orderBy: [desc(popups.createdAt)],
     });
     
-    const validPopup = { rows: [] };
+    console.log(`[POPUP DEBUG] Encontrados ${allActivePopups.length} popups ativos no período válido`);
     
-    if (validPopup.rows.length > 0) {
-      return res.json({
-        hasActivePopup: true,
-        popup: validPopup.rows[0],
-        sessionId: currentSessionId
+    if (allActivePopups.length > 0) {
+      // Filtrar por páginas específicas se configurado
+      let validPopups = allActivePopups.filter(popup => {
+        // Se não há páginas específicas configuradas, mostrar em todas as páginas
+        if (!popup.pages || popup.pages.length === 0) {
+          return true;
+        }
+        
+        // Se há páginas específicas, verificar se a página atual está incluída
+        const currentPageNormalized = currentPath || 'home';
+        return popup.pages.includes(currentPageNormalized);
       });
+      
+      console.log(`[POPUP DEBUG] ${validPopups.length} popups válidos após filtro de páginas`);
+      
+      // Filtrar por tipo de usuário
+      validPopups = validPopups.filter(popup => {
+        if (userId) {
+          // Usuário logado
+          if (userRole === 'premium' && !popup.showToPremiumUsers) return false;
+          if (userRole !== 'premium' && !popup.showToLoggedUsers) return false;
+        } else {
+          // Usuário visitante
+          if (!popup.showToGuestUsers) return false;
+        }
+        return true;
+      });
+      
+      console.log(`[POPUP DEBUG] ${validPopups.length} popups válidos após filtro de usuários`);
+      
+      if (validPopups.length > 0) {
+        const selectedPopup = validPopups[0];
+        console.log(`[POPUP DEBUG] Popup selecionado: ${selectedPopup.title} (ID: ${selectedPopup.id})`);
+        
+        return res.json({
+          hasActivePopup: true,
+          popup: selectedPopup,
+          sessionId: currentSessionId
+        });
+      }
     }
     
+    console.log(`[POPUP DEBUG] Nenhum popup válido encontrado`);
     res.json({ hasActivePopup: false, sessionId: currentSessionId });
   } catch (error) {
     console.error('Erro ao buscar popups ativos:', error);
