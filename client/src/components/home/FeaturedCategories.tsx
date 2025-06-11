@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter, Grid3X3 } from 'lucide-react';
-import { Category } from '@/types';
+import { ArrowRight, ChevronLeft, ChevronRight, Grid3X3 } from 'lucide-react';
 
 interface SampleArt {
   id: string;
@@ -37,86 +36,30 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     return () => clearTimeout(timer);
   }, []);
   
-  // Buscar categorias principais
-  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+  // Buscar categorias com artes de amostra (endpoint otimizado)
+  const { data: sampleArtsData, isLoading } = useQuery<{ categories: CategoryWithSamples[] }>({
+    queryKey: ['/api/categories/sample-arts'],
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });
 
-  // Buscar artes populares para usar como amostras
-  const { data: artsData, isLoading: artsLoading } = useQuery<{ arts: any[] }>({
-    queryKey: ['/api/arts', { limit: 24 }],
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const isLoading = categoriesLoading || artsLoading;
-
-  // Processar dados para criar categorias com amostras de artes
-  const categoriesWithSamples = React.useMemo(() => {
-    if (!categories || !artsData?.arts) return [];
-
-    const arts = artsData.arts.filter(art => art.format === 'cartaz' && art.imageUrl);
-    
-    return categories.map(category => {
-      // Filtrar artes desta categoria
-      const categoryArts = arts.filter(art => art.categoryId === category.id);
-      
-      // Agrupar por groupId e pegar uma arte de cada grupo (máximo 4)
-      const seenGroups = new Set();
-      const sampleArts = categoryArts
-        .filter(art => {
-          if (!art.groupId || seenGroups.has(art.groupId)) return false;
-          seenGroups.add(art.groupId);
-          return true;
-        })
-        .slice(0, 4)
-        .map(art => ({
-          id: art.id.toString(),
-          title: art.title,
-          imageUrl: art.imageUrl
-        }));
-
-      return {
-        categoryId: category.id,
-        categoryName: category.name,
-        categorySlug: category.slug,
-        sampleArts
-      };
-    });
-  }, [categories, artsData?.arts]);
+  // Usar os dados do endpoint otimizado
+  const categoriesWithSamples = sampleArtsData?.categories || [];
 
   // Handler para a seleção de categoria
   const handleCategorySelect = (categoryId: number | null) => {
     // Sempre redirecionar para a página da categoria específica
-    if (categoryId !== null) {
-      const category = categories?.find(c => c.id === categoryId);
+    if (categoryId) {
+      const category = categoriesWithSamples.find(c => c.categoryId === categoryId);
       if (category) {
-        // Redirecionar para a página da categoria específica
-        setLocation(`/categorias/${category.slug}`);
+        setLocation(`/categoria/${category.categorySlug}`);
       }
-    } else if (onCategorySelect) {
-      // Se não for uma categoria específica, usar o onCategorySelect apenas como fallback
-      onCategorySelect(categoryId);
-    }
-  };
-  
-  // Função para obter imagens reais da categoria otimizada
-  const getCategoryImagePaths = (categoryWithSamples: CategoryWithSamples): string[] => {
-    if (categoryWithSamples.sampleArts && categoryWithSamples.sampleArts.length > 0) {
-      // Usar até 4 imagens reais da categoria
-      return categoryWithSamples.sampleArts.slice(0, 4).map(art => art.imageUrl);
     }
     
-    // Fallback: imagens padrão caso não tenha dados ainda
-    const fallbackImages = [
-      '/assets/VENDAS 04.png', 
-      '/assets/VENDAS 10.png', 
-      '/assets/VENDAS 17.png', 
-      '/assets/VENDAS 32.png'
-    ];
-    return fallbackImages;
+    // Chamar o callback se fornecido
+    if (onCategorySelect) {
+      onCategorySelect(categoryId);
+    }
   };
 
   // Função para determinar a cor de destaque da categoria
@@ -129,6 +72,9 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
       'seminovos': 'from-purple-500 to-purple-600',
       'promocoes': 'from-orange-500 to-orange-600',
       'lancamentos': 'from-indigo-500 to-indigo-600',
+      'feirao': 'from-pink-500 to-pink-600',
+      'consorcio': 'from-teal-500 to-teal-600',
+      'seguro': 'from-emerald-500 to-emerald-600',
     };
     
     return colors[slug] || 'from-blue-500 to-blue-600';
@@ -190,36 +136,31 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
             </>
           )}
           
-          {/* Gradientes para indicar continuação */}
-          <div className="absolute top-0 left-0 h-full w-12 sm:w-20 bg-gradient-to-r from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute top-0 right-0 h-full w-12 sm:w-20 bg-gradient-to-l from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
-          
-          {/* Carrossel de categorias */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="rounded-xl overflow-hidden shadow-sm animate-pulse">
-                  <div className="aspect-square bg-neutral-200">
-                    <div className="grid grid-cols-2 h-full">
-                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+          {/* Skeleton Loading State */}
+          {isLoading && (
+            <div className="flex overflow-x-auto pb-6 sm:pb-8 hide-scrollbar snap-x snap-mandatory pl-2 sm:pl-4 pt-1 sm:pt-2 space-x-3 sm:space-x-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="flex-none w-[220px] sm:w-[250px] md:w-[300px] snap-start">
+                  <div className="bg-gray-200 rounded-2xl overflow-hidden h-full animate-pulse">
+                    <div className="aspect-square bg-gray-300"></div>
+                    <div className="p-3 sm:p-4">
+                      <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-2/3"></div>
                     </div>
-                  </div>
-                  <div className="p-3">
-                    <div className="h-5 bg-neutral-200 rounded mb-2 w-2/3" />
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
+          )}
+          
+          {/* Carrossel de categorias */}
+          {!isLoading && categoriesWithSamples && categoriesWithSamples.length > 0 && (
             <div 
               ref={scrollContainerRef}
               className="flex overflow-x-auto pb-6 sm:pb-8 hide-scrollbar snap-x snap-mandatory pl-2 sm:pl-4 pt-1 sm:pt-2"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {categoriesWithSamples?.map((category) => {
+              {categoriesWithSamples.map((category) => {
                 const categoryColor = getCategoryColor(category.categorySlug);
                 const isHovered = hoveredCategory === category.categoryId;
                 
@@ -227,7 +168,6 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                   <div 
                     key={category.categoryId} 
                     className="flex-none w-[220px] sm:w-[250px] md:w-[300px] pr-4 sm:pr-5 snap-start"
-                    style={{ scrollSnapAlign: 'start' }}
                     onMouseEnter={() => setHoveredCategory(category.categoryId)}
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
@@ -264,23 +204,12 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                         {/* Overlay com gradiente na parte inferior para nome da categoria */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
-                        {/* Badge de selecionado */}
-                        {selectedCategory === category.categoryId && (
-                          <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-medium rounded-full px-3 py-1 z-10 shadow-lg">
-                            Selecionado
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Badge centralizada sobre o card */}
-                      <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-gradient-to-r ${categoryColor} px-3 sm:px-4 py-1 sm:py-2 shadow-lg z-20`}>
-                        <h3 className="text-xs sm:text-sm font-semibold text-white">{category.categoryName}</h3>
-                      </div>
-                      
-                      {/* Ícone "Ver" que aparece ao passar o mouse */}
-                      <div className={`absolute bottom-3 right-3 bg-white rounded-full p-2 shadow-md 
-                        transition-all duration-300 ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
-                        <Eye className="h-4 w-4 text-blue-600" />
+                        {/* Badge da categoria com gradiente dinâmico */}
+                        <div className={`absolute bottom-3 left-3 right-3 bg-gradient-to-r ${categoryColor} 
+                          text-white px-3 py-2 rounded-lg text-sm font-medium text-center shadow-lg 
+                          transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300`}>
+                          {category.categoryName}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -289,16 +218,12 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
             </div>
           )}
           
-          {/* Indicadores de paginação (bolinhas) */}
-          {!isLoading && categories && categories.length > 4 && (
-            <div className="flex justify-center mt-2 sm:mt-4 space-x-1 sm:space-x-1.5">
-              {Array.from({ length: Math.ceil((categories.length || 0) / 4) }).map((_, index) => (
-                <div 
-                  key={index}
-                  className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full transition-all duration-300 
-                    ${index === 0 ? 'bg-blue-500 w-3 sm:w-4' : 'bg-blue-200 hover:bg-blue-300'}`}
-                />
-              ))}
+          {/* Empty State */}
+          {!isLoading && (!categoriesWithSamples || categoriesWithSamples.length === 0) && (
+            <div className="text-center py-12">
+              <Grid3X3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">Nenhuma categoria encontrada</p>
+              <p className="text-gray-400 text-sm mt-2">As categorias aparecerão aqui em breve</p>
             </div>
           )}
         </div>
