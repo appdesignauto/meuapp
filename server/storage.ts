@@ -1942,10 +1942,9 @@ export class DatabaseStorage implements IStorage {
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Para painel admin (limit=10) ou "Designs Profissionais" (limit=20), buscar ordenado por data de criação
-        if (limit === 10 || limit === 20) {
-          const contextLabel = limit === 10 ? 'Painel Admin' : 'Designs Profissionais';
-          console.log(`[Performance] Detectado limit=${limit} - usando consulta para ${contextLabel}`);
+        // Para painel admin (limit=10), buscar ordenado por data de criação
+        if (limit === 10) {
+          console.log(`[Performance] Detectado limit=10 - usando consulta para Painel Admin`);
           const optimizedQuery = sql`
             SELECT 
               id, 
@@ -1980,7 +1979,85 @@ export class DatabaseStorage implements IStorage {
           const arts = result.rows as Art[];
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "${contextLabel}" executada em ${endTime - startTime}ms - ${arts.length} artes ordenadas por data`);
+          console.log(`[Performance] Consulta "Painel Admin" executada em ${endTime - startTime}ms - ${arts.length} artes ordenadas por data`);
+          
+          return { arts, totalCount };
+        }
+        
+        // Para "Designs Profissionais" (limit=20), buscar apenas uma arte por groupId para evitar duplicatas
+        if (limit === 20) {
+          console.log(`[Performance] Detectado limit=20 - usando consulta para Designs Profissionais (sem duplicatas por groupId)`);
+          const optimizedQuery = sql`
+            WITH unique_arts AS (
+              SELECT 
+                id, 
+                "createdAt", 
+                title, 
+                "imageUrl", 
+                format, 
+                "fileType",
+                "isPremium",
+                "isVisible",
+                "groupId",
+                "categoryId",
+                ROW_NUMBER() OVER (
+                  PARTITION BY COALESCE("groupId", CONCAT('single_', id)) 
+                  ORDER BY 
+                    CASE 
+                      WHEN format = 'Feed' THEN 1
+                      WHEN format = 'Stories' THEN 2
+                      WHEN format = 'Cartaz' THEN 3
+                      ELSE 4
+                    END,
+                    "createdAt" DESC
+                ) as rn
+              FROM arts 
+              WHERE "isVisible" = ${isVisibleFilter}
+            )
+            SELECT 
+              id, 
+              "createdAt", 
+              title, 
+              "imageUrl", 
+              format, 
+              "fileType",
+              "isPremium",
+              "isVisible",
+              "groupId",
+              "categoryId"
+            FROM unique_arts 
+            WHERE rn = 1
+            ORDER BY "createdAt" DESC
+            LIMIT ${limit}
+            OFFSET ${offset}
+          `;
+          
+          const countQuery = sql`
+            WITH unique_arts AS (
+              SELECT 
+                id,
+                ROW_NUMBER() OVER (
+                  PARTITION BY COALESCE("groupId", CONCAT('single_', id)) 
+                  ORDER BY "createdAt" DESC
+                ) as rn
+              FROM arts 
+              WHERE "isVisible" = ${isVisibleFilter}
+            )
+            SELECT COUNT(*) as count 
+            FROM unique_arts 
+            WHERE rn = 1
+          `;
+          
+          const [result, countResult] = await Promise.all([
+            db.execute(optimizedQuery),
+            db.execute(countQuery)
+          ]);
+          
+          const totalCount = parseInt(countResult.rows[0].count as string);
+          const arts = result.rows as Art[];
+          
+          const endTime = Date.now();
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes únicas por grupo`);
           
           return { arts, totalCount };
         }
