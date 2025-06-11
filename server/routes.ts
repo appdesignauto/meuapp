@@ -937,6 +937,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para buscar artes de amostra por categoria para prévias (DEVE VIR ANTES das rotas gerais)
+  app.get("/api/categories/sample-arts", async (req, res) => {
+    try {
+      console.log('[Sample Arts] Buscando artes de amostra por categoria...');
+      
+      // Buscar categorias com suas artes mais recentes
+      const results = [];
+      const categoriesResult = await db.select().from(categories).orderBy(asc(categories.id));
+      console.log(`[Sample Arts] Encontradas ${categoriesResult.length} categorias`);
+      
+      for (const category of categoriesResult) {
+        console.log(`[Sample Arts] Processando categoria: ${category.name} (ID: ${category.id})`);
+        
+        // Buscar até 4 artes mais recentes desta categoria
+        const categoryArts = await db
+          .select({
+            id: arts.id,
+            title: arts.title,
+            imageUrl: arts.imageUrl
+          })
+          .from(arts)
+          .where(and(
+            eq(arts.categoryId, category.id),
+            eq(arts.isVisible, true),
+            isNotNull(arts.imageUrl)
+          ))
+          .orderBy(desc(arts.createdAt))
+          .limit(4);
+
+        console.log(`[Sample Arts] Encontradas ${categoryArts.length} artes para ${category.name}`);
+        
+        results.push({
+          categoryId: category.id,
+          categoryName: category.name,
+          categorySlug: category.slug,
+          sampleArts: categoryArts
+        });
+      }
+
+      console.log(`[Sample Arts] Retornando ${results.length} categorias com artes de amostra`);
+      res.json({ categories: results });
+    } catch (error) {
+      console.error("Erro detalhado ao buscar artes de amostra:", error);
+      res.status(500).json({ message: "Erro ao buscar artes de amostra", error: error.message });
+    }
+  });
+  
   // Dashboard SaaS APIs - Dados reais do sistema
   app.get("/api/dashboard/metrics", async (req, res) => {
     try {
@@ -1224,7 +1271,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/categories/:id", async (req, res) => {
     try {
+      console.log(`[Categories Route] Received param: ${req.params.id}`);
+      
+      // Skip if this is the sample-arts route
+      if (req.params.id === 'sample-arts') {
+        console.log('[Categories Route] Detected sample-arts, returning 404');
+        return res.status(404).json({ message: "Route not found" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        console.log(`[Categories Route] Invalid ID: ${req.params.id}`);
+        return res.status(400).json({ message: "ID deve ser um número válido" });
+      }
+      
       const category = await storage.getCategoryById(id);
       
       if (!category) {
@@ -1233,6 +1293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(category);
     } catch (error) {
+      console.error('[Categories Route] Error:', error);
       res.status(500).json({ message: "Erro ao buscar categoria" });
     }
   });
@@ -2091,53 +2152,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint para buscar artes de amostra por categoria para prévias
-  app.get("/api/categories/sample-arts", async (req, res) => {
-    try {
-      console.log('[Sample Arts] Buscando artes de amostra por categoria...');
-      
-      // Buscar categorias com suas artes mais recentes
-      const results = [];
-      const categoriesResult = await db.select().from(categories).orderBy(asc(categories.id));
-      console.log(`[Sample Arts] Encontradas ${categoriesResult.length} categorias`);
-      
-      for (const category of categoriesResult) {
-        console.log(`[Sample Arts] Processando categoria: ${category.name} (ID: ${category.id})`);
-        
-        // Buscar até 4 artes mais recentes desta categoria
-        const categoryArts = await db
-          .select({
-            id: arts.id,
-            title: arts.title,
-            imageUrl: arts.imageUrl
-          })
-          .from(arts)
-          .where(and(
-            eq(arts.categoryId, category.id),
-            eq(arts.isVisible, true),
-            isNotNull(arts.imageUrl)
-          ))
-          .orderBy(desc(arts.createdAt))
-          .limit(4);
-
-        console.log(`[Sample Arts] Encontradas ${categoryArts.length} artes para ${category.name}`);
-        
-        results.push({
-          categoryId: category.id,
-          categoryName: category.name,
-          categorySlug: category.slug,
-          sampleArts: categoryArts
-        });
-      }
-
-      console.log(`[Sample Arts] Retornando ${results.length} categorias com artes de amostra`);
-      res.json({ categories: results });
-    } catch (error) {
-      console.error("Erro detalhado ao buscar artes de amostra:", error);
-      res.status(500).json({ message: "Erro ao buscar artes de amostra", error: error.message });
-    }
-  });
-
   // Essa rota foi movida para antes de /api/artes/:id para evitar problemas de ordem
 
   app.get("/api/arts/:id/related", async (req, res) => {
