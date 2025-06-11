@@ -351,7 +351,10 @@ const AuthPage = () => {
                             <FormLabel className="text-gray-700 font-medium">Telefone (opcional)</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
+                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2 z-10">
+                                  <span className="text-lg">🇧🇷</span>
+                                  <span className="text-gray-500 text-sm">+55</span>
+                                </div>
                                 <InputMask
                                   mask="(99) 99999-9999"
                                   value={field.value}
@@ -363,7 +366,7 @@ const AuthPage = () => {
                                       {...inputProps}
                                       type="tel"
                                       placeholder="(11) 99999-9999"
-                                      className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                      className="pl-20 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                                     />
                                   )}
                                 </InputMask>
