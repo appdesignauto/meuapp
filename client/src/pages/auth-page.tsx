@@ -304,9 +304,16 @@ const AuthPage = () => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome completo</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Nome completo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu nome completo" {...field} />
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <Input 
+                                  placeholder="Seu nome completo" 
+                                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                  {...field} 
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -318,9 +325,17 @@ const AuthPage = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="seu@email.com" {...field} />
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <Input 
+                                  type="email" 
+                                  placeholder="seu@email.com" 
+                                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                  {...field} 
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -332,9 +347,17 @@ const AuthPage = () => {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Telefone (opcional)</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Telefone (opcional)</FormLabel>
                             <FormControl>
-                              <Input type="tel" placeholder="(11) 99999-9999" {...field} />
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <Input 
+                                  type="tel" 
+                                  placeholder="(11) 99999-9999" 
+                                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                  {...field} 
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -346,19 +369,21 @@ const AuthPage = () => {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Senha</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Senha</FormLabel>
                             <FormControl>
                               <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                 <Input 
                                   type={showRegisterPassword ? "text" : "password"} 
                                   placeholder="Sua senha" 
+                                  className="pl-10 pr-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                                   {...field} 
                                 />
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                                   onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                                 >
                                   {showRegisterPassword ? (
@@ -379,19 +404,21 @@ const AuthPage = () => {
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Confirmar senha</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">Confirmar senha</FormLabel>
                             <FormControl>
                               <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                 <Input 
                                   type={showConfirmPassword ? "text" : "password"} 
                                   placeholder="Confirme sua senha" 
+                                  className="pl-10 pr-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                                   {...field} 
                                 />
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                 >
                                   {showConfirmPassword ? (
@@ -409,12 +436,12 @@ const AuthPage = () => {
 
                       <Button 
                         type="submit" 
-                        className="w-full"
+                        className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             Criando conta...
                           </>
                         ) : (
