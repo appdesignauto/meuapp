@@ -1946,8 +1946,25 @@ export class DatabaseStorage implements IStorage {
         // Usar limit maior para garantir representação de todas as categorias
         const adjustedLimit = Math.max(limit, 100); // Mínimo 100 artes para categorias
         
-        // Consulta otimizada com campos essenciais incluindo categoryId
+        // Para componente de categorias, buscar artes de todas as categorias
+        // Usar estratégia que garante representação de todas as categorias
         const optimizedQuery = sql`
+          WITH category_arts AS (
+            SELECT 
+              id, 
+              "createdAt", 
+              title, 
+              "imageUrl", 
+              format, 
+              "fileType",
+              "isPremium",
+              "isVisible",
+              "groupId",
+              "categoryId",
+              ROW_NUMBER() OVER (PARTITION BY "categoryId" ORDER BY "createdAt" DESC) as rn
+            FROM arts 
+            WHERE "isVisible" = ${isVisibleFilter}
+          )
           SELECT 
             id, 
             "createdAt", 
@@ -1959,10 +1976,10 @@ export class DatabaseStorage implements IStorage {
             "isVisible",
             "groupId",
             "categoryId"
-          FROM arts 
-          WHERE "isVisible" = ${isVisibleFilter}
-          ORDER BY "createdAt" DESC 
-          LIMIT ${adjustedLimit} OFFSET ${offset}
+          FROM category_arts 
+          WHERE rn <= 20
+          ORDER BY "categoryId", "createdAt" DESC
+          LIMIT ${adjustedLimit}
         `;
         
         // Count otimizado
