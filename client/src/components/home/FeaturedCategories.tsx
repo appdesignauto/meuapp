@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter, Grid3X3 } from 'lucide-react';
@@ -37,19 +37,55 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     return () => clearTimeout(timer);
   }, []);
   
-  // Query otimizada com stale time para evitar requisições desnecessárias
-  const { data: sampleArtsData, isLoading } = useQuery<{ categories: CategoryWithSamples[] }>({
-    queryKey: ['/api/categories/sample-arts'],
-    staleTime: 2 * 60 * 1000, // 2 minutos sem refetch automático (conteúdo dinâmico)
-    refetchOnWindowFocus: false, // Evita refetch desnecessário
+  // Buscar categorias principais
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
+    queryKey: ['/api/categories'],
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
   });
 
-  // Fallback para categorias básicas se necessário
-  const { data: categories } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
-    enabled: !sampleArtsData, // Só executa se não tiver dados das sample-arts
-    staleTime: 2 * 60 * 1000,
+  // Buscar artes populares para usar como amostras
+  const { data: artsData, isLoading: artsLoading } = useQuery<{ arts: any[] }>({
+    queryKey: ['/api/arts', { limit: 24 }],
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
   });
+
+  const isLoading = categoriesLoading || artsLoading;
+
+  // Processar dados para criar categorias com amostras de artes
+  const categoriesWithSamples = React.useMemo(() => {
+    if (!categories || !artsData?.arts) return [];
+
+    const arts = artsData.arts.filter(art => art.format === 'cartaz' && art.imageUrl);
+    
+    return categories.map(category => {
+      // Filtrar artes desta categoria
+      const categoryArts = arts.filter(art => art.categoryId === category.id);
+      
+      // Agrupar por groupId e pegar uma arte de cada grupo (máximo 4)
+      const seenGroups = new Set();
+      const sampleArts = categoryArts
+        .filter(art => {
+          if (!art.groupId || seenGroups.has(art.groupId)) return false;
+          seenGroups.add(art.groupId);
+          return true;
+        })
+        .slice(0, 4)
+        .map(art => ({
+          id: art.id.toString(),
+          title: art.title,
+          imageUrl: art.imageUrl
+        }));
+
+      return {
+        categoryId: category.id,
+        categoryName: category.name,
+        categorySlug: category.slug,
+        sampleArts
+      };
+    });
+  }, [categories, artsData?.arts]);
 
   // Handler para a seleção de categoria
   const handleCategorySelect = (categoryId: number | null) => {
@@ -135,7 +171,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
         
         <div className="relative overflow-hidden">
           {/* Botões de navegação do carrossel com animação */}
-          {!isLoading && sampleArtsData?.categories && sampleArtsData.categories.length > 0 && showArrows && (
+          {!isLoading && categoriesWithSamples && categoriesWithSamples.length > 0 && showArrows && (
             <>
               <button 
                 onClick={scrollLeft}
@@ -183,8 +219,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
               className="flex overflow-x-auto pb-6 sm:pb-8 hide-scrollbar snap-x snap-mandatory pl-2 sm:pl-4 pt-1 sm:pt-2"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {sampleArtsData?.categories?.map((category) => {
-                const imagePaths = getCategoryImagePaths(category);
+              {categoriesWithSamples?.map((category) => {
                 const categoryColor = getCategoryColor(category.categorySlug);
                 const isHovered = hoveredCategory === category.categoryId;
                 
