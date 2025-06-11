@@ -1986,7 +1986,7 @@ export class DatabaseStorage implements IStorage {
         
         // Para "Designs Profissionais" (limit=20), buscar apenas uma arte por groupId para evitar duplicatas
         if (limit === 20) {
-          console.log(`[Performance] Detectado limit=20 - usando consulta para Designs Profissionais (sem duplicatas por groupId)`);
+          console.log(`[Performance] Detectado limit=20 - usando consulta para Designs Profissionais (com alternância de formatos)`);
           const optimizedQuery = sql`
             WITH unique_arts AS (
               SELECT 
@@ -2002,17 +2002,25 @@ export class DatabaseStorage implements IStorage {
                 "categoryId",
                 ROW_NUMBER() OVER (
                   PARTITION BY COALESCE("groupId", CONCAT('single_', id)) 
-                  ORDER BY 
-                    CASE 
-                      WHEN format = 'Feed' THEN 1
-                      WHEN format = 'Stories' THEN 2
-                      WHEN format = 'Cartaz' THEN 3
-                      ELSE 4
-                    END,
-                    "createdAt" DESC
+                  ORDER BY "createdAt" DESC
                 ) as rn
               FROM arts 
               WHERE "isVisible" = ${isVisibleFilter}
+            ),
+            format_balanced AS (
+              SELECT *,
+                ROW_NUMBER() OVER (
+                  PARTITION BY format 
+                  ORDER BY "createdAt" DESC
+                ) as format_rn
+              FROM unique_arts 
+              WHERE rn = 1
+            ),
+            interleaved AS (
+              SELECT *,
+                ROW_NUMBER() OVER (ORDER BY format_rn, format, "createdAt" DESC) as final_position
+              FROM format_balanced
+              WHERE format_rn <= 7
             )
             SELECT 
               id, 
@@ -2025,9 +2033,8 @@ export class DatabaseStorage implements IStorage {
               "isVisible",
               "groupId",
               "categoryId"
-            FROM unique_arts 
-            WHERE rn = 1
-            ORDER BY "createdAt" DESC
+            FROM interleaved
+            ORDER BY final_position
             LIMIT ${limit}
             OFFSET ${offset}
           `;
