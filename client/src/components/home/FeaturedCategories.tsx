@@ -57,6 +57,15 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   const categoriesWithSamples = React.useMemo(() => {
     if (!categories || !artsData?.arts) return [];
 
+    console.log('Debug FeaturedCategories:', {
+      totalCategories: categories.length,
+      totalArts: artsData.arts.length,
+      artsByCategory: artsData.arts.reduce((acc, art) => {
+        acc[art.categoryId] = (acc[art.categoryId] || 0) + 1;
+        return acc;
+      }, {} as Record<number, number>)
+    });
+
     const arts = artsData.arts.filter(art => art.format === 'cartaz' && art.imageUrl);
     
     // Ordenar artes de forma determinística para consistência
