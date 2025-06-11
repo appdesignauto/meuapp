@@ -1942,9 +1942,10 @@ export class DatabaseStorage implements IStorage {
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Para "Designs Profissionais" (limit=20), buscar apenas as 20 artes mais recentes
-        if (limit === 20) {
-          console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais');
+        // Para painel admin (limit=10) ou "Designs Profissionais" (limit=20), buscar ordenado por data de criação
+        if (limit === 10 || limit === 20) {
+          const contextLabel = limit === 10 ? 'Painel Admin' : 'Designs Profissionais';
+          console.log(`[Performance] Detectado limit=${limit} - usando consulta para ${contextLabel}`);
           const optimizedQuery = sql`
             SELECT 
               id, 
@@ -1961,6 +1962,7 @@ export class DatabaseStorage implements IStorage {
             WHERE "isVisible" = ${isVisibleFilter}
             ORDER BY "createdAt" DESC
             LIMIT ${limit}
+            OFFSET ${offset}
           `;
           
           const countQuery = sql`
@@ -1978,7 +1980,7 @@ export class DatabaseStorage implements IStorage {
           const arts = result.rows as Art[];
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes`);
+          console.log(`[Performance] Consulta "${contextLabel}" executada em ${endTime - startTime}ms - ${arts.length} artes ordenadas por data`);
           
           return { arts, totalCount };
         }
