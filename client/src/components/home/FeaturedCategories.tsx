@@ -44,9 +44,9 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     refetchOnWindowFocus: false,
   });
 
-  // Buscar artes populares para usar como amostras
+  // Buscar artes para amostras das categorias (consulta separada da vitrine principal)
   const { data: artsData, isLoading: artsLoading } = useQuery<{ arts: any[] }>({
-    queryKey: ['/api/arts', { limit: 24 }],
+    queryKey: ['/api/arts', { limit: 50, page: 1 }],
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });
