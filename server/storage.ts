@@ -1986,7 +1986,7 @@ export class DatabaseStorage implements IStorage {
         
         // Para "Designs Profissionais" (limit=20), buscar apenas uma arte por groupId para evitar duplicatas
         if (limit === 20) {
-          console.log(`[Performance] Detectado limit=20 - usando consulta para Designs Profissionais (com alternância de formatos)`);
+          console.log(`[Performance] Detectado limit=20 - usando consulta para Designs Profissionais (alternância Cartaz > Story)`);
           const optimizedQuery = sql`
             WITH unique_arts AS (
               SELECT 
@@ -2007,7 +2007,7 @@ export class DatabaseStorage implements IStorage {
               FROM arts 
               WHERE "isVisible" = ${isVisibleFilter}
             ),
-            format_balanced AS (
+            format_separated AS (
               SELECT *,
                 ROW_NUMBER() OVER (
                   PARTITION BY format 
@@ -2016,11 +2016,25 @@ export class DatabaseStorage implements IStorage {
               FROM unique_arts 
               WHERE rn = 1
             ),
-            interleaved AS (
-              SELECT *,
-                ROW_NUMBER() OVER (ORDER BY format_rn, format, "createdAt" DESC) as final_position
-              FROM format_balanced
-              WHERE format_rn <= 7
+            cartaz_arts AS (
+              SELECT *, 'cartaz' as tipo, format_rn as position
+              FROM format_separated 
+              WHERE format = 'Cartaz' AND format_rn <= 10
+            ),
+            story_arts AS (
+              SELECT *, 'story' as tipo, format_rn as position
+              FROM format_separated 
+              WHERE format = 'Stories' AND format_rn <= 10
+            ),
+            alternated AS (
+              SELECT *, 
+                ROW_NUMBER() OVER (ORDER BY position) as final_order
+              FROM (
+                SELECT *, (position * 2 - 1) as sort_order FROM cartaz_arts
+                UNION ALL
+                SELECT *, (position * 2) as sort_order FROM story_arts
+              ) combined
+              ORDER BY sort_order
             )
             SELECT 
               id, 
@@ -2033,8 +2047,8 @@ export class DatabaseStorage implements IStorage {
               "isVisible",
               "groupId",
               "categoryId"
-            FROM interleaved
-            ORDER BY final_position
+            FROM alternated
+            ORDER BY final_order
             LIMIT ${limit}
             OFFSET ${offset}
           `;
