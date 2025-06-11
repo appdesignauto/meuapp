@@ -937,58 +937,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint para buscar artes de amostra por categoria para prévias (DEVE VIR ANTES das rotas gerais)
+  // Endpoint otimizado para buscar artes de amostra por categoria em uma única query
   app.get("/api/categories/sample-arts", async (req, res) => {
     try {
-      console.log('[Sample Arts] Buscando artes de amostra por categoria...');
+      console.log('[Sample Arts Fast] Buscando categorias e artes em query única...');
       
-      // Buscar categorias com suas artes mais recentes
-      const results = [];
-      const categoriesResult = await db.select().from(categories).orderBy(asc(categories.id));
-      console.log(`[Sample Arts] Encontradas ${categoriesResult.length} categorias`);
+      // Query SQL única otimizada para buscar tudo de uma vez
+      const result = await db.execute(sql`
+        WITH category_art_groups AS (
+          SELECT 
+            c.id as category_id,
+            c.name as category_name,
+            c.slug as category_slug,
+            a.id as art_id,
+            a.title as art_title,
+            a."imageUrl" as art_image_url,
+            a."groupId" as group_id,
+            ROW_NUMBER() OVER (
+              PARTITION BY c.id, a."groupId" 
+              ORDER BY a."createdAt" DESC
+            ) as rn_in_group
+          FROM categories c
+          LEFT JOIN arts a ON c.id = a."categoryId" 
+            AND a."isVisible" = true 
+            AND a."imageUrl" IS NOT NULL 
+            AND a."groupId" IS NOT NULL
+            AND a.format = 'cartaz'
+          WHERE c."isActive" = true
+        ),
+        top_arts_per_category AS (
+          SELECT 
+            category_id,
+            category_name,
+            category_slug,
+            art_id,
+            art_title,
+            art_image_url,
+            ROW_NUMBER() OVER (
+              PARTITION BY category_id 
+              ORDER BY group_id
+            ) as art_rank
+          FROM category_art_groups 
+          WHERE rn_in_group = 1 AND art_id IS NOT NULL
+        )
+        SELECT 
+          category_id,
+          category_name,
+          category_slug,
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', art_id::text,
+              'title', art_title,
+              'imageUrl', art_image_url
+            ) ORDER BY art_rank
+          ) FILTER (WHERE art_id IS NOT NULL AND art_rank <= 4) as sample_arts
+        FROM top_arts_per_category
+        GROUP BY category_id, category_name, category_slug
+        ORDER BY category_id
+      `);
+
+      const categories = (result.rows || []).map((row: any) => ({
+        categoryId: row.category_id,
+        categoryName: row.category_name,
+        categorySlug: row.category_slug,
+        sampleArts: row.sample_arts || []
+      }));
+
+      console.log(`[Sample Arts Fast] Retornando ${categories.length} categorias em ${Date.now()}ms`);
+      res.json({ categories });
       
-      for (const category of categoriesResult) {
-        console.log(`[Sample Arts] Processando categoria: ${category.name} (ID: ${category.id})`);
-        
-        // Query SQL otimizada para buscar uma arte de cada grupo diferente (apenas formato cartaz)
-        const categoryArts = await db.execute(sql`
-          WITH distinct_groups AS (
-            SELECT DISTINCT ON ("groupId") 
-              id, title, "imageUrl", "groupId"
-            FROM arts 
-            WHERE "categoryId" = ${category.id} 
-              AND "isVisible" = true 
-              AND "imageUrl" IS NOT NULL 
-              AND "groupId" IS NOT NULL
-              AND format = 'cartaz'
-            ORDER BY "groupId", "createdAt" DESC
-            LIMIT 4
-          )
-          SELECT id, title, "imageUrl" FROM distinct_groups
-        `);
-
-        // Mapear os resultados da query para o formato esperado
-        const queryRows = categoryArts.rows || [];
-        const formattedArts = queryRows.map((row: any) => ({
-          id: row.id.toString(),
-          title: row.title,
-          imageUrl: row.imageUrl
-        }));
-
-        console.log(`[Sample Arts] ${category.name}: ${formattedArts.length} artes únicas por groupId`);
-        
-        results.push({
-          categoryId: category.id,
-          categoryName: category.name,
-          categorySlug: category.slug,
-          sampleArts: formattedArts
-        });
-      }
-
-      console.log(`[Sample Arts] Retornando ${results.length} categorias com artes de amostra`);
-      res.json({ categories: results });
     } catch (error) {
-      console.error("Erro detalhado ao buscar artes de amostra:", error);
+      console.error("[Sample Arts Fast] Erro:", error);
       res.status(500).json({ message: "Erro ao buscar artes de amostra", error: error.message });
     }
   });

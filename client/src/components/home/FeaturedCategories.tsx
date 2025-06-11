@@ -37,13 +37,18 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     return () => clearTimeout(timer);
   }, []);
   
-  const { data: categories, isLoading } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+  // Query otimizada com stale time para evitar requisições desnecessárias
+  const { data: sampleArtsData, isLoading } = useQuery<{ categories: CategoryWithSamples[] }>({
+    queryKey: ['/api/categories/sample-arts'],
+    staleTime: 2 * 60 * 1000, // 2 minutos sem refetch automático (conteúdo dinâmico)
+    refetchOnWindowFocus: false, // Evita refetch desnecessário
   });
 
-  // Fetch sample arts for authentic category previews
-  const { data: sampleArtsData } = useQuery<{ categories: CategoryWithSamples[] }>({
-    queryKey: ['/api/categories/sample-arts'],
+  // Fallback para categorias básicas se necessário
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ['/api/categories'],
+    enabled: !sampleArtsData, // Só executa se não tiver dados das sample-arts
+    staleTime: 2 * 60 * 1000,
   });
 
   // Handler para a seleção de categoria
@@ -61,16 +66,11 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     }
   };
   
-  // Função para obter imagens reais da categoria
-  const getCategoryImagePaths = (category: Category): string[] => {
-    // Buscar artes reais desta categoria nos dados de amostra
-    const categoryData = sampleArtsData?.categories.find(
-      cat => cat.categoryId === category.id
-    );
-    
-    if (categoryData && categoryData.sampleArts.length > 0) {
+  // Função para obter imagens reais da categoria otimizada
+  const getCategoryImagePaths = (categoryWithSamples: CategoryWithSamples): string[] => {
+    if (categoryWithSamples.sampleArts && categoryWithSamples.sampleArts.length > 0) {
       // Usar até 4 imagens reais da categoria
-      return categoryData.sampleArts.slice(0, 4).map(art => art.imageUrl);
+      return categoryWithSamples.sampleArts.slice(0, 4).map(art => art.imageUrl);
     }
     
     // Fallback: imagens padrão caso não tenha dados ainda
@@ -135,7 +135,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
         
         <div className="relative overflow-hidden">
           {/* Botões de navegação do carrossel com animação */}
-          {!isLoading && categories && categories.length > 0 && showArrows && (
+          {!isLoading && sampleArtsData?.categories && sampleArtsData.categories.length > 0 && showArrows && (
             <>
               <button 
                 onClick={scrollLeft}
@@ -183,10 +183,10 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
               className="flex overflow-x-auto pb-6 sm:pb-8 hide-scrollbar snap-x snap-mandatory pl-2 sm:pl-4 pt-1 sm:pt-2"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {categories?.map((category) => {
+              {sampleArtsData?.categories?.map((category) => {
                 const imagePaths = getCategoryImagePaths(category);
-                const categoryColor = getCategoryColor(category.slug);
-                const isHovered = hoveredCategory === category.id;
+                const categoryColor = getCategoryColor(category.categorySlug);
+                const isHovered = hoveredCategory === category.categoryId;
                 
                 return (
                   <div 
