@@ -148,7 +148,7 @@ const TrendingPopular = () => {
           {/* Desktop: Grid Responsivo */}
           <div className="hidden md:block">
             <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 w-full">
-              {currentArts.slice(0, 18).map((art, index) => (
+              {currentArts.map((art, index) => (
                 <motion.div
                   key={art.id}
                   initial={{ opacity: 0, y: 20 }}
