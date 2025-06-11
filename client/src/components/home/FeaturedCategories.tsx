@@ -63,14 +63,16 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     const sortedArts = [...arts].sort((a, b) => a.id - b.id);
     
     return categories.map((category) => {
-      // Pegar APENAS artes da categoria específica
-      const categoryArts = sortedArts.filter(art => art.categoryId === category.id);
+      // 1. Primeiro pegar artes cartaz da categoria específica
+      const categoryCartazArts = sortedArts.filter(art => 
+        art.categoryId === category.id && art.format === 'cartaz'
+      );
       
       let sampleArts = [];
-      
-      // Sempre usar apenas artes da categoria específica
       const seenGroups = new Set();
-      sampleArts = categoryArts
+      
+      // Usar artes cartaz com grupos únicos
+      sampleArts = categoryCartazArts
         .filter(art => {
           if (!art.groupId || seenGroups.has(art.groupId)) return false;
           seenGroups.add(art.groupId);
@@ -83,19 +85,50 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           imageUrl: art.imageUrl
         }));
       
-      // Se não conseguir 4 artes únicas por groupId, pegar as primeiras da categoria
+      // 2. Se não conseguir 4 artes cartaz, completar com stories da mesma categoria
       if (sampleArts.length < 4) {
-        const remainingCategoryArts = categoryArts
-          .filter(art => !sampleArts.some(sample => sample.id === art.id.toString()))
-          .slice(0, 4 - sampleArts.length);
+        const categoryStoriesArts = artsData.arts.filter(art => 
+          art.categoryId === category.id && 
+          art.format === 'stories' && 
+          art.imageUrl &&
+          !sampleArts.some(sample => sample.id === art.id.toString())
+        );
         
-        remainingCategoryArts.forEach(art => {
-          sampleArts.push({
+        const remainingSlots = 4 - sampleArts.length;
+        const additionalArts = categoryStoriesArts
+          .filter(art => {
+            if (!art.groupId || seenGroups.has(art.groupId)) return false;
+            seenGroups.add(art.groupId);
+            return true;
+          })
+          .slice(0, remainingSlots)
+          .map(art => ({
             id: art.id.toString(),
             title: art.title,
             imageUrl: art.imageUrl
-          });
-        });
+          }));
+        
+        sampleArts = [...sampleArts, ...additionalArts];
+      }
+      
+      // 3. Se ainda não conseguir 4 artes, pegar qualquer arte da categoria
+      if (sampleArts.length < 4) {
+        const allCategoryArts = artsData.arts.filter(art => 
+          art.categoryId === category.id && 
+          art.imageUrl &&
+          !sampleArts.some(sample => sample.id === art.id.toString())
+        );
+        
+        const remainingSlots = 4 - sampleArts.length;
+        const finalArts = allCategoryArts
+          .slice(0, remainingSlots)
+          .map(art => ({
+            id: art.id.toString(),
+            title: art.title,
+            imageUrl: art.imageUrl
+          }));
+        
+        sampleArts = [...sampleArts, ...finalArts];
       }
 
 
@@ -131,14 +164,8 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
       return categoryWithSamples.sampleArts.slice(0, 4).map(art => art.imageUrl);
     }
     
-    // Fallback: imagens padrão caso não tenha dados ainda
-    const fallbackImages = [
-      '/assets/VENDAS 04.png', 
-      '/assets/VENDAS 10.png', 
-      '/assets/VENDAS 17.png', 
-      '/assets/VENDAS 32.png'
-    ];
-    return fallbackImages;
+    // Retornar array vazio quando não há artes (será tratado como "Em breve")
+    return [];
   };
 
   // Função para determinar a cor de destaque da categoria
@@ -262,26 +289,37 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                         transformStyle: 'preserve-3d',
                       }}
                     >
-                      {/* Imagens em Grid 2x2 */}
+                      {/* Imagens em Grid 2x2 ou "Em breve" se não houver artes */}
                       <div className="aspect-square relative">
-                        <div className="grid grid-cols-2 h-full">
-                          {category.sampleArts.slice(0, 4).map((art, i) => (
-                            <div key={i} className="overflow-hidden border-[1.5px] border-white">
-                              <img 
-                                src={art.imageUrl} 
-                                alt={art.title} 
-                                className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
-                                loading="lazy"
-                              />
+                        {category.sampleArts.length === 0 ? (
+                          // Quando não há artes da categoria, mostrar "Em breve"
+                          <div className="h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-gray-400 text-sm font-medium mb-1">Em breve</div>
+                              <div className="text-gray-300 text-xs">Novas artes chegando</div>
                             </div>
-                          ))}
-                          {/* Fill empty slots if less than 4 images */}
-                          {Array.from({ length: Math.max(0, 4 - category.sampleArts.length) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="bg-gray-100 border-[1.5px] border-white flex items-center justify-center">
-                              <div className="text-gray-400 text-xs">Em breve</div>
-                            </div>
-                          ))}
-                        </div>
+                          </div>
+                        ) : (
+                          // Quando há artes, mostrar grid normal
+                          <div className="grid grid-cols-2 h-full">
+                            {category.sampleArts.slice(0, 4).map((art, i) => (
+                              <div key={i} className="overflow-hidden border-[1.5px] border-white">
+                                <img 
+                                  src={art.imageUrl} 
+                                  alt={art.title} 
+                                  className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
+                                  loading="lazy"
+                                />
+                              </div>
+                            ))}
+                            {/* Fill empty slots if less than 4 images */}
+                            {Array.from({ length: Math.max(0, 4 - category.sampleArts.length) }).map((_, i) => (
+                              <div key={`empty-${i}`} className="bg-gray-100 border-[1.5px] border-white flex items-center justify-center">
+                                <div className="text-gray-400 text-xs">Em breve</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         
                         {/* Overlay com gradiente na parte inferior para nome da categoria */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
