@@ -28,6 +28,7 @@ import { Loader2, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown } from "luci
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import InputMask from "react-input-mask";
+import designAutoLogo from "@assets/LOGO DESIGNAUTO.png";
 
 const loginSchema = z.object({
   email: z.string().email("Digite um email válido"),
@@ -165,14 +166,14 @@ const AuthPage = () => {
           {/* Header com logo e título */}
           <div className="text-center space-y-4">
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg flex items-center justify-center transform hover:scale-105 transition-transform duration-200">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                </svg>
-              </div>
+              <img 
+                src={designAutoLogo} 
+                alt="DesignAuto" 
+                className="h-16 w-auto object-contain transform hover:scale-105 transition-transform duration-200"
+              />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Bem-vindo ao DesignAuto</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 whitespace-nowrap">Bem-Vindo Ao DesignAuto</h2>
               <p className="text-gray-600">Acesse sua conta ou crie uma nova</p>
             </div>
           </div>
