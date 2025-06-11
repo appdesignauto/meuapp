@@ -1984,16 +1984,29 @@ export class DatabaseStorage implements IStorage {
           return { arts, totalCount };
         }
         
-        // Para "Designs Profissionais" (limit=24), aplicar alternância perfeita entre cartaz e stories
+        // Para "Designs Profissionais" (limit=24), aplicar alternância com grupos únicos
         if (limit === 24) {
-          console.log(`[Performance] Detectado limit=24 - usando alternância otimizada cartaz/stories`);
+          console.log(`[Performance] Detectado limit=24 - usando alternância com grupos únicos`);
           
-          // Buscar cartazes únicos por groupId
+          // Buscar todos os groupIds únicos em uso para evitar repetições
+          const allGroupsQuery = sql`
+            SELECT DISTINCT COALESCE("groupId", CONCAT('single_', id)) as group_key
+            FROM arts 
+            WHERE "isVisible" = ${isVisibleFilter}
+          `;
+          
+          const allGroupsResult = await db.execute(allGroupsQuery);
+          const allGroups = allGroupsResult.rows.map((row: any) => row.group_key);
+          
+          console.log(`[Debug] Total de grupos únicos disponíveis: ${allGroups.length}`);
+          
+          // Buscar cartazes únicos por groupId - mais artes para garantir variedade
           const cartazQuery = sql`
             WITH unique_cartaz AS (
               SELECT 
                 id, "createdAt", title, "imageUrl", format, "fileType",
                 "isPremium", "isVisible", "groupId", "categoryId",
+                COALESCE("groupId", CONCAT('single_', id)) as group_key,
                 ROW_NUMBER() OVER (
                   PARTITION BY COALESCE("groupId", CONCAT('single_', id)) 
                   ORDER BY "createdAt" DESC
@@ -2002,19 +2015,20 @@ export class DatabaseStorage implements IStorage {
               WHERE "isVisible" = ${isVisibleFilter} AND format = 'cartaz'
             )
             SELECT id, "createdAt", title, "imageUrl", format, "fileType",
-                   "isPremium", "isVisible", "groupId", "categoryId"
+                   "isPremium", "isVisible", "groupId", "categoryId", group_key
             FROM unique_cartaz
             WHERE rn = 1
             ORDER BY "createdAt" DESC
-            LIMIT 15
+            LIMIT 50
           `;
           
-          // Buscar stories únicos por groupId  
+          // Buscar stories únicos por groupId - mais artes para garantir variedade  
           const storiesQuery = sql`
             WITH unique_stories AS (
               SELECT 
                 id, "createdAt", title, "imageUrl", format, "fileType",
                 "isPremium", "isVisible", "groupId", "categoryId",
+                COALESCE("groupId", CONCAT('single_', id)) as group_key,
                 ROW_NUMBER() OVER (
                   PARTITION BY COALESCE("groupId", CONCAT('single_', id)) 
                   ORDER BY "createdAt" DESC
@@ -2023,11 +2037,11 @@ export class DatabaseStorage implements IStorage {
               WHERE "isVisible" = ${isVisibleFilter} AND format = 'stories'
             )
             SELECT id, "createdAt", title, "imageUrl", format, "fileType",
-                   "isPremium", "isVisible", "groupId", "categoryId"
+                   "isPremium", "isVisible", "groupId", "categoryId", group_key
             FROM unique_stories
             WHERE rn = 1
             ORDER BY "createdAt" DESC
-            LIMIT 15
+            LIMIT 50
           `;
           
           const [cartazResult, storiesResult] = await Promise.all([
@@ -2035,39 +2049,72 @@ export class DatabaseStorage implements IStorage {
             db.execute(storiesQuery)
           ]);
           
-          const cartazArts = cartazResult.rows as Art[];
-          const storiesArts = storiesResult.rows as Art[];
+          const cartazArts = cartazResult.rows as (Art & { group_key: string })[];
+          const storiesArts = storiesResult.rows as (Art & { group_key: string })[];
           
-          console.log(`[Debug] Formatos separados - Cartaz: ${cartazArts.length}, Stories: ${storiesArts.length}`);
+          console.log(`[Debug] Artes disponíveis - Cartaz: ${cartazArts.length}, Stories: ${storiesArts.length}`);
           
-          // Aplicar alternância perfeita: cartaz (1), stories (2), cartaz (3), stories (4), etc.
+          // Garantir grupos únicos na vitrine final
+          const usedGroups = new Set<string>();
           const alternatedArts: Art[] = [];
           let cartazIndex = 0;
           let storiesIndex = 0;
           
           for (let position = 1; position <= limit; position++) {
+            let artAdded = false;
+            
             if (position % 2 === 1) {
-              // Posições ímpares (1, 3, 5, 7...): cartaz
-              if (cartazIndex < cartazArts.length) {
-                alternatedArts.push(cartazArts[cartazIndex]);
+              // Posições ímpares (1, 3, 5, 7...): buscar cartaz
+              while (cartazIndex < cartazArts.length && !artAdded) {
+                const art = cartazArts[cartazIndex];
+                if (!usedGroups.has(art.group_key)) {
+                  usedGroups.add(art.group_key);
+                  alternatedArts.push(art);
+                  artAdded = true;
+                }
                 cartazIndex++;
-              } else if (storiesIndex < storiesArts.length) {
-                alternatedArts.push(storiesArts[storiesIndex]);
-                storiesIndex++;
+              }
+              
+              // Se não encontrou cartaz único, buscar stories único
+              if (!artAdded) {
+                while (storiesIndex < storiesArts.length && !artAdded) {
+                  const art = storiesArts[storiesIndex];
+                  if (!usedGroups.has(art.group_key)) {
+                    usedGroups.add(art.group_key);
+                    alternatedArts.push(art);
+                    artAdded = true;
+                  }
+                  storiesIndex++;
+                }
               }
             } else {
-              // Posições pares (2, 4, 6, 8...): stories
-              if (storiesIndex < storiesArts.length) {
-                alternatedArts.push(storiesArts[storiesIndex]);
+              // Posições pares (2, 4, 6, 8...): buscar stories
+              while (storiesIndex < storiesArts.length && !artAdded) {
+                const art = storiesArts[storiesIndex];
+                if (!usedGroups.has(art.group_key)) {
+                  usedGroups.add(art.group_key);
+                  alternatedArts.push(art);
+                  artAdded = true;
+                }
                 storiesIndex++;
-              } else if (cartazIndex < cartazArts.length) {
-                alternatedArts.push(cartazArts[cartazIndex]);
-                cartazIndex++;
+              }
+              
+              // Se não encontrou stories único, buscar cartaz único
+              if (!artAdded) {
+                while (cartazIndex < cartazArts.length && !artAdded) {
+                  const art = cartazArts[cartazIndex];
+                  if (!usedGroups.has(art.group_key)) {
+                    usedGroups.add(art.group_key);
+                    alternatedArts.push(art);
+                    artAdded = true;
+                  }
+                  cartazIndex++;
+                }
               }
             }
           }
           
-          console.log(`[Debug] Alternância perfeita aplicada - Total: ${alternatedArts.length} artes`);
+          console.log(`[Debug] Vitrine com grupos únicos - Total: ${alternatedArts.length} artes, ${usedGroups.size} grupos únicos`);
           
           // Aplicar paginação
           const arts = alternatedArts.slice(offset, offset + limit);
@@ -2083,7 +2130,7 @@ export class DatabaseStorage implements IStorage {
           const totalCount = parseInt(countResult.rows[0].count as string);
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância perfeita`);
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com grupos únicos`);
           
           return { arts, totalCount };
         }
