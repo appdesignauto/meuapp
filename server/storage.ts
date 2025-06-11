@@ -1984,10 +1984,11 @@ export class DatabaseStorage implements IStorage {
           return { arts, totalCount };
         }
         
-        // Para "Designs Profissionais" (limit=24), buscar apenas uma arte por groupId para evitar duplicatas
+        // Para "Designs Profissionais" (limit=24), buscar apenas uma arte por groupId e aplicar alternância de formato
         if (limit === 24) {
-          console.log(`[Performance] Detectado limit=24 - usando consulta para Designs Profissionais (sem duplicatas por groupId)`);
-          // Buscar artes únicas por groupId e aplicar alternância de formato via JavaScript
+          console.log(`[Performance] Detectado limit=24 - usando consulta para Designs Profissionais com alternância JavaScript`);
+          
+          // Buscar todas as artes únicas disponíveis
           const uniqueQuery = sql`
             WITH unique_arts AS (
               SELECT 
@@ -2024,53 +2025,56 @@ export class DatabaseStorage implements IStorage {
             ORDER BY "createdAt" DESC
           `;
           
-          const allUniqueArts = await db.execute(uniqueQuery);
-          const uniqueArts = allUniqueArts.rows as Art[];
+          const allUniqueResult = await db.execute(uniqueQuery);
+          const allUniqueArts = allUniqueResult.rows as Art[];
           
-          // Aplicar alternância de formato via JavaScript
+          // Separar artes por formato
+          const cartazArts = allUniqueArts.filter(art => art.format === 'cartaz');
+          const storiesArts = allUniqueArts.filter(art => art.format === 'stories');
+          const otherArts = allUniqueArts.filter(art => art.format !== 'cartaz' && art.format !== 'stories');
+          
+          console.log(`[Debug] Formatos disponíveis - Cartaz: ${cartazArts.length}, Stories: ${storiesArts.length}, Outros: ${otherArts.length}`);
+          
+          // Aplicar alternância perfeita: cartaz (1), stories (2), cartaz (3), stories (4), etc.
           const alternatedArts: Art[] = [];
           let cartazIndex = 0;
           let storiesIndex = 0;
+          let otherIndex = 0;
           
-          // Separar por formato
-          const cartazArts = uniqueArts.filter(art => art.format === 'cartaz');
-          const storiesArts = uniqueArts.filter(art => art.format === 'stories');
-          const otherArts = uniqueArts.filter(art => art.format !== 'cartaz' && art.format !== 'stories');
-          
-          console.log(`[Debug] Alternância de formatos - Cartaz: ${cartazArts.length}, Stories: ${storiesArts.length}, Outros: ${otherArts.length}`);
-          
-          // Alternar entre cartaz e stories
-          for (let i = 0; i < limit && (cartazIndex < cartazArts.length || storiesIndex < storiesArts.length); i++) {
-            if (i % 2 === 0) {
-              // Posições pares: cartaz
+          for (let position = 1; position <= limit; position++) {
+            if (position % 2 === 1) {
+              // Posições ímpares (1, 3, 5, 7...): cartaz
               if (cartazIndex < cartazArts.length) {
                 alternatedArts.push(cartazArts[cartazIndex]);
                 cartazIndex++;
               } else if (storiesIndex < storiesArts.length) {
                 alternatedArts.push(storiesArts[storiesIndex]);
                 storiesIndex++;
+              } else if (otherIndex < otherArts.length) {
+                alternatedArts.push(otherArts[otherIndex]);
+                otherIndex++;
               }
             } else {
-              // Posições ímpares: stories
+              // Posições pares (2, 4, 6, 8...): stories
               if (storiesIndex < storiesArts.length) {
                 alternatedArts.push(storiesArts[storiesIndex]);
                 storiesIndex++;
               } else if (cartazIndex < cartazArts.length) {
                 alternatedArts.push(cartazArts[cartazIndex]);
                 cartazIndex++;
+              } else if (otherIndex < otherArts.length) {
+                alternatedArts.push(otherArts[otherIndex]);
+                otherIndex++;
               }
             }
           }
           
-          // Preencher com outros formatos se necessário
-          let otherIndex = 0;
-          while (alternatedArts.length < limit && otherIndex < otherArts.length) {
-            alternatedArts.push(otherArts[otherIndex]);
-            otherIndex++;
-          }
+          console.log(`[Debug] Alternância aplicada - Total: ${alternatedArts.length} artes`);
           
+          // Aplicar paginação
           const arts = alternatedArts.slice(offset, offset + limit);
           
+          // Count total de artes únicas
           const countQuery = sql`
             WITH unique_arts AS (
               SELECT 
@@ -2091,7 +2095,7 @@ export class DatabaseStorage implements IStorage {
           const totalCount = parseInt(countResult.rows[0].count as string);
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância de formato`);
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância JavaScript`);
           
           return { arts, totalCount };
         }
