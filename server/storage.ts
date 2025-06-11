@@ -2007,34 +2007,22 @@ export class DatabaseStorage implements IStorage {
               FROM arts 
               WHERE "isVisible" = ${isVisibleFilter}
             ),
-            format_separated AS (
+            all_unique AS (
               SELECT *,
-                ROW_NUMBER() OVER (
-                  PARTITION BY format 
-                  ORDER BY "createdAt" DESC
-                ) as format_rn
+                ROW_NUMBER() OVER (ORDER BY "createdAt" DESC) as global_rn
               FROM unique_arts 
               WHERE rn = 1
             ),
-            cartaz_arts AS (
-              SELECT *, 'cartaz' as tipo, format_rn as position
-              FROM format_separated 
-              WHERE format = 'Cartaz' AND format_rn <= 10
-            ),
-            story_arts AS (
-              SELECT *, 'story' as tipo, format_rn as position
-              FROM format_separated 
-              WHERE format = 'Stories' AND format_rn <= 10
-            ),
             alternated AS (
-              SELECT *, 
-                ROW_NUMBER() OVER (ORDER BY position) as final_order
-              FROM (
-                SELECT *, (position * 2 - 1) as sort_order FROM cartaz_arts
-                UNION ALL
-                SELECT *, (position * 2) as sort_order FROM story_arts
-              ) combined
-              ORDER BY sort_order
+              SELECT *,
+                CASE 
+                  WHEN global_rn % 2 = 1 THEN 
+                    CASE WHEN format = 'Cartaz' THEN 1 ELSE 3 END
+                  ELSE 
+                    CASE WHEN format = 'Stories' THEN 1 ELSE 3 END
+                END as format_priority,
+                global_rn
+              FROM all_unique
             )
             SELECT 
               id, 
@@ -2048,7 +2036,7 @@ export class DatabaseStorage implements IStorage {
               "groupId",
               "categoryId"
             FROM alternated
-            ORDER BY final_order
+            ORDER BY global_rn, format_priority
             LIMIT ${limit}
             OFFSET ${offset}
           `;
