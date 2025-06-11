@@ -1942,145 +1942,43 @@ export class DatabaseStorage implements IStorage {
         
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
-        // Para "Designs Profissionais" (limit=20), buscar com alternância simples de formatos
-        if (limit === 20 || limit === 24) {
-          console.log(`[Performance] Detectado limit=${limit} - usando consulta para Designs Profissionais com alternância`);
-          
-          // Buscar separadamente cada formato para garantir alternância
-          const cartazQuery = sql`
-            WITH unique_cartaz AS (
-              SELECT 
-                id, "createdAt", title, "imageUrl", format, "fileType",
-                "isPremium", "isVisible", "groupId", "categoryId",
-                ROW_NUMBER() OVER (PARTITION BY "groupId" ORDER BY "createdAt" DESC) as rn
-              FROM arts 
-              WHERE "isVisible" = ${isVisibleFilter} AND format = 'cartaz'
-            )
-            SELECT * FROM unique_cartaz WHERE rn = 1
-            ORDER BY "createdAt" DESC LIMIT 7
+        // Para "Designs Profissionais" (limit=20), buscar apenas as 20 artes mais recentes
+        if (limit === 20) {
+          console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais');
+          const optimizedQuery = sql`
+            SELECT 
+              id, 
+              "createdAt", 
+              title, 
+              "imageUrl", 
+              format, 
+              "fileType",
+              "isPremium",
+              "isVisible",
+              "groupId",
+              "categoryId"
+            FROM arts 
+            WHERE "isVisible" = ${isVisibleFilter}
+            ORDER BY "createdAt" DESC
+            LIMIT ${limit}
           `;
           
-          const storiesQuery = sql`
-            WITH unique_stories AS (
-              SELECT 
-                id, "createdAt", title, "imageUrl", format, "fileType",
-                "isPremium", "isVisible", "groupId", "categoryId",
-                ROW_NUMBER() OVER (PARTITION BY "groupId" ORDER BY "createdAt" DESC) as rn
-              FROM arts 
-              WHERE "isVisible" = ${isVisibleFilter} AND format = 'stories'
-            )
-            SELECT * FROM unique_stories WHERE rn = 1
-            ORDER BY "createdAt" DESC LIMIT 7
+          const countQuery = sql`
+            SELECT COUNT(*) as count 
+            FROM arts 
+            WHERE "isVisible" = ${isVisibleFilter}
           `;
           
-          const otherQuery = sql`
-            WITH unique_other AS (
-              SELECT 
-                id, "createdAt", title, "imageUrl", format, "fileType",
-                "isPremium", "isVisible", "groupId", "categoryId",
-                ROW_NUMBER() OVER (PARTITION BY "groupId" ORDER BY "createdAt" DESC) as rn
-              FROM arts 
-              WHERE "isVisible" = ${isVisibleFilter} AND format NOT IN ('cartaz', 'stories')
-            )
-            SELECT * FROM unique_other WHERE rn = 1
-            ORDER BY "createdAt" DESC LIMIT 6
-          `;
-          
-          const [cartazResult, storiesResult, otherResult, countResult] = await Promise.all([
-            db.execute(cartazQuery),
-            db.execute(storiesQuery),
-            db.execute(otherQuery),
-            db.execute(sql`SELECT COUNT(*) as count FROM arts WHERE "isVisible" = ${isVisibleFilter}`)
+          const [result, countResult] = await Promise.all([
+            db.execute(optimizedQuery),
+            db.execute(countQuery)
           ]);
           
-          // Criar pool de todas as artes e organizar por data
-          const allArts = [
-            ...(cartazResult.rows as Art[]),
-            ...(storiesResult.rows as Art[]),
-            ...(otherResult.rows as Art[])
-          ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          
-          // Alternância harmônica simples + espaçamento de grupos
-          const distributedArts: Art[] = [];
-          const SPACING_MINIMUM = 4;
-          
-          // Separar artes por formato mantendo a ordenação por data
-          const formatQueues = {
-            cartaz: allArts.filter(art => art.format === 'cartaz'),
-            stories: allArts.filter(art => art.format === 'stories'),
-            outros: allArts.filter(art => art.format !== 'cartaz' && art.format !== 'stories')
-          };
-          
-          // Padrão harmônico: cartaz, stories, cartaz, outros
-          const harmonicPattern = ['cartaz', 'stories', 'cartaz', 'outros'];
-          
-          while (distributedArts.length < limit) {
-            const patternIndex = distributedArts.length % harmonicPattern.length;
-            const targetFormat = harmonicPattern[patternIndex] as keyof typeof formatQueues;
-            let artAdded = false;
-            
-            // Buscar primeira arte do formato que respeite espaçamento de grupo
-            const queue = formatQueues[targetFormat];
-            
-            for (let i = 0; i < queue.length; i++) {
-              const art = queue[i];
-              
-              // Verificar espaçamento do grupo
-              const lastGroupIndex = distributedArts.map((item, index) => 
-                item.groupId === art.groupId ? index : -1
-              ).filter(index => index !== -1).pop();
-              
-              const respectsSpacing = lastGroupIndex === undefined || 
-                (distributedArts.length - lastGroupIndex) >= SPACING_MINIMUM;
-              
-              if (respectsSpacing) {
-                distributedArts.push(art);
-                queue.splice(i, 1);
-                artAdded = true;
-                break;
-              }
-            }
-            
-            // Se não encontrou no formato alvo, tentar outros formatos com prioridade para cartaz
-            if (!artAdded) {
-              const fallbackOrder = targetFormat === 'cartaz' ? ['stories', 'outros'] :
-                                   targetFormat === 'stories' ? ['cartaz', 'outros'] : 
-                                   ['cartaz', 'stories'];
-              
-              for (const fallbackFormat of fallbackOrder) {
-                const fallbackQueue = formatQueues[fallbackFormat as keyof typeof formatQueues];
-                
-                for (let i = 0; i < fallbackQueue.length; i++) {
-                  const art = fallbackQueue[i];
-                  
-                  const lastGroupIndex = distributedArts.map((item, index) => 
-                    item.groupId === art.groupId ? index : -1
-                  ).filter(index => index !== -1).pop();
-                  
-                  const respectsSpacing = lastGroupIndex === undefined || 
-                    (distributedArts.length - lastGroupIndex) >= SPACING_MINIMUM;
-                  
-                  if (respectsSpacing) {
-                    distributedArts.push(art);
-                    fallbackQueue.splice(i, 1);
-                    artAdded = true;
-                    break;
-                  }
-                }
-                if (artAdded) break;
-              }
-            }
-            
-            if (!artAdded) break; // Evitar loop infinito
-          }
-          
-          const alternatedArts = distributedArts;
-          
           const totalCount = parseInt(countResult.rows[0].count as string);
-          const arts = alternatedArts.slice(0, limit);
+          const arts = result.rows as Art[];
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância harmônica + espaçamento`);
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes`);
           
           return { arts, totalCount };
         }
