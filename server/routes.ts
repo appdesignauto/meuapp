@@ -950,7 +950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const category of categoriesResult) {
         console.log(`[Sample Arts] Processando categoria: ${category.name} (ID: ${category.id})`);
         
-        // Query SQL otimizada para buscar uma arte de cada grupo diferente
+        // Query SQL otimizada para buscar uma arte de cada grupo diferente (apenas formato cartaz)
         const categoryArts = await db.execute(sql`
           WITH distinct_groups AS (
             SELECT DISTINCT ON ("groupId") 
@@ -960,6 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               AND "isVisible" = true 
               AND "imageUrl" IS NOT NULL 
               AND "groupId" IS NOT NULL
+              AND format = 'cartaz'
             ORDER BY "groupId", "createdAt" DESC
             LIMIT 4
           )
