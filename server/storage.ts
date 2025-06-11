@@ -1987,7 +1987,8 @@ export class DatabaseStorage implements IStorage {
         // Para "Designs Profissionais" (limit=24), buscar apenas uma arte por groupId para evitar duplicatas
         if (limit === 24) {
           console.log(`[Performance] Detectado limit=24 - usando consulta para Designs Profissionais (sem duplicatas por groupId)`);
-          const optimizedQuery = sql`
+          // Buscar artes únicas por groupId e aplicar alternância de formato via JavaScript
+          const uniqueQuery = sql`
             WITH unique_arts AS (
               SELECT 
                 id, 
@@ -2021,9 +2022,54 @@ export class DatabaseStorage implements IStorage {
             FROM unique_arts
             WHERE rn = 1
             ORDER BY "createdAt" DESC
-            LIMIT ${limit}
-            OFFSET ${offset}
           `;
+          
+          const allUniqueArts = await db.execute(uniqueQuery);
+          const uniqueArts = allUniqueArts.rows as Art[];
+          
+          // Aplicar alternância de formato via JavaScript
+          const alternatedArts: Art[] = [];
+          let cartazIndex = 0;
+          let storiesIndex = 0;
+          
+          // Separar por formato
+          const cartazArts = uniqueArts.filter(art => art.format === 'cartaz');
+          const storiesArts = uniqueArts.filter(art => art.format === 'stories');
+          const otherArts = uniqueArts.filter(art => art.format !== 'cartaz' && art.format !== 'stories');
+          
+          console.log(`[Debug] Alternância de formatos - Cartaz: ${cartazArts.length}, Stories: ${storiesArts.length}, Outros: ${otherArts.length}`);
+          
+          // Alternar entre cartaz e stories
+          for (let i = 0; i < limit && (cartazIndex < cartazArts.length || storiesIndex < storiesArts.length); i++) {
+            if (i % 2 === 0) {
+              // Posições pares: cartaz
+              if (cartazIndex < cartazArts.length) {
+                alternatedArts.push(cartazArts[cartazIndex]);
+                cartazIndex++;
+              } else if (storiesIndex < storiesArts.length) {
+                alternatedArts.push(storiesArts[storiesIndex]);
+                storiesIndex++;
+              }
+            } else {
+              // Posições ímpares: stories
+              if (storiesIndex < storiesArts.length) {
+                alternatedArts.push(storiesArts[storiesIndex]);
+                storiesIndex++;
+              } else if (cartazIndex < cartazArts.length) {
+                alternatedArts.push(cartazArts[cartazIndex]);
+                cartazIndex++;
+              }
+            }
+          }
+          
+          // Preencher com outros formatos se necessário
+          let otherIndex = 0;
+          while (alternatedArts.length < limit && otherIndex < otherArts.length) {
+            alternatedArts.push(otherArts[otherIndex]);
+            otherIndex++;
+          }
+          
+          const arts = alternatedArts.slice(offset, offset + limit);
           
           const countQuery = sql`
             WITH unique_arts AS (
@@ -2041,16 +2087,11 @@ export class DatabaseStorage implements IStorage {
             WHERE rn = 1
           `;
           
-          const [result, countResult] = await Promise.all([
-            db.execute(optimizedQuery),
-            db.execute(countQuery)
-          ]);
-          
+          const countResult = await db.execute(countQuery);
           const totalCount = parseInt(countResult.rows[0].count as string);
-          const arts = result.rows as Art[];
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes únicas por grupo`);
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância de formato`);
           
           return { arts, totalCount };
         }
