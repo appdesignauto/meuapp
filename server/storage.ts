@@ -1984,9 +1984,9 @@ export class DatabaseStorage implements IStorage {
           return { arts, totalCount };
         }
         
-        // Para "Designs Profissionais" (limit=20), buscar apenas uma arte por groupId para evitar duplicatas
-        if (limit === 20) {
-          console.log(`[Performance] Detectado limit=20 - usando consulta para Designs Profissionais (alternância Cartaz > Story)`);
+        // Para "Designs Profissionais" (limit=24), buscar apenas uma arte por groupId para evitar duplicatas
+        if (limit === 24) {
+          console.log(`[Performance] Detectado limit=24 - usando consulta para Designs Profissionais (sem duplicatas por groupId)`);
           const optimizedQuery = sql`
             WITH unique_arts AS (
               SELECT 
@@ -2006,23 +2006,6 @@ export class DatabaseStorage implements IStorage {
                 ) as rn
               FROM arts 
               WHERE "isVisible" = ${isVisibleFilter}
-            ),
-            all_unique AS (
-              SELECT *,
-                ROW_NUMBER() OVER (ORDER BY "createdAt" DESC) as global_rn
-              FROM unique_arts 
-              WHERE rn = 1
-            ),
-            alternated AS (
-              SELECT *,
-                CASE 
-                  WHEN global_rn % 2 = 1 THEN 
-                    CASE WHEN format = 'Cartaz' THEN 1 ELSE 3 END
-                  ELSE 
-                    CASE WHEN format = 'Stories' THEN 1 ELSE 3 END
-                END as format_priority,
-                global_rn
-              FROM all_unique
             )
             SELECT 
               id, 
@@ -2035,8 +2018,9 @@ export class DatabaseStorage implements IStorage {
               "isVisible",
               "groupId",
               "categoryId"
-            FROM alternated
-            ORDER BY global_rn, format_priority
+            FROM unique_arts
+            WHERE rn = 1
+            ORDER BY "createdAt" DESC
             LIMIT ${limit}
             OFFSET ${offset}
           `;
