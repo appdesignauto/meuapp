@@ -2003,8 +2003,7 @@ export class DatabaseStorage implements IStorage {
           return acc;
         }, {} as Record<number, number>);
         
-        console.log(`[Debug] Artes por categoria retornadas:`, categoryStats);
-        console.log(`[Debug] Total de artes retornadas: ${arts.length}`);
+
         
         const endTime = Date.now();
         console.log(`[Performance] Consulta vitrine executada em ${endTime - startTime}ms`);

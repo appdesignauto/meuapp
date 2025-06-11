@@ -25,9 +25,18 @@ const Categories = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [, setLocation] = useLocation();
   
-  const { data: categories, isLoading } = useQuery<EnhancedCategory[]>({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<EnhancedCategory[]>({
     queryKey: ['/api/categories'],
   });
+
+  // Buscar artes para usar nas prévias das categorias
+  const { data: artsData, isLoading: artsLoading } = useQuery<{ arts: any[] }>({
+    queryKey: ['/api/arts'],
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const isLoading = categoriesLoading || artsLoading;
   
   // Armazenar a URL atual para navegação de retorno
   useEffect(() => {
@@ -35,20 +44,52 @@ const Categories = () => {
     localStorage.setItem('lastGalleryPage', currentUrl);
   }, [searchQuery, activeFilter]);
 
-  // Função para obter imagens relacionadas à categoria específica (usando imagens locais)
+  // Função para obter imagens reais da categoria com sistema de fallback
   const getCategoryImagePaths = (category: EnhancedCategory): string[] => {
-    const imagePaths: { [key: string]: string[] } = {
-      'vendas': ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'],
-      'lavagem': ['/assets/LAVAGEM 01.png', '/assets/LAVAGEM 03.png', '/assets/LAVAGEM 04.png', '/assets/LAVAGEM 10.png'],
-      'mecanica': ['/assets/MECÂNICA 08.png', '/assets/MECÂNICA MOTO 01.png', '/assets/MECÂNICA 08.png', '/assets/MECÂNICA MOTO 01.png'],
-      'locacao': ['/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png'],
-      'seminovos': ['/assets/VENDAS 36.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'],
-      'promocoes': ['/assets/VENDAS 54.png', '/assets/VENDAS 57.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png'],
-      'lancamentos': ['/assets/VENDAS 32.png', '/assets/VENDAS 17.png', '/assets/VENDAS 10.png', '/assets/VENDAS 04.png'],
-    };
+    if (!artsData?.arts) return [];
     
-    // Se encontrar imagens para a categoria, use-as; caso contrário, use uma lista padrão
-    return imagePaths[category.slug] || ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'];
+    // 1. Primeiro tentar artes cartaz da categoria específica
+    const categoryCartazArts = artsData.arts.filter(art => 
+      art.categoryId === category.id && 
+      art.format === 'cartaz' && 
+      art.imageUrl
+    );
+    
+    let sampleArts = [];
+    const seenGroups = new Set();
+    
+    // Usar artes cartaz com grupos únicos (até 4)
+    sampleArts = categoryCartazArts
+      .filter(art => {
+        if (!art.groupId || seenGroups.has(art.groupId)) return false;
+        seenGroups.add(art.groupId);
+        return true;
+      })
+      .slice(0, 4);
+    
+    // 2. Se não conseguir 4 artes cartaz, completar com stories da mesma categoria
+    if (sampleArts.length < 4) {
+      const categoryStoriesArts = artsData.arts.filter(art => 
+        art.categoryId === category.id && 
+        art.format === 'stories' && 
+        art.imageUrl &&
+        !sampleArts.some(sample => sample.id === art.id)
+      );
+      
+      const remainingSlots = 4 - sampleArts.length;
+      const additionalArts = categoryStoriesArts
+        .filter(art => {
+          if (!art.groupId || seenGroups.has(art.groupId)) return false;
+          seenGroups.add(art.groupId);
+          return true;
+        })
+        .slice(0, remainingSlots);
+      
+      sampleArts = [...sampleArts, ...additionalArts];
+    }
+    
+    // Retornar URLs das imagens ou array vazio se não há artes
+    return sampleArts.map(art => art.imageUrl);
   };
   
   // Função para obter o esquema de cores específico de cada categoria
@@ -287,22 +328,48 @@ const Categories = () => {
                         {/* Faixa de cor superior */}
                         <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colorScheme.gradient} transform origin-left transition-all duration-500 group-hover:h-2`}></div>
 
-                        {/* Imagens em Grid */}
+                        {/* Imagens em Grid ou Estado "Em breve" */}
                         <div className="aspect-square relative">
-                          <div className="grid grid-cols-2 h-full">
-                            {imagePaths.map((path, i) => (
-                              <div key={i} className="overflow-hidden border border-white relative">
-                                <img 
-                                  src={path} 
-                                  alt="" 
-                                  className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
-                                  loading="lazy"
-                                />
-                                {/* Overlay para efeito de hover */}
-                                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                          {imagePaths.length > 0 ? (
+                            <div className="grid grid-cols-2 h-full">
+                              {/* Renderizar até 4 imagens */}
+                              {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="overflow-hidden border border-white relative">
+                                  {imagePaths[i] ? (
+                                    <img 
+                                      src={imagePaths[i]} 
+                                      alt="" 
+                                      className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
+                                      loading="lazy"
+                                    />
+                                  ) : (
+                                    <div className={`w-full h-full ${colorScheme.light} flex items-center justify-center`}>
+                                      <div className={`w-8 h-8 ${colorScheme.primary} opacity-30`}>
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Overlay para efeito de hover */}
+                                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            /* Estado "Em breve" quando não há artes */
+                            <div className={`w-full h-full ${colorScheme.light} flex flex-col items-center justify-center`}>
+                              <div className={`w-12 h-12 ${colorScheme.primary} mb-3 opacity-50`}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10"/>
+                                  <polyline points="12,6 12,12 16,14"/>
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                              <span className={`text-sm font-medium ${colorScheme.primary}`}>
+                                Em breve
+                              </span>
+                            </div>
+                          )}
                           
                           {/* Badge de quantidade */}
                           <div className={`absolute top-3 left-3 ${colorScheme.light} ${colorScheme.primary} text-xs font-medium rounded-full px-2.5 py-1 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-500 transform scale-75 group-hover:scale-100`}>
