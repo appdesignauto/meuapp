@@ -1943,8 +1943,8 @@ export class DatabaseStorage implements IStorage {
         const isVisibleFilter = filters?.isVisible !== undefined ? filters.isVisible : true;
         
         // Para "Designs Profissionais" (limit=20), buscar com alternância simples de formatos
-        if (limit === 20) {
-          console.log('[Performance] Detectado limit=20 - usando consulta para Designs Profissionais com alternância');
+        if (limit === 20 || limit === 24) {
+          console.log(`[Performance] Detectado limit=${limit} - usando consulta para Designs Profissionais com alternância`);
           
           // Buscar separadamente cada formato para garantir alternância
           const cartazQuery = sql`
