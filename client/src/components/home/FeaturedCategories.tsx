@@ -190,17 +190,17 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                 
                 return (
                   <div 
-                    key={category.id} 
+                    key={category.categoryId} 
                     className="flex-none w-[220px] sm:w-[250px] md:w-[300px] pr-4 sm:pr-5 snap-start"
                     style={{ scrollSnapAlign: 'start' }}
-                    onMouseEnter={() => setHoveredCategory(category.id)}
+                    onMouseEnter={() => setHoveredCategory(category.categoryId)}
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <div 
-                      onClick={() => handleCategorySelect(category.id)}
+                      onClick={() => handleCategorySelect(category.categoryId)}
                       className={`group relative bg-white rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-300 
                         ${isHovered ? 'shadow-2xl scale-[1.02] -translate-y-1' : 'shadow-lg hover:shadow-xl hover:-translate-y-1'} 
-                        ${selectedCategory === category.id ? 'ring-2 ring-blue-500' : ''}`}
+                        ${selectedCategory === category.categoryId ? 'ring-2 ring-blue-500' : ''}`}
                       style={{
                         transformStyle: 'preserve-3d',
                       }}
@@ -224,7 +224,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
                         {/* Badge de selecionado */}
-                        {selectedCategory === category.id && (
+                        {selectedCategory === category.categoryId && (
                           <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-medium rounded-full px-3 py-1 z-10 shadow-lg">
                             Selecionado
                           </div>
@@ -233,7 +233,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                       
                       {/* Badge centralizada sobre o card */}
                       <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-gradient-to-r ${categoryColor} px-3 sm:px-4 py-1 sm:py-2 shadow-lg z-20`}>
-                        <h3 className="text-xs sm:text-sm font-semibold text-white">{category.name}</h3>
+                        <h3 className="text-xs sm:text-sm font-semibold text-white">{category.categoryName}</h3>
                       </div>
                       
                       {/* Ícone "Ver" que aparece ao passar o mouse */}
