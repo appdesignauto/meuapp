@@ -72,7 +72,7 @@ const TrendingPopular = () => {
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <TrendingUp className="h-4 w-4 text-blue-600" />
-            <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Top 6 - Artes em Alta</h2>
+            <h2 className="sm:text-sm font-medium text-neutral-800 whitespace-nowrap text-[15px]">Designs Profissionais</h2>
           </div>
         </div>
 
@@ -145,10 +145,10 @@ const TrendingPopular = () => {
             </div>
           </div>
 
-          {/* Desktop: 6 Column Grid */}
+          {/* Desktop: Grid Responsivo */}
           <div className="hidden md:block">
-            <div className="grid grid-cols-6 gap-4 w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-              {currentArts.map((art, index) => (
+            <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 w-full">
+              {currentArts.slice(0, 18).map((art, index) => (
                 <motion.div
                   key={art.id}
                   initial={{ opacity: 0, y: 20 }}
