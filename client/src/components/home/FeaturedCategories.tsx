@@ -58,20 +58,18 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     if (!categories || !artsData?.arts) return [];
 
     const arts = artsData.arts.filter(art => art.format === 'cartaz' && art.imageUrl);
-    console.log('Artes filtradas para categorias:', arts.length);
     
-    // Shufflar as artes para garantir variedade
-    const shuffledArts = [...arts].sort(() => Math.random() - 0.5);
+    // Ordenar artes de forma determinística para consistência
+    const sortedArts = [...arts].sort((a, b) => a.id - b.id);
     
-    return categories.map((category, categoryIndex) => {
-      // Filtrar artes desta categoria específica
-      const categoryArts = arts.filter(art => art.categoryId === category.id);
-      console.log(`Categoria ${category.name}: ${categoryArts.length} artes encontradas`);
+    return categories.map((category) => {
+      // 1. Primeiro tentar artes da categoria específica
+      const categoryArts = sortedArts.filter(art => art.categoryId === category.id);
       
       let sampleArts = [];
       
       if (categoryArts.length >= 4) {
-        // Se há artes suficientes da categoria, usar apenas desta categoria
+        // Se há artes suficientes da categoria, usar grupos únicos
         const seenGroups = new Set();
         sampleArts = categoryArts
           .filter(art => {
@@ -86,27 +84,44 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
             imageUrl: art.imageUrl
           }));
       } else {
-        // Se não há artes suficientes da categoria, usar sistema de offset
-        // Cada categoria começa em um ponto diferente das artes shuffladas
-        const offset = categoryIndex * 4;
+        // 2. Se não há artes suficientes, usar sistema baseado no ID da categoria
+        const baseOffset = category.id * 3; // Usar ID da categoria como base
         const seenGroups = new Set();
-        sampleArts = shuffledArts
-          .slice(offset)
-          .concat(shuffledArts.slice(0, offset)) // Circular para garantir 4 artes
-          .filter(art => {
-            if (!art.groupId || seenGroups.has(art.groupId)) return false;
-            seenGroups.add(art.groupId);
-            return true;
-          })
-          .slice(0, 4)
-          .map(art => ({
-            id: art.id.toString(),
-            title: art.title,
-            imageUrl: art.imageUrl
-          }));
+        
+        // Adicionar primeiro as artes da categoria se houver
+        if (categoryArts.length > 0) {
+          categoryArts.forEach(art => {
+            if (sampleArts.length < 4 && art.groupId && !seenGroups.has(art.groupId)) {
+              seenGroups.add(art.groupId);
+              sampleArts.push({
+                id: art.id.toString(),
+                title: art.title,
+                imageUrl: art.imageUrl
+              });
+            }
+          });
+        }
+        
+        // Completar com outras artes usando offset baseado no ID da categoria
+        if (sampleArts.length < 4) {
+          const remainingArts = sortedArts.filter(art => art.categoryId !== category.id);
+          let startIndex = baseOffset % remainingArts.length;
+          
+          for (let i = 0; i < remainingArts.length && sampleArts.length < 4; i++) {
+            const art = remainingArts[(startIndex + i) % remainingArts.length];
+            if (art.groupId && !seenGroups.has(art.groupId)) {
+              seenGroups.add(art.groupId);
+              sampleArts.push({
+                id: art.id.toString(),
+                title: art.title,
+                imageUrl: art.imageUrl
+              });
+            }
+          }
+        }
       }
 
-      console.log(`Categoria ${category.name}: ${sampleArts.length} artes de exemplo`);
+
 
       return {
         categoryId: category.id,
