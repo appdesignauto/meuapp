@@ -2000,56 +2000,101 @@ export class DatabaseStorage implements IStorage {
             ...(otherResult.rows as Art[])
           ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           
-          // Algoritmo de espaçamento profissional que evita agrupamento visual
-          const groupMap = new Map<string, Art[]>();
+          // Algoritmo de alternância equilibrada com espaçamento inteligente
+          const groupMap = new Map<string, { cartaz: Art[], stories: Art[], outros: Art[] }>();
           
-          // Organizar artes por grupo
+          // Organizar artes por grupo e formato
           allArts.forEach(art => {
             if (!art.groupId) return;
             if (!groupMap.has(art.groupId)) {
-              groupMap.set(art.groupId, []);
+              groupMap.set(art.groupId, { cartaz: [], stories: [], outros: [] });
             }
-            groupMap.get(art.groupId)!.push(art);
+            const groupArts = groupMap.get(art.groupId)!;
+            if (art.format === 'cartaz') {
+              groupArts.cartaz.push(art);
+            } else if (art.format === 'stories') {
+              groupArts.stories.push(art);
+            } else {
+              groupArts.outros.push(art);
+            }
           });
           
           const distributedArts: Art[] = [];
           const SPACING_MINIMUM = 4; // Espaço mínimo entre artes do mesmo grupo
           
-          // Primeira fase: distribuir uma arte de cada grupo
-          const groupKeys = Array.from(groupMap.keys());
-          for (const groupId of groupKeys) {
-            if (distributedArts.length >= limit) break;
-            const groupArts = groupMap.get(groupId)!;
-            if (groupArts.length > 0) {
-              distributedArts.push(groupArts.shift()!);
-            }
-          }
+          // Criar pools balanceados por formato
+          const pools = {
+            cartaz: [] as Art[],
+            stories: [] as Art[],
+            outros: [] as Art[]
+          };
           
-          // Segunda fase: adicionar artes restantes com espaçamento forçado
+          // Distribuir artes dos grupos nos pools por formato
+          Array.from(groupMap.entries()).forEach(([groupId, groupArts]) => {
+            pools.cartaz.push(...groupArts.cartaz);
+            pools.stories.push(...groupArts.stories);
+            pools.outros.push(...groupArts.outros);
+          });
+          
+          // Padrão de alternância mais rigoroso: 2 cartaz, 1 stories, 1 outros
+          const alternationPattern = ['cartaz', 'cartaz', 'stories', 'outros'];
+          
           while (distributedArts.length < limit) {
+            const patternIndex = distributedArts.length % alternationPattern.length;
+            const targetFormat = alternationPattern[patternIndex];
             let artAdded = false;
             
-            for (const groupId of groupKeys) {
-              if (distributedArts.length >= limit) break;
+            // Buscar arte do formato alvo que respeite espaçamento
+            const targetPool = pools[targetFormat as keyof typeof pools];
+            
+            for (let i = 0; i < targetPool.length; i++) {
+              const art = targetPool[i];
               
-              const groupArts = groupMap.get(groupId)!;
-              if (groupArts.length === 0) continue;
-              
-              // Verificar se o último índice do grupo está distante o suficiente
-              const lastGroupIndex = distributedArts.map((art, index) => 
-                art.groupId === groupId ? index : -1
+              // Verificar espaçamento do grupo
+              const lastGroupIndex = distributedArts.map((item, index) => 
+                item.groupId === art.groupId ? index : -1
               ).filter(index => index !== -1).pop();
               
-              if (lastGroupIndex === undefined || 
-                  (distributedArts.length - lastGroupIndex) >= SPACING_MINIMUM) {
-                distributedArts.push(groupArts.shift()!);
+              const respectsSpacing = lastGroupIndex === undefined || 
+                (distributedArts.length - lastGroupIndex) >= SPACING_MINIMUM;
+              
+              if (respectsSpacing) {
+                distributedArts.push(art);
+                targetPool.splice(i, 1); // Remover arte usada
                 artAdded = true;
-                break; // Adicionar apenas uma arte por iteração
+                break;
               }
             }
             
-            // Se não conseguiu adicionar com espaçamento, parar para evitar loop
-            if (!artAdded) break;
+            // Se não encontrou no formato alvo, tentar outros formatos em ordem de prioridade
+            if (!artAdded) {
+              const fallbackFormats = ['cartaz', 'stories', 'outros'].filter(f => f !== targetFormat);
+              
+              for (const fallbackFormat of fallbackFormats) {
+                const fallbackPool = pools[fallbackFormat as keyof typeof pools];
+                
+                for (let i = 0; i < fallbackPool.length; i++) {
+                  const art = fallbackPool[i];
+                  
+                  const lastGroupIndex = distributedArts.map((item, index) => 
+                    item.groupId === art.groupId ? index : -1
+                  ).filter(index => index !== -1).pop();
+                  
+                  const respectsSpacing = lastGroupIndex === undefined || 
+                    (distributedArts.length - lastGroupIndex) >= SPACING_MINIMUM;
+                  
+                  if (respectsSpacing) {
+                    distributedArts.push(art);
+                    fallbackPool.splice(i, 1);
+                    artAdded = true;
+                    break;
+                  }
+                }
+                if (artAdded) break;
+              }
+            }
+            
+            if (!artAdded) break; // Evitar loop infinito
           }
           
           const alternatedArts = distributedArts;
@@ -2058,7 +2103,7 @@ export class DatabaseStorage implements IStorage {
           const arts = alternatedArts.slice(0, limit);
           
           const endTime = Date.now();
-          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com espaçamento automático`);
+          console.log(`[Performance] Consulta "Designs Profissionais" executada em ${endTime - startTime}ms - ${arts.length} artes com alternância harmônica + espaçamento`);
           
           return { arts, totalCount };
         }
