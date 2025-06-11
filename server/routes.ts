@@ -1399,14 +1399,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Artes mais populares (30 mais recentes com espaçamento de grupos)
+  // Artes mais populares (mais downloads de todos os tempos)
   app.get("/api/arts/popular", async (req, res) => {
     try {
       const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
       
-      console.log("Buscando artes populares - 30 mais recentes com espaçamento de grupos");
+      console.log("Buscando artes populares - excluindo tipo 'imagens-png'");
       
-      // Buscar artes ordenadas por data de criação (mais recentes primeiro)
       const result = await db.execute(sql`
         SELECT 
           a.id,
@@ -1414,8 +1413,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           a."imageUrl",
           a."isPremium",
           a."fileType",
-          a."groupId",
-          a."createdAt",
           c.name as "categoryName",
           COUNT(d.id) as "downloadCount",
           a.viewcount
@@ -1423,34 +1420,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN downloads d ON a.id = d."artId"
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE ${!isAdmin ? sql`a."isVisible" = TRUE` : sql`1=1`}
-        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", a."fileType", a."groupId", a."createdAt", c.name, a.viewcount
-        ORDER BY a."createdAt" DESC
-        LIMIT 100
+        GROUP BY a.id, a.title, a."imageUrl", a."isPremium", a."fileType", c.name, a.viewcount
+        ORDER BY COUNT(d.id) DESC, a.viewcount DESC
+        LIMIT 6
       `);
 
-      // Implementar espaçamento de grupos - selecionar até 30 artes com grupos únicos
-      const seenGroups = new Set();
-      const selectedArts = [];
-      
-      for (const art of result.rows) {
-        // Se não tem groupId ou o groupId ainda não foi visto, inclui a arte
-        if (!art.groupId || !seenGroups.has(art.groupId)) {
-          selectedArts.push(art);
-          if (art.groupId) {
-            seenGroups.add(art.groupId);
-          }
-          
-          // Para quando atingir 30 artes
-          if (selectedArts.length >= 30) {
-            break;
-          }
-        }
-      }
+      console.log("Artes retornadas na vitrine:", result.rows.map(art => ({ id: art.id, fileType: art.fileType, title: art.title })));
 
-      console.log(`Artes populares processadas: ${selectedArts.length} de ${result.rows.length} total`);
-      console.log("Grupos únicos selecionados:", Array.from(seenGroups).slice(0, 10));
-
-      const arts = selectedArts.map(art => ({
+      const arts = result.rows.map(art => ({
         id: art.id,
         title: art.title,
         imageUrl: art.imageUrl,
