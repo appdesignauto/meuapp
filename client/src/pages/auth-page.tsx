@@ -27,6 +27,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import InputMask from "react-input-mask";
 
 const loginSchema = z.object({
   email: z.string().email("Digite um email válido"),
@@ -350,13 +351,22 @@ const AuthPage = () => {
                             <FormLabel className="text-gray-700 font-medium">Telefone (opcional)</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                <Input 
-                                  type="tel" 
-                                  placeholder="(11) 99999-9999" 
-                                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
-                                  {...field} 
-                                />
+                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
+                                <InputMask
+                                  mask="(99) 99999-9999"
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  maskChar={null}
+                                >
+                                  {(inputProps: any) => (
+                                    <Input
+                                      {...inputProps}
+                                      type="tel"
+                                      placeholder="(11) 99999-9999"
+                                      className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                                    />
+                                  )}
+                                </InputMask>
                               </div>
                             </FormControl>
                             <FormMessage />
