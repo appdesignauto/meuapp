@@ -216,7 +216,7 @@ const ReportForm = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="text-gray-600 hover:text-blue-600 text-xs transition-colors text-left">
+        <button className="text-gray-600 hover:text-blue-600 text-sm transition-colors text-left">
           Denunciar arquivo
         </button>
       </DialogTrigger>
