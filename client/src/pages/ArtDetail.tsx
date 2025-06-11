@@ -846,7 +846,7 @@ export default function ArtDetail() {
           
           {/* Art Details - Agora ocupa 2/6 para um painel lateral mais estreito */}
           <div className="p-5 md:p-6 flex flex-col h-full lg:col-span-2 bg-[#f7f9fc]">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2 truncate whitespace-nowrap overflow-hidden text-ellipsis">
+            <h1 className="text-lg md:text-xl font-bold text-gray-800 mb-2 truncate whitespace-nowrap overflow-hidden text-ellipsis">
               {art.title}
             </h1>
             
