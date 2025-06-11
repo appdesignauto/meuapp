@@ -4,6 +4,19 @@ import { Link, useLocation } from 'wouter';
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter, Grid3X3 } from 'lucide-react';
 import { Category } from '@/types';
 
+interface SampleArt {
+  id: string;
+  title: string;
+  imageUrl: string;
+}
+
+interface CategoryWithSamples {
+  categoryId: number;
+  categoryName: string;
+  categorySlug: string;
+  sampleArts: SampleArt[];
+}
+
 interface FeaturedCategoriesProps {
   selectedCategory?: number | null;
   onCategorySelect?: (categoryId: number | null) => void;
@@ -28,6 +41,11 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     queryKey: ['/api/categories'],
   });
 
+  // Fetch sample arts for authentic category previews
+  const { data: sampleArtsData } = useQuery<{ categories: CategoryWithSamples[] }>({
+    queryKey: ['/api/categories/sample-arts'],
+  });
+
   // Handler para a seleção de categoria
   const handleCategorySelect = (categoryId: number | null) => {
     // Sempre redirecionar para a página da categoria específica
@@ -43,20 +61,26 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     }
   };
   
-  // Função para obter imagens relacionadas à categoria específica
+  // Função para obter imagens reais da categoria
   const getCategoryImagePaths = (category: Category): string[] => {
-    const imagePaths: { [key: string]: string[] } = {
-      'vendas': ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'],
-      'lavagem': ['/assets/LAVAGEM 01.png', '/assets/LAVAGEM 03.png', '/assets/LAVAGEM 04.png', '/assets/LAVAGEM 10.png'],
-      'mecanica': ['/assets/MECÂNICA 08.png', '/assets/MECÂNICA MOTO 01.png', '/assets/MECÂNICA 08.png', '/assets/MECÂNICA MOTO 01.png'],
-      'locacao': ['/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png'],
-      'seminovos': ['/assets/VENDAS 36.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'],
-      'promocoes': ['/assets/VENDAS 54.png', '/assets/VENDAS 57.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png'],
-      'lancamentos': ['/assets/VENDAS 32.png', '/assets/VENDAS 17.png', '/assets/VENDAS 10.png', '/assets/VENDAS 04.png'],
-    };
+    // Buscar artes reais desta categoria nos dados de amostra
+    const categoryData = sampleArtsData?.categories.find(
+      cat => cat.categoryId === category.id
+    );
     
-    // Se encontrar imagens para a categoria, use-as; caso contrário, use uma lista padrão
-    return imagePaths[category.slug] || ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'];
+    if (categoryData && categoryData.sampleArts.length > 0) {
+      // Usar até 4 imagens reais da categoria
+      return categoryData.sampleArts.slice(0, 4).map(art => art.imageUrl);
+    }
+    
+    // Fallback: imagens padrão caso não tenha dados ainda
+    const fallbackImages = [
+      '/assets/VENDAS 04.png', 
+      '/assets/VENDAS 10.png', 
+      '/assets/VENDAS 17.png', 
+      '/assets/VENDAS 32.png'
+    ];
+    return fallbackImages;
   };
 
   // Função para determinar a cor de destaque da categoria
