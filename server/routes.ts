@@ -2091,6 +2091,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para buscar artes de amostra por categoria para prévias
+  app.get("/api/categories/sample-arts", async (req, res) => {
+    try {
+      console.log('[Sample Arts] Buscando artes de amostra por categoria...');
+      
+      // Buscar 4 artes recentes de cada categoria principal
+      const categorySamples = await db.execute(sql`
+        SELECT 
+          c.id as category_id,
+          c.name as category_name,
+          c.slug as category_slug,
+          json_agg(
+            json_build_object(
+              'id', a.id,
+              'title', a.title,
+              'imageUrl', a."imageUrl"
+            ) ORDER BY a."createdAt" DESC
+          ) as sample_arts
+        FROM categories c
+        LEFT JOIN (
+          SELECT DISTINCT ON (category) 
+            category,
+            id,
+            title,
+            "imageUrl",
+            "createdAt"
+          FROM (
+            SELECT 
+              category,
+              id,
+              title,
+              "imageUrl",
+              "createdAt",
+              ROW_NUMBER() OVER (PARTITION BY category ORDER BY "createdAt" DESC) as rn
+            FROM arts
+            WHERE "isVisible" = TRUE
+            AND "imageUrl" IS NOT NULL
+          ) ranked
+          WHERE rn <= 4
+        ) a ON c.id = a.category
+        GROUP BY c.id, c.name, c.slug
+        ORDER BY c.id
+      `);
+
+      const results = categorySamples.rows.map(row => ({
+        categoryId: row.category_id,
+        categoryName: row.category_name,
+        categorySlug: row.category_slug,
+        sampleArts: row.sample_arts || []
+      }));
+
+      console.log(`[Sample Arts] Encontradas ${results.length} categorias com artes de amostra`);
+      res.json({ categories: results });
+    } catch (error) {
+      console.error("Erro ao buscar artes de amostra por categoria:", error);
+      res.status(500).json({ message: "Erro ao buscar artes de amostra" });
+    }
+  });
+
   // Essa rota foi movida para antes de /api/artes/:id para evitar problemas de ordem
 
   app.get("/api/arts/:id/related", async (req, res) => {
