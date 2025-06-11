@@ -966,15 +966,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           SELECT id, title, "imageUrl" FROM distinct_groups
         `);
 
-        console.log(`[Sample Arts] Query executada para ${category.name}, resultados:`, categoryArts.rows.length);
+        console.log(`[Sample Arts] Query executada para ${category.name}, objeto completo:`, categoryArts);
 
-        console.log(`[Sample Arts] Encontradas ${categoryArts.length} artes para ${category.name}`);
+        // Mapear os resultados da query para o formato esperado
+        const queryRows = categoryArts.rows || [];
+        const formattedArts = queryRows.map((row: any) => ({
+          id: row.id.toString(),
+          title: row.title,
+          imageUrl: row.imageUrl
+        }));
+
+        console.log(`[Sample Arts] Rows extraídas:`, queryRows.length);
+        console.log(`[Sample Arts] Artes formatadas:`, formattedArts.length);
         
         results.push({
           categoryId: category.id,
           categoryName: category.name,
           categorySlug: category.slug,
-          sampleArts: categoryArts
+          sampleArts: formattedArts
         });
       }
 
