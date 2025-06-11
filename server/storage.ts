@@ -2000,55 +2000,30 @@ export class DatabaseStorage implements IStorage {
             ...(otherResult.rows as Art[])
           ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           
-          // Algoritmo de alternância equilibrada com espaçamento inteligente
-          const groupMap = new Map<string, { cartaz: Art[], stories: Art[], outros: Art[] }>();
-          
-          // Organizar artes por grupo e formato
-          allArts.forEach(art => {
-            if (!art.groupId) return;
-            if (!groupMap.has(art.groupId)) {
-              groupMap.set(art.groupId, { cartaz: [], stories: [], outros: [] });
-            }
-            const groupArts = groupMap.get(art.groupId)!;
-            if (art.format === 'cartaz') {
-              groupArts.cartaz.push(art);
-            } else if (art.format === 'stories') {
-              groupArts.stories.push(art);
-            } else {
-              groupArts.outros.push(art);
-            }
-          });
-          
+          // Alternância harmônica simples + espaçamento de grupos
           const distributedArts: Art[] = [];
-          const SPACING_MINIMUM = 4; // Espaço mínimo entre artes do mesmo grupo
+          const SPACING_MINIMUM = 4;
           
-          // Criar pools balanceados por formato
-          const pools = {
-            cartaz: [] as Art[],
-            stories: [] as Art[],
-            outros: [] as Art[]
+          // Separar artes por formato mantendo a ordenação por data
+          const formatQueues = {
+            cartaz: allArts.filter(art => art.format === 'cartaz'),
+            stories: allArts.filter(art => art.format === 'stories'),
+            outros: allArts.filter(art => art.format !== 'cartaz' && art.format !== 'stories')
           };
           
-          // Distribuir artes dos grupos nos pools por formato
-          Array.from(groupMap.entries()).forEach(([groupId, groupArts]) => {
-            pools.cartaz.push(...groupArts.cartaz);
-            pools.stories.push(...groupArts.stories);
-            pools.outros.push(...groupArts.outros);
-          });
-          
-          // Padrão de alternância mais rigoroso: 2 cartaz, 1 stories, 1 outros
-          const alternationPattern = ['cartaz', 'cartaz', 'stories', 'outros'];
+          // Padrão harmônico: cartaz, stories, cartaz, outros
+          const harmonicPattern = ['cartaz', 'stories', 'cartaz', 'outros'];
           
           while (distributedArts.length < limit) {
-            const patternIndex = distributedArts.length % alternationPattern.length;
-            const targetFormat = alternationPattern[patternIndex];
+            const patternIndex = distributedArts.length % harmonicPattern.length;
+            const targetFormat = harmonicPattern[patternIndex] as keyof typeof formatQueues;
             let artAdded = false;
             
-            // Buscar arte do formato alvo que respeite espaçamento
-            const targetPool = pools[targetFormat as keyof typeof pools];
+            // Buscar primeira arte do formato que respeite espaçamento de grupo
+            const queue = formatQueues[targetFormat];
             
-            for (let i = 0; i < targetPool.length; i++) {
-              const art = targetPool[i];
+            for (let i = 0; i < queue.length; i++) {
+              const art = queue[i];
               
               // Verificar espaçamento do grupo
               const lastGroupIndex = distributedArts.map((item, index) => 
@@ -2060,21 +2035,23 @@ export class DatabaseStorage implements IStorage {
               
               if (respectsSpacing) {
                 distributedArts.push(art);
-                targetPool.splice(i, 1); // Remover arte usada
+                queue.splice(i, 1);
                 artAdded = true;
                 break;
               }
             }
             
-            // Se não encontrou no formato alvo, tentar outros formatos em ordem de prioridade
+            // Se não encontrou no formato alvo, tentar outros formatos com prioridade para cartaz
             if (!artAdded) {
-              const fallbackFormats = ['cartaz', 'stories', 'outros'].filter(f => f !== targetFormat);
+              const fallbackOrder = targetFormat === 'cartaz' ? ['stories', 'outros'] :
+                                   targetFormat === 'stories' ? ['cartaz', 'outros'] : 
+                                   ['cartaz', 'stories'];
               
-              for (const fallbackFormat of fallbackFormats) {
-                const fallbackPool = pools[fallbackFormat as keyof typeof pools];
+              for (const fallbackFormat of fallbackOrder) {
+                const fallbackQueue = formatQueues[fallbackFormat as keyof typeof formatQueues];
                 
-                for (let i = 0; i < fallbackPool.length; i++) {
-                  const art = fallbackPool[i];
+                for (let i = 0; i < fallbackQueue.length; i++) {
+                  const art = fallbackQueue[i];
                   
                   const lastGroupIndex = distributedArts.map((item, index) => 
                     item.groupId === art.groupId ? index : -1
@@ -2085,7 +2062,7 @@ export class DatabaseStorage implements IStorage {
                   
                   if (respectsSpacing) {
                     distributedArts.push(art);
-                    fallbackPool.splice(i, 1);
+                    fallbackQueue.splice(i, 1);
                     artAdded = true;
                     break;
                   }
