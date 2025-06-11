@@ -350,26 +350,28 @@ const AuthPage = () => {
                           <FormItem>
                             <FormLabel className="text-gray-700 font-medium">Telefone (opcional)</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2 z-10">
-                                  <span className="text-lg">🇧🇷</span>
-                                  <span className="text-gray-500 text-sm">+55</span>
+                              <div className="flex">
+                                <div className="flex items-center bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg px-3">
+                                  <span className="text-lg mr-1">🇧🇷</span>
+                                  <span className="text-gray-600 text-sm font-medium">+55</span>
                                 </div>
-                                <InputMask
-                                  mask="(99) 99999-9999"
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  maskChar={null}
-                                >
-                                  {(inputProps: any) => (
-                                    <Input
-                                      {...inputProps}
-                                      type="tel"
-                                      placeholder="(11) 99999-9999"
-                                      className="pl-20 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
-                                    />
-                                  )}
-                                </InputMask>
+                                <div className="flex-1 relative">
+                                  <InputMask
+                                    mask="(99) 99999-9999"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    maskChar={null}
+                                  >
+                                    {(inputProps: any) => (
+                                      <Input
+                                        {...inputProps}
+                                        type="tel"
+                                        placeholder="(11) 99999-9999"
+                                        className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-l-none rounded-r-lg border-l-0"
+                                      />
+                                    )}
+                                  </InputMask>
+                                </div>
                               </div>
                             </FormControl>
                             <FormMessage />
