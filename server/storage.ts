@@ -1979,7 +1979,6 @@ export class DatabaseStorage implements IStorage {
           FROM category_arts 
           WHERE rn <= 20
           ORDER BY "categoryId", "createdAt" DESC
-          LIMIT ${adjustedLimit}
         `;
         
         // Count otimizado
@@ -1996,6 +1995,16 @@ export class DatabaseStorage implements IStorage {
         
         const totalCount = parseInt(countResult.rows[0].count as string);
         const arts = result.rows as Art[];
+        
+        // Debug: verificar categorias retornadas
+        const categoryStats = arts.reduce((acc, art) => {
+          const catId = art.categoryId;
+          acc[catId] = (acc[catId] || 0) + 1;
+          return acc;
+        }, {} as Record<number, number>);
+        
+        console.log(`[Debug] Artes por categoria retornadas:`, categoryStats);
+        console.log(`[Debug] Total de artes retornadas: ${arts.length}`);
         
         const endTime = Date.now();
         console.log(`[Performance] Consulta vitrine executada em ${endTime - startTime}ms`);
