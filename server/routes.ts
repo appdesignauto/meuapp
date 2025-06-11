@@ -9,7 +9,7 @@ import { flexibleAuth } from "./auth-flexible";
 import imageUploadRoutes from "./routes/image-upload";
 import { setupFollowRoutesSimple } from "./routes/follows-simple";
 import { db } from "./db";
-import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray } from "drizzle-orm";
+import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray, isNotNull } from "drizzle-orm";
 import { randomBytes, scrypt } from "crypto";
 import { promisify } from "util";
 import bcrypt from "bcrypt";
@@ -2096,57 +2096,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('[Sample Arts] Buscando artes de amostra por categoria...');
       
-      // Buscar 4 artes recentes de cada categoria principal
-      const categorySamples = await db.execute(sql`
-        SELECT 
-          c.id as category_id,
-          c.name as category_name,
-          c.slug as category_slug,
-          json_agg(
-            json_build_object(
-              'id', a.id,
-              'title', a.title,
-              'imageUrl', a."imageUrl"
-            ) ORDER BY a."createdAt" DESC
-          ) as sample_arts
-        FROM categories c
-        LEFT JOIN (
-          SELECT DISTINCT ON (category) 
-            category,
-            id,
-            title,
-            "imageUrl",
-            "createdAt"
-          FROM (
-            SELECT 
-              category,
-              id,
-              title,
-              "imageUrl",
-              "createdAt",
-              ROW_NUMBER() OVER (PARTITION BY category ORDER BY "createdAt" DESC) as rn
-            FROM arts
-            WHERE "isVisible" = TRUE
-            AND "imageUrl" IS NOT NULL
-          ) ranked
-          WHERE rn <= 4
-        ) a ON c.id = a.category
-        GROUP BY c.id, c.name, c.slug
-        ORDER BY c.id
-      `);
+      // Buscar categorias com suas artes mais recentes
+      const results = [];
+      const categoriesResult = await db.select().from(categories).orderBy(asc(categories.id));
+      console.log(`[Sample Arts] Encontradas ${categoriesResult.length} categorias`);
+      
+      for (const category of categoriesResult) {
+        console.log(`[Sample Arts] Processando categoria: ${category.name} (ID: ${category.id})`);
+        
+        // Buscar até 4 artes mais recentes desta categoria
+        const categoryArts = await db
+          .select({
+            id: arts.id,
+            title: arts.title,
+            imageUrl: arts.imageUrl
+          })
+          .from(arts)
+          .where(and(
+            eq(arts.categoryId, category.id),
+            eq(arts.isVisible, true),
+            isNotNull(arts.imageUrl)
+          ))
+          .orderBy(desc(arts.createdAt))
+          .limit(4);
 
-      const results = categorySamples.rows.map(row => ({
-        categoryId: row.category_id,
-        categoryName: row.category_name,
-        categorySlug: row.category_slug,
-        sampleArts: row.sample_arts || []
-      }));
+        console.log(`[Sample Arts] Encontradas ${categoryArts.length} artes para ${category.name}`);
+        
+        results.push({
+          categoryId: category.id,
+          categoryName: category.name,
+          categorySlug: category.slug,
+          sampleArts: categoryArts
+        });
+      }
 
-      console.log(`[Sample Arts] Encontradas ${results.length} categorias com artes de amostra`);
+      console.log(`[Sample Arts] Retornando ${results.length} categorias com artes de amostra`);
       res.json({ categories: results });
     } catch (error) {
-      console.error("Erro ao buscar artes de amostra por categoria:", error);
-      res.status(500).json({ message: "Erro ao buscar artes de amostra" });
+      console.error("Erro detalhado ao buscar artes de amostra:", error);
+      res.status(500).json({ message: "Erro ao buscar artes de amostra", error: error.message });
     }
   });
 
