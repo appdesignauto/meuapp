@@ -18,7 +18,7 @@ interface ArtGalleryProps {
 }
 
 const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtGalleryProps) => {
-  const initialLimit = 24; // Mostra 24 itens na home para encaixe perfeito
+  const initialLimit = 25; // Mostra 25 itens na home para encaixe perfeito (5 linhas × 5 colunas)
   const [, setLocation] = useLocation();
   const galleryRef = useRef<HTMLDivElement>(null); // Referência para a galeria principal
   const { user } = useAuth();

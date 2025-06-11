@@ -1984,9 +1984,9 @@ export class DatabaseStorage implements IStorage {
           return { arts, totalCount };
         }
         
-        // Para "Designs Profissionais" (limit=24), aplicar alternância com grupos únicos
-        if (limit === 24) {
-          console.log(`[Performance] Detectado limit=24 - usando alternância com grupos únicos`);
+        // Para "Designs Profissionais" (limit=25), aplicar alternância com grupos únicos
+        if (limit === 25) {
+          console.log(`[Performance] Detectado limit=25 - usando alternância com grupos únicos`);
           
           // Buscar todos os groupIds únicos em uso para evitar repetições
           const allGroupsQuery = sql`
