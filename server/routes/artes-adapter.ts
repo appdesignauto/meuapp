@@ -62,6 +62,10 @@ router.get('/api/artes', async (req: Request, res: Response) => {
     if (req.query.sortBy) {
       filters.sortBy = req.query.sortBy as string;
       console.log(`Ordenação aplicada: ${filters.sortBy}`);
+    } else {
+      // Para o painel de artes, sempre ordenar do mais recente para o mais antigo
+      filters.sortBy = 'recentes';
+      console.log('Aplicando ordenação padrão: mais recentes primeiro');
     }
     
     // Verificar se o usuário é admin para determinar visibilidade
