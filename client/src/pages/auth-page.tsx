@@ -372,10 +372,9 @@ const AuthPage = () => {
                                     setSelectedCountry(country);
                                   }}
                                 >
-                                  <SelectTrigger className="w-24 h-12 border-r-0 rounded-r-none border-gray-300 focus:border-blue-500">
-                                    <div className="flex items-center space-x-1">
-                                      <span>{selectedCountry.flag}</span>
-                                      <ChevronDown className="h-4 w-4" />
+                                  <SelectTrigger className="w-20 h-12 border-r-0 rounded-r-none border-gray-300 focus:border-blue-500">
+                                    <div className="flex items-center justify-center">
+                                      <span className="text-lg">{selectedCountry.flag}</span>
                                     </div>
                                   </SelectTrigger>
                                   <SelectContent>
