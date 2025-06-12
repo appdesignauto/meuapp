@@ -570,4 +570,61 @@ html body div[class*="columns-"] {
     width: auto !important;
   }
 }
+
+/* CORREÇÃO DEFINITIVA DO RODAPÉ INTERMITENTE */
+footer {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10 !important;
+  min-height: auto !important;
+  height: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+footer * {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+footer div {
+  display: block !important;
+}
+
+footer .hidden {
+  display: block !important;
+}
+
+footer .md\:hidden {
+  display: block !important;
+}
+
+@media (min-width: 768px) {
+  footer .md\:hidden {
+    display: none !important;
+  }
+  
+  footer .hidden.md\:grid,
+  footer .hidden.md\:flex,
+  footer .hidden.md\:block {
+    display: grid !important;
+  }
+}
+
+/* Garantir que o flexbox do layout principal funcione */
+.flex.flex-col.min-h-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+}
+
+.flex.flex-col.min-h-screen > footer {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+}
+
 /* Cache buster: 1748646572 */

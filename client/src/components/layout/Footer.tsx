@@ -1,11 +1,78 @@
+import { useEffect, useRef } from 'react';
 import ReportForm from '../reports/ReportForm';
 import { Heart, Instagram, Mail, MessageCircle } from 'lucide-react';
 import { SiTiktok, SiPinterest } from 'react-icons/si';
 import { Link } from 'wouter';
 
 const Footer = () => {
+  const footerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+
+    // Função para forçar visibilidade
+    const enforceVisibility = () => {
+      if (footer) {
+        footer.style.display = 'block';
+        footer.style.visibility = 'visible';
+        footer.style.opacity = '1';
+        footer.style.position = 'relative';
+        footer.style.zIndex = '10';
+        footer.style.transform = 'none';
+      }
+    };
+
+    // Aplicar imediatamente
+    enforceVisibility();
+
+    // Observador de mutação para detectar mudanças
+    const observer = new MutationObserver(() => {
+      enforceVisibility();
+    });
+
+    // Observar mudanças no footer e seus filhos
+    observer.observe(footer, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+      attributeFilter: ['style', 'class']
+    });
+
+    // Intervalo de backup para garantir visibilidade
+    const interval = setInterval(enforceVisibility, 1000);
+
+    // Cleanup
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Detectar tentativas de ocultação via event listeners
+  useEffect(() => {
+    const handleStyleChange = () => {
+      const footer = footerRef.current;
+      if (footer) {
+        footer.style.display = 'block';
+        footer.style.visibility = 'visible';
+        footer.style.opacity = '1';
+      }
+    };
+
+    // Múltiplos listeners para interceptar mudanças
+    document.addEventListener('DOMContentLoaded', handleStyleChange);
+    window.addEventListener('load', handleStyleChange);
+    window.addEventListener('resize', handleStyleChange);
+
+    return () => {
+      document.removeEventListener('DOMContentLoaded', handleStyleChange);
+      window.removeEventListener('load', handleStyleChange);
+      window.removeEventListener('resize', handleStyleChange);
+    };
+  }, []);
   return (
-    <footer className="bg-white border-t border-gray-200">
+    <footer ref={footerRef} className="bg-white border-t border-gray-200 relative z-10 block" style={{ display: 'block !important', visibility: 'visible !important' }}>
       <div className="w-full px-4 py-6 md:py-12">
         <div className="max-w-6xl mx-auto">
           
