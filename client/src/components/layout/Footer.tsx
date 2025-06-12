@@ -115,7 +115,7 @@ const Footer = () => {
           <div className="border-t border-gray-200 pt-4">
             <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-3">
               <div className="text-gray-500 text-xs text-center md:text-left">
-                © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
+                © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00
               </div>
               
               <div className="flex items-center gap-3">

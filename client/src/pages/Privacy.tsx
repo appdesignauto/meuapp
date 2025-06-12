@@ -170,7 +170,7 @@ const Privacy = () => {
 
           <div className="border-t border-gray-200 pt-6 mt-8">
             <p className="text-sm text-gray-500 text-center">
-              © 2025 DesignAuto - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
+              © 2025 DesignAuto - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-00
             </p>
           </div>
         </div>
