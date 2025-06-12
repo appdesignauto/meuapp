@@ -159,13 +159,9 @@ const DesktopFooter = () => {
                   </Link>
                 </li>
                 <li>
-                  <a 
-                    href="mailto:support@designauto.com.br" 
-                    className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm flex items-center gap-2"
-                  >
-                    <Mail className="h-4 w-4" />
+                  <Link href="/suporte" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
                     Suporte
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
