@@ -397,6 +397,79 @@ app.use((req, res, next) => {
       }
     });
     
+    // Rota dedicada para webhook da Doppus - implementação completa
+    app.post('/webhook/doppus', async (req, res) => {
+      console.log('📩 Webhook da Doppus recebido em', new Date().toISOString());
+      
+      try {
+        const payload = req.body;
+        const status = payload?.status?.code || 'UNKNOWN';
+        console.log('📦 [WEBHOOK DOPPUS] Status:', status);
+        
+        // Extrair email do webhook da Doppus
+        const customer = payload.customer;
+        const email = customer?.email?.toLowerCase().trim();
+        
+        if (!email) {
+          console.log('⚠️ [WEBHOOK DOPPUS] Email não encontrado no webhook');
+          return res.status(200).json({
+            success: false,
+            message: 'Email não encontrado no webhook'
+          });
+        }
+        
+        console.log('📧 [WEBHOOK DOPPUS] Email extraído:', email);
+        
+        // Processar usando o SubscriptionService
+        const result = await SubscriptionService.processDoppusWebhook(payload);
+        
+        console.log('✅ [WEBHOOK DOPPUS] Processamento concluído:', result);
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Webhook da Doppus processado com sucesso',
+          result: result,
+          timestamp: new Date().toISOString()
+        });
+        
+      } catch (error) {
+        console.error('❌ [WEBHOOK DOPPUS] Erro ao processar webhook:', error);
+        
+        // Registrar log de erro
+        try {
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL
+          });
+          
+          await pool.query(
+            `INSERT INTO webhook_logs 
+             (event_type, status, email, source, raw_payload, error_message, source_ip, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [
+              payload?.status?.code || 'unknown',
+              'error',
+              payload?.customer?.email || null,
+              'doppus',
+              JSON.stringify(payload),
+              error.message,
+              req.ip,
+              new Date()
+            ]
+          );
+          
+          await pool.end();
+        } catch (dbError) {
+          console.error('❌ [WEBHOOK DOPPUS] Erro ao registrar log:', dbError);
+        }
+        
+        return res.status(200).json({
+          success: false,
+          message: 'Erro ao processar webhook da Doppus, mas confirmamos o recebimento',
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
 
 
     
@@ -423,12 +496,16 @@ app.use((req, res, next) => {
         routes: [
           { path: '/webhook/hotmart', status: 'configured' },
           { path: '/webhook/hotmart-fixed', status: 'configured' },
-          { path: '/webhook/hotmart-enhanced', status: 'configured', version: '2.0', recommended: true }
+          { path: '/webhook/hotmart-enhanced', status: 'configured', version: '2.0', recommended: true },
+          { path: '/webhook/doppus', status: 'configured', version: '1.0', platform: 'Doppus' }
         ],
-        integrationService: 'HotmartService',
-        environment: process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção',
-        recommendedEndpoint: '/webhook/hotmart-enhanced',
-        message: 'Os webhooks estão configurados e funcionando. Recomendamos usar o endpoint aprimorado para melhor compatibilidade.'
+        integrationServices: ['HotmartService', 'DoppusService'],
+        environment: {
+          hotmart: process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção',
+          doppus: 'Produção'
+        },
+        supportedPlatforms: ['Hotmart', 'Doppus'],
+        message: 'Webhooks da Hotmart e Doppus estão configurados e funcionando.'
       });
     });
     
