@@ -15,6 +15,7 @@ A integração com a plataforma Doppus permite que usuários sejam automaticamen
 ### ✅ Gestão de Usuários
 - Criação automática de usuários quando não existem
 - Atualização de usuários existentes para premium
+- **Senha padrão:** `auto@123` (padronizada com Hotmart)
 - Configuração de expiração de assinatura (30 dias)
 - Origem da assinatura marcada como "doppus"
 
