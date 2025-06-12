@@ -405,7 +405,8 @@ export class SubscriptionService {
         case 'cancelled':
         case 'refunded':
         case 'chargeback':
-          result = await DoppusService.processCancellation(webhookData, email);
+        case 'reversed':
+          result = await DoppusService.processCancel(webhookData, email);
           break;
         
         case 'renewed':

@@ -43,7 +43,7 @@ export class DoppusService {
       // Processar cancelamento/estorno
       if (status?.code === 'reversed' || status?.code === 'cancelled' || status?.code === 'refunded') {
         console.log('❌ Processando cancelamento/estorno para:', email);
-        return await this.processCancel(webhookData, email);
+        return await DoppusService.processCancel(webhookData, email);
       }
 
       // Verificar se a transação foi aprovada
