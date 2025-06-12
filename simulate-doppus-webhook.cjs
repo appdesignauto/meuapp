@@ -84,6 +84,15 @@ function sendWebhook() {
   
   const data = JSON.stringify(webhookPayload);
   
+  // Validar JSON antes de enviar
+  try {
+    JSON.parse(data);
+    console.log('✅ JSON válido, enviando webhook...');
+  } catch (error) {
+    console.error('❌ JSON inválido:', error.message);
+    return;
+  }
+  
   const url = new URL(WEBHOOK_URL);
   const isHttps = url.protocol === 'https:';
   const client = isHttps ? https : http;
