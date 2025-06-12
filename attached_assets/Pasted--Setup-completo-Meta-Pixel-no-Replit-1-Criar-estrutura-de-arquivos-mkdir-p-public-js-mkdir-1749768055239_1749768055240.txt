@@ -1,0 +1,378 @@
+# Setup completo Meta Pixel no Replit
+
+# 1. Criar estrutura de arquivos
+mkdir -p public/js
+mkdir -p src
+
+# 2. Criar arquivo de configuração do Meta Pixel
+cat > public/js/meta-pixel.js << 'EOF'
+// Configuração do Meta Pixel
+(function() {
+    // Verificar se o Meta Pixel ID está definido
+    const PIXEL_ID = '123123145'; // Substitua pelo seu ID
+    
+    if (!PIXEL_ID) {
+        console.error('Meta Pixel ID não configurado');
+        return;
+    }
+
+    // Carregar o Meta Pixel
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+
+    // Inicializar o pixel
+    fbq('init', PIXEL_ID);
+    fbq('track', 'PageView');
+
+    // Função para rastrear eventos de formulário
+    window.trackFormSubmit = function(formData) {
+        fbq('track', 'Lead', {
+            content_name: formData.formName || 'Contact Form',
+            value: formData.value || 0,
+            currency: 'BRL'
+        });
+        console.log('Meta Pixel: Lead event tracked', formData);
+    };
+
+    // Função para rastrear cliques em botões
+    window.trackButtonClick = function(buttonName) {
+        fbq('trackCustom', 'ButtonClick', {
+            button_name: buttonName
+        });
+        console.log('Meta Pixel: Button click tracked', buttonName);
+    };
+
+    // Função para rastrear visualizações de conteúdo
+    window.trackContentView = function(contentData) {
+        fbq('track', 'ViewContent', {
+            content_name: contentData.name || 'Page',
+            content_category: contentData.category || 'General'
+        });
+        console.log('Meta Pixel: Content view tracked', contentData);
+    };
+
+    console.log('Meta Pixel carregado com sucesso!');
+})();
+EOF
+
+# 3. Criar arquivo HTML de exemplo
+cat > public/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Pixel - Replit Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #1877f2;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #166fe5;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .pixel-status {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Meta Pixel Integration Test</h1>
+        
+        <div class="pixel-status">
+            <h3>Status do Meta Pixel</h3>
+            <p id="pixel-status">Carregando...</p>
+        </div>
+
+        <form id="leadForm">
+            <h2>Formulário de Contato</h2>
+            
+            <div class="form-group">
+                <label for="name">Nome:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Telefone:</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+            
+            <div class="form-group">
+                <label for="interest">Interesse:</label>
+                <select id="interest" name="interest">
+                    <option value="produto">Produto</option>
+                    <option value="servico">Serviço</option>
+                    <option value="consultoria">Consultoria</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Mensagem:</label>
+                <textarea id="message" name="message" rows="4"></textarea>
+            </div>
+            
+            <button type="submit">Enviar Formulário</button>
+        </form>
+
+        <div class="success" id="successMessage">
+            ✅ Formulário enviado com sucesso! Evento Meta Pixel disparado.
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h2>Testes de Eventos</h2>
+        <button onclick="testButtonClick()">Teste Click Botão</button>
+        <button onclick="testContentView()">Teste View Content</button>
+        <button onclick="testCustomEvent()">Teste Evento Custom</button>
+
+        <hr style="margin: 30px 0;">
+
+        <h2>Console de Debug</h2>
+        <div id="debug-console" style="background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; max-height: 200px; overflow-y: auto;">
+            Aguardando eventos...
+        </div>
+    </div>
+
+    <!-- Meta Pixel Script -->
+    <script src="/js/meta-pixel.js"></script>
+    
+    <script>
+        // Verificar se Meta Pixel carregou
+        setTimeout(() => {
+            const status = document.getElementById('pixel-status');
+            if (typeof fbq !== 'undefined') {
+                status.innerHTML = '✅ Meta Pixel carregado corretamente';
+                status.style.color = 'green';
+            } else {
+                status.innerHTML = '❌ Erro ao carregar Meta Pixel';
+                status.style.color = 'red';
+            }
+        }, 2000);
+
+        // Debug console
+        function addToDebug(message) {
+            const debugConsole = document.getElementById('debug-console');
+            const timestamp = new Date().toLocaleTimeString();
+            debugConsole.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+
+        // Formulário de contato
+        document.getElementById('leadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                interest: document.getElementById('interest').value,
+                message: document.getElementById('message').value,
+                formName: 'Contact Form',
+                value: 10 // Valor estimado do lead
+            };
+
+            // Disparar evento Meta Pixel
+            if (typeof trackFormSubmit !== 'undefined') {
+                trackFormSubmit(formData);
+                addToDebug(`Lead event: ${formData.name} - ${formData.email}`);
+            }
+
+            // Mostrar mensagem de sucesso
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Limpar formulário
+            this.reset();
+            
+            // Esconder mensagem após 5 segundos
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 5000);
+        });
+
+        // Funções de teste
+        function testButtonClick() {
+            if (typeof trackButtonClick !== 'undefined') {
+                trackButtonClick('Test Button');
+                addToDebug('Button click event disparado');
+            }
+        }
+
+        function testContentView() {
+            if (typeof trackContentView !== 'undefined') {
+                trackContentView({
+                    name: 'Test Page',
+                    category: 'Testing'
+                });
+                addToDebug('Content view event disparado');
+            }
+        }
+
+        function testCustomEvent() {
+            if (typeof fbq !== 'undefined') {
+                fbq('trackCustom', 'TestCustomEvent', {
+                    test_parameter: 'test_value'
+                });
+                addToDebug('Custom event disparado');
+            }
+        }
+
+        // Rastrear visualização da página
+        window.addEventListener('load', function() {
+            if (typeof trackContentView !== 'undefined') {
+                trackContentView({
+                    name: 'Home Page',
+                    category: 'Main'
+                });
+                addToDebug('Page view event disparado automaticamente');
+            }
+        });
+    </script>
+</body>
+</html>
+EOF
+
+# 4. Criar servidor Node.js (se necessário)
+cat > server.js << 'EOF'
+const express = require('express');
+const path = require('path');
+const app = express();
+
+// Middleware para servir arquivos estáticos
+app.use(express.static('public'));
+app.use(express.json());
+
+// Headers de segurança para permitir Meta Pixel
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', 
+        "script-src 'self' 'unsafe-inline' https://connect.facebook.net; " +
+        "connect-src 'self' https://www.facebook.com; " +
+        "img-src 'self' data: https://www.facebook.com"
+    );
+    next();
+});
+
+// Rota para processar dados do formulário (opcional)
+app.post('/api/lead', (req, res) => {
+    console.log('Lead recebido:', req.body);
+    
+    // Aqui você pode salvar no banco de dados
+    // ou enviar para outros sistemas
+    
+    res.json({ 
+        success: true, 
+        message: 'Lead processado com sucesso!' 
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`📱 Meta Pixel configurado e pronto!`);
+    console.log(`🔗 Acesse: http://localhost:${PORT}`);
+});
+EOF
+
+# 5. Criar package.json
+cat > package.json << 'EOF'
+{
+  "name": "meta-pixel-replit",
+  "version": "1.0.0",
+  "description": "Meta Pixel integration for Replit",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
+EOF
+
+# 6. Instalar dependências
+npm install
+
+# 7. Criar arquivo de configuração do Replit
+cat > .replit << 'EOF'
+run = "npm start"
+modules = ["nodejs-18"]
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+EOF
+
+echo "🎉 Setup do Meta Pixel concluído!"
+echo ""
+echo "📋 Próximos passos:"
+echo "1. Substitua '123123145' pelo seu Meta Pixel ID real em public/js/meta-pixel.js"
+echo "2. Execute: npm start"
+echo "3. Teste o formulário e verifique os eventos no Meta Events Manager"
+echo "4. Use a extensão Facebook Pixel Helper para debug"
+echo ""
+echo "🔧 Arquivos criados:"
+echo "- public/index.html (página de teste)"
+echo "- public/js/meta-pixel.js (configuração do pixel)"  
+echo "- server.js (servidor Express)"
+echo "- package.json (dependências)"
+echo ""
+echo "✅ Tudo pronto para usar!"

@@ -45,6 +45,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Rota específica para configurações do Meta Pixel (para o script dinâmico)
+router.get('/settings', async (req, res) => {
+  try {
+    const [settings] = await db.select().from(analyticsSettings);
+    
+    if (!settings) {
+      return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
+    }
+    
+    // Retorna configurações completas do Meta Pixel para o script
+    const pixelSettings = {
+      metaPixelId: settings.metaPixelId,
+      metaPixelEnabled: settings.metaPixelEnabled,
+      trackPageviews: settings.trackPageviews,
+      trackClicks: settings.trackClicks,
+      trackFormSubmissions: settings.trackFormSubmissions,
+      trackArtsViewed: settings.trackArtsViewed,
+      trackArtsDownloaded: settings.trackArtsDownloaded
+    };
+    
+    res.json(pixelSettings);
+  } catch (error) {
+    console.error('Erro ao buscar configurações do Meta Pixel:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar configurações do Meta Pixel' });
+  }
+});
+
 // Rotas administrativas abaixo
 // Todas requerem autenticação de admin
 
