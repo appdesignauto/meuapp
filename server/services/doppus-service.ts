@@ -197,7 +197,7 @@ export class DoppusService {
       const [downgradedUser] = await db
         .update(users)
         .set({
-          nivelacesso: 'free',
+          nivelacesso: 'usuario',
           origemassinatura: null,
           tipoplano: null,
           dataassinatura: null,
