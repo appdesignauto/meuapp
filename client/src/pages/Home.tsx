@@ -31,11 +31,15 @@ const Home = () => {
            user.tipoplano === 'anual' || 
            user.tipoplano === 'vitalicio' || 
            user.tipoplano === 'personalizado' || 
+           user.tipoplano === 'premium_mensal' || 
+           user.tipoplano === 'premium_anual' || 
+           user.tipoplano === 'premium_vitalicio' || 
            user.acessovitalicio || 
            user.nivelacesso === 'admin' || 
            user.nivelacesso === 'designer_adm' ||
            user.nivelacesso === 'designer' ||
-           user.nivelacesso === 'suporte';
+           user.nivelacesso === 'suporte' ||
+           user.nivelacesso === 'premium';
   };
 
   const isPremiumUser = userHasPremiumAccess();
