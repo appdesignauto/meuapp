@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReportForm from '../reports/ReportForm';
 import { Heart, Instagram, Mail, MessageCircle } from 'lucide-react';
 import { SiTiktok, SiPinterest } from 'react-icons/si';
@@ -6,45 +6,71 @@ import { Link } from 'wouter';
 
 const Footer = () => {
   const footerRef = useRef<HTMLElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const footer = footerRef.current;
-    if (!footer) return;
-
-    // Função para forçar visibilidade
-    const enforceVisibility = () => {
+    const checkScreenSize = () => {
+      const isMobileSize = window.innerWidth < 768;
+      setIsMobile(isMobileSize);
+      
+      const footer = footerRef.current;
       if (footer) {
-        footer.style.display = 'block';
-        footer.style.visibility = 'visible';
-        footer.style.opacity = '1';
-        footer.style.position = 'relative';
-        footer.style.zIndex = '10';
-        footer.style.transform = 'none';
+        if (isMobileSize) {
+          footer.style.display = 'block';
+          footer.style.visibility = 'visible';
+          footer.style.opacity = '1';
+          footer.style.position = 'relative';
+          footer.style.zIndex = '10';
+          footer.style.transform = 'none';
+        } else {
+          footer.style.display = 'none';
+        }
       }
     };
 
-    // Aplicar imediatamente
-    enforceVisibility();
+    // Verificar tamanho da tela imediatamente
+    checkScreenSize();
 
-    // Observador de mutação para detectar mudanças
-    const observer = new MutationObserver(() => {
-      enforceVisibility();
-    });
+    // Observador de mutação para forçar visibilidade apenas em mobile
+    const footer = footerRef.current;
+    let observer: MutationObserver | null = null;
+    
+    if (footer) {
+      observer = new MutationObserver(() => {
+        if (window.innerWidth < 768) {
+          footer.style.display = 'block';
+          footer.style.visibility = 'visible';
+          footer.style.opacity = '1';
+        } else {
+          footer.style.display = 'none';
+        }
+      });
 
-    // Observar mudanças no footer e seus filhos
-    observer.observe(footer, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-      attributeFilter: ['style', 'class']
-    });
+      observer.observe(footer, {
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    }
 
-    // Intervalo de backup para garantir visibilidade
-    const interval = setInterval(enforceVisibility, 1000);
+    // Listeners para mudanças de tamanho
+    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener('load', checkScreenSize);
 
-    // Cleanup
+    // Intervalo de backup para garantir visibilidade apenas em mobile
+    const interval = setInterval(() => {
+      if (window.innerWidth < 768 && footer) {
+        footer.style.display = 'block';
+        footer.style.visibility = 'visible';
+        footer.style.opacity = '1';
+      } else if (footer) {
+        footer.style.display = 'none';
+      }
+    }, 1000);
+
     return () => {
-      observer.disconnect();
+      if (observer) observer.disconnect();
+      window.removeEventListener('resize', checkScreenSize);
+      window.removeEventListener('load', checkScreenSize);
       clearInterval(interval);
     };
   }, []);
@@ -72,7 +98,15 @@ const Footer = () => {
     };
   }, []);
   return (
-    <footer ref={footerRef} className="md:hidden bg-white border-t border-gray-200 relative z-10 block" style={{ display: 'block !important', visibility: 'visible !important' }}>
+    <footer 
+      ref={footerRef} 
+      className="md:hidden bg-white border-t border-gray-200 relative z-10"
+      style={{ 
+        display: isMobile ? 'block' : 'none',
+        visibility: 'visible',
+        opacity: '1'
+      }}
+    >
       <div className="w-full px-4 py-6">
         <div className="max-w-6xl mx-auto">
           
