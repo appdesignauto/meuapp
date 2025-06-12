@@ -405,6 +405,14 @@ export default function ArtDetail() {
     // Se o usuário for premium, abrir o link de edição
     registerDownloadMutation.mutate();
     
+    // Tracking Meta Pixel - Download da arte premium
+    trackArtDownload({
+      id: id!,
+      title: art.title,
+      category: art.category?.name || 'Design',
+      value: 1
+    });
+    
     toast({
       title: "Redirecionando para o editor",
       description: "Abrindo o editor em uma nova janela...",
@@ -433,6 +441,14 @@ export default function ArtDetail() {
     
     // Registrar download antes de abrir a URL
     registerDownloadMutation.mutate();
+    
+    // Tracking Meta Pixel - Download da arte
+    trackArtDownload({
+      id: id!,
+      title: art.title,
+      category: art.category?.name || 'Design',
+      value: 1
+    });
     
     // Feedback para o usuário (opcional)
     toast({
