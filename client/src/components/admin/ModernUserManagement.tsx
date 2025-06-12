@@ -1333,14 +1333,7 @@ const ModernUserManagement = () => {
                 type="email"
                 {...editForm.register("email")}
                 placeholder="Digite o email"
-                disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
-                className={
-                  selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
-                    ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
-                    : ""
-                }
               />
-
             </div>
 
             <div>
@@ -1467,12 +1460,6 @@ const ModernUserManagement = () => {
                       id="edit-dataexpiracao"
                       type="date"
                       {...editForm.register("dataexpiracao")}
-                      disabled={selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus"}
-                      className={
-                        selectedUser?.origemassinatura === "hotmart" || selectedUser?.origemassinatura === "doppus" 
-                          ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
-                          : ""
-                      }
                     />
                   </div>
                 </div>
