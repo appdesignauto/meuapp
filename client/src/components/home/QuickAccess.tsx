@@ -72,10 +72,10 @@ const QuickAccess = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
-      {/* Padrão de fundo decorativo */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="w-full h-full bg-gradient-to-r from-white/5 via-transparent to-white/5"></div>
+    <section className="py-16 bg-gradient-to-br from-blue-50 via-blue-100 to-slate-100 relative overflow-hidden">
+      {/* Padrão de fundo decorativo sutil */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="w-full h-full bg-gradient-to-r from-blue-100/30 via-transparent to-blue-100/30"></div>
       </div>
       
       <div className="relative">
@@ -83,12 +83,12 @@ const QuickAccess = () => {
           {/* Header */}
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <Zap className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">
+              <Zap className="h-6 w-6 text-blue-600" />
+              <h2 className="text-2xl font-bold text-gray-800">
                 Acesso Rápido
               </h2>
             </div>
-            <p className="text-sm text-blue-100 max-w-md mx-auto">
+            <p className="text-sm text-gray-600 max-w-md mx-auto">
               Acesse rapidamente suas ferramentas favoritas
             </p>
           </div>
