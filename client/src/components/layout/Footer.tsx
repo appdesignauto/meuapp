@@ -1,344 +1,161 @@
-import { Link } from "wouter";
-import { Heart, Instagram, MessageCircle } from "lucide-react";
-import { SiTiktok, SiPinterest } from "react-icons/si";
-import ReportForm from "../reports/ReportForm";
-import { useQuery } from '@tanstack/react-query';
+import ReportForm from '../reports/ReportForm';
+import { Heart, Instagram, Mail, MessageCircle } from 'lucide-react';
+import { SiTiktok, SiPinterest } from 'react-icons/si';
+import { Link } from 'wouter';
 
 const Footer = () => {
-  const { data: siteSettings } = useQuery({
-    queryKey: ['/api/site-settings'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  const logoUrl = siteSettings?.logoUrl || '/images/logos/logo_1746071698944.png';
-
   return (
-    <footer className="bg-white border-t border-gray-200 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Mobile Layout (< 768px) */}
-        <div className="block md:hidden py-8">
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center mb-3">
-              <img 
-                src={logoUrl} 
-                alt="DesignAuto"
-                className="h-8 w-auto"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/logos/logo_1746071698944.png';
-                }}
-              />
-            </div>
-            <p className="text-gray-600 text-sm leading-relaxed mb-4 px-4">
-              Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
-              Recursos gráficos incríveis para inspirar criatividade.
-            </p>
-          </div>
-
-          {/* Links móveis em grid */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 text-sm">EMPRESA</h3>
-              <div className="space-y-2">
-                <Link href="/sobre" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Sobre
-                </Link>
-                <Link href="/planos" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Planos
-                </Link>
-                <Link href="/duvidas" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Dúvidas
-                </Link>
+    <footer className="bg-white border-t border-gray-200">
+      <div className="w-full px-4 py-6 md:py-12">
+        <div className="max-w-6xl mx-auto">
+          
+          {/* Mobile Layout */}
+          <div className="block md:hidden mb-6">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">DA</span>
+                </div>
+                <span className="font-bold text-lg text-gray-900">DesignAuto</span>
               </div>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 text-sm">LEGAL</h3>
-              <div className="space-y-2">
-                <Link href="/termos" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Termos
-                </Link>
-                <Link href="/privacidade" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Privacidade
-                </Link>
-                <ReportForm />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 text-sm">PARCERIA</h3>
-              <div className="space-y-2">
-                <Link href="/colaboradores" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Colaborar
-                </Link>
-                <Link href="/afiliacao" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Afiliação
-                </Link>
-                <Link href="/suporte" className="block text-gray-600 text-sm hover:text-blue-600 transition-colors">
-                  Suporte
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Redes sociais móveis */}
-          <div className="flex justify-center items-center gap-4 mb-6">
-            <a 
-              href="https://wa.me/5511999999999" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-green-500 transition-colors p-2"
-              aria-label="WhatsApp"
-            >
-              <MessageCircle className="w-5 h-5" />
-            </a>
-            <a 
-              href="https://instagram.com/designauto.oficial" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-pink-500 transition-colors p-2"
-              aria-label="Instagram"
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a 
-              href="https://tiktok.com/@designauto.oficial" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-black transition-colors p-2"
-              aria-label="TikTok"
-            >
-              <SiTiktok className="w-5 h-5" />
-            </a>
-            <a 
-              href="https://pinterest.com/designauto" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-red-600 transition-colors p-2"
-              aria-label="Pinterest"
-            >
-              <SiPinterest className="w-5 h-5" />
-            </a>
-          </div>
-
-          {/* Copyright móvel */}
-          <div className="text-center text-gray-500 text-xs border-t border-gray-200 pt-4">
-            © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA
-            <br />
-            CNPJ 37.561.761/0001-0
-          </div>
-        </div>
-
-        {/* Tablet Layout (768px - 1023px) */}
-        <div className="hidden md:block lg:hidden py-6">
-          <div className="flex flex-col space-y-6 mb-6">
-            {/* Logo centralizado para tablet */}
-            <div className="text-center">
-              <div className="flex justify-center items-center mb-3">
-                <img 
-                  src={logoUrl} 
-                  alt="DesignAuto"
-                  className="h-6 w-auto"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/logos/logo_1746071698944.png';
-                  }}
-                />
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed max-w-lg mx-auto">
-                Sua plataforma completa para criação de materiais de marketing automotivo profissionais e impactantes.
+              <p className="text-gray-600 text-sm leading-relaxed mb-3 px-4">
+                Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
+                Recursos gráficos incríveis para inspirar criatividade.
               </p>
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                <Mail className="w-4 h-4 flex-shrink-0" />
+                <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors">
+                  suporte@designauto.com.br
+                </a>
+              </div>
             </div>
 
-            {/* Grid 3 colunas para tablet */}
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-              <div className="text-center">
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm tracking-wide">EMPRESA</h3>
+            <div className="grid grid-cols-3 gap-4 text-center text-sm">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Empresa</h4>
                 <div className="space-y-2">
-                  <Link href="/sobre" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Sobre
-                  </Link>
-                  <Link href="/planos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Planos
-                  </Link>
-                  <Link href="/duvidas" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Dúvidas
-                  </Link>
+                  <div><Link href="/sobre" className="text-gray-600 hover:text-blue-600 transition-colors">Sobre</Link></div>
+                  <div><Link href="/planos" className="text-gray-600 hover:text-blue-600 transition-colors">Planos</Link></div>
+                  <div><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 transition-colors">Dúvidas</Link></div>
                 </div>
               </div>
-
-              <div className="text-center">
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm tracking-wide">LEGAL</h3>
-                <div className="space-y-2">
-                  <Link href="/termos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Termos
-                  </Link>
-                  <Link href="/privacidade" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Privacidade
-                  </Link>
-                  <div className="block">
-                    <ReportForm />
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm tracking-wide">PARCERIA</h3>
-                <div className="space-y-2">
-                  <Link href="/colaboradores" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Colaborar
-                  </Link>
-                  <Link href="/afiliacao" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Afiliação
-                  </Link>
-                  <Link href="/suporte" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Suporte
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Copyright e redes sociais tablet */}
-          <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
-            <div className="text-gray-500 text-xs">
-              © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
-            </div>
-            <div className="flex space-x-3">
-              <a href="https://instagram.com/designauto.oficial" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-500 transition-colors duration-200" aria-label="Instagram">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="https://www.tiktok.com/@designauto.oficial" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black transition-colors duration-200" aria-label="TikTok">
-                <SiTiktok className="h-4 w-4" />
-              </a>
-              <a href="https://pinterest.com/designauto" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-600 transition-colors duration-200" aria-label="Pinterest">
-                <SiPinterest className="h-4 w-4" />
-              </a>
-              <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-500 transition-colors duration-200" aria-label="WhatsApp">
-                <MessageCircle className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop Layout (≥ 1024px) */}
-        <div className="hidden lg:block py-4">
-          {/* Container Principal Desktop */}
-          <div className="flex justify-between items-start mb-4">
-            
-            {/* Logo e Descrição - Lado Esquerdo */}
-            <div className="max-w-xs">
-              <div className="flex items-center mb-2">
-                <img 
-                  src={logoUrl} 
-                  alt="DesignAuto"
-                  className="h-6 w-auto"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/logos/logo_1746071698944.png';
-                  }}
-                />
-              </div>
-              <p className="text-gray-600 text-xs leading-normal">
-                Sua plataforma completa para criação de materiais de marketing automotivo profissionais e impactantes.
-              </p>
-            </div>
-
-            {/* Colunas de Links - Lado Direito */}
-            <div className="flex gap-8">
               
-              {/* EMPRESA */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2 text-xs tracking-wide">EMPRESA</h3>
-                <div className="space-y-1">
-                  <Link href="/sobre" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Sobre
-                  </Link>
-                  <Link href="/planos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Planos
-                  </Link>
-                  <Link href="/duvidas" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Dúvidas
-                  </Link>
+                <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Legal</h4>
+                <div className="space-y-2">
+                  <div><Link href="/termos" className="text-gray-600 hover:text-blue-600 transition-colors">Termos</Link></div>
+                  <div><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 transition-colors">Privacidade</Link></div>
+                  <div><ReportForm /></div>
                 </div>
               </div>
-
-              {/* LEGAL */}
+              
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2 text-xs tracking-wide">LEGAL</h3>
-                <div className="space-y-1">
-                  <Link href="/termos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Termos
-                  </Link>
-                  <Link href="/privacidade" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Privacidade
-                  </Link>
-                  <div className="block">
-                    <ReportForm />
-                  </div>
-                </div>
-              </div>
-
-              {/* PARCERIA */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 text-xs tracking-wide">PARCERIA</h3>
-                <div className="space-y-1">
-                  <Link href="/colaboradores" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Colaborar
-                  </Link>
-                  <Link href="/afiliacao" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Afiliação
-                  </Link>
-                  <Link href="/suporte" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
-                    Suporte
-                  </Link>
+                <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Parceria</h4>
+                <div className="space-y-2">
+                  <div><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 transition-colors">Colaborar</Link></div>
+                  <div><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 transition-colors">Afiliação</Link></div>
+                  <div><Link href="/suporte" className="text-gray-600 hover:text-blue-600 transition-colors">Suporte</Link></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Copyright e Redes Sociais - Desktop */}
-          <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
-            <div className="text-gray-500 text-xs">
-              © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
+          {/* Desktop Layout */}
+          <div className="hidden md:grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">DA</span>
+                </div>
+                <span className="font-bold text-lg text-gray-900">DesignAuto</span>
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
+                <br />
+                Recursos gráficos incríveis para inspirar criatividade.
+              </p>
+              
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Mail className="w-4 h-4 flex-shrink-0" />
+                <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors break-all">
+                  suporte@designauto.com.br
+                </a>
+              </div>
             </div>
-            
-            {/* Redes Sociais Desktop */}
-            <div className="flex space-x-2">
-              <a 
-                href="https://wa.me/5511999999999" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-green-500 transition-colors duration-200"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </a>
-              <a 
-                href="https://instagram.com/designauto.oficial" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-pink-500 transition-colors duration-200"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a 
-                href="https://pinterest.com/designauto" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-red-600 transition-colors duration-200"
-                aria-label="Pinterest"
-              >
-                <SiPinterest className="h-4 w-4" />
-              </a>
-              <a 
-                href="https://www.tiktok.com/@designauto.oficial" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-black transition-colors duration-200"
-                aria-label="TikTok"
-              >
-                <SiTiktok className="h-4 w-4" />
-              </a>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm">DESIGN AUTO</h3>
+              <ul className="space-y-3">
+                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
+                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Planos</Link></li>
+                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Dúvidas</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm">INFORMATIVO</h3>
+              <ul className="space-y-3">
+                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Política de Privacidade</Link></li>
+                <li><ReportForm /></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm">PARCERIA</h3>
+              <ul className="space-y-3">
+                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Colaborador</Link></li>
+                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar afiliação</Link></li>
+                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Acionar o Suporte</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom section */}
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-3">
+              <div className="text-gray-500 text-xs text-center md:text-left">
+                © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <a 
+                  href="https://wa.me/5511999999999" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-green-500 transition-colors p-1"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://instagram.com/designauto" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-pink-500 transition-colors p-1"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://tiktok.com/@designauto" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-black transition-colors p-1"
+                  aria-label="TikTok"
+                >
+                  <SiTiktok className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://pinterest.com/designauto" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                  aria-label="Pinterest"
+                >
+                  <SiPinterest className="w-5 h-5" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
