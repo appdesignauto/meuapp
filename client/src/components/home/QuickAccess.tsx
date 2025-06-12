@@ -72,88 +72,83 @@ const QuickAccess = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50/60 via-blue-100/40 to-indigo-100/50 relative overflow-hidden">
-      {/* Efeito de fundo sutil */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+    <section className="py-16 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
+      {/* Padrão de fundo decorativo */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="w-full h-full bg-gradient-to-r from-white/5 via-transparent to-white/5"></div>
+      </div>
+      
       <div className="relative">
         <div className="container mx-auto px-4">
           {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Zap className="h-6 w-6 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-900">
-              Acesso Rápido
-            </h2>
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <Zap className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">
+                Acesso Rápido
+              </h2>
+            </div>
+            <p className="text-sm text-blue-100 max-w-md mx-auto">
+              Acesse rapidamente suas ferramentas favoritas
+            </p>
           </div>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">
-            Acesse rapidamente suas ferramentas favoritas
-          </p>
-        </div>
 
-        {/* Grid de ícones - Layout centralizado com 2 linhas de 4 ícones */}
-        <div className="max-w-4xl mx-auto">
-          {/* Primeira linha - 4 ícones principais centralizados */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-            {quickAccessItems.slice(0, 4).map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <Link key={index} href={item.href}>
-                  <div className="group relative bg-white/90 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-xl p-4 transition-all duration-200 hover:shadow-md cursor-pointer text-center">
-                    {/* Ícone centralizado */}
-                    <div className={`mx-auto w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-all duration-200 ${item.color}`}>
-                      <Icon className="h-6 w-6" />
+          {/* Grid de ícones - Layout centralizado com 2 linhas de 4 ícones */}
+          <div className="max-w-4xl mx-auto">
+            {/* Primeira linha - 4 ícones principais centralizados */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+              {quickAccessItems.slice(0, 4).map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Link key={index} href={item.href}>
+                    <div className="group relative bg-white border border-white/20 rounded-xl p-4 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-center backdrop-blur-sm">
+                      {/* Ícone centralizado */}
+                      <div className={`mx-auto w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-all duration-200 ${item.color}`}>
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      
+                      {/* Label centralizado */}
+                      <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
+                        {item.label}
+                      </h3>
+                      
+                      {/* Description centralizada */}
+                      <p className="text-xs text-gray-500 leading-snug">
+                        {item.description}
+                      </p>
                     </div>
-                    
-                    {/* Label centralizado */}
-                    <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
-                      {item.label}
-                    </h3>
-                    
-                    {/* Description centralizada */}
-                    <p className="text-xs text-gray-500 leading-snug">
-                      {item.description}
-                    </p>
+                  </Link>
+                );
+              })}
+            </div>
 
-                    {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Segunda linha - 4 ícones secundários centralizados */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {quickAccessItems.slice(4, 8).map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <Link key={index + 4} href={item.href}>
-                  <div className="group relative bg-white/90 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-xl p-4 transition-all duration-200 hover:shadow-md cursor-pointer text-center">
-                    {/* Ícone centralizado */}
-                    <div className={`mx-auto w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-all duration-200 ${item.color}`}>
-                      <Icon className="h-6 w-6" />
+            {/* Segunda linha - 4 ícones secundários centralizados */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {quickAccessItems.slice(4, 8).map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Link key={index + 4} href={item.href}>
+                    <div className="group relative bg-white border border-white/20 rounded-xl p-4 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-center backdrop-blur-sm">
+                      {/* Ícone centralizado */}
+                      <div className={`mx-auto w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-all duration-200 ${item.color}`}>
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      
+                      {/* Label centralizado */}
+                      <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
+                        {item.label}
+                      </h3>
+                      
+                      {/* Description centralizada */}
+                      <p className="text-xs text-gray-500 leading-snug">
+                        {item.description}
+                      </p>
                     </div>
-                    
-                    {/* Label centralizado */}
-                    <h3 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-gray-900">
-                      {item.label}
-                    </h3>
-                    
-                    {/* Description centralizada */}
-                    <p className="text-xs text-gray-500 leading-snug">
-                      {item.description}
-                    </p>
-
-                    {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent group-hover:from-blue-50/20 group-hover:to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  </div>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
-
-
         </div>
       </div>
     </section>
