@@ -2,8 +2,16 @@ import { Link } from "wouter";
 import { Heart, Instagram, MessageCircle } from "lucide-react";
 import { SiTiktok, SiPinterest } from "react-icons/si";
 import ReportForm from "../reports/ReportForm";
+import { useQuery } from '@tanstack/react-query';
 
 const Footer = () => {
+  const { data: siteSettings } = useQuery({
+    queryKey: ['/api/site-settings'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const logoUrl = siteSettings?.logoUrl || '/images/logos/logo_1746071698944.png';
+
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,11 +19,15 @@ const Footer = () => {
         {/* Mobile Layout (< 768px) */}
         <div className="block md:hidden py-8">
           <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DA</span>
-              </div>
-              <span className="font-bold text-lg text-gray-900">DesignAuto</span>
+            <div className="flex items-center justify-center mb-3">
+              <img 
+                src={logoUrl} 
+                alt="DesignAuto"
+                className="h-8 w-auto"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/logos/logo_1746071698944.png';
+                }}
+              />
             </div>
             <p className="text-gray-600 text-sm leading-relaxed mb-4 px-4">
               Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
@@ -124,9 +136,12 @@ const Footer = () => {
             <div className="text-center">
               <div className="flex justify-center items-center mb-3">
                 <img 
-                  src="/images/logos/logo_1746071698944.png" 
+                  src={logoUrl} 
                   alt="DesignAuto"
                   className="h-6 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/logos/logo_1746071698944.png';
+                  }}
                 />
               </div>
               <p className="text-gray-600 text-sm leading-relaxed max-w-lg mx-auto">
@@ -214,9 +229,12 @@ const Footer = () => {
             <div className="max-w-xs">
               <div className="flex items-center mb-2">
                 <img 
-                  src="/images/logos/logo_1746071698944.png" 
+                  src={logoUrl} 
                   alt="DesignAuto"
-                  className="h-5 w-auto"
+                  className="h-6 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/logos/logo_1746071698944.png';
+                  }}
                 />
               </div>
               <p className="text-gray-600 text-xs leading-normal">
