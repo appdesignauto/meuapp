@@ -44,6 +44,7 @@ import { ptBR } from 'date-fns/locale';
 import SEO from '@/components/seo';
 import { formatSeoTitle, generateMetaDescription, generateArtSchemaMarkup, generateCanonicalUrl } from '@/lib/utils/seo';
 import { extractIdFromSeoUrl, createSeoUrl } from '@/lib/utils/slug';
+import { useMetaPixel } from '@/hooks/useMetaPixel';
 
 // Interfaces para tipagem de dados
 interface RecentArt {
@@ -176,6 +177,7 @@ export default function ArtDetail() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
+  const { trackArtView, trackArtDownload } = useMetaPixel();
 
   // Fetch art details
   const { data: art, isLoading, error } = useQuery({
@@ -289,6 +291,18 @@ export default function ArtDetail() {
       setLiked(favoriteStatus.isFavorited);
     }
   }, [favoriteStatus]);
+
+  // Tracking Meta Pixel - Visualização da arte
+  useEffect(() => {
+    if (art && id) {
+      trackArtView({
+        id: id,
+        title: art.title,
+        category: art.category?.name || 'Design',
+        value: 1
+      });
+    }
+  }, [art, id, trackArtView]);
   
   // Redirecionar para URL com slug se a arte for carregada e estivermos em uma URL sem slug
   useEffect(() => {
