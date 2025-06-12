@@ -206,38 +206,38 @@ const Footer = () => {
         </div>
 
         {/* Desktop Layout (≥ 1024px) */}
-        <div className="hidden lg:block py-6">
+        <div className="hidden lg:block py-4">
           {/* Container Principal Desktop */}
-          <div className="flex justify-between items-start mb-6">
+          <div className="flex justify-between items-start mb-4">
             
             {/* Logo e Descrição - Lado Esquerdo */}
-            <div className="max-w-sm">
-              <div className="flex items-center mb-3">
+            <div className="max-w-xs">
+              <div className="flex items-center mb-2">
                 <img 
                   src="/images/logos/logo_1746071698944.png" 
                   alt="DesignAuto"
-                  className="h-6 w-auto"
+                  className="h-5 w-auto"
                 />
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 text-xs leading-normal">
                 Sua plataforma completa para criação de materiais de marketing automotivo profissionais e impactantes.
               </p>
             </div>
 
             {/* Colunas de Links - Lado Direito */}
-            <div className="flex gap-16">
+            <div className="flex gap-8">
               
               {/* EMPRESA */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm tracking-wide">EMPRESA</h3>
-                <div className="space-y-2">
-                  <Link href="/sobre" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                <h3 className="font-semibold text-gray-900 mb-2 text-xs tracking-wide">EMPRESA</h3>
+                <div className="space-y-1">
+                  <Link href="/sobre" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Sobre
                   </Link>
-                  <Link href="/planos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  <Link href="/planos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Planos
                   </Link>
-                  <Link href="/duvidas" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  <Link href="/duvidas" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Dúvidas
                   </Link>
                 </div>
@@ -245,12 +245,12 @@ const Footer = () => {
 
               {/* LEGAL */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm tracking-wide">LEGAL</h3>
-                <div className="space-y-2">
-                  <Link href="/termos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                <h3 className="font-semibold text-gray-900 mb-2 text-xs tracking-wide">LEGAL</h3>
+                <div className="space-y-1">
+                  <Link href="/termos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Termos
                   </Link>
-                  <Link href="/privacidade" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  <Link href="/privacidade" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Privacidade
                   </Link>
                   <div className="block">
@@ -261,15 +261,15 @@ const Footer = () => {
 
               {/* PARCERIA */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm tracking-wide">PARCERIA</h3>
-                <div className="space-y-2">
-                  <Link href="/colaboradores" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                <h3 className="font-semibold text-gray-900 mb-2 text-xs tracking-wide">PARCERIA</h3>
+                <div className="space-y-1">
+                  <Link href="/colaboradores" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Colaborar
                   </Link>
-                  <Link href="/afiliacao" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  <Link href="/afiliacao" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Afiliação
                   </Link>
-                  <Link href="/suporte" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  <Link href="/suporte" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-xs">
                     Suporte
                   </Link>
                 </div>
@@ -278,13 +278,22 @@ const Footer = () => {
           </div>
 
           {/* Copyright e Redes Sociais - Desktop */}
-          <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
+          <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
             <div className="text-gray-500 text-xs">
               © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
             </div>
             
             {/* Redes Sociais Desktop */}
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
+              <a 
+                href="https://wa.me/5511999999999" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-green-500 transition-colors duration-200"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
               <a 
                 href="https://instagram.com/designauto.oficial" 
                 target="_blank" 
@@ -293,15 +302,6 @@ const Footer = () => {
                 aria-label="Instagram"
               >
                 <Instagram className="h-4 w-4" />
-              </a>
-              <a 
-                href="https://www.tiktok.com/@designauto.oficial" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-black transition-colors duration-200"
-                aria-label="TikTok"
-              >
-                <SiTiktok className="h-4 w-4" />
               </a>
               <a 
                 href="https://pinterest.com/designauto" 
@@ -313,13 +313,13 @@ const Footer = () => {
                 <SiPinterest className="h-4 w-4" />
               </a>
               <a 
-                href="https://wa.me/5511999999999" 
+                href="https://www.tiktok.com/@designauto.oficial" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-green-500 transition-colors duration-200"
-                aria-label="WhatsApp"
+                className="text-gray-400 hover:text-black transition-colors duration-200"
+                aria-label="TikTok"
               >
-                <MessageCircle className="h-4 w-4" />
+                <SiTiktok className="h-4 w-4" />
               </a>
             </div>
           </div>
