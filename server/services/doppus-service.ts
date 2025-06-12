@@ -19,7 +19,7 @@ export class DoppusService {
   }
 
   /**
-   * Processa um webhook da Doppus para compra aprovada
+   * Processa um webhook da Doppus para compra aprovada ou cancelada/estornada
    */
   static async processPurchase(webhookData: any, email: string) {
     console.log('🔄 DoppusService.processPurchase iniciado para:', email);
@@ -39,6 +39,12 @@ export class DoppusService {
         transactionCode: transaction?.code,
         status: status?.code
       });
+
+      // Processar cancelamento/estorno
+      if (status?.code === 'reversed' || status?.code === 'cancelled' || status?.code === 'refunded') {
+        console.log('❌ Processando cancelamento/estorno para:', email);
+        return await this.processCancel(webhookData, email);
+      }
 
       // Verificar se a transação foi aprovada
       if (status?.code !== 'approved') {
@@ -146,6 +152,76 @@ export class DoppusService {
 
     } catch (error) {
       console.error('❌ Erro no DoppusService.processCancellation:', error);
+      await DoppusService.logWebhook(webhookData, 'error', null, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Processa cancelamento/estorno de assinatura da Doppus
+   */
+  static async processCancel(webhookData: any, email: string) {
+    console.log('❌ DoppusService.processCancel iniciado para:', email);
+    
+    try {
+      const customer = webhookData.customer;
+      const transaction = webhookData.transaction;
+      const status = webhookData.status;
+
+      console.log('🔄 Processando cancelamento/estorno:', {
+        email: customer?.email,
+        transactionCode: transaction?.code,
+        status: status?.code,
+        statusMessage: status?.message
+      });
+
+      // Buscar usuário existente
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+
+      if (!existingUser) {
+        console.log('⚠️ Usuário não encontrado para cancelamento:', email);
+        await DoppusService.logWebhook(webhookData, 'warning', null, 'Usuário não encontrado para cancelamento');
+        return { 
+          success: false, 
+          message: 'Usuário não encontrado para cancelamento',
+          action: 'user_not_found'
+        };
+      }
+
+      console.log('👤 Usuário encontrado, rebaixando acesso:', existingUser.username);
+
+      // Rebaixar usuário para free (mesmo padrão da Hotmart)
+      const [downgradedUser] = await db
+        .update(users)
+        .set({
+          nivelacesso: 'free',
+          origemassinatura: null,
+          tipoplano: null,
+          dataassinatura: null,
+          dataexpiracao: null,
+          acessovitalicio: false,
+          observacaoadmin: `Acesso cancelado via Doppus em ${new Date().toLocaleDateString('pt-BR')} - Status: ${status?.code} - ${status?.message}`
+        })
+        .where(eq(users.id, existingUser.id))
+        .returning();
+
+      console.log('✅ Usuário rebaixado com sucesso:', downgradedUser.username);
+
+      // Log do webhook com sucesso
+      await DoppusService.logWebhook(webhookData, 'success', downgradedUser.id, 'Usuário rebaixado para free');
+
+      return {
+        success: true,
+        message: 'Usuário rebaixado com sucesso',
+        action: 'downgraded',
+        user: downgradedUser
+      };
+
+    } catch (error) {
+      console.error('❌ Erro no DoppusService.processCancel:', error);
       await DoppusService.logWebhook(webhookData, 'error', null, error.message);
       throw error;
     }
