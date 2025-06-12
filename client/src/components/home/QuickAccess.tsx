@@ -72,9 +72,9 @@ const QuickAccess = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50/60 via-blue-100/40 to-indigo-100/50 relative overflow-hidden">
+    <section className="py-16 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 relative overflow-hidden">
       {/* Efeito de fundo sutil */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-white/10 to-blue-50/30"></div>
       <div className="relative">
         <div className="container mx-auto px-4">
           {/* Header */}
@@ -98,7 +98,7 @@ const QuickAccess = () => {
               const Icon = item.icon;
               return (
                 <Link key={index} href={item.href}>
-                  <div className="group relative bg-white/90 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-xl p-4 transition-all duration-200 hover:shadow-md cursor-pointer text-center">
+                  <div className="group relative bg-white hover:bg-gray-50 border border-blue-100 hover:border-blue-200 rounded-xl p-4 transition-all duration-200 hover:shadow-lg cursor-pointer text-center backdrop-blur-sm">
                     {/* Ícone centralizado */}
                     <div className={`mx-auto w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-all duration-200 ${item.color}`}>
                       <Icon className="h-6 w-6" />
@@ -128,7 +128,7 @@ const QuickAccess = () => {
               const Icon = item.icon;
               return (
                 <Link key={index + 4} href={item.href}>
-                  <div className="group relative bg-white/90 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-xl p-4 transition-all duration-200 hover:shadow-md cursor-pointer text-center">
+                  <div className="group relative bg-white hover:bg-gray-50 border border-blue-100 hover:border-blue-200 rounded-xl p-4 transition-all duration-200 hover:shadow-lg cursor-pointer text-center backdrop-blur-sm">
                     {/* Ícone centralizado */}
                     <div className={`mx-auto w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-all duration-200 ${item.color}`}>
                       <Icon className="h-6 w-6" />
