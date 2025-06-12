@@ -189,9 +189,9 @@ export class DoppusService {
       // Gerar username único baseado no email
       const username = email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 5);
       
-      // Gerar senha aleatória
-      const randomPassword = Math.random().toString(36).slice(-12);
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      // Senha padrão do sistema (mesma da Hotmart)
+      const defaultPassword = 'auto@123';
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
       // Criar novo usuário
       const [newUser] = await db
