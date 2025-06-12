@@ -1,230 +1,72 @@
-import { useEffect, useRef, useState } from 'react';
 import ReportForm from '../reports/ReportForm';
-import { Heart, Instagram, Mail, MessageCircle } from 'lucide-react';
+import { Heart, Instagram, MessageCircle } from 'lucide-react';
 import { SiTiktok, SiPinterest } from 'react-icons/si';
 import { Link } from 'wouter';
 
 const Footer = () => {
-  const footerRef = useRef<HTMLElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const isMobileSize = window.innerWidth < 768;
-      setIsMobile(isMobileSize);
-      
-      const footer = footerRef.current;
-      if (footer) {
-        if (isMobileSize) {
-          footer.style.display = 'block';
-          footer.style.visibility = 'visible';
-          footer.style.opacity = '1';
-          footer.style.position = 'relative';
-          footer.style.zIndex = '10';
-          footer.style.transform = 'none';
-        } else {
-          footer.style.display = 'none';
-        }
-      }
-    };
-
-    // Verificar tamanho da tela imediatamente
-    checkScreenSize();
-
-    // Observador de mutação para forçar visibilidade apenas em mobile
-    const footer = footerRef.current;
-    let observer: MutationObserver | null = null;
-    
-    if (footer) {
-      observer = new MutationObserver(() => {
-        if (window.innerWidth < 768) {
-          footer.style.display = 'block';
-          footer.style.visibility = 'visible';
-          footer.style.opacity = '1';
-        } else {
-          footer.style.display = 'none';
-        }
-      });
-
-      observer.observe(footer, {
-        attributes: true,
-        attributeFilter: ['style', 'class']
-      });
-    }
-
-    // Listeners para mudanças de tamanho
-    window.addEventListener('resize', checkScreenSize);
-    window.addEventListener('load', checkScreenSize);
-
-    // Intervalo de backup para garantir visibilidade apenas em mobile
-    const interval = setInterval(() => {
-      if (window.innerWidth < 768 && footer) {
-        footer.style.display = 'block';
-        footer.style.visibility = 'visible';
-        footer.style.opacity = '1';
-      } else if (footer) {
-        footer.style.display = 'none';
-      }
-    }, 1000);
-
-    return () => {
-      if (observer) observer.disconnect();
-      window.removeEventListener('resize', checkScreenSize);
-      window.removeEventListener('load', checkScreenSize);
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Detectar tentativas de ocultação via event listeners
-  useEffect(() => {
-    const handleStyleChange = () => {
-      const footer = footerRef.current;
-      if (footer) {
-        footer.style.display = 'block';
-        footer.style.visibility = 'visible';
-        footer.style.opacity = '1';
-      }
-    };
-
-    // Múltiplos listeners para interceptar mudanças
-    document.addEventListener('DOMContentLoaded', handleStyleChange);
-    window.addEventListener('load', handleStyleChange);
-    window.addEventListener('resize', handleStyleChange);
-
-    return () => {
-      document.removeEventListener('DOMContentLoaded', handleStyleChange);
-      window.removeEventListener('load', handleStyleChange);
-      window.removeEventListener('resize', handleStyleChange);
-    };
-  }, []);
-  // Não renderizar se não for mobile
-  if (!isMobile) {
-    return null;
-  }
-
   return (
-    <footer 
-      ref={footerRef} 
-      className="block md:hidden bg-white border-t border-gray-200 relative z-10"
-      style={{ 
-        display: 'block',
-        visibility: 'visible',
-        opacity: '1'
-      }}
-    >
+    <footer className="bg-white border-t border-gray-200 relative z-10">
       <div className="w-full px-4 py-6">
         <div className="max-w-6xl mx-auto">
           
           {/* Mobile Layout */}
-          <div className="block md:hidden mb-6">
+          <div className="block mb-6">
             <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">DA</span>
-                </div>
-                <span className="font-bold text-lg text-gray-900">DesignAuto</span>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <img 
+                  src="/images/logos/logo_1749693001463.png" 
+                  alt="DesignAuto" 
+                  className="h-8 w-auto"
+                />
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-3 px-4">
-                Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
-                Recursos gráficos incríveis para inspirar criatividade.
+              <p className="text-gray-600 text-sm">
+                Sua plataforma completa para criação de materiais de marketing automotivo profissionais e impactantes.
               </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                <Mail className="w-4 h-4 flex-shrink-0" />
-                <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors">
-                  suporte@designauto.com.br
-                </a>
-              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 text-center text-sm">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Empresa</h4>
-                <div className="space-y-2">
-                  <div><Link href="/sobre" className="text-gray-600 hover:text-blue-600 transition-colors">Sobre</Link></div>
-                  <div><Link href="/planos" className="text-gray-600 hover:text-blue-600 transition-colors">Planos</Link></div>
-                  <div><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 transition-colors">Dúvidas</Link></div>
-                </div>
-              </div>
+            {/* Links organizados em colunas para mobile */}
+            <div className="grid grid-cols-1 gap-6 mb-6">
               
+              {/* EMPRESA */}
               <div>
-                <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Legal</h4>
-                <div className="space-y-2">
-                  <div><Link href="/termos" className="text-gray-600 hover:text-blue-600 transition-colors">Termos</Link></div>
-                  <div><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 transition-colors">Privacidade</Link></div>
-                  <div><ReportForm /></div>
+                <h3 className="font-semibold text-gray-900 mb-4 text-sm text-center">EMPRESA</h3>
+                <div className="flex flex-col items-center space-y-3">
+                  <Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre</Link>
+                  <Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Planos</Link>
+                  <Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Dúvidas</Link>
                 </div>
               </div>
-              
+
+              {/* LEGAL */}
               <div>
-                <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Parceria</h4>
-                <div className="space-y-2">
-                  <div><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 transition-colors">Colaborar</Link></div>
-                  <div><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 transition-colors">Afiliação</Link></div>
-                  <div><Link href="/suporte" className="text-gray-600 hover:text-blue-600 transition-colors">Suporte</Link></div>
+                <h3 className="font-semibold text-gray-900 mb-4 text-sm text-center">LEGAL</h3>
+                <div className="flex flex-col items-center space-y-3">
+                  <Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos</Link>
+                  <Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Privacidade</Link>
+                  <ReportForm />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Desktop Layout */}
-          <div className="hidden md:grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">DA</span>
+              {/* PARCERIA */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-4 text-sm text-center">PARCERIA</h3>
+                <div className="flex flex-col items-center space-y-3">
+                  <Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Colaborador</Link>
+                  <Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar afiliação</Link>
+                  <Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Suporte</Link>
                 </div>
-                <span className="font-bold text-lg text-gray-900">DesignAuto</span>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                Criado com <Heart className="inline w-4 h-4 text-red-500 fill-current" /> por apaixonados por design.
-                <br />
-                Recursos gráficos incríveis para inspirar criatividade.
-              </p>
-              
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Mail className="w-4 h-4 flex-shrink-0" />
-                <a href="mailto:suporte@designauto.com.br" className="hover:text-blue-600 transition-colors break-all">
-                  suporte@designauto.com.br
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm">DESIGN AUTO</h3>
-              <ul className="space-y-3">
-                <li><Link href="/sobre" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Sobre nós</Link></li>
-                <li><Link href="/planos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Planos</Link></li>
-                <li><Link href="/duvidas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Dúvidas</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm">INFORMATIVO</h3>
-              <ul className="space-y-3">
-                <li><Link href="/termos" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Política de Privacidade</Link></li>
-                <li><ReportForm /></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm">PARCERIA</h3>
-              <ul className="space-y-3">
-                <li><Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Colaborador</Link></li>
-                <li><Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Solicitar afiliação</Link></li>
-                <li><Link href="/suporte" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">Acionar o Suporte</Link></li>
-              </ul>
             </div>
           </div>
 
           {/* Bottom section */}
           <div className="border-t border-gray-200 pt-4">
-            <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-3">
-              <div className="text-gray-500 text-xs text-center md:text-left">
+            <div className="flex flex-col-reverse gap-3">
+              <div className="text-gray-500 text-xs text-center">
                 © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3">
                 <a 
                   href="https://wa.me/5511999999999" 
                   target="_blank" 
