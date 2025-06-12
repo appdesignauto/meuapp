@@ -15,21 +15,18 @@ const PV = () => {
     {
       name: "Carlos Silva",
       role: "Vendedor de Veículos",
-      image: "/api/placeholder/60/60",
       rating: 5,
       text: "Desde que comecei a usar o DesignAuto, minhas vendas aumentaram 40%. As artes são profissionais e me ajudam a me destacar da concorrência."
     },
     {
       name: "Marina Oliveira",
       role: "Proprietária de Loja",
-      image: "/api/placeholder/60/60",
       rating: 5,
       text: "Economizo horas de trabalho todo dia. Antes pagava caro para designers, agora tenho acesso ilimitado a designs incríveis."
     },
     {
       name: "João Santos",
       role: "Consultor Automotivo",
-      image: "/api/placeholder/60/60",
       rating: 5,
       text: "A qualidade é impressionante! Meus clientes sempre elogiam minhas publicações. Recomendo para todos da área."
     }
