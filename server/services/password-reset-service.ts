@@ -67,9 +67,8 @@ export class PasswordResetService {
         .where(eq(users.id, user.id));
 
       // Envia email com o link de redefinição
-      // Sempre usar o domínio real de produção, mesmo em ambiente de desenvolvimento
-      // para garantir que os links de redefinição funcionem corretamente
-      const baseUrl = 'https://design-auto-hub-1-appdesignauto.replit.app';
+      // Sempre usar o domínio oficial de produção
+      const baseUrl = 'https://designauto.com.br';
       
       // Extrair o timestamp do token para diagnóstico
       const tokenParts = token.split('.');

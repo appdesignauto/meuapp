@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = [
   'http://app.designauto.com.br',
   'https://designauto-app.replit.app',
   'https://designauto-app.repl.co',
-  'https://design-auto-hub-1-appdesignauto.replit.app',
+  'https://designauto.com.br',
   // Domínios da Hotmart para webhooks
   'https://hotmart.com',
   'https://www.hotmart.com',
@@ -44,7 +44,7 @@ export const TRUSTED_DOMAINS = [
   '.designauto.com.br', // Inclui todos os subdomínios
   'designauto-app.replit.app',
   'designauto-app.repl.co',
-  'design-auto-hub-1-appdesignauto.replit.app',
+  'designauto.com.br',
   '.replit.dev',
   '.repl.co',
   '.replit.app'
