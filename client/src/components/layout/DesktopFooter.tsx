@@ -76,7 +76,7 @@ const DesktopFooter = () => {
       ref={footerRef} 
       className="hidden md:block bg-white border-t border-gray-200 relative z-10"
       style={{ 
-        display: window.innerWidth >= 768 ? 'block' : 'none',
+        display: isDesktop ? 'block' : 'none',
         visibility: 'visible',
         opacity: '1'
       }}
