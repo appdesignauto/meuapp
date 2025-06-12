@@ -51,6 +51,7 @@ import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Collaborator from "@/pages/Collaborator";
 import Affiliate from "@/pages/Affiliate";
+import PV from "@/pages/PV";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -66,8 +67,8 @@ import PainelPerfil from "@/pages/painel/PainelPerfil";
 function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   
-  // Não mostrar o layout padrão para páginas administrativas ou do painel
-  if (location.startsWith('/admin') || location.startsWith('/painel')) {
+  // Não mostrar o layout padrão para páginas administrativas, do painel ou página de vendas
+  if (location.startsWith('/admin') || location.startsWith('/painel') || location === '/pv') {
     return <>{children}</>;
   }
   
@@ -181,6 +182,7 @@ function AppRoutes() {
       <Route path="/privacidade" component={Privacy} />
       <Route path="/colaboradores" component={Collaborator} />
       <Route path="/afiliacao" component={Affiliate} />
+      <Route path="/pv" component={PV} />
       <Route path="/suporte">
         {() => {
           const SuportePage = lazy(() => import("@/pages/suporte/index"));
