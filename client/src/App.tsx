@@ -1,5 +1,5 @@
 import { Switch, Route, Router, useLocation } from "wouter";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
@@ -66,35 +66,18 @@ import PainelPerfil from "@/pages/painel/PainelPerfil";
 // Componente para decidir se mostra o layout padrão
 function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const [isDesktop, setIsDesktop] = useState(false);
   
   // Não mostrar o layout padrão para páginas administrativas ou do painel
   if (location.startsWith('/admin') || location.startsWith('/painel')) {
     return <>{children}</>;
   }
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-
-    // Verificar tamanho inicial
-    checkScreenSize();
-
-    // Adicionar listener para mudanças de tamanho
-    window.addEventListener('resize', checkScreenSize);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', checkScreenSize);
-    };
-  }, []);
   
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1">{children}</main>
-      {isDesktop ? <DesktopFooter /> : <Footer />}
+      <Footer />
+      <DesktopFooter />
     </div>
   );
 }

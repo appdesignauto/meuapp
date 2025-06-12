@@ -1,76 +1,103 @@
-import ReportForm from '../reports/ReportForm';
-import { Instagram, MessageCircle } from 'lucide-react';
-import { SiTiktok, SiPinterest } from 'react-icons/si';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
+import { Instagram, MessageCircle, Mail, Heart } from 'lucide-react';
+import { SiTiktok, SiPinterest } from 'react-icons/si';
+import ReportForm from '@/components/reports/ReportForm';
 
 const DesktopFooter = () => {
+  const [isDesktop, setIsDesktop] = useState(false);
+  const footerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isDesktopSize = window.innerWidth >= 768;
+      setIsDesktop(isDesktopSize);
+    };
+
+    // Check initial screen size
+    checkScreenSize();
+
+    // Add resize listener
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
+
+  // Don't render if not desktop
+  if (!isDesktop) {
+    return null;
+  }
+
   return (
-    <footer className="bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-gray-200 relative z-10">
-      <div className="w-full px-6 py-12">
-        <div className="max-w-7xl mx-auto">
+    <footer 
+      ref={footerRef} 
+      className="hidden md:block bg-gradient-to-br from-slate-50 to-blue-50 border-t border-gray-200 relative z-10"
+    >
+      <div className="w-full px-4 py-12">
+        <div className="max-w-6xl mx-auto">
           
-          {/* Desktop Layout */}
-          <div className="grid grid-cols-4 gap-8 mb-8">
+          {/* Desktop Layout Only */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             
-            {/* Logo e Descrição */}
-            <div className="col-span-1">
-              <div className="flex items-center gap-3 mb-6">
+            {/* Coluna 1: Logo e Descrição */}
+            <div className="space-y-4">
+              <div className="flex items-center">
                 <img 
-                  src="/images/logos/logo_1749693001463.png" 
-                  alt="DesignAuto" 
-                  className="h-10 w-auto"
+                  src="/images/logos/logo_1746071698944.png" 
+                  alt="DesignAuto"
+                  className="h-8 w-auto"
                 />
-                <span className="text-xl font-bold text-gray-900">DesignAuto</span>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
+              <p className="text-gray-600 text-sm leading-relaxed">
                 Sua plataforma completa para criação de materiais de marketing automotivo profissionais e impactantes.
               </p>
               
               {/* Redes Sociais */}
-              <div className="flex items-center gap-4">
+              <div className="flex space-x-4">
                 <a 
-                  href="https://wa.me/5511999999999" 
+                  href="https://instagram.com/designauto.oficial" 
                   target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-400 hover:text-green-500 transition-colors duration-200 p-2 rounded-full hover:bg-white"
-                  aria-label="WhatsApp"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-pink-500 transition-colors duration-200"
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <Instagram className="h-5 w-5" />
                 </a>
                 <a 
-                  href="https://instagram.com/designauto" 
+                  href="https://www.tiktok.com/@designauto.oficial" 
                   target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-400 hover:text-pink-500 transition-colors duration-200 p-2 rounded-full hover:bg-white"
-                  aria-label="Instagram"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-black transition-colors duration-200"
                 >
-                  <Instagram className="w-5 h-5" />
+                  <SiTiktok className="h-5 w-5" />
                 </a>
                 <a 
-                  href="https://tiktok.com/@designauto" 
+                  href="https://br.pinterest.com/designautooficial/" 
                   target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-400 hover:text-black transition-colors duration-200 p-2 rounded-full hover:bg-white"
-                  aria-label="TikTok"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-red-600 transition-colors duration-200"
                 >
-                  <SiTiktok className="w-5 h-5" />
+                  <SiPinterest className="h-5 w-5" />
                 </a>
                 <a 
-                  href="https://pinterest.com/designauto" 
+                  href="https://wa.me/5581987654321" 
                   target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-400 hover:text-red-600 transition-colors duration-200 p-2 rounded-full hover:bg-white"
-                  aria-label="Pinterest"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-green-500 transition-colors duration-200"
                 >
-                  <SiPinterest className="w-5 h-5" />
+                  <MessageCircle className="h-5 w-5" />
                 </a>
               </div>
             </div>
 
-            {/* EMPRESA */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-6 text-sm uppercase tracking-wider">EMPRESA</h3>
-              <ul className="space-y-4">
+            {/* Coluna 2: EMPRESA */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+                EMPRESA
+              </h3>
+              <ul className="space-y-3">
                 <li>
                   <Link href="/sobre" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
                     Sobre
@@ -89,10 +116,12 @@ const DesktopFooter = () => {
               </ul>
             </div>
 
-            {/* LEGAL */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-6 text-sm uppercase tracking-wider">LEGAL</h3>
-              <ul className="space-y-4">
+            {/* Coluna 3: LEGAL */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+                LEGAL
+              </h3>
+              <ul className="space-y-3">
                 <li>
                   <Link href="/termos" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
                     Termos
@@ -103,16 +132,24 @@ const DesktopFooter = () => {
                     Privacidade
                   </Link>
                 </li>
-                <li><ReportForm /></li>
+                <li>
+                  <ReportForm>
+                    <button className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm text-left">
+                      Denunciar arquivo
+                    </button>
+                  </ReportForm>
+                </li>
               </ul>
             </div>
 
-            {/* PARCERIA */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-6 text-sm uppercase tracking-wider">PARCERIA</h3>
-              <ul className="space-y-4">
+            {/* Coluna 4: PARCERIA */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+                PARCERIA
+              </h3>
+              <ul className="space-y-3">
                 <li>
-                  <Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  <Link href="/colaborar" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
                     Colaborar
                   </Link>
                 </li>
@@ -130,11 +167,14 @@ const DesktopFooter = () => {
             </div>
           </div>
 
-          {/* Bottom section */}
-          <div className="border-t border-gray-200 pt-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-gray-500 text-xs text-center md:text-left">
+          {/* Copyright Footer */}
+          <div className="mt-12 pt-8 border-t border-gray-200">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-gray-500 text-xs">
                 © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
+              </p>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                Feito com <Heart className="h-3 w-3 text-red-500 fill-current" /> para o mercado automotivo
               </div>
             </div>
           </div>
