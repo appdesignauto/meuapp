@@ -230,16 +230,16 @@ export class DoppusService {
 
       await pool.query(`
         INSERT INTO webhook_logs (
-          source, event_type, raw_payload, status, user_id, error_message, transaction_id, created_at
+          source, event_type, raw_payload, status, email, error_message, transaction_id, created_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       `, [
         'doppus',
         webhookData.status?.code || 'unknown',
         JSON.stringify(webhookData),
         status,
-        userId,
+        webhookData.customer?.email || null,
         errorMessage || null,
-        webhookData.transaction?.code || null,
+        webhookData.transaction?.id || webhookData.id || null,
         new Date()
       ]);
 
