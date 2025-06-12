@@ -179,7 +179,7 @@ export const insertUserStatsSchema = createInsertSchema(userStats).omit({
 
 // Types
 export type NivelAcesso = 'visitante' | 'usuario' | 'premium' | 'designer' | 'designer_adm' | 'suporte' | 'admin';
-export type OrigemAssinatura = 'hotmart' | 'manual' | 'auto' | 'nenhuma';
+export type OrigemAssinatura = 'hotmart' | 'doppus' | 'manual' | 'auto' | 'nenhuma';
 export type TipoPlano = 'mensal' | 'anual' | 'personalizado' | 'vitalicio';
 
 export type User = typeof users.$inferSelect;

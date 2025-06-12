@@ -372,4 +372,55 @@ export class SubscriptionService {
       throw error;
     }
   }
+
+  /**
+   * Processa um webhook da Doppus
+   * Esta função serve como ponte entre a requisição webhook e o DoppusService
+   * @param webhookData Dados do webhook recebido da Doppus
+   */
+  static async processDoppusWebhook(webhookData: any) {
+    console.log('🔄 SubscriptionService.processDoppusWebhook iniciado');
+    try {
+      // Importar o DoppusService dinamicamente
+      const { DoppusService } = await import('./doppus-service');
+      
+      // Extrair email do webhook da Doppus
+      const email = webhookData?.customer?.email;
+      
+      if (!email) {
+        throw new Error('Email não encontrado no webhook da Doppus');
+      }
+      
+      console.log(`📧 Email extraído: ${email}`);
+      
+      // Determinar tipo de evento baseado no status da Doppus
+      const status = webhookData?.status?.code;
+      
+      let result;
+      switch (status) {
+        case 'approved':
+          result = await DoppusService.processPurchase(webhookData, email);
+          break;
+        
+        case 'cancelled':
+        case 'refunded':
+        case 'chargeback':
+          result = await DoppusService.processCancellation(webhookData, email);
+          break;
+        
+        case 'renewed':
+          result = await DoppusService.processRenewal(webhookData, email);
+          break;
+        
+        default:
+          console.log(`⚠️ Status não processado: ${status}`);
+          return { success: false, message: `Status não suportado: ${status}` };
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Erro no processamento do webhook Doppus:', error);
+      throw error;
+    }
+  }
 }
