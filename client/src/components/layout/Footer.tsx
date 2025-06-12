@@ -119,11 +119,11 @@ const Footer = () => {
 
         {/* Desktop Layout (≥ 768px) */}
         <div className="hidden md:block py-12">
-          {/* Grid Container com força no display */}
-          <div className="grid grid-cols-4 gap-x-8 gap-y-6 mb-8">
+          {/* Container Flexbox forçado com CSS específico */}
+          <div className="mb-8" style={{display: 'flex', flexWrap: 'nowrap', justifyContent: 'space-between', gap: '2rem'}}>
             
             {/* Coluna 1: Logo e Descrição */}
-            <div className="col-span-1">
+            <div className="flex-1 min-w-0 max-w-xs">
               <div className="flex items-center mb-4">
                 <img 
                   src="/images/logos/logo_1746071698944.png" 
@@ -177,7 +177,7 @@ const Footer = () => {
             </div>
 
             {/* Coluna 2: EMPRESA */}
-            <div className="col-span-1">
+            <div style={{minWidth: '120px', maxWidth: '150px'}}>
               <h3 className="font-semibold text-gray-900 mb-4 text-sm tracking-wide">EMPRESA</h3>
               <div className="space-y-3">
                 <Link href="/sobre" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
@@ -193,7 +193,7 @@ const Footer = () => {
             </div>
 
             {/* Coluna 3: LEGAL */}
-            <div className="col-span-1">
+            <div style={{minWidth: '120px', maxWidth: '150px'}}>
               <h3 className="font-semibold text-gray-900 mb-4 text-sm tracking-wide">LEGAL</h3>
               <div className="space-y-3">
                 <Link href="/termos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
@@ -209,7 +209,7 @@ const Footer = () => {
             </div>
 
             {/* Coluna 4: PARCERIA */}
-            <div className="col-span-1">
+            <div style={{minWidth: '120px', maxWidth: '150px'}}>
               <h3 className="font-semibold text-gray-900 mb-4 text-sm tracking-wide">PARCERIA</h3>
               <div className="space-y-3">
                 <Link href="/colaboradores" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
