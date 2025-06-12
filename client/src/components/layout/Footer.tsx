@@ -97,12 +97,17 @@ const Footer = () => {
       window.removeEventListener('resize', handleStyleChange);
     };
   }, []);
+  // Não renderizar se não for mobile
+  if (!isMobile) {
+    return null;
+  }
+
   return (
     <footer 
       ref={footerRef} 
-      className="md:hidden bg-white border-t border-gray-200 relative z-10"
+      className="block md:hidden bg-white border-t border-gray-200 relative z-10"
       style={{ 
-        display: isMobile ? 'block' : 'none',
+        display: 'block',
         visibility: 'visible',
         opacity: '1'
       }}
