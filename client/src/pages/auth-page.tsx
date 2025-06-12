@@ -294,6 +294,15 @@ const AuthPage = () => {
                           "Entrar"
                         )}
                       </Button>
+
+                      <div className="text-center mt-4">
+                        <Link 
+                          href="/password/forgot" 
+                          className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200"
+                        >
+                          Esqueci minha senha
+                        </Link>
+                      </div>
                       
                       {loginError && (
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
