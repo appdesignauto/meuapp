@@ -296,10 +296,10 @@ app.use((req, res, next) => {
           console.log('🚫 [WEBHOOK] Processando cancelamento para:', email);
           
           try {
-            // Rebaixar usuário para free
+            // Rebaixar usuário para usuario
             const userUpdateResult = await pool.query(`
               UPDATE users SET
-                nivelacesso = 'free',
+                nivelacesso = 'usuario',
                 acessovitalicio = false,
                 tipoplano = NULL,
                 dataexpiracao = CURRENT_DATE
