@@ -119,23 +119,24 @@ const Footer = () => {
 
         {/* Desktop Layout (≥ 768px) */}
         <div className="hidden md:block py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          {/* Grid Container com força no display */}
+          <div className="grid grid-cols-4 gap-x-8 gap-y-6 mb-8">
             
             {/* Coluna 1: Logo e Descrição */}
-            <div className="space-y-4">
-              <div className="flex items-center">
+            <div className="col-span-1">
+              <div className="flex items-center mb-4">
                 <img 
                   src="/images/logos/logo_1746071698944.png" 
                   alt="DesignAuto"
                   className="h-8 w-auto"
                 />
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
                 Sua plataforma completa para criação de materiais de marketing automotivo profissionais e impactantes.
               </p>
               
               {/* Redes Sociais Desktop */}
-              <div className="flex space-x-4">
+              <div className="flex space-x-3">
                 <a 
                   href="https://instagram.com/designauto.oficial" 
                   target="_blank" 
@@ -176,76 +177,58 @@ const Footer = () => {
             </div>
 
             {/* Coluna 2: EMPRESA */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm">EMPRESA</h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link href="/sobre" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Sobre
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/planos" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Planos
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/duvidas" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Dúvidas
-                  </Link>
-                </li>
-              </ul>
+            <div className="col-span-1">
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm tracking-wide">EMPRESA</h3>
+              <div className="space-y-3">
+                <Link href="/sobre" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Sobre
+                </Link>
+                <Link href="/planos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Planos
+                </Link>
+                <Link href="/duvidas" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Dúvidas
+                </Link>
+              </div>
             </div>
 
             {/* Coluna 3: LEGAL */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm">LEGAL</h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link href="/termos" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Termos
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacidade" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Privacidade
-                  </Link>
-                </li>
-                <li>
+            <div className="col-span-1">
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm tracking-wide">LEGAL</h3>
+              <div className="space-y-3">
+                <Link href="/termos" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Termos
+                </Link>
+                <Link href="/privacidade" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Privacidade
+                </Link>
+                <div className="block">
                   <ReportForm />
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
 
             {/* Coluna 4: PARCERIA */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm">PARCERIA</h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link href="/colaboradores" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Colaborar
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/afiliacao" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Afiliação
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/suporte" className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
-                    Suporte
-                  </Link>
-                </li>
-              </ul>
+            <div className="col-span-1">
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm tracking-wide">PARCERIA</h3>
+              <div className="space-y-3">
+                <Link href="/colaboradores" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Colaborar
+                </Link>
+                <Link href="/afiliacao" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Afiliação
+                </Link>
+                <Link href="/suporte" className="block text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm">
+                  Suporte
+                </Link>
+              </div>
             </div>
           </div>
 
           {/* Copyright Desktop */}
-          <div className="border-t border-gray-200 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="text-gray-500 text-sm">
-                © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
-              </div>
+          <div className="border-t border-gray-200 pt-6">
+            <div className="text-center text-gray-500 text-sm">
+              © DesignAuto 2025 - DESIGNAUTO.COM.BR LTDA - CNPJ 37.561.761/0001-0
             </div>
           </div>
         </div>
