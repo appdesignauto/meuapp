@@ -16,6 +16,7 @@ import { measureWebVitals } from "./lib/measureWebVitals";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import DesktopFooter from "@/components/layout/DesktopFooter";
 import Home from "@/pages/Home";
 import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
@@ -76,6 +77,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
+      <DesktopFooter />
     </div>
   );
 }

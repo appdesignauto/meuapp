@@ -72,8 +72,8 @@ const Footer = () => {
     };
   }, []);
   return (
-    <footer ref={footerRef} className="bg-white border-t border-gray-200 relative z-10 block" style={{ display: 'block !important', visibility: 'visible !important' }}>
-      <div className="w-full px-4 py-6 md:py-12">
+    <footer ref={footerRef} className="md:hidden bg-white border-t border-gray-200 relative z-10 block" style={{ display: 'block !important', visibility: 'visible !important' }}>
+      <div className="w-full px-4 py-6">
         <div className="max-w-6xl mx-auto">
           
           {/* Mobile Layout */}
