@@ -179,7 +179,7 @@ const ModernDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="flex min-h-screen bg-gray-50/50">
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -199,8 +199,8 @@ const ModernDashboard = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ${
-        sidebarOpen ? 'lg:w-64' : 'lg:w-16'
+      <div className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
+        sidebarOpen ? 'w-64' : 'w-16'
       }`}>
         <DesktopSidebar 
           menuSections={menuSections}
@@ -215,7 +215,7 @@ const ModernDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className={`lg:pl-64 transition-all duration-300 ${!sidebarOpen ? 'lg:pl-16' : ''}`}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -263,7 +263,7 @@ const ModernDashboard = () => {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">
             {renderContent()}
           </div>
@@ -276,7 +276,7 @@ const ModernDashboard = () => {
 // Desktop Sidebar Component
 const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, sidebarOpen, setSidebarOpen, handleLogout }: any) => {
   return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+    <div className="flex flex-col h-full">
       {/* Logo Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         {sidebarOpen ? (
