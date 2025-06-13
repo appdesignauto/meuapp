@@ -8161,17 +8161,17 @@ app.use('/api/reports-v2', (req, res, next) => {
         }
       }
 
-      // Buscar contadores de assinantes por fonte (corrigido para não duplicar)
+      // Buscar APENAS assinantes pagantes reais (via webhooks Hotmart/Doppus)
       const subscriberCounts = await db.execute(sql`
         SELECT 
-          COUNT(*) as total_subscribers,
+          COUNT(CASE WHEN origemassinatura IN ('hotmart', 'doppus') THEN 1 END) as total_subscribers,
           COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) as hotmart_count,
           COUNT(CASE WHEN origemassinatura = 'doppus' THEN 1 END) as doppus_count,
-          COUNT(CASE WHEN tipoplano = 'anual' AND origemassinatura IS NULL THEN 1 END) as annual_count,
-          COUNT(CASE WHEN tipoplano = 'mensal' AND origemassinatura IS NULL THEN 1 END) as monthly_count,
-          COUNT(CASE WHEN origemassinatura IS NULL AND tipoplano IS NULL THEN 1 END) as manual_count
+          0 as annual_count,
+          0 as monthly_count,
+          0 as manual_count
         FROM users 
-        WHERE nivelacesso IN ('premium', 'designer') AND isactive = true
+        WHERE nivelacesso = 'premium' AND origemassinatura IN ('hotmart', 'doppus') AND isactive = true
       `);
       
       const counts = subscriberCounts.rows[0];
@@ -8248,22 +8248,20 @@ app.use('/api/reports-v2', (req, res, next) => {
         });
       }
 
-      // Buscar assinantes recentes
+      // Buscar APENAS assinantes recentes pagantes (Hotmart/Doppus)
       const recentSubscribersResult = await db.execute(sql`
         SELECT 
           id, name, email,
-          COALESCE(tipoplano, 'mensal') as plan_type,
-          COALESCE(origemassinatura, 'manual') as source,
+          COALESCE(tipoplano, 'premium') as plan_type,
+          origemassinatura as source,
           COALESCE(dataassinatura, criadoem) as subscription_date,
           CASE 
             WHEN origemassinatura = 'hotmart' THEN 7.00
             WHEN origemassinatura = 'doppus' THEN 39.80
-            WHEN tipoplano = 'anual' THEN 197
-            WHEN tipoplano = 'mensal' THEN 19.90
-            ELSE 19.90
+            ELSE 0
           END as plan_value
         FROM users 
-        WHERE nivelacesso IN ('premium', 'designer') AND isactive = true
+        WHERE nivelacesso = 'premium' AND origemassinatura IN ('hotmart', 'doppus') AND isactive = true
         ORDER BY COALESCE(dataassinatura, criadoem) DESC
         LIMIT 10
       `);
