@@ -15,6 +15,8 @@ import {
   Activity,
   Eye,
   EyeOff,
+  Lock,
+  Info,
   Download,
   Upload,
   Settings,
@@ -73,7 +75,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SaasDashboard } from "@/components/admin/SaasDashboard";
+import SaasDashboard from "@/components/admin/SaasDashboard";
 import SimpleSubscriptionDashboard from "@/components/admin/SimpleSubscriptionDashboard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -991,6 +993,7 @@ const ModernUserManagement = () => {
                       <SelectTrigger className="h-11 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400">
                         <SelectValue placeholder="Selecione o nível de acesso" />
                       </SelectTrigger>
+                      <SelectContent>
                         {Object.entries(roleConfig).map(([key, config]) => (
                           <SelectItem key={key} value={key}>
                             <div className="flex items-center gap-2">
