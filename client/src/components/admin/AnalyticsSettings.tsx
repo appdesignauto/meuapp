@@ -212,28 +212,89 @@ const AnalyticsSettings: React.FC = () => {
               <Label htmlFor="metaAdsEnabled" className="text-sm font-medium">Ativar Conversions API</Label>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex justify-end pt-6">
-            <Button 
-              onClick={handleSave} 
-              disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
-            >
-              {isLoading ? (
-                <>
-                  <Save className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Configurações
-                </>
-              )}
-            </Button>
+      {/* Google Tag Manager */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações do Google Tag Manager</CardTitle>
+          <CardDescription>Configure o GTM para gerenciar tags e scripts de rastreamento</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="gtmContainerId" className="text-sm font-medium">ID do Container GTM</Label>
+            <Input
+              id="gtmContainerId"
+              value={analytics?.gtmContainerId || ''}
+              onChange={(e) => handleInputChange('gtmContainerId', e.target.value)}
+              placeholder="GTM-XXXXXXX"
+              className="bg-gray-50"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="gtmEnabled"
+              checked={analytics?.gtmEnabled || false}
+              onCheckedChange={(checked) => handleInputChange('gtmEnabled', checked)}
+              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
+            <Label htmlFor="gtmEnabled" className="text-sm font-medium">Ativar Google Tag Manager</Label>
           </div>
         </CardContent>
       </Card>
+
+      {/* Google Analytics 4 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações do Google Analytics 4</CardTitle>
+          <CardDescription>Configure o GA4 para análise detalhada de comportamento</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="ga4MeasurementId" className="text-sm font-medium">ID de Medição GA4</Label>
+            <Input
+              id="ga4MeasurementId"
+              value={analytics?.ga4MeasurementId || ''}
+              onChange={(e) => handleInputChange('ga4MeasurementId', e.target.value)}
+              placeholder="G-XXXXXXXXXX"
+              className="bg-gray-50"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="ga4Enabled"
+              checked={analytics?.ga4Enabled || false}
+              onCheckedChange={(checked) => handleInputChange('ga4Enabled', checked)}
+              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
+            <Label htmlFor="ga4Enabled" className="text-sm font-medium">Ativar Google Analytics 4</Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Botão de Salvar Global */}
+      <div className="flex justify-end pt-6">
+        <Button 
+          onClick={handleSave} 
+          disabled={isLoading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md"
+        >
+          {isLoading ? (
+            <>
+              <Save className="mr-2 h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Salvar Configurações
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
