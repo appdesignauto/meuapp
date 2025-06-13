@@ -1607,8 +1607,6 @@ const AdminDashboard = () => {
       <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
         <header className="bg-white relative border-b border-gray-200 shadow-sm">
           <div className="px-6 py-4 pt-6 flex flex-col sm:flex-row sm:items-center justify-between">
-            {/* Linha de separação limitada alinhada ao ícone */}
-            <div className="absolute bottom-0 left-6 w-16 h-px bg-gradient-to-r from-blue-300 to-transparent"></div>
             <div className="flex items-center mb-3 sm:mb-0">
               {/* Botão de alternância do menu (visível apenas em telas menores) */}
               <button 
