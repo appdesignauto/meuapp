@@ -20,6 +20,22 @@ interface ResumoGeralData {
   communityGrowthPercent: number
   downloadGrowthPercent: number
   commentGrowthPercent: number
+  newUsersMonth: number
+  newUsersPrevPeriod: number
+  activeUsers: number
+  activeWeek: number
+  artsThisPeriod: number
+  artsPrevPeriod: number
+  artsThisWeek: number
+  artsThisMonth: number
+  postsThisPeriod: number
+  postsPrevPeriod: number
+  postsThisWeek: number
+  postsThisMonth: number
+  downloadsThisPeriod: number
+  downloadsPrevPeriod: number
+  commentsThisPeriod: number
+  commentsPrevPeriod: number
 }
 
 export function useResumoGeral(period: string = '30d') {
