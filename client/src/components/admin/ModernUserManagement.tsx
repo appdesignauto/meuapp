@@ -864,115 +864,164 @@ const ModernUserManagement = () => {
           createForm.reset();
         }
       }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Criar Novo Usuário
-              <span className="text-sm font-normal text-muted-foreground ml-auto">
-                Etapa {createUserStep} de {selectedNivelAcesso === "premium" ? "2" : "1"}
-              </span>
-            </DialogTitle>
-            <DialogDescription>
-              {createUserStep === 1 
-                ? "Preencha os dados principais de acesso"
-                : "Configure os detalhes da assinatura premium"
-              }
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-              style={{ 
-                width: selectedNivelAcesso === "premium" 
-                  ? `${(createUserStep / 2) * 100}%` 
-                  : "100%" 
-              }}
-            />
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+          {/* Custom Header with better spacing */}
+          <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+                <Plus className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Criar Novo Usuário</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {createUserStep === 1 
+                    ? "Preencha os dados principais de acesso"
+                    : "Configure os detalhes da assinatura premium"
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="text-sm font-medium text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
+              Etapa {createUserStep} de {selectedNivelAcesso === "premium" ? "2" : "1"}
+            </div>
           </div>
 
-          <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-4">
-            {/* Step 1: Basic Information */}
-            {createUserStep === 1 && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...createForm.register("email", { required: "Email é obrigatório" })}
-                    placeholder="Digite o email (identificação principal)"
-                    className="text-base"
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    O email será usado como identificação principal
-                  </p>
-                </div>
+          {/* Progress Bar with better styling */}
+          <div className="py-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-gray-600">Progresso</span>
+              <span className="text-xs text-gray-500">
+                {selectedNivelAcesso === "premium" 
+                  ? `${Math.round((createUserStep / 2) * 100)}%` 
+                  : "100%"
+                }
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out" 
+                style={{ 
+                  width: selectedNivelAcesso === "premium" 
+                    ? `${(createUserStep / 2) * 100}%` 
+                    : "100%" 
+                }}
+              />
+            </div>
+          </div>
 
-                <div>
-                  <Label htmlFor="name">Nome Completo *</Label>
-                  <Input
-                    id="name"
-                    {...createForm.register("name", { required: "Nome é obrigatório" })}
-                    placeholder="Digite o nome completo"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="password">Senha *</Label>
-                  <div className="relative">
+          {/* Form Content with better scrolling */}
+          <div className="max-h-[60vh] overflow-y-auto pr-2">
+            <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-6">
+              {/* Step 1: Basic Information */}
+              {createUserStep === 1 && (
+                <div className="space-y-6">
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      Email
+                      <span className="text-red-500">*</span>
+                    </Label>
                     <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      {...createForm.register("password", { required: "Senha é obrigatória" })}
-                      placeholder="Digite a senha"
+                      id="email"
+                      type="email"
+                      {...createForm.register("email", { required: "Email é obrigatório" })}
+                      placeholder="exemplo@empresa.com"
+                      className="h-11 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
+                    <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                      <Info className="w-3 h-3" />
+                      O email será usado como identificação principal
+                    </p>
+                  </div>
+
+                  {/* Name Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <User className="w-4 h-4 text-gray-400" />
+                      Nome Completo
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      {...createForm.register("name", { required: "Nome é obrigatório" })}
+                      placeholder="João Silva Santos"
+                      className="h-11 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-gray-400" />
+                      Senha
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        {...createForm.register("password", { required: "Senha é obrigatória" })}
+                        placeholder="Digite uma senha segura"
+                        className="h-11 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400 pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-11 px-3 hover:bg-gray-50"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Access Level Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="nivelacesso" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-gray-400" />
+                      Nível de Acesso
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <Select onValueChange={(value) => {
+                      createForm.setValue("nivelacesso", value as NivelAcesso);
+                      setSelectedNivelAcesso(value);
+                    }}>
+                      <SelectTrigger className="h-11 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400">
+                        <SelectValue placeholder="Selecione o nível de acesso" />
+                      </SelectTrigger>
+                        {Object.entries(roleConfig).map(([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            <div className="flex items-center gap-2">
+                              <config.icon className="w-4 h-4" />
+                              {config.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* User Status */}
+                  <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                    <Checkbox
+                      id="isactive"
+                      {...createForm.register("isactive")}
+                      defaultChecked={true}
+                      className="border-gray-300"
+                    />
+                    <div className="flex flex-col">
+                      <Label htmlFor="isactive" className="text-sm font-medium text-gray-700 cursor-pointer">
+                        Usuário ativo
+                      </Label>
+                      <p className="text-xs text-gray-500">
+                        O usuário poderá fazer login na plataforma
+                      </p>
+                    </div>
                   </div>
                 </div>
-
-                <div>
-                  <Label htmlFor="nivelacesso">Nível de Acesso *</Label>
-                  <Select onValueChange={(value) => {
-                    createForm.setValue("nivelacesso", value as NivelAcesso);
-                    setSelectedNivelAcesso(value);
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o nível de acesso" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(roleConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          <div className="flex items-center gap-2">
-                            <config.icon className="w-4 h-4" />
-                            {config.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isactive"
-                    {...createForm.register("isactive")}
-                    defaultChecked={true}
-                  />
-                  <Label htmlFor="isactive">Usuário ativo</Label>
-                </div>
-              </div>
-            )}
+              )}
 
             {/* Step 2: Premium Subscription Details */}
             {createUserStep === 2 && selectedNivelAcesso === "premium" && (
