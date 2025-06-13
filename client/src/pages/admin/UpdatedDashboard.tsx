@@ -1782,233 +1782,160 @@ const AdminDashboard = () => {
 
             
             <TabsContent value="stats">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Estatísticas Gerais</h2>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Users className="w-5 h-5 mr-2 text-blue-500" />
-                        <span>Usuários Totais</span>
+              <div className="space-y-6">
+                {/* Header do Dashboard */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-medium text-gray-600">Visão geral da plataforma</h2>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-500 mb-1">Hoje</div>
+                    <ChevronDown className="w-4 h-4 text-gray-400 ml-auto" />
+                  </div>
+                </div>
+
+                {/* Cards de Métricas Principais */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Usuários Totais */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-blue-50 rounded-lg mr-3">
+                        <Users className="w-5 h-5 text-blue-600" />
                       </div>
-                      <div className="font-medium">1,245</div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold text-gray-900">1.245</div>
+                        <div className="text-sm text-green-600 font-medium">+12% este mês</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Image className="w-5 h-5 mr-2 text-blue-500" />
-                        <span>Artes Publicadas</span>
-                      </div>
-                      <div className="font-medium">3,672</div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 mb-1">Usuários Totais</div>
+                      <div className="text-xs text-gray-500">327 premium ativos</div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Video className="w-5 h-5 mr-2 text-blue-500" />
-                        <span>Vídeo-aulas</span>
+                  </div>
+
+                  {/* Total de Artes */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-purple-50 rounded-lg mr-3">
+                        <Image className="w-5 h-5 text-purple-600" />
                       </div>
-                      <div className="font-medium">84</div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold text-gray-900">2.847</div>
+                        <div className="text-sm text-green-600 font-medium">+8% este mês</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Crown className="w-5 h-5 mr-2 text-amber-500" />
-                        <span>Usuários Premium</span>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 mb-1">Total de Artes</div>
+                      <div className="text-xs text-gray-500">156 adicionadas esta semana</div>
+                    </div>
+                  </div>
+
+                  {/* Posts Comunidade */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-green-50 rounded-lg mr-3">
+                        <MessageSquare className="w-5 h-5 text-green-600" />
                       </div>
-                      <div className="font-medium">327</div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold text-gray-900">489</div>
+                        <div className="text-sm text-green-600 font-medium">+15% este mês</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 mb-1">Posts Comunidade</div>
+                      <div className="text-xs text-gray-500">73 interações hoje</div>
+                    </div>
+                  </div>
+
+                  {/* Receita Mensal */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-yellow-50 rounded-lg mr-3">
+                        <CreditCard className="w-5 h-5 text-yellow-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold text-gray-900">R$ 18.2k</div>
+                        <div className="text-sm text-green-600 font-medium">+23% este mês</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 mb-1">Receita Mensal</div>
+                      <div className="text-xs text-gray-500">R$ 1.6k esta semana</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estatísticas Detalhadas */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Estatísticas Detalhadas</h3>
+                    <p className="text-sm text-gray-500">Métricas de performance da plataforma</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Vídeo-aulas */}
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-blue-50 rounded-lg mr-3">
+                          <Video className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Vídeo-aulas</div>
+                          <div className="text-xs text-gray-500">84 📚 Taxa Premium</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">26.3%</div>
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <span className="w-3 h-3 bg-blue-100 rounded-full mr-1"></span>
+                          Downloads 12.8k
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <BookOpen className="w-5 h-5 mr-2 text-green-500" />
-                        <span>Cursos</span>
+                    {/* Categorias */}
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-purple-50 rounded-lg mr-3">
+                          <LayoutGrid className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Categorias</div>
+                          <div className="text-xs text-gray-500">15 📈 Crescimento</div>
+                        </div>
                       </div>
-                      <div className="font-medium">{courses?.length || 0}</div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">+18.2%</div>
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <span className="w-3 h-3 bg-purple-100 rounded-full mr-1"></span>
+                          Comentários 1.2k
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Layers className="w-5 h-5 mr-2 text-purple-500" />
-                        <span>Módulos</span>
+                    {/* Formatos */}
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-green-50 rounded-lg mr-3">
+                          <FileType className="w-4 h-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Formatos</div>
+                          <div className="text-xs text-gray-500">8 ⏱️ Tempo Médio</div>
+                        </div>
                       </div>
-                      <div className="font-medium">{modules?.length || 0}</div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <FileText className="w-5 h-5 mr-2 text-indigo-500" />
-                        <span>Aulas</span>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">42min</div>
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <span className="w-3 h-3 bg-green-100 rounded-full mr-1"></span>
+                          ⭐ Avaliação 4.8★
+                        </div>
                       </div>
-                      <div className="font-medium">{lessons?.length || 0}</div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Cursos</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
-                          <BookOpen className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Módulos</div>
-                          <div className="text-sm text-gray-500">15 publicados</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTab('modules')} className="text-blue-600 hover:text-blue-800">
-                        <ChevronDown className="w-5 h-5 rotate-[270deg]" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
-                          <Video className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Aulas</div>
-                          <div className="text-sm text-gray-500">84 publicadas</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTab('lessons')} className="text-blue-600 hover:text-blue-800">
-                        <ChevronDown className="w-5 h-5 rotate-[270deg]" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mr-3">
-                          <Settings className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Configurações</div>
-                          <div className="text-sm text-gray-500">Banner, textos</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTab('coursesConfig')} className="text-blue-600 hover:text-blue-800">
-                        <ChevronDown className="w-5 h-5 rotate-[270deg]" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Conteúdo</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mr-3">
-                          <Image className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Artes</div>
-                          <div className="text-sm text-gray-500">3.6k publicadas</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTab('arts')} className="text-blue-600 hover:text-blue-800">
-                        <ChevronDown className="w-5 h-5 rotate-[270deg]" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-3">
-                          <LayoutGrid className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Categorias</div>
-                          <div className="text-sm text-gray-500">12 principais</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTab('categories')} className="text-blue-600 hover:text-blue-800">
-                        <ChevronDown className="w-5 h-5 rotate-[270deg]" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 mr-3">
-                          <CreditCard className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Formatos</div>
-                          <div className="text-sm text-gray-500">6 padrões</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTab('formats')} className="text-blue-600 hover:text-blue-800">
-                        <ChevronDown className="w-5 h-5 rotate-[270deg]" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Acesso Rápido</h2>
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-blue-800">Acesso ao Site</h3>
-                          <p className="text-sm mt-2">Visualize a plataforma</p>
-                        </div>
-                        <Home className="w-8 h-8 text-blue-500" />
-                      </div>
-                      <Link href="/">
-                        <button className="mt-4 text-blue-600 text-sm hover:text-blue-800 flex items-center">
-                          Acessar Site
-                          <ChevronDown className="w-4 h-4 ml-1 rotate-[270deg]" />
-                        </button>
-                      </Link>
-                    </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-purple-800">Vídeo-aulas</h3>
-                          <p className="text-sm mt-2">Página de cursos</p>
-                        </div>
-                        <Video className="w-8 h-8 text-purple-500" />
-                      </div>
-                      <Link href="/videoaulas">
-                        <button className="mt-4 text-purple-600 text-sm hover:text-purple-800 flex items-center">
-                          Visualizar
-                          <ChevronDown className="w-4 h-4 ml-1 rotate-[270deg]" />
-                        </button>
-                      </Link>
-                    </div>
-                    <div className="bg-emerald-50 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-emerald-800">Configurações</h3>
-                          <p className="text-sm mt-2">Página de cursos</p>
-                        </div>
-                        <Settings className="w-8 h-8 text-emerald-500" />
-                      </div>
-                      <button 
-                        onClick={() => setActiveTab('coursesConfig')}
-                        className="mt-4 text-emerald-600 text-sm hover:text-emerald-800 flex items-center"
-                      >
-                        Configurar
-                        <ChevronDown className="w-4 h-4 ml-1 rotate-[270deg]" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border rounded-lg p-4 mt-6 md:col-span-2">
-                  <h3 className="font-semibold mb-4">Acesso rápido a cursos</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button 
-                      onClick={() => setActiveTab('modules')}
-                      variant="outline" 
-                      className="flex items-center justify-center h-12 border-blue-200 text-blue-700 hover:bg-blue-50"
-                    >
-                      <BookOpen className="w-5 h-5 mr-2" />
-                      Gerenciar Módulos
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => setActiveTab('lessons')}
-                      variant="outline" 
-                      className="flex items-center justify-center h-12 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                    >
-                      <Video className="w-5 h-5 mr-2" />
-                      Gerenciar Aulas
-                    </Button>
+              </div>
+            </TabsContent>
                     
                     <Button 
                       onClick={() => window.location.href = '/videoaulas'}
