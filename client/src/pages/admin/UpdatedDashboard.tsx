@@ -1724,7 +1724,6 @@ const AdminDashboard = () => {
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Cursos</h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -1772,7 +1771,6 @@ const AdminDashboard = () => {
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Conteúdo</h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -2887,7 +2885,6 @@ const AdminDashboard = () => {
             <TabsContent value="lessons" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Aulas dos Cursos</h2>
                   <Button 
                     onClick={() => {
                       setCurrentLesson(null);
@@ -4149,7 +4146,6 @@ const AdminDashboard = () => {
                         </div>
                         
                         <div className="grid gap-3 mt-4">
-                          <h3 className="text-md font-medium">Configurações Avançadas</h3>
                           <Separator />
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
