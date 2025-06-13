@@ -66,7 +66,11 @@ import {
   Calendar,
   Wrench,
   FlagIcon,
-  Palette
+  Palette,
+  TrendingUp,
+  Clock,
+  Download,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1801,63 +1805,273 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="stats">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold mb-4">Estatísticas Gerais</h2>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Users className="w-5 h-5 mr-2 text-blue-500" />
-                        <span>Usuários Totais</span>
-                      </div>
-                      <div className="font-medium">1,245</div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Image className="w-5 h-5 mr-2 text-blue-500" />
-                        <span>Artes Publicadas</span>
-                      </div>
-                      <div className="font-medium">3,672</div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Video className="w-5 h-5 mr-2 text-blue-500" />
-                        <span>Vídeo-aulas</span>
-                      </div>
-                      <div className="font-medium">84</div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Crown className="w-5 h-5 mr-2 text-amber-500" />
-                        <span>Usuários Premium</span>
-                      </div>
-                      <div className="font-medium">327</div>
-                    </div>
+              {/* Dashboard Header */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm">Visão geral da plataforma</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Select defaultValue="30dias">
+                      <SelectTrigger className="w-[140px] border-gray-200 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hoje">Hoje</SelectItem>
+                        <SelectItem value="7dias">7 dias</SelectItem>
+                        <SelectItem value="30dias">30 dias</SelectItem>
+                        <SelectItem value="90dias">90 dias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <BookOpen className="w-5 h-5 mr-2 text-green-500" />
-                        <span>Cursos</span>
-                      </div>
-                      <div className="font-medium">{courses?.length || 0}</div>
+              {/* Métricas Principais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* Card Usuários */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                      <Users className="w-6 h-6 text-blue-600" />
                     </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Layers className="w-5 h-5 mr-2 text-purple-500" />
-                        <span>Módulos</span>
-                      </div>
-                      <div className="font-medium">{modules?.length || 0}</div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <FileText className="w-5 h-5 mr-2 text-indigo-500" />
-                        <span>Aulas</span>
-                      </div>
-                      <div className="font-medium">{lessons?.length || 0}</div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">1,245</div>
+                      <div className="text-xs text-green-600 font-medium">+12% este mês</div>
                     </div>
                   </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 mb-1">Usuários Totais</div>
+                    <div className="text-xs text-gray-500">327 premium ativos</div>
+                  </div>
+                </div>
+
+                {/* Card Artes */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
+                      <Palette className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">3,672</div>
+                      <div className="text-xs text-green-600 font-medium">+8% este mês</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 mb-1">Artes Publicadas</div>
+                    <div className="text-xs text-gray-500">15 categorias ativas</div>
+                  </div>
+                </div>
+
+                {/* Card Cursos */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">{courses?.length || 0}</div>
+                      <div className="text-xs text-green-600 font-medium">100% ativos</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 mb-1">Cursos Disponíveis</div>
+                    <div className="text-xs text-gray-500">{modules?.length || 0} módulos totais</div>
+                  </div>
+                </div>
+
+                {/* Card Engajamento */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">94.2%</div>
+                      <div className="text-xs text-green-600 font-medium">+2.1% este mês</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 mb-1">Taxa de Engajamento</div>
+                    <div className="text-xs text-gray-500">Média de sessões</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção de Atividades Recentes e Insights */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Atividades Recentes */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900">Atividades Recentes</h3>
+                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                      Ver todas
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Users className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 font-medium">Novo usuário premium</p>
+                        <p className="text-xs text-gray-500">João Silva se inscreveu no plano anual</p>
+                        <p className="text-xs text-gray-400">há 2 minutos</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Palette className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 font-medium">Nova arte publicada</p>
+                        <p className="text-xs text-gray-500">Template de vendas para veículos</p>
+                        <p className="text-xs text-gray-400">há 15 minutos</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center flex-shrink-0">
+                        <MessageSquare className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 font-medium">Novo comentário</p>
+                        <p className="text-xs text-gray-500">Feedback positivo no curso de design</p>
+                        <p className="text-xs text-gray-400">há 1 hora</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900">Ações Rápidas</h3>
+                    <p className="text-sm text-gray-500 mt-1">Acesse funcionalidades principais</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => setActiveTab('arts')}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                    >
+                      <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-100 transition-colors">
+                        <Palette className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">Gerenciar Artes</div>
+                      <div className="text-xs text-gray-500 mt-1">Adicionar e editar designs</div>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('users')}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                    >
+                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
+                        <Users className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">Usuários</div>
+                      <div className="text-xs text-gray-500 mt-1">Gerenciar contas</div>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('coursesList')}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                    >
+                      <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-emerald-100 transition-colors">
+                        <BookOpen className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">Cursos</div>
+                      <div className="text-xs text-gray-500 mt-1">Conteúdo educacional</div>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('settings')}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                    >
+                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-gray-100 transition-colors">
+                        <Settings className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">Configurações</div>
+                      <div className="text-xs text-gray-500 mt-1">Ajustes do sistema</div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Estatísticas Detalhadas */}
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Estatísticas Detalhadas</h3>
+                  <p className="text-sm text-gray-500 mt-1">Métricas de performance da plataforma</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <div className="flex items-center text-gray-600">
+                        <Video className="w-4 h-4 mr-2 text-blue-500" />
+                        <span className="text-sm">Vídeo-aulas</span>
+                      </div>
+                      <div className="text-sm font-medium">84</div>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <div className="flex items-center text-gray-600">
+                        <LayoutGrid className="w-4 h-4 mr-2 text-purple-500" />
+                        <span className="text-sm">Categorias</span>
+                      </div>
+                      <div className="text-sm font-medium">15</div>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <div className="flex items-center text-gray-600">
+                        <FileType className="w-4 h-4 mr-2 text-emerald-500" />
+                        <span className="text-sm">Formatos</span>
+                      </div>
+                      <div className="text-sm font-medium">8</div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <div className="flex items-center text-gray-600">
+                        <Crown className="w-4 h-4 mr-2 text-amber-500" />
+                        <span className="text-sm">Taxa Premium</span>
+                      </div>
+                      <div className="text-sm font-medium">26.3%</div>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <div className="flex items-center text-gray-600">
+                        <TrendingUp className="w-4 h-4 mr-2 text-green-500" />
+                        <span className="text-sm">Crescimento</span>
+                      </div>
+                      <div className="text-sm font-medium">+18.2%</div>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <div className="flex items-center text-gray-600">
+                        <Clock className="w-4 h-4 mr-2 text-indigo-500" />
+                        <span className="text-sm">Tempo Médio</span>
+                      </div>
+                      <div className="text-sm font-medium">42min</div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <div className="flex items-center text-gray-600">
+                        <Download className="w-4 h-4 mr-2 text-blue-500" />
+                        <span className="text-sm">Downloads</span>
+                      </div>
+                      <div className="text-sm font-medium">12.8k</div>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <div className="flex items-center text-gray-600">
+                        <MessageSquare className="w-4 h-4 mr-2 text-purple-500" />
+                        <span className="text-sm">Comentários</span>
+                      </div>
+                      <div className="text-sm font-medium">1.2k</div>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <div className="flex items-center text-gray-600">
+                        <Star className="w-4 h-4 mr-2 text-amber-500" />
+                        <span className="text-sm">Avaliação</span>
+                      </div>
+                      <div className="text-sm font-medium">4.8★</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-6">
