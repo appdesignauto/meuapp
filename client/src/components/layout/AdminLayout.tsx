@@ -188,23 +188,23 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               key={item.href} 
               href={item.href}
               className={cn(
-                'flex items-center px-3 py-2 text-sm font-medium rounded-md',
+                'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg mb-1 transition-all duration-200 group',
                 location === item.href || location.startsWith(`${item.href}/`)
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+                  ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-l-3 border-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-blue-700 hover:shadow-sm'
               )}
             >
               <div className={cn(
-                'flex items-center justify-center w-10 h-6',
+                'flex items-center justify-center w-5 h-5 mr-3 transition-colors',
                 location === item.href || location.startsWith(`${item.href}/`)
-                  ? 'text-blue-800'
-                  : 'text-gray-500'
+                  ? 'text-blue-600'
+                  : 'text-gray-500 group-hover:text-blue-600'
               )}>
                 {item.icon}
               </div>
-              <span className="ml-2 truncate">{item.title}</span>
+              <span className="truncate font-medium">{item.title}</span>
               {item.badge && (
-                <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
+                <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">
                   {item.badge}
                 </span>
               )}
@@ -261,13 +261,23 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             collapsed ? "w-16" : "w-64"
           )}
         >
-          <div className="py-5 px-4 border-b border-gray-100 flex items-center justify-between">
-            {!collapsed && <h2 className="text-lg font-bold text-gray-900">Painel Admin</h2>}
+          <div className="py-6 px-4 border-b border-gray-100 flex items-center justify-between">
+            {!collapsed && (
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
+                  <span className="text-white font-bold text-sm">DA</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">DesignAuto</h2>
+                  <p className="text-xs text-gray-500">Painel Administrativo</p>
+                </div>
+              </div>
+            )}
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setCollapsed(!collapsed)}
-              className={cn("ml-auto hover:bg-gray-100", collapsed && "mx-auto")}
+              className={cn("ml-auto hover:bg-gray-100 hover:text-blue-600 transition-colors", collapsed && "mx-auto")}
             >
               <ChevronRight className={cn("h-5 w-5 text-gray-500 transition-transform", collapsed ? "rotate-180" : "")} />
             </Button>
@@ -307,21 +317,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         {/* Main content */}
         <main className="flex-1">
           {/* Desktop top header */}
-          <div className="hidden lg:flex items-center justify-between py-3 px-6 border-b border-gray-100 bg-white">
+          <div className="hidden lg:flex items-center justify-between py-4 px-6 border-b border-gray-100 bg-white shadow-sm">
             <div className="flex items-center">
               {backLink && (
-                <Button variant="ghost" size="icon" asChild className="mr-2 hover:bg-gray-100">
+                <Button variant="ghost" size="icon" asChild className="mr-3 hover:bg-gray-100 hover:text-blue-600 transition-colors">
                   <Link href={backLink}>
                     <ChevronLeft className="h-5 w-5 text-gray-500" />
                   </Link>
                 </Button>
               )}
-              <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Gerencie sua plataforma DesignAuto</p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <Button variant="outline" size="sm" asChild className="flex items-center gap-1 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-800">
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" asChild className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors shadow-sm">
                 <Link href="/">
-                  Ver site <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  <ExternalLink className="h-4 w-4" />
+                  Ver site
                 </Link>
               </Button>
             </div>
