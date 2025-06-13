@@ -1617,94 +1617,35 @@ const AdminDashboard = () => {
                 <PanelRight className="w-5 h-5" />
               </button>
               
-              {activeTab === 'financeiro' ? (
-                <div className="mb-2">
-                  <div className="flex items-center mb-1">
-                    <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Dashboard Financeiro
-                    </h1>
-                  </div>
-                  <p className="text-sm text-gray-500 ml-9">
-                    Métricas essenciais de receita e crescimento
-                  </p>
-                </div>
-              ) : activeTab === 'stats' ? (
-                <div className="mb-2">
-                  <div className="flex items-center mb-1">
-                    <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Dashboard
-                    </h1>
-                  </div>
-                  <p className="text-sm text-gray-500 ml-9">
-                    Visão geral e métricas principais da plataforma
-                  </p>
-                </div>
-              ) : activeTab === 'arts' ? (
-                <div className="mb-2">
-                  <div className="flex items-center mb-1">
-                    <Palette className="w-6 h-6 text-blue-600 mr-3" />
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Artes e Designs
-                    </h1>
-                  </div>
-                  <p className="text-sm text-gray-500 ml-9">
-                    Gerencie templates, designs e conteúdo visual
-                  </p>
-                </div>
-              ) : activeTab === 'users' ? (
-                <div className="mb-2">
-                  <div className="flex items-center mb-1">
-                    <Users className="w-6 h-6 text-blue-600 mr-3" />
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Usuários
-                    </h1>
-                  </div>
-                  <p className="text-sm text-gray-500 ml-9">
-                    Administre contas, perfis e permissões de usuários
-                  </p>
-                </div>
-              ) : activeTab === 'community' ? (
-                <div className="mb-2">
-                  <div className="flex items-center mb-1">
-                    <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Comunidade
-                    </h1>
-                  </div>
-                  <p className="text-sm text-gray-500 ml-9">
-                    Modere posts, comentários e interações da comunidade
-                  </p>
-                </div>
-              ) : activeTab === 'settings' ? (
-                <div className="mb-2">
-                  <div className="flex items-center mb-1">
-                    <Settings className="w-6 h-6 text-blue-600 mr-3" />
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Configurações
-                    </h1>
-                  </div>
-                  <p className="text-sm text-gray-500 ml-9">
-                    Configure parâmetros gerais da plataforma
-                  </p>
-                </div>
-              ) : (
-                <h1 className="text-xl font-semibold">
+              <div className="flex items-center">
+                {activeTab === 'financeiro' && <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'stats' && <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'arts' && <Palette className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'users' && <Users className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'community' && <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'settings' && <Settings className="w-6 h-6 text-blue-600 mr-3" />}
+                
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {activeTab === 'financeiro' && 'Dashboard Financeiro'}
+                  {activeTab === 'stats' && 'Dashboard'}
+                  {activeTab === 'arts' && 'Artes e Designs'}
+                  {activeTab === 'users' && 'Usuários'}
+                  {activeTab === 'community' && 'Comunidade'}
+                  {activeTab === 'settings' && 'Configurações'}
                   {activeTab === 'categories' && 'Categorias'}
                   {activeTab === 'formats' && 'Formatos'}
                   {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
                   {activeTab === 'collections' && 'Coleções'}
-                  {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
-                  {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
-                  {activeTab === 'modules' && 'Módulos dos Cursos'}
-                  {activeTab === 'lessons' && 'Aulas dos Cursos'}
+                  {activeTab === 'subscriptions' && 'Assinaturas'}
+                  {activeTab === 'coursesList' && 'Cursos'}
+                  {activeTab === 'modules' && 'Módulos'}
+                  {activeTab === 'lessons' && 'Aulas'}
                   {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
-                  {activeTab === 'comments' && 'Gerenciamento de Comentários'}
-                  {activeTab === 'popups' && 'Gerenciamento de Popups'}
+                  {activeTab === 'comments' && 'Comentários'}
+                  {activeTab === 'popups' && 'Popups'}
                 </h1>
-              )}
+              </div>
             </div>
             
             <div className="flex items-center flex-wrap gap-2">
