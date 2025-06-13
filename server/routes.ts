@@ -7801,6 +7801,148 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // Endpoint específico para resumo geral do dashboard (seguindo plano estruturado)
+  app.get('/api/dashboard/resumo-geral', async (req, res) => {
+    // Verificar autenticação usando a sessão existente
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ message: 'Acesso não autorizado' });
+    }
+    try {
+      const [
+        faturamentoTotal,
+        assinantesAtivos,
+        taxaConversao,
+        ticketMedio,
+        usuarios,
+        artes,
+        posts,
+        receitaMensal,
+        downloads
+      ] = await Promise.all([
+        // Faturamento total baseado em assinaturas reais
+        db.execute(sql`
+          SELECT COALESCE(SUM(
+            CASE 
+              WHEN "tipoplano" = 'mensal' THEN 29.90
+              WHEN "tipoplano" = 'anual' THEN 197.00
+              WHEN "tipoplano" = 'vitalicio' THEN 497.00
+              WHEN "origemassinatura" = 'hotmart' THEN 7.00
+              ELSE 0 
+            END
+          ), 0) AS total 
+          FROM users 
+          WHERE "nivelacesso" IN ('premium', 'designer') 
+          AND "dataassinatura" IS NOT NULL
+          AND "isactive" = true
+        `),
+        
+        // Assinantes ativos (premium + designer)
+        db.execute(sql`
+          SELECT COUNT(*) AS total 
+          FROM users 
+          WHERE "nivelacesso" IN ('premium', 'designer') 
+          AND "isactive" = true
+        `),
+        
+        // Taxa de conversão real
+        db.execute(sql`
+          SELECT ROUND(
+            COUNT(*) FILTER (WHERE "nivelacesso" IN ('premium', 'designer'))::decimal / 
+            NULLIF(COUNT(*), 0) * 100
+          ) AS taxa 
+          FROM users 
+          WHERE "isactive" = true
+        `),
+        
+        // Ticket médio baseado em assinaturas reais
+        db.execute(sql`
+          SELECT ROUND(AVG(
+            CASE 
+              WHEN "tipoplano" = 'mensal' THEN 29.90
+              WHEN "tipoplano" = 'anual' THEN 197.00
+              WHEN "tipoplano" = 'vitalicio' THEN 497.00
+              WHEN "origemassinatura" = 'hotmart' THEN 7.00
+              ELSE 0 
+            END
+          )) AS media 
+          FROM users 
+          WHERE "nivelacesso" IN ('premium', 'designer') 
+          AND "dataassinatura" IS NOT NULL
+          AND "isactive" = true
+        `),
+        
+        // Distribuição de usuários
+        db.execute(sql`
+          SELECT 
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE "nivelacesso" = 'free') AS gratuitos,
+            COUNT(*) FILTER (WHERE "nivelacesso" IN ('premium', 'designer')) AS premium
+          FROM users 
+          WHERE "isactive" = true
+        `),
+        
+        // Total de artes
+        db.execute(sql`SELECT COUNT(*) AS total FROM arts WHERE "isVisible" = true`),
+        
+        // Total de posts da comunidade
+        db.execute(sql`SELECT COUNT(*) AS total FROM "communityPosts"`),
+        
+        // Receita mensal (últimos 30 dias)
+        db.execute(sql`
+          SELECT COALESCE(SUM(
+            CASE 
+              WHEN "tipoplano" = 'mensal' THEN 29.90
+              WHEN "tipoplano" = 'anual' THEN 197.00
+              WHEN "tipoplano" = 'vitalicio' THEN 497.00
+              WHEN "origemassinatura" = 'hotmart' THEN 7.00
+              ELSE 0 
+            END
+          ), 0) AS total 
+          FROM users 
+          WHERE "nivelacesso" IN ('premium', 'designer') 
+          AND "dataassinatura" >= CURRENT_DATE - INTERVAL '30 days'
+          AND "isactive" = true
+        `),
+        
+        // Total de downloads
+        db.execute(sql`SELECT COUNT(*) AS total FROM downloads`)
+      ]);
+
+      // Extrair dados das consultas
+      const faturamento = faturamentoTotal.rows[0];
+      const assinantes = assinantesAtivos.rows[0];
+      const conversao = taxaConversao.rows[0];
+      const ticket = ticketMedio.rows[0];
+      const usuariosData = usuarios.rows[0];
+      const artesData = artes.rows[0];
+      const postsData = posts.rows[0];
+      const receitaData = receitaMensal.rows[0];
+      const downloadsData = downloads.rows[0];
+
+      // Resposta padronizada seguindo o plano
+      res.json({
+        faturamento: parseFloat(faturamento.total || 0),
+        assinantes: parseInt(assinantes.total || 0),
+        taxaConversao: parseFloat(conversao.taxa || 0),
+        ticketMedio: parseFloat(ticket.media || 0),
+        usuariosTotais: parseInt(usuariosData.total || 0),
+        usuariosGratuitos: parseInt(usuariosData.gratuitos || 0),
+        usuariosPremium: parseInt(usuariosData.premium || 0),
+        artesTotais: parseInt(artesData.total || 0),
+        postsTotais: parseInt(postsData.total || 0),
+        receitaMensal: parseFloat(receitaData.total || 0),
+        downloadsTotais: parseInt(downloadsData.total || 0)
+      });
+
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+      res.status(500).json({ 
+        message: 'Erro ao carregar dados do dashboard.', 
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Erro interno'
+      });
+    }
+  });
+
   // Endpoint para estatísticas reais do dashboard com filtro de data
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

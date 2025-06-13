@@ -1,0 +1,111 @@
+✅ ETAPA 1 – Criar a Rota no Backend /api/dashboard/resumo-geral
+📄 Exemplo de rota (Node.js + Express + PostgreSQL)
+ts
+Copiar
+Editar
+// server/routes/dashboard.ts
+import express from 'express'
+import db from '../../db'
+import { isAuthenticated } from '../middleware/auth'
+
+const router = express.Router()
+
+router.get('/api/dashboard/resumo-geral', isAuthenticated, async (req, res) => {
+  try {
+    const [
+      faturamentoTotal,
+      assinantesAtivos,
+      taxaConversao,
+      ticketMedio,
+      usuarios,
+      artes,
+      posts,
+      receitaMensal,
+      downloads
+    ] = await Promise.all([
+      db.one('SELECT COALESCE(SUM(valor), 0) AS total FROM pagamentos WHERE status = $1', ['aprovado']),
+      db.one('SELECT COUNT(*) AS total FROM users WHERE plano != $1 AND ativo = true', ['free']),
+      db.one(`SELECT ROUND(COUNT(*) FILTER (WHERE plano != 'free')::decimal / NULLIF(COUNT(*),0) * 100) AS taxa FROM users`),
+      db.one('SELECT ROUND(AVG(valor)) AS media FROM pagamentos WHERE status = $1', ['aprovado']),
+      db.one(`SELECT 
+                COUNT(*) AS total, 
+                COUNT(*) FILTER (WHERE plano = 'free') AS gratuitos, 
+                COUNT(*) FILTER (WHERE plano != 'free') AS premium 
+              FROM users`),
+      db.one('SELECT COUNT(*) AS total FROM artes'),
+      db.one('SELECT COUNT(*) AS total FROM posts'),
+      db.one('SELECT COALESCE(SUM(valor), 0) AS total FROM pagamentos WHERE status = $1 AND created_at >= DATE_TRUNC(\'month\', CURRENT_DATE)', ['aprovado']),
+      db.one('SELECT COUNT(*) AS total FROM downloads'),
+    ])
+
+    res.json({
+      faturamento: parseFloat(faturamentoTotal.total),
+      assinantes: parseInt(assinantesAtivos.total),
+      taxaConversao: parseFloat(taxaConversao.taxa),
+      ticketMedio: parseFloat(ticketMedio.media),
+      usuariosTotais: parseInt(usuarios.total),
+      usuariosGratuitos: parseInt(usuarios.gratuitos),
+      usuariosPremium: parseInt(usuarios.premium),
+      artesTotais: parseInt(artes.total),
+      postsTotais: parseInt(posts.total),
+      receitaMensal: parseFloat(receitaMensal.total),
+      downloadsTotais: parseInt(downloads.total)
+    })
+
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Erro ao carregar dados do dashboard.', error })
+  }
+})
+
+export default router
+✅ ETAPA 2 – Registrar a rota no servidor principal
+No seu server.ts ou index.ts, adicione:
+
+ts
+Copiar
+Editar
+import dashboardRoutes from './routes/dashboard'
+app.use(dashboardRoutes)
+✅ ETAPA 3 – Conectar o Frontend à API
+📦 Exemplo com axios (padrão pro)
+ts
+Copiar
+Editar
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+
+export function useResumoGeral() {
+  const [dados, setDados] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    axios.get('/api/dashboard/resumo-geral')
+      .then(res => setDados(res.data))
+      .catch(err => console.error('Erro ao carregar resumo geral:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  return { dados, loading }
+}
+Exemplo de uso:
+tsx
+Copiar
+Editar
+const { dados, loading } = useResumoGeral()
+
+if (loading) return <p>Carregando...</p>
+
+return (
+  <DashboardCard title="Faturamento Total" value={`R$ ${dados.faturamento}`} />
+  // repita para os outros cards
+)
+✅ ETAPA 4 – Segurança e Controle
+Certifique-se que:
+
+Sessão ou token está funcionando corretamente com isAuthenticated
+
+A rota está protegida
+
+Os valores do banco estão padronizados (evite null retornando para o frontend)
+
