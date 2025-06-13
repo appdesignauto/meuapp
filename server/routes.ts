@@ -8126,8 +8126,8 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  // Endpoint para dados financeiros e de receita
-  app.get("/api/financial/stats", async (req, res) => {
+  // API Financeira Corrigida - Dados Autênticos do Banco
+  app.get("/api/financial/stats", isAdmin, async (req, res) => {
     try {
       const period = req.query.period as string || 'all';
       
@@ -8166,38 +8166,40 @@ app.use('/api/reports-v2', (req, res, next) => {
         ? await db.execute(sql`
             SELECT 
               COALESCE(origemassinatura, 'auto') as source,
-              COALESCE(tipoplano, 'mensal') as plan_type,
               COUNT(*) as subscribers,
-              CASE 
-                WHEN origemassinatura = 'hotmart' THEN COUNT(*) * 7.00
-                WHEN origemassinatura = 'doppus' THEN COUNT(*) * 39.80  
-                WHEN tipoplano = 'anual' THEN COUNT(*) * 197
-                WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
-                ELSE COUNT(*) * 19.90
-              END as estimated_revenue
+              SUM(
+                CASE 
+                  WHEN COALESCE(origemassinatura, 'auto') = 'hotmart' THEN 7.00
+                  WHEN COALESCE(origemassinatura, 'auto') = 'doppus' THEN 39.80  
+                  WHEN COALESCE(tipoplano, 'mensal') = 'anual' THEN 197
+                  WHEN COALESCE(tipoplano, 'mensal') = 'mensal' THEN 19.90
+                  ELSE 19.90
+                END
+              ) as estimated_revenue
             FROM users 
             WHERE nivelacesso IN ('premium', 'designer') 
               AND isactive = true
-            GROUP BY COALESCE(origemassinatura, 'auto'), COALESCE(tipoplano, 'mensal')
+            GROUP BY COALESCE(origemassinatura, 'auto')
             ORDER BY estimated_revenue DESC
           `)
         : await db.execute(sql`
             SELECT 
               COALESCE(origemassinatura, 'auto') as source,
-              COALESCE(tipoplano, 'mensal') as plan_type,
               COUNT(*) as subscribers,
-              CASE 
-                WHEN origemassinatura = 'hotmart' THEN COUNT(*) * 7.00
-                WHEN origemassinatura = 'doppus' THEN COUNT(*) * 39.80
-                WHEN tipoplano = 'anual' THEN COUNT(*) * 197
-                WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
-                ELSE COUNT(*) * 19.90
-              END as estimated_revenue
+              SUM(
+                CASE 
+                  WHEN COALESCE(origemassinatura, 'auto') = 'hotmart' THEN 7.00
+                  WHEN COALESCE(origemassinatura, 'auto') = 'doppus' THEN 39.80
+                  WHEN COALESCE(tipoplano, 'mensal') = 'anual' THEN 197
+                  WHEN COALESCE(tipoplano, 'mensal') = 'mensal' THEN 19.90
+                  ELSE 19.90
+                END
+              ) as estimated_revenue
             FROM users 
             WHERE nivelacesso IN ('premium', 'designer') 
               AND isactive = true
               AND (dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} OR dataassinatura IS NULL)
-            GROUP BY COALESCE(origemassinatura, 'auto'), COALESCE(tipoplano, 'mensal')
+            GROUP BY COALESCE(origemassinatura, 'auto')
             ORDER BY estimated_revenue DESC
           `);
       const revenueBySource = revenueBySourceResult.rows || [];
