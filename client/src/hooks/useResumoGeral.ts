@@ -22,11 +22,11 @@ interface ResumoGeralData {
   commentGrowthPercent: number
 }
 
-export function useResumoGeral() {
+export function useResumoGeral(period: string = '30d') {
   const { data: dados, isLoading: loading, error } = useQuery<ResumoGeralData>({
-    queryKey: ['/api/dashboard/resumo-geral'],
+    queryKey: ['/api/dashboard/resumo-geral', period],
     queryFn: async () => {
-      const response = await fetch('/api/dashboard/resumo-geral', {
+      const response = await fetch(`/api/dashboard/resumo-geral?period=${period}`, {
         credentials: 'include' // Importante para incluir cookies de sessão
       })
       

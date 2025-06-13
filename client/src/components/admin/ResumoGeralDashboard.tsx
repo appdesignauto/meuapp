@@ -2,8 +2,12 @@ import { useResumoGeral } from "@/hooks/useResumoGeral"
 import { DashboardCard } from "./DashboardCard"
 import { DollarSign, Users, TrendingUp, Target, BarChart3, Download } from "lucide-react"
 
-export function ResumoGeralDashboard() {
-  const { dados, loading, error } = useResumoGeral()
+interface ResumoGeralDashboardProps {
+  period?: string
+}
+
+export function ResumoGeralDashboard({ period = '30d' }: ResumoGeralDashboardProps) {
+  const { dados, loading, error } = useResumoGeral(period)
 
   if (error) {
     return (

@@ -7808,6 +7808,8 @@ app.use('/api/reports-v2', (req, res, next) => {
       return res.status(401).json({ message: 'Acesso não autorizado' });
     }
     try {
+      const period = req.query.period || '30d';
+      console.log(`[DASHBOARD RESUMO] Período solicitado: ${period}`);
       const [
         faturamentoTotal,
         assinantesAtivos,
