@@ -1541,7 +1541,7 @@ const AdminDashboard = () => {
             href="/painel/perfil"
             className={`flex items-center hover:bg-blue-50 rounded-xl transition-all duration-200 border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 shadow-sm ${
               !sidebarOpen 
-                ? 'justify-center p-2 mx-1 mb-3' 
+                ? 'justify-center p-1.5 mx-1 mb-2' 
                 : 'p-3 mb-2'
             }`}
             title="Ir para Perfil"
@@ -1552,18 +1552,18 @@ const AdminDashboard = () => {
                   src={user.profileimageurl} 
                   alt={user.name || 'Admin'} 
                   className={`rounded-full object-cover border-2 border-blue-200 shadow-sm ${
-                    !sidebarOpen ? 'w-8 h-8' : 'w-9 h-9'
+                    !sidebarOpen ? 'w-7 h-7' : 'w-9 h-9'
                   }`}
                 />
               ) : (
                 <div className={`rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium border-2 border-blue-200 shadow-sm ${
-                  !sidebarOpen ? 'w-8 h-8 text-xs' : 'w-9 h-9 text-sm'
+                  !sidebarOpen ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'
                 }`}>
                   {user?.name?.charAt(0) || 'A'}
                 </div>
               )}
               {!sidebarOpen && (
-                <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-white shadow-sm"></div>
+                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border border-white shadow-sm"></div>
               )}
               {sidebarOpen && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
