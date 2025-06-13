@@ -7843,65 +7843,123 @@ app.use('/api/reports-v2', (req, res, next) => {
           prevDateStart = '30 days';
       }
       // Estatísticas de usuários com período dinâmico
-      const userStats = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_users,
-          COUNT(CASE WHEN nivelacesso = 'premium' OR acessovitalicio = true THEN 1 END) as premium_users,
-          COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as new_users_period,
-          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as new_users_prev_period,
-          COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
-          SUM(
-            CASE 
-              WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+      const userStats = period === 'all' 
+        ? await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_users,
+              COUNT(CASE WHEN nivelacesso = 'premium' OR acessovitalicio = true THEN 1 END) as premium_users,
+              COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
+              COUNT(*) as new_users_period,
+              0 as new_users_prev_period,
+              COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
+              SUM(
                 CASE 
-                  WHEN origemassinatura = 'hotmart' THEN 7.00
-                  WHEN tipoplano = 'mensal' THEN 29.90
-                  WHEN tipoplano = 'anual' THEN 197.00
-                  WHEN tipoplano = 'vitalicio' THEN 497.00
-                  ELSE 29.90
+                  WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+                    CASE 
+                      WHEN origemassinatura = 'hotmart' THEN 7.00
+                      WHEN tipoplano = 'mensal' THEN 29.90
+                      WHEN tipoplano = 'anual' THEN 197.00
+                      WHEN tipoplano = 'vitalicio' THEN 497.00
+                      ELSE 29.90
+                    END
+                  ELSE 0
                 END
-              ELSE 0
-            END
-          ) as monthly_revenue,
-          SUM(
-            CASE 
-              WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+              ) as monthly_revenue,
+              SUM(
                 CASE 
-                  WHEN origemassinatura = 'hotmart' THEN 7.00
-                  WHEN tipoplano = 'mensal' THEN 29.90
-                  WHEN tipoplano = 'anual' THEN 197.00
-                  WHEN tipoplano = 'vitalicio' THEN 497.00
-                  ELSE 29.90
+                  WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+                    CASE 
+                      WHEN origemassinatura = 'hotmart' THEN 7.00
+                      WHEN tipoplano = 'mensal' THEN 29.90
+                      WHEN tipoplano = 'anual' THEN 197.00
+                      WHEN tipoplano = 'vitalicio' THEN 497.00
+                      ELSE 29.90
+                    END
+                  ELSE 0
                 END
-              ELSE 0
-            END
-          ) as period_revenue,
-          COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
-        FROM users
-      `);
+              ) as period_revenue,
+              COUNT(CASE WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
+            FROM users
+          `)
+        : await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_users,
+              COUNT(CASE WHEN nivelacesso = 'premium' OR acessovitalicio = true THEN 1 END) as premium_users,
+              COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
+              COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as new_users_period,
+              COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as new_users_prev_period,
+              COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
+              SUM(
+                CASE 
+                  WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+                    CASE 
+                      WHEN origemassinatura = 'hotmart' THEN 7.00
+                      WHEN tipoplano = 'mensal' THEN 29.90
+                      WHEN tipoplano = 'anual' THEN 197.00
+                      WHEN tipoplano = 'vitalicio' THEN 497.00
+                      ELSE 29.90
+                    END
+                  ELSE 0
+                END
+              ) as monthly_revenue,
+              SUM(
+                CASE 
+                  WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+                    CASE 
+                      WHEN origemassinatura = 'hotmart' THEN 7.00
+                      WHEN tipoplano = 'mensal' THEN 29.90
+                      WHEN tipoplano = 'anual' THEN 197.00
+                      WHEN tipoplano = 'vitalicio' THEN 497.00
+                      ELSE 29.90
+                    END
+                  ELSE 0
+                END
+              ) as period_revenue,
+              COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
+            FROM users
+          `);
 
       // Estatísticas de artes com período dinâmico
-      const artStats = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_arts,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as arts_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as arts_prev_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as arts_week,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as arts_month
-        FROM arts
-      `);
+      const artStats = period === 'all' 
+        ? await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_arts,
+              COUNT(*) as arts_period,
+              0 as arts_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as arts_week,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as arts_month
+            FROM arts
+          `)
+        : await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_arts,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as arts_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as arts_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as arts_week,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as arts_month
+            FROM arts
+          `);
 
       // Estatísticas de posts da comunidade com período dinâmico
-      const communityStats = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_posts,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as posts_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as posts_prev_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '1 day' THEN 1 END) as posts_today,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as posts_month
-        FROM "communityPosts"
-      `);
+      const communityStats = period === 'all' 
+        ? await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_posts,
+              COUNT(*) as posts_period,
+              0 as posts_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '1 day' THEN 1 END) as posts_today,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as posts_month
+            FROM "communityPosts"
+          `)
+        : await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_posts,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as posts_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as posts_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '1 day' THEN 1 END) as posts_today,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as posts_month
+            FROM "communityPosts"
+          `);
 
       // Estatísticas de downloads com período dinâmico (incluindo downloads sem data para período "all")
       const downloadStats = period === 'all' 
@@ -7925,15 +7983,25 @@ app.use('/api/reports-v2', (req, res, next) => {
           `);
 
       // Estatísticas de comentários com período dinâmico
-      const commentStats = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_comments,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as comments_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as comments_prev_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_month,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_prev_month
-        FROM "communityComments"
-      `);
+      const commentStats = period === 'all' 
+        ? await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_comments,
+              COUNT(*) as comments_period,
+              0 as comments_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_month,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_prev_month
+            FROM "communityComments"
+          `)
+        : await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_comments,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as comments_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as comments_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_month,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_prev_month
+            FROM "communityComments"
+          `);
 
       // Estatísticas de cursos
       const courseStats = await db.execute(sql`
