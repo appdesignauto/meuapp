@@ -1604,7 +1604,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 border-l border-blue-100 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
+      <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
         <header className="bg-gray-50 relative">
           <div className="px-6 py-4 pt-6 flex flex-col sm:flex-row sm:items-center justify-between">
             {/* Linha de separação limitada alinhada ao ícone */}
