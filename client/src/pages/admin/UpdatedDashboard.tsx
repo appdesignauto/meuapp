@@ -1436,10 +1436,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Ferramentas"
               >
-                <Wrench className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                <Wrench className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                 {sidebarOpen && (
                   <>
                     <span className="font-semibold">Ferramentas</span>
@@ -1472,10 +1472,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Configurações"
               >
-                <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                 {sidebarOpen && (
                   <>
                     <span className="font-semibold">Configurações</span>
