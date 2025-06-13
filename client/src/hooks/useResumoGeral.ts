@@ -4,15 +4,22 @@ import { useQuery } from '@tanstack/react-query'
 interface ResumoGeralData {
   faturamento: number
   assinantes: number
+  premiumUsers: number
+  totalUsers: number
+  usuariosGratuitos: number
   taxaConversao: number
   ticketMedio: number
-  usuariosTotais: number
-  usuariosGratuitos: number
-  usuariosPremium: number
-  artesTotais: number
-  postsTotais: number
-  receitaMensal: number
-  downloadsTotais: number
+  totalArts: number
+  totalPosts: number
+  totalDownloads: number
+  totalComments: number
+  monthlyRevenue: number
+  periodRevenue: number
+  userGrowthPercent: number
+  artGrowthPercent: number
+  communityGrowthPercent: number
+  downloadGrowthPercent: number
+  commentGrowthPercent: number
 }
 
 export function useResumoGeral() {

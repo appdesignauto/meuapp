@@ -8113,16 +8113,38 @@ app.use('/api/reports-v2', (req, res, next) => {
       const commentGrowthPercent = commentData.comments_prev_period > 0 ? 
         Math.round(((commentData.comments_period - commentData.comments_prev_period) / commentData.comments_prev_period) * 100) : 0;
 
+      // Calcular valores corretos para o frontend
+      const faturamento = Number(userData.monthly_revenue || 0);
+      const assinantes = Number(userData.premium_users || 0);
+      const totalUsuarios = Number(userData.total_users || 0);
+      const usuariosGratuitos = totalUsuarios - assinantes;
+      
+      // Taxa de conversão: percentual de usuários que se tornaram premium
+      const taxaConversao = totalUsuarios > 0 ? 
+        Math.round((assinantes / totalUsuarios) * 100) : 0;
+      
+      // Ticket médio: receita total dividida por número de assinantes premium
+      const ticketMedio = assinantes > 0 ? 
+        Math.round((faturamento / assinantes) * 100) / 100 : 0;
+
       res.json({
-        // Estatísticas principais
-        totalUsers: Number(userData.total_users),
-        premiumUsers: Number(userData.premium_users),
-        activeUsers: Number(userData.active_users),
+        // Dados financeiros principais (nomes corretos para o frontend)
+        faturamento: faturamento,
+        assinantes: assinantes,
+        premiumUsers: assinantes, // alias para compatibilidade
+        totalUsers: totalUsuarios,
+        usuariosGratuitos: usuariosGratuitos,
+        taxaConversao: taxaConversao,
+        ticketMedio: ticketMedio,
+        
+        // Estatísticas de crescimento
         newUsersMonth: Number(userData.new_users_period),
         newUsersPrevPeriod: Number(userData.new_users_prev_period),
+        activeUsers: Number(userData.active_users),
         activeWeek: Number(userData.active_week),
         userGrowthPercent,
 
+        // Estatísticas de conteúdo
         totalArts: Number(artData.total_arts),
         artsThisPeriod: Number(artData.arts_period),
         artsPrevPeriod: Number(artData.arts_prev_period),
@@ -8130,6 +8152,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         artsThisMonth: Number(artData.arts_month),
         artGrowthPercent,
 
+        // Estatísticas da comunidade
         totalPosts: Number(communityData.total_posts),
         postsThisPeriod: Number(communityData.posts_period),
         postsPrevPeriod: Number(communityData.posts_prev_period),
@@ -8137,14 +8160,13 @@ app.use('/api/reports-v2', (req, res, next) => {
         postsThisMonth: Number(communityData.posts_month),
         communityGrowthPercent,
 
+        // Estatísticas de interação
         totalDownloads: Number(downloadData.total_downloads),
         downloadsThisPeriod: Number(downloadData.downloads_period),
         downloadsPrevPeriod: Number(downloadData.downloads_prev_period),
         totalComments: Number(commentData.total_comments),
         commentsThisPeriod: Number(commentData.comments_period),
         commentsPrevPeriod: Number(commentData.comments_prev_period),
-        
-        // Percentuais de crescimento reais
         downloadGrowthPercent,
         commentGrowthPercent,
 
@@ -8152,30 +8174,23 @@ app.use('/api/reports-v2', (req, res, next) => {
         totalCourses: Number(courseData.total_courses),
         totalModules: Number(courseData.total_modules),
         totalLessons: Number(courseData.total_lessons),
+        videoLessons: Number(courseData.total_lessons),
 
-        // Métricas de monetização dinâmicas baseadas no período
-        premiumRate: userData.total_users > 0 ? 
-          Math.round((userData.premium_users / userData.total_users) * 100) : 0,
-        
-        // Receita real baseada nos dados do banco de dados no período selecionado
+        // Receita detalhada
         periodRevenue: Number(userData.period_revenue || 0),
-        monthlyRevenue: Number(userData.monthly_revenue || 0),
-        revenueThisWeek: Math.round(Number(userData.monthly_revenue || 0) * 0.25),
+        monthlyRevenue: faturamento,
+        revenueThisWeek: Math.round(faturamento * 0.25),
         
-        // Taxa de conversão real baseada nos dados do período
-        conversionRate: userData.total_users > 0 ? 
-          Math.round((Number(userData.premium_users) / Number(userData.total_users)) * 100) : 0,
+        // Taxa premium e outras métricas
+        premiumRate: taxaConversao,
+        conversionRate: taxaConversao, // alias para compatibilidade
+        averageTicket: ticketMedio, // alias para compatibilidade
         
-        // Ticket médio real baseado na receita e novos assinantes do período
-        averageTicket: userData.new_premium_users_period > 0 ? 
-          Math.round(Number(userData.period_revenue || 0) / Number(userData.new_premium_users_period)) : 0,
-        
-        // Métricas de crescimento específicas do período selecionado
+        // Configurações do período
         period: period,
         dateInterval: dateInterval,
         
-        // Estatísticas detalhadas calculadas do banco
-        videoLessons: Number(courseData.total_lessons),
+        // Estatísticas detalhadas
         categories: Number(categoriesData.total_categories),
         formats: Number(formatsData.total_formats),
         downloads: Number(downloadData.total_downloads),
