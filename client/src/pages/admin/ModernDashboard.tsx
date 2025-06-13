@@ -341,7 +341,7 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {menuSections.map((section: any) => {
           const visibleItems = section.items.filter((item: any) => hasTabAccess(item.id));
           if (visibleItems.length === 0) return null;
@@ -352,20 +352,20 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
           // Se não é colapsável ou tem apenas um item, renderiza diretamente
           if (!section.collapsible || visibleItems.length === 1) {
             return (
-              <div key={section.title} className="space-y-1">
+              <div key={section.title}>
                 {visibleItems.map((item: any) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    className={`flex items-center w-full px-2 py-2 mb-1 text-sm font-medium rounded-md transition-all duration-200 ${
                       activeTab === item.id
                         ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     } ${!sidebarOpen ? 'justify-center' : ''}`}
                     title={item.label}
                   >
-                    <item.icon className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
-                    {sidebarOpen && <span>{item.label}</span>}
+                    <item.icon className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-2'}`} />
+                    {sidebarOpen && <span className="text-sm">{item.label}</span>}
                   </button>
                 ))}
               </div>
@@ -374,17 +374,17 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
 
           // Renderiza seção colapsável
           return (
-            <div key={section.title} className="space-y-1">
+            <div key={section.title} className="mb-2">
               <button
                 onClick={() => sidebarOpen && toggleSection(section.title)}
-                className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-50 ${
+                className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gray-50 ${
                   hasActiveItem ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
                 } ${!sidebarOpen ? 'justify-center' : 'justify-between'}`}
                 title={section.title}
               >
                 <div className="flex items-center">
-                  <section.icon className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
-                  {sidebarOpen && <span>{section.title}</span>}
+                  <section.icon className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-2'}`} />
+                  {sidebarOpen && <span className="text-sm">{section.title}</span>}
                 </div>
                 {sidebarOpen && section.collapsible && (
                   <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${
@@ -395,20 +395,20 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
               
               {/* Dropdown Items */}
               {sidebarOpen && isExpanded && (
-                <div className="ml-6 space-y-1 border-l border-gray-200 pl-3">
+                <div className="ml-4 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
                   {visibleItems.map((item: any) => (
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                      className={`flex items-center w-full px-2 py-1.5 text-xs rounded-md transition-all duration-200 ${
                         activeTab === item.id
                           ? 'bg-blue-50 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                       title={item.label}
                     >
-                      <item.icon className="h-3 w-3 mr-2" />
-                      <span className="text-xs">{item.label}</span>
+                      <item.icon className="h-3 w-3 mr-1.5" />
+                      <span>{item.label}</span>
                     </button>
                   ))}
                 </div>
@@ -469,7 +469,7 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {menuSections.map((section: any) => {
           const visibleItems = section.items.filter((item: any) => hasTabAccess(item.id));
           if (visibleItems.length === 0) return null;
@@ -480,7 +480,7 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
           // Se não é colapsável ou tem apenas um item, renderiza diretamente
           if (!section.collapsible || visibleItems.length === 1) {
             return (
-              <div key={section.title} className="space-y-1">
+              <div key={section.title}>
                 {visibleItems.map((item: any) => (
                   <button
                     key={item.id}
@@ -488,14 +488,14 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    className={`flex items-center w-full px-2 py-2 mb-1 text-sm font-medium rounded-md transition-all duration-200 ${
                       activeTab === item.id
                         ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    <item.icon className="h-4 w-4 mr-3" />
-                    <span>{item.label}</span>
+                    <item.icon className="h-4 w-4 mr-2" />
+                    <span className="text-sm">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -504,16 +504,16 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
 
           // Renderiza seção colapsável
           return (
-            <div key={section.title} className="space-y-1">
+            <div key={section.title} className="mb-2">
               <button
                 onClick={() => toggleSection(section.title)}
-                className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-50 ${
+                className={`flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gray-50 ${
                   hasActiveItem ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
                 }`}
               >
                 <div className="flex items-center">
-                  <section.icon className="h-4 w-4 mr-3" />
-                  <span>{section.title}</span>
+                  <section.icon className="h-4 w-4 mr-2" />
+                  <span className="text-sm">{section.title}</span>
                 </div>
                 {section.collapsible && (
                   <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${
@@ -524,7 +524,7 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
               
               {/* Dropdown Items */}
               {isExpanded && (
-                <div className="ml-6 space-y-1 border-l border-gray-200 pl-3">
+                <div className="ml-4 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
                   {visibleItems.map((item: any) => (
                     <button
                       key={item.id}
@@ -532,14 +532,14 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
                         setActiveTab(item.id);
                         setMobileMenuOpen(false);
                       }}
-                      className={`flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                      className={`flex items-center w-full px-2 py-1.5 text-xs rounded-md transition-all duration-200 ${
                         activeTab === item.id
                           ? 'bg-blue-50 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <item.icon className="h-3 w-3 mr-2" />
-                      <span className="text-xs">{item.label}</span>
+                      <item.icon className="h-3 w-3 mr-1.5" />
+                      <span>{item.label}</span>
                     </button>
                   ))}
                 </div>
