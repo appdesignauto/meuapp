@@ -7811,55 +7811,53 @@ app.use('/api/reports-v2', (req, res, next) => {
       const period = req.query.period || '30d';
       console.log(`[DASHBOARD RESUMO] Período solicitado: ${period}`);
       
-      // Calcular intervalos de data baseado no período
-      let dateInterval = '30 days';
-      let prevDateInterval = '60 days';
-      let prevDateStart = '30 days';
+      // Calcular datas baseado no período
+      let days = 30;
+      let prevDays = 60;
+      let prevStartDays = 30;
       
       switch (period) {
         case '7d':
-          dateInterval = '7 days';
-          prevDateInterval = '14 days';
-          prevDateStart = '7 days';
+          days = 7;
+          prevDays = 14;
+          prevStartDays = 7;
           break;
         case '90d':
-          dateInterval = '90 days';
-          prevDateInterval = '180 days';
-          prevDateStart = '90 days';
+          days = 90;
+          prevDays = 180;
+          prevStartDays = 90;
           break;
         case '1y':
-          dateInterval = '365 days';
-          prevDateInterval = '730 days';
-          prevDateStart = '365 days';
+          days = 365;
+          prevDays = 730;
+          prevStartDays = 365;
           break;
         default: // 30d
-          dateInterval = '30 days';
-          prevDateInterval = '60 days';
-          prevDateStart = '30 days';
+          days = 30;
+          prevDays = 60;
+          prevStartDays = 30;
       }
 
-      const [
-        // Dados dos usuários com crescimento
-        userData,
-        // Dados das artes com crescimento
-        artData,
-        // Dados da comunidade com crescimento
-        communityData,
-        // Dados de downloads com crescimento
-        downloadData,
-        // Dados de comentários com crescimento
-        commentData
-      ] = await Promise.all([
-        // Estatísticas de usuários com filtro de período
-        db.execute(sql`
+      // Calcular datas exatas
+      const now = new Date();
+      const periodStart = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+      const prevPeriodStart = new Date(now.getTime() - (prevDays * 24 * 60 * 60 * 1000));
+      const prevPeriodEnd = new Date(now.getTime() - (prevStartDays * 24 * 60 * 60 * 1000));
+
+      // Executar consultas separadamente com tratamento de erro individual
+      let userData, artData, communityData, downloadData, commentData;
+
+      try {
+        // Estatísticas de usuários
+        userData = await db.execute(sql`
           SELECT 
-            COUNT(*) as total_users,
-            COUNT(*) FILTER (WHERE "nivelacesso" IN ('premium', 'designer')) as active_subscriptions,
-            COUNT(*) FILTER (WHERE "nivelacesso" = 'free') as free_users,
-            COUNT(*) FILTER (WHERE "criadoem" >= NOW() - INTERVAL ${dateInterval}) as new_users_period,
-            COUNT(*) FILTER (WHERE "criadoem" >= NOW() - INTERVAL ${prevDateInterval} AND "criadoem" < NOW() - INTERVAL ${prevDateStart}) as new_users_prev_period,
-            COUNT(*) FILTER (WHERE "ultimologin" >= NOW() - INTERVAL '7 days') as active_week,
-            COUNT(*) FILTER (WHERE "ultimologin" >= NOW() - INTERVAL ${dateInterval}) as active_users,
+            COUNT(*)::int as total_users,
+            COUNT(*) FILTER (WHERE "nivelacesso" IN ('premium', 'designer'))::int as active_subscriptions,
+            COUNT(*) FILTER (WHERE "nivelacesso" = 'free')::int as free_users,
+            COUNT(*) FILTER (WHERE "criadoem" >= NOW() - INTERVAL '30 days')::int as new_users_period,
+            COUNT(*) FILTER (WHERE "criadoem" >= NOW() - INTERVAL '60 days' AND "criadoem" < NOW() - INTERVAL '30 days')::int as new_users_prev_period,
+            COUNT(*) FILTER (WHERE "ultimologin" >= NOW() - INTERVAL '7 days')::int as active_week,
+            COUNT(*) FILTER (WHERE "ultimologin" >= NOW() - INTERVAL '30 days')::int as active_users,
             COALESCE(SUM(
               CASE 
                 WHEN "tipoplano" = 'mensal' THEN 29.90
@@ -7868,10 +7866,10 @@ app.use('/api/reports-v2', (req, res, next) => {
                 WHEN "origemassinatura" = 'hotmart' THEN 7.00
                 ELSE 0 
               END
-            ), 0) as total_revenue,
+            ), 0)::numeric as total_revenue,
             COALESCE(SUM(
               CASE 
-                WHEN "dataassinatura" >= NOW() - INTERVAL ${dateInterval} THEN
+                WHEN "dataassinatura" >= NOW() - INTERVAL '30 days' THEN
                   CASE 
                     WHEN "tipoplano" = 'mensal' THEN 29.90
                     WHEN "tipoplano" = 'anual' THEN 197.00
@@ -7881,52 +7879,55 @@ app.use('/api/reports-v2', (req, res, next) => {
                   END
                 ELSE 0
               END
-            ), 0) as period_revenue
+            ), 0)::numeric as period_revenue
           FROM users 
           WHERE "isactive" = true
-        `),
+        `);
         
-        // Estatísticas de artes com filtro de período
-        db.execute(sql`
+        // Estatísticas de artes
+        artData = await db.execute(sql`
           SELECT 
-            COUNT(*) as total_arts,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${dateInterval}) as arts_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${prevDateInterval} AND "createdAt" < NOW() - INTERVAL ${prevDateStart}) as arts_prev_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as arts_week,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days') as arts_month
+            COUNT(*)::int as total_arts,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as arts_period,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as arts_prev_period,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days')::int as arts_week,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as arts_month
           FROM arts 
           WHERE "isVisible" = true
-        `),
+        `);
         
-        // Estatísticas da comunidade com filtro de período
-        db.execute(sql`
+        // Estatísticas da comunidade
+        communityData = await db.execute(sql`
           SELECT 
-            COUNT(*) as total_posts,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${dateInterval}) as posts_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${prevDateInterval} AND "createdAt" < NOW() - INTERVAL ${prevDateStart}) as posts_prev_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as posts_week,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days') as posts_month
+            COUNT(*)::int as total_posts,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as posts_period,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as posts_prev_period,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days')::int as posts_week,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as posts_month
           FROM "communityPosts"
-        `),
+        `);
         
-        // Estatísticas de downloads com filtro de período
-        db.execute(sql`
+        // Estatísticas de downloads
+        downloadData = await db.execute(sql`
           SELECT 
-            COUNT(*) as total_downloads,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${dateInterval}) as downloads_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${prevDateInterval} AND "createdAt" < NOW() - INTERVAL ${prevDateStart}) as downloads_prev_period
+            COUNT(*)::int as total_downloads,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as downloads_period,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as downloads_prev_period
           FROM downloads
-        `),
+        `);
         
-        // Estatísticas de comentários com filtro de período
-        db.execute(sql`
+        // Estatísticas de comentários
+        commentData = await db.execute(sql`
           SELECT 
-            COUNT(*) as total_comments,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${dateInterval}) as comments_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL ${prevDateInterval} AND "createdAt" < NOW() - INTERVAL ${prevDateStart}) as comments_prev_period
+            COUNT(*)::int as total_comments,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as comments_period,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as comments_prev_period
           FROM "communityComments"
-        `)
-      ]);
+        `);
+      } catch (error) {
+        console.error('[DASHBOARD ERROR] Erro nas consultas SQL:', error);
+        throw error;
+      }
 
       // Extrair dados das consultas (acessar primeira linha dos resultados)
       const userRow = userData.rows[0];
