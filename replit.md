@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 13, 2025: Completed dashboard monetization metrics with authentic database integration
+  - Fixed revenue calculations to use real database data instead of artificial values
+  - Implemented period-based revenue tracking based on actual user subscription dates
+  - Corrected ticket médio calculation using real subscription revenue and user counts
+  - Enhanced tax conversion calculation with genuine user data ratios
+  - All financial metrics now reflect authentic transaction data from subscription system
 - June 13, 2025: Implemented comprehensive dashboard monetization metrics with smart date filtering
   - Added dynamic date filter (7d, 30d, 90d, 1y) for all dashboard statistics
   - Enhanced backend with period-based database queries and real-time growth calculations
