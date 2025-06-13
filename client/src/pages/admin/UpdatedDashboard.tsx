@@ -1,92 +1,34 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useLocation } from 'wouter';
-import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
-import ReportsManagement from '@/components/admin/ReportsManagement';
-import CollaborationRequestsManagement from '@/components/admin/CollaborationRequestsManagement';
-import AffiliateRequestsManagement from '@/components/admin/AffiliateRequestsManagement';
-import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
-import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
-import SubscriptionDashboard from '@/components/admin/SubscriptionDashboard';
-import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
+import { useState } from 'react';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import UserManagement from '@/components/admin/UserManagement';
+import SimpleFormMultiDialog from '@/components/admin/SimpleFormMultiDialog';
 import SaasDashboard from '@/components/admin/SaasDashboard';
 import PlatformMetrics from '@/components/admin/PlatformMetrics';
 import {
-  LayoutGrid,
-  Image,
   Users,
-  User,
-  ListChecks,
+  Image,
   MessageSquare,
-  BarChart3,
-  Settings,
-  Plus,
-  Search,
-  Home,
-  LogOut,
-  Sliders,
-  Database,
-  HardDrive,
-  FileType,
-  Flag,
   CreditCard,
-  BookOpen,
-  LayoutDashboard,
-  ChevronDown,
-  ImagePlus,
-  FolderPlus,
-  Layers,
-  PanelRight,
-  PanelLeft,
-  ChevronRight,
   Video,
-  Trash2,
-  FileImage,
-  FileText,
-  Pencil,
-  MoreVertical,
-  AlertCircle,
-  AlertTriangle,
-  Loader2,
-  XCircle,
-  CheckCircle2,
+  LayoutGrid,
+  FileType,
   Crown,
-  Sparkles,
-  Upload,
-  Zap,
-  Award,
-  FileVideo,
-  MoreHorizontal,
-  Edit,
-  Eye, 
-  RefreshCw,
-  ListOrdered,
-  BellRing,
-  Save,
-  Calendar,
-  Wrench,
-  FlagIcon,
-  Palette,
   TrendingUp,
   Clock,
   Download,
-  Star
+  Star,
+  Plus
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/use-auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import UserManagement from '@/components/admin/UserManagement';
-import SimpleFormMultiDialog from '@/components/admin/SimpleFormMultiDialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AdminDashboard = () => {
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="container mx-auto px-6 py-8">
+    <AdminLayout title="Painel Administrativo">
+      <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:grid-cols-none lg:inline-flex">
             <TabsTrigger value="overview">Dashboard</TabsTrigger>
@@ -277,9 +219,12 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="arts">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Gerenciar Artes</h2>
-              <div className="flex items-center gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Gerenciar Artes</h2>
+                  <p className="text-sm text-gray-500 mt-1">Administre todas as artes da plataforma</p>
+                </div>
                 <Button 
                   onClick={() => setIsMultiFormOpen(true)}
                   className="bg-blue-600 hover:bg-blue-700"
@@ -288,21 +233,36 @@ const AdminDashboard = () => {
                   Nova Arte
                 </Button>
               </div>
-              <p className="text-gray-500">Funcionalidade de gerenciamento de artes em desenvolvimento.</p>
+              <div className="text-center py-12">
+                <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Funcionalidade de gerenciamento de artes em desenvolvimento.</p>
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="community">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Gerenciar Comunidade</h2>
-              <p className="text-gray-500">Funcionalidade de gerenciamento da comunidade em desenvolvimento.</p>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">Gerenciar Comunidade</h2>
+                <p className="text-sm text-gray-500 mt-1">Modere posts e interações da comunidade</p>
+              </div>
+              <div className="text-center py-12">
+                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Funcionalidade de gerenciamento da comunidade em desenvolvimento.</p>
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="courses">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Gerenciar Cursos</h2>
-              <p className="text-gray-500">Funcionalidade de gerenciamento de cursos em desenvolvimento.</p>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">Gerenciar Cursos</h2>
+                <p className="text-sm text-gray-500 mt-1">Administre cursos e vídeo-aulas</p>
+              </div>
+              <div className="text-center py-12">
+                <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Funcionalidade de gerenciamento de cursos em desenvolvimento.</p>
+              </div>
             </div>
           </TabsContent>
 
@@ -314,16 +274,16 @@ const AdminDashboard = () => {
             <PlatformMetrics />
           </TabsContent>
         </Tabs>
-      </main>
-      
-      {/* Diálogo de criação de arte multi-formato */}
-      <SimpleFormMultiDialog 
-        isOpen={isMultiFormOpen} 
-        onClose={() => setIsMultiFormOpen(false)}
-        editingArt={null}
-        isEditing={false}
-      />
-    </div>
+        
+        {/* Diálogo de criação de arte multi-formato */}
+        <SimpleFormMultiDialog 
+          isOpen={isMultiFormOpen} 
+          onClose={() => setIsMultiFormOpen(false)}
+          editingArt={null}
+          isEditing={false}
+        />
+      </div>
+    </AdminLayout>
   );
 };
 
