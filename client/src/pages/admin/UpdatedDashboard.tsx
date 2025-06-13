@@ -67,6 +67,12 @@ import {
   FlagIcon,
   Palette
 } from 'lucide-react';
+import { 
+  TrendingUp,
+  Clock,
+  Download,
+  Star
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
@@ -1872,64 +1878,114 @@ const AdminDashboard = () => {
                     <p className="text-sm text-gray-500">Métricas de performance da plataforma</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Vídeo-aulas */}
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center">
-                        <div className="p-2 bg-blue-50 rounded-lg mr-3">
-                          <Video className="w-4 h-4 text-blue-600" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Coluna Esquerda */}
+                    <div className="space-y-6">
+                      {/* Vídeo-aulas */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-blue-50 rounded-lg">
+                            <Video className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Vídeo-aulas</span>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Vídeo-aulas</div>
-                          <div className="text-xs text-gray-500">84 📚 Taxa Premium</div>
-                        </div>
+                        <div className="text-lg font-bold text-gray-900">84</div>
                       </div>
-                      <div className="text-right">
+
+                      {/* Categorias */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-purple-50 rounded-lg">
+                            <LayoutGrid className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Categorias</span>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">15</div>
+                      </div>
+
+                      {/* Formatos */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-green-50 rounded-lg">
+                            <FileType className="w-4 h-4 text-green-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Formatos</span>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">8</div>
+                      </div>
+                    </div>
+
+                    {/* Coluna Direita */}
+                    <div className="space-y-6">
+                      {/* Taxa Premium */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-yellow-50 rounded-lg">
+                            <Crown className="w-4 h-4 text-yellow-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Taxa Premium</span>
+                        </div>
                         <div className="text-lg font-bold text-gray-900">26.3%</div>
-                        <div className="text-xs text-gray-500 flex items-center">
-                          <span className="w-3 h-3 bg-blue-100 rounded-full mr-1"></span>
-                          Downloads 12.8k
-                        </div>
                       </div>
-                    </div>
 
-                    {/* Categorias */}
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center">
-                        <div className="p-2 bg-purple-50 rounded-lg mr-3">
-                          <LayoutGrid className="w-4 h-4 text-purple-600" />
+                      {/* Crescimento */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-emerald-50 rounded-lg">
+                            <TrendingUp className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Crescimento</span>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Categorias</div>
-                          <div className="text-xs text-gray-500">15 📈 Crescimento</div>
-                        </div>
+                        <div className="text-lg font-bold text-green-600">+18.2%</div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">+18.2%</div>
-                        <div className="text-xs text-gray-500 flex items-center">
-                          <span className="w-3 h-3 bg-purple-100 rounded-full mr-1"></span>
-                          Comentários 1.2k
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Formatos */}
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center">
-                        <div className="p-2 bg-green-50 rounded-lg mr-3">
-                          <FileType className="w-4 h-4 text-green-600" />
+                      {/* Tempo Médio */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-orange-50 rounded-lg">
+                            <Clock className="w-4 h-4 text-orange-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Tempo Médio</span>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Formatos</div>
-                          <div className="text-xs text-gray-500">8 ⏱️ Tempo Médio</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
                         <div className="text-lg font-bold text-gray-900">42min</div>
-                        <div className="text-xs text-gray-500 flex items-center">
-                          <span className="w-3 h-3 bg-green-100 rounded-full mr-1"></span>
-                          ⭐ Avaliação 4.8★
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Linha inferior com métricas adicionais */}
+                  <div className="mt-8 pt-6 border-t border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Downloads */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-blue-50 rounded-lg">
+                            <Download className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Downloads</span>
                         </div>
+                        <div className="text-lg font-bold text-gray-900">12.8k</div>
+                      </div>
+
+                      {/* Comentários */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-purple-50 rounded-lg">
+                            <MessageSquare className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Comentários</span>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">1.2k</div>
+                      </div>
+
+                      {/* Avaliação */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-yellow-50 rounded-lg">
+                            <Star className="w-4 h-4 text-yellow-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">Avaliação</span>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">4.8★</div>
                       </div>
                     </div>
                   </div>
