@@ -1960,7 +1960,7 @@ const AdminDashboard = () => {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          filteredModules.map((module) => (
+                          (filteredModules || []).map((module: any) => (
                             <TableRow key={module.id}>
                               <TableCell>
                                 <div className="w-16 h-9 bg-gray-100 rounded overflow-hidden">
@@ -2192,7 +2192,7 @@ const AdminDashboard = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todos os módulos</SelectItem>
-                          {modules.map((module) => (
+                          {modules.map((module: any) => (
                             <SelectItem key={module.id} value={module.id.toString()}>
                               {module.title}
                             </SelectItem>
