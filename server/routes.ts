@@ -8126,6 +8126,235 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // Endpoint para dados financeiros e de receita
+  app.get("/api/financial/stats", async (req, res) => {
+    try {
+      const period = req.query.period as string || 'all';
+      
+      // Configuração dos intervalos de data baseado no período
+      let dateInterval = '1000 years';
+      let prevDateInterval = '2000 years';
+      let prevDateStart = '1000 years';
+      
+      if (period !== 'all') {
+        switch (period) {
+          case '7d':
+            dateInterval = '7 days';
+            prevDateInterval = '14 days';
+            prevDateStart = '7 days';
+            break;
+          case '30d':
+            dateInterval = '30 days';
+            prevDateInterval = '60 days';
+            prevDateStart = '30 days';
+            break;
+          case '90d':
+            dateInterval = '90 days';
+            prevDateInterval = '180 days';
+            prevDateStart = '90 days';
+            break;
+          case '1y':
+            dateInterval = '365 days';
+            prevDateInterval = '730 days';
+            prevDateStart = '365 days';
+            break;
+        }
+      }
+
+      // Receita por origem (Hotmart, Doppus, Manual)
+      const revenueBySource = period === 'all'
+        ? await db.execute(sql`
+            SELECT 
+              origemassinatura as source,
+              tipoplano as plan_type,
+              COUNT(*) as subscribers,
+              CASE 
+                WHEN tipoplano = 'anual' THEN COUNT(*) * 197
+                WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
+                ELSE COUNT(*) * 19.90
+              END as estimated_revenue
+            FROM users 
+            WHERE origemassinatura IS NOT NULL 
+              AND tipoplano IS NOT NULL
+              AND nivelacesso IN ('premium', 'designer')
+            GROUP BY origemassinatura, tipoplano
+            ORDER BY estimated_revenue DESC
+          `)
+        : await db.execute(sql`
+            SELECT 
+              origemassinatura as source,
+              tipoplano as plan_type,
+              COUNT(*) as subscribers,
+              CASE 
+                WHEN tipoplano = 'anual' THEN COUNT(*) * 197
+                WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
+                ELSE COUNT(*) * 19.90
+              END as estimated_revenue
+            FROM users 
+            WHERE origemassinatura IS NOT NULL 
+              AND tipoplano IS NOT NULL
+              AND nivelacesso IN ('premium', 'designer')
+              AND dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)}
+            GROUP BY origemassinatura, tipoplano
+            ORDER BY estimated_revenue DESC
+          `);
+
+      // Receita mensal (últimos 12 meses)
+      const monthlyRevenue = await db.execute(sql`
+        SELECT 
+          TO_CHAR(DATE_TRUNC('month', dataassinatura), 'YYYY-MM') as month,
+          COUNT(*) as new_subscriptions,
+          CASE 
+            WHEN tipoplano = 'anual' THEN COUNT(*) * 197
+            WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
+            ELSE COUNT(*) * 19.90
+          END as monthly_revenue
+        FROM users 
+        WHERE dataassinatura >= CURRENT_DATE - INTERVAL '12 months'
+          AND origemassinatura IS NOT NULL 
+          AND tipoplano IS NOT NULL
+          AND nivelacesso IN ('premium', 'designer')
+        GROUP BY DATE_TRUNC('month', dataassinatura), tipoplano
+        ORDER BY month DESC
+      `);
+
+      // MRR (Receita Recorrente Mensal) - apenas planos mensais ativos
+      const mrrData = await db.execute(sql`
+        SELECT 
+          COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) as monthly_subscribers,
+          COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) as annual_subscribers,
+          COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) * 19.90 as monthly_mrr,
+          COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) * (197/12) as annual_mrr_monthly
+        FROM users 
+        WHERE nivelacesso IN ('premium', 'designer')
+          AND tipoplano IS NOT NULL
+          AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE)
+      `);
+
+      // Ticket médio por plano
+      const averageTicketByPlan = await db.execute(sql`
+        SELECT 
+          tipoplano as plan_type,
+          COUNT(*) as subscribers,
+          CASE 
+            WHEN tipoplano = 'anual' THEN 197
+            WHEN tipoplano = 'mensal' THEN 19.90
+            ELSE 19.90
+          END as plan_price
+        FROM users 
+        WHERE nivelacesso IN ('premium', 'designer')
+          AND tipoplano IS NOT NULL
+        GROUP BY tipoplano
+      `);
+
+      // Taxa de churn (cancelamentos vs assinantes ativos)
+      const churnData = await db.execute(sql`
+        SELECT 
+          COUNT(CASE WHEN nivelacesso IN ('premium', 'designer') 
+                     AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE) THEN 1 END) as active_subscribers,
+          COUNT(CASE WHEN nivelacesso NOT IN ('premium', 'designer') 
+                     AND origemassinatura IS NOT NULL THEN 1 END) as churned_subscribers,
+          COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as new_subscribers_30d
+        FROM users 
+        WHERE origemassinatura IS NOT NULL
+      `);
+
+      // Faturamento por tipo de plano
+      const revenueByPlanType = await db.execute(sql`
+        SELECT 
+          tipoplano as plan_type,
+          COUNT(*) as subscribers,
+          CASE 
+            WHEN tipoplano = 'anual' THEN COUNT(*) * 197
+            WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
+            ELSE COUNT(*) * 19.90
+          END as total_revenue
+        FROM users 
+        WHERE nivelacesso IN ('premium', 'designer')
+          AND tipoplano IS NOT NULL
+        GROUP BY tipoplano
+        ORDER BY total_revenue DESC
+      `);
+
+      // Assinantes recentes (últimos 30 dias)
+      const recentSubscribers = await db.execute(sql`
+        SELECT 
+          id,
+          name,
+          email,
+          tipoplano as plan_type,
+          origemassinatura as source,
+          dataassinatura as subscription_date,
+          CASE 
+            WHEN tipoplano = 'anual' THEN 197
+            WHEN tipoplano = 'mensal' THEN 19.90
+            ELSE 19.90
+          END as plan_value
+        FROM users 
+        WHERE dataassinatura >= CURRENT_DATE - INTERVAL '30 days'
+          AND nivelacesso IN ('premium', 'designer')
+          AND origemassinatura IS NOT NULL
+        ORDER BY dataassinatura DESC
+        LIMIT 50
+      `);
+
+      // Calcular totais
+      const totalMRR = Number(mrrData[0]?.monthly_mrr || 0) + Number(mrrData[0]?.annual_mrr_monthly || 0);
+      const activeSubscribers = Number(churnData[0]?.active_subscribers || 0);
+      const churnedSubscribers = Number(churnData[0]?.churned_subscribers || 0);
+      const churnRate = activeSubscribers > 0 ? 
+        Math.round((churnedSubscribers / (activeSubscribers + churnedSubscribers)) * 100) : 0;
+
+      const totalRevenue = revenueByPlanType.reduce((sum, plan) => 
+        sum + Number(plan.total_revenue || 0), 0);
+
+      res.json({
+        period,
+        summary: {
+          totalRevenue: Math.round(totalRevenue),
+          mrr: Math.round(totalMRR),
+          activeSubscribers,
+          churnRate,
+          averageTicket: activeSubscribers > 0 ? Math.round(totalRevenue / activeSubscribers) : 0
+        },
+        revenueBySource: revenueBySource.map(item => ({
+          source: item.source || 'Desconhecido',
+          planType: item.plan_type || 'Indefinido',
+          subscribers: Number(item.subscribers || 0),
+          revenue: Number(item.estimated_revenue || 0)
+        })),
+        monthlyRevenue: monthlyRevenue.map(item => ({
+          month: item.month,
+          subscriptions: Number(item.new_subscriptions || 0),
+          revenue: Number(item.monthly_revenue || 0)
+        })),
+        averageTicketByPlan: averageTicketByPlan.map(item => ({
+          planType: item.plan_type || 'Indefinido',
+          subscribers: Number(item.subscribers || 0),
+          price: Number(item.plan_price || 0)
+        })),
+        revenueByPlanType: revenueByPlanType.map(item => ({
+          planType: item.plan_type || 'Indefinido',
+          subscribers: Number(item.subscribers || 0),
+          revenue: Number(item.total_revenue || 0)
+        })),
+        recentSubscribers: recentSubscribers.map(item => ({
+          id: item.id,
+          name: item.name,
+          email: item.email,
+          planType: item.plan_type,
+          source: item.source,
+          subscriptionDate: item.subscription_date,
+          planValue: Number(item.plan_value || 0)
+        }))
+      });
+
+    } catch (error) {
+      console.error("Erro ao buscar dados financeiros:", error);
+      res.status(500).json({ message: "Erro ao buscar dados financeiros" });
+    }
+  });
+
   // Rota para salvar solicitação de colaboração
   app.post("/api/collaboration-request", async (req, res) => {
     try {

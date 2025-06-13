@@ -133,6 +133,7 @@ import { useSiteSettings } from '@/hooks/use-site-settings';
 import GerenciarFerramentas from './ferramentas/GerenciarFerramentas';
 import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 import DashboardOverview from '@/components/admin/DashboardOverview';
+import FinancialDashboard from '@/components/admin/FinancialDashboard';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -146,6 +147,8 @@ const AdminDashboard = () => {
   };
   
   const [activeTab, setActiveTab] = useState(getDefaultTab());
+  const [dashboardActiveTab, setDashboardActiveTab] = useState('overview'); // Nova aba interna do dashboard
+  const [selectedPeriod, setSelectedPeriod] = useState('all'); // Estado para o filtro de período
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
@@ -1082,25 +1085,6 @@ const AdminDashboard = () => {
               </button>
             )}
             
-            {/* Financeiro / Receita - apenas para admin */}
-            {hasTabAccess('stats') && (
-              <button
-                onClick={() => setActiveTab('revenue')}
-                className={`flex items-center w-full rounded-xl text-base transition-all duration-200 ${
-                  activeTab === 'revenue' 
-                    ? 'bg-blue-50 text-blue-700 shadow-sm' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                } ${!sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3'}`}
-                title="Financeiro / Receita"
-              >
-                <DollarSign className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                  activeTab === 'revenue' ? 'text-blue-600' : 'text-gray-600'
-                }`} />
-                {sidebarOpen && <span className="font-semibold">Financeiro / Receita</span>}
-              </button>
-            )}
-
-            
             {/* Usuários - dropdown com assinaturas */}
             {(hasTabAccess('users') || hasTabAccess('subscriptions')) && (
               <Collapsible 
@@ -1808,8 +1792,66 @@ const AdminDashboard = () => {
 
             
             <TabsContent value="stats">
-              {/* Dashboard com dados reais da plataforma */}
-              <DashboardOverview />
+              {/* Dashboard com abas internas */}
+              <div className="space-y-6">
+                {/* Header com título e filtro de período */}
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-600">Período:</span>
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todo período</SelectItem>
+                        <SelectItem value="7d">7 dias</SelectItem>
+                        <SelectItem value="30d">30 dias</SelectItem>
+                        <SelectItem value="90d">90 dias</SelectItem>
+                        <SelectItem value="1y">1 ano</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Abas internas do Dashboard */}
+                <div className="bg-white rounded-lg shadow-sm border">
+                  <div className="border-b border-gray-200">
+                    <nav className="flex space-x-8 px-6" aria-label="Dashboard tabs">
+                      <button
+                        onClick={() => setDashboardActiveTab('overview')}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                          dashboardActiveTab === 'overview'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        Visão Geral
+                      </button>
+                      <button
+                        onClick={() => setDashboardActiveTab('financial')}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                          dashboardActiveTab === 'financial'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        Financeiro
+                      </button>
+                    </nav>
+                  </div>
+
+                  <div className="p-6">
+                    {dashboardActiveTab === 'overview' && (
+                      <DashboardOverview />
+                    )}
+                    
+                    {dashboardActiveTab === 'financial' && (
+                      <FinancialDashboard period={selectedPeriod} />
+                    )}
+                  </div>
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="modules" className="mt-0">
