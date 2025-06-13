@@ -1055,8 +1055,39 @@ const AdminDashboard = () => {
         </div>
         <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
           
+          {/* Perfil do usuário */}
+          <Link 
+            href="/painel/perfil"
+            className={`flex items-center mb-4 hover:bg-blue-50 rounded-lg p-3 transition-colors border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 shadow-sm ${!sidebarOpen ? 'justify-center' : ''}`}
+            title="Ir para Perfil"
+          >
+            <div className={`relative ${sidebarOpen ? 'mr-3' : ''}`}>
+              {user?.profileimageurl ? (
+                <img 
+                  src={user.profileimageurl} 
+                  alt={user.name || 'Admin'} 
+                  className="w-9 h-9 rounded-full object-cover border-2 border-blue-200 shadow-sm"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium text-sm border-2 border-blue-200 shadow-sm">
+                  {user?.name?.charAt(0) || 'A'}
+                </div>
+              )}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
+            </div>
+            {sidebarOpen && (
+              <div className="overflow-hidden">
+                <p className="font-semibold text-gray-900 truncate text-sm">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-blue-600 truncate font-medium">
+                  {user?.nivelacesso === 'admin' ? 'Administrador' : 
+                   user?.nivelacesso === 'designer_adm' ? 'Designer Admin' : 
+                   user?.nivelacesso === 'suporte' ? 'Suporte' : 'Usuário'}
+                </p>
+              </div>
+            )}
+          </Link>
 
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {/* Dashboard principal - apenas para admin */}
             {hasTabAccess('stats') && (
               <button
@@ -1093,6 +1124,16 @@ const AdminDashboard = () => {
               </button>
             )}
             
+            {/* Separador e título de seção */}
+            {sidebarOpen && (
+              <div className="pt-4 pb-2">
+                <div className="h-px bg-gray-200 mb-3"></div>
+                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Gerenciamento
+                </h3>
+              </div>
+            )}
+            
             {/* Usuários - dropdown com assinaturas */}
             {(hasTabAccess('users') || hasTabAccess('subscriptions')) && (
               <Collapsible 
@@ -1101,13 +1142,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
                 <CollapsibleTrigger 
-                  className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                  className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                   title="Usuários"
                 >
                   <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                   {sidebarOpen && (
                     <>
-                      <span className="font-medium">Usuários</span>
+                      <span>Usuários</span>
                       <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                     </>
                   )}
@@ -1149,6 +1190,16 @@ const AdminDashboard = () => {
               </Collapsible>
             )}
             
+            {/* Separador e título de seção para Conteúdo */}
+            {user?.nivelacesso !== 'suporte' && sidebarOpen && (
+              <div className="pt-4 pb-2">
+                <div className="h-px bg-gray-200 mb-3"></div>
+                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Conteúdo
+                </h3>
+              </div>
+            )}
+            
             {/* Gerenciamento de Conteúdo - Oculto para suporte */}
             {user?.nivelacesso !== 'suporte' && (
               <Collapsible 
@@ -1157,13 +1208,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Conteúdo"
               >
                 <Layers className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="font-medium">Conteúdo</span>
+                    <span>Artes & Media</span>
                     <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
@@ -1525,36 +1576,6 @@ const AdminDashboard = () => {
           </nav>
         </div>
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
-          <Link 
-            href="/painel/perfil"
-            className={`flex items-center mb-2 hover:bg-blue-50 rounded-lg p-3 transition-colors border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 shadow-sm ${!sidebarOpen ? 'justify-center' : ''}`}
-            title="Ir para Perfil"
-          >
-            <div className={`relative ${sidebarOpen ? 'mr-3' : ''}`}>
-              {user?.profileimageurl ? (
-                <img 
-                  src={user.profileimageurl} 
-                  alt={user.name || 'Admin'} 
-                  className="w-9 h-9 rounded-full object-cover border-2 border-blue-200 shadow-sm"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium text-sm border-2 border-blue-200 shadow-sm">
-                  {user?.name?.charAt(0) || 'A'}
-                </div>
-              )}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
-            </div>
-            {sidebarOpen && (
-              <div className="overflow-hidden">
-                <p className="font-semibold text-gray-900 truncate text-sm">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-blue-600 truncate font-medium">
-                  {user?.nivelacesso === 'admin' ? 'Administrador' : 
-                   user?.nivelacesso === 'designer_adm' ? 'Designer Admin' : 
-                   user?.nivelacesso === 'suporte' ? 'Suporte' : 'Usuário'}
-                </p>
-              </div>
-            )}
-          </Link>
           <Link 
             href="/"
             title="Ir para o Site"
