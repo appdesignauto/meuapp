@@ -3095,7 +3095,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="arts">
-              <ArtsList setIsMultiFormOpen={setIsMultiFormOpen} />
+              <ArtsList />
             </TabsContent>
             
             <TabsContent value="categories">
