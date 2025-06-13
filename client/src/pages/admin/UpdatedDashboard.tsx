@@ -1742,6 +1742,71 @@ const AdminDashboard = () => {
         
         <main className="p-6 pt-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 mb-8 h-auto p-2 bg-gray-50/50 rounded-xl">
+              {hasTabAccess('stats') && (
+                <TabsTrigger value="stats" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <BarChart3 className="w-4 h-4 mr-1" />
+                  Dashboard
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('arts') && (
+                <TabsTrigger value="arts" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <Image className="w-4 h-4 mr-1" />
+                  Artes
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('courses') && (
+                <TabsTrigger value="courses" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <PlayCircle className="w-4 h-4 mr-1" />
+                  Cursos
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('modules') && (
+                <TabsTrigger value="modules" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <BookOpen className="w-4 h-4 mr-1" />
+                  Módulos
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('users') && (
+                <TabsTrigger value="users" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <Users className="w-4 h-4 mr-1" />
+                  Usuários
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('subscriptions') && (
+                <TabsTrigger value="subscriptions" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <Crown className="w-4 h-4 mr-1" />
+                  Assinaturas
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('community') && (
+                <TabsTrigger value="community" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  Comunidade
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('ferramentas') && (
+                <TabsTrigger value="ferramentas" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <Wrench className="w-4 h-4 mr-1" />
+                  Ferramentas
+                </TabsTrigger>
+              )}
+              
+              {hasTabAccess('analytics') && (
+                <TabsTrigger value="analytics" className="flex items-center justify-center text-xs px-3 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg transition-all">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  Analytics
+                </TabsTrigger>
+              )}
+            </TabsList>
+
             <TabsContent value="comments">
               <div className="mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1791,166 +1856,6 @@ const AdminDashboard = () => {
             <TabsContent value="stats">
               {/* Dashboard com dados reais da plataforma */}
               <DashboardOverview />
-            </TabsContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <MessageSquare className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">489</div>
-                      <div className="text-xs text-green-600 font-medium flex items-center justify-end">
-                        <span className="mr-1">+15%</span>
-                        <span className="text-gray-500">este mês</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Posts Comunidade</h3>
-                    <p className="text-xs text-gray-500 mt-1">73 interações hoje</p>
-                  </div>
-                </div>
-
-                {/* Receita Mensal */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <DollarSign className="h-6 w-6 text-yellow-600" />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">R$ 18.2k</div>
-                      <div className="text-xs text-green-600 font-medium flex items-center justify-end">
-                        <span className="mr-1">+7%</span>
-                        <span className="text-gray-500">este mês</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Receita Mensal</h3>
-                    <p className="text-xs text-gray-500 mt-1">R$ 5.1k esta semana</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Estatísticas Detalhadas */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Estatísticas Detalhadas</h3>
-                  <p className="text-sm text-gray-500">Métricas de performance da plataforma</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Vídeo-aulas */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Video className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Vídeo-aulas</p>
-                        <p className="text-xs text-gray-500">Conteúdo educacional</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">84</p>
-                      <div className="flex items-center text-xs text-yellow-600">
-                        <Crown className="h-3 w-3 mr-1" />
-                        <span>Taxa Premium</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Categorias */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <LayoutGrid className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Categorias</p>
-                        <p className="text-xs text-gray-500">Organização de conteúdo</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">15</p>
-                      <div className="flex items-center text-xs text-green-600">
-                        <span className="mr-1">+18.2%</span>
-                        <span>Crescimento</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Formatos */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <CreditCard className="h-5 w-5 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Formatos</p>
-                        <p className="text-xs text-gray-500">Tipos de arte</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">8</p>
-                      <div className="flex items-center text-xs text-gray-600">
-                        <Clock className="h-3 w-3 mr-1" />
-                        <span>Tempo Médio</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Downloads */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-indigo-100 rounded-lg">
-                        <Download className="h-5 w-5 text-indigo-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Downloads</p>
-                        <p className="text-xs text-gray-500">Total de downloads</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">12.8k</p>
-                      <p className="text-xs text-green-600 font-medium">26.3%</p>
-                    </div>
-                  </div>
-
-                  {/* Comentários */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-pink-100 rounded-lg">
-                        <MessageSquare className="h-5 w-5 text-pink-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Comentários</p>
-                        <p className="text-xs text-gray-500">Engajamento</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">1.2k</p>
-                      <p className="text-xs text-green-600 font-medium">+18.2%</p>
-                    </div>
-                  </div>
-
-                  {/* Avaliação */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-yellow-100 rounded-lg">
-                        <Star className="h-5 w-5 text-yellow-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Avaliação</p>
-                        <p className="text-xs text-gray-500">Satisfação média</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">4.8★</p>
-                      <p className="text-xs text-gray-600">42min</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </TabsContent>
             
             <TabsContent value="modules" className="mt-0">
