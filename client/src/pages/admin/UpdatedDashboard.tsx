@@ -1028,7 +1028,7 @@ const AdminDashboard = () => {
               <img 
                 src={siteSettings.logoUrl} 
                 alt="DesignAuto Logo" 
-                className={`h-8 object-contain ${sidebarOpen ? 'mr-3' : ''}`}
+                className={`h-8 w-auto object-contain ${sidebarOpen ? 'mr-3' : ''}`}
               />
             )}
             {sidebarOpen && (
