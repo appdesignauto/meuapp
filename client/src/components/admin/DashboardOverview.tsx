@@ -17,38 +17,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const DashboardOverview = () => {
-  // Query para obter estatísticas do dashboard
+  // Query para obter estatísticas reais do dashboard
   const { data: dashboardStats, isLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/dashboard/stats');
-        if (!response.ok) {
-          throw new Error('Falha ao carregar estatísticas');
-        }
-        return await response.json();
-      } catch (error) {
-        // Retornar dados padrão se a API não existir ainda
-        return {
-          totalUsers: 1245,
-          premiumUsers: 327,
-          totalArts: 2847,
-          artsThisWeek: 156,
-          totalPosts: 489,
-          postsToday: 73,
-          monthlyRevenue: 18200,
-          revenueThisWeek: 5100,
-          videoLessons: 84,
-          premiumRate: 26.3,
-          categories: 15,
-          growth: 18.2,
-          formats: 8,
-          avgTime: 42,
-          downloads: 12800,
-          comments: 1200,
-          rating: 4.8
-        };
+      const response = await fetch('/api/dashboard/stats');
+      if (!response.ok) {
+        throw new Error('Falha ao carregar estatísticas');
       }
+      return await response.json();
     }
   });
 
