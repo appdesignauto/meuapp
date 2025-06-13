@@ -1042,7 +1042,7 @@ const UserManagement = () => {
         data.acessovitalicio = false;
       }
       // 2. Para papéis administrativos (admin, suporte, designer, designer_adm)
-      else if (['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
+      else if (data.nivelacesso && ['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
         data.tipoplano = null as any;
         data.origemassinatura = null as any;
         data.dataassinatura = null as any;
