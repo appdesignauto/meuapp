@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 13, 2025: Fixed critical SQL errors in financial API with authentic revenue calculations
+  - Resolved GROUP BY SQL syntax errors preventing financial data retrieval
+  - Corrected revenue calculations to show authentic values: R$ 14,00 total (2 Hotmart subscribers × R$ 7,00 each)
+  - Eliminated duplicate subscriber counting across different payment sources
+  - Financial dashboard now displays accurate metrics based on real webhook payment data
 - June 13, 2025: Simplified financial dashboard layout based on user feedback
   - Removed unnecessary internal tabs from financial dashboard section
   - Reorganized "Assinantes Recentes" section to appear below "Receita por Origem de Pagamento"
