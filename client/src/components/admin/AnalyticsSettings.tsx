@@ -161,19 +161,27 @@ const AnalyticsSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Aviso de Conformidade */}
-      <Alert className="mb-6">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Importante</AlertTitle>
-        <AlertDescription className="text-sm">
-          Estas configurações afetam como o site rastreia as atividades dos usuários. 
-          Certifique-se de que seu site esteja em conformidade com leis de privacidade aplicáveis, 
-          como LGPD e GDPR, e de que sua Política de Privacidade reflita o uso dessas tecnologias.
-        </AlertDescription>
-      </Alert>
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <div className="flex flex-col space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
+          <p className="text-muted-foreground">
+            Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+          </p>
+        </div>
 
-      <Tabs defaultValue="meta-pixel" className="w-full">
+        {/* Aviso de Conformidade */}
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Importante</AlertTitle>
+          <AlertDescription className="text-sm">
+            Estas configurações afetam como o site rastreia as atividades dos usuários. 
+            Certifique-se de que seu site esteja em conformidade com leis de privacidade aplicáveis, 
+            como LGPD e GDPR, e de que sua Política de Privacidade reflita o uso dessas tecnologias.
+          </AlertDescription>
+        </Alert>
+
+        <Tabs defaultValue="meta-pixel" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
           <TabsTrigger value="google-tag-manager">Google Tag Manager</TabsTrigger>
@@ -323,25 +331,26 @@ const AnalyticsSettings: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Botão de Salvar Global */}
-      <div className="flex justify-end pt-6">
-        <Button 
-          onClick={handleSave} 
-          disabled={isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md"
-        >
-          {isLoading ? (
-            <>
-              <Save className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Salvar Configurações
-            </>
-          )}
-        </Button>
+        {/* Botão de Salvar Global */}
+        <div className="flex justify-end pt-6">
+          <Button 
+            onClick={handleSave} 
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md"
+          >
+            {isLoading ? (
+              <>
+                <Save className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Configurações
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
