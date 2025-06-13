@@ -7833,9 +7833,9 @@ app.use('/api/reports-v2', (req, res, next) => {
           prevDateStart = '365 days';
           break;
         case 'all':
-          dateInterval = '10 years';
-          prevDateInterval = '20 years';
-          prevDateStart = '10 years';
+          dateInterval = '100 years'; // Usar período muito amplo para capturar todos os dados
+          prevDateInterval = '200 years';
+          prevDateStart = '100 years';
           break;
         default: // 30d
           dateInterval = '30 days';
