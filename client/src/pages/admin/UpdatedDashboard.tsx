@@ -1019,7 +1019,7 @@ const AdminDashboard = () => {
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
       <div 
         className={`
-          fixed lg:relative z-40 h-full bg-white
+          fixed lg:relative z-40 h-full bg-white border-r border-gray-200
           transition-all duration-300 ease-in-out overflow-hidden
           ${sidebarOpen 
             ? 'w-64 translate-x-0' 
