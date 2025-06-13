@@ -1816,8 +1816,8 @@ const ModernUserManagement = () => {
                   )}
 
                   {/* Assinatura Premium - Só mostra se a data for posterior ao cadastro */}
-                  {selectedUserForHistory.dataassinatura && 
-                   new Date(selectedUserForHistory.dataassinatura) >= new Date(selectedUserForHistory.criadoem) && (
+                  {(selectedUserForHistory.dataassinatura && 
+                   new Date(selectedUserForHistory.dataassinatura) >= new Date(selectedUserForHistory.criadoem)) && (
                     <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
                       <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
                         <Crown className="w-4 h-4 text-white" />
