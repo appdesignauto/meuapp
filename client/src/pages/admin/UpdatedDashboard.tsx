@@ -1505,7 +1505,7 @@ const AdminDashboard = () => {
                       className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
                       <HardDrive className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
-                      {sidebarOpen && <span>Testar Armazenamento</span>}
+                      {sidebarOpen && <span>Armazenamento</span>}
                     </Link>
                     <button
                       onClick={() => setActiveTab('analytics')}
