@@ -1226,78 +1226,88 @@ const AdminDashboard = () => {
             {/* Cursos e Vídeo-aulas - Visível para suporte e admin */}
             {(user?.nivelacesso === 'suporte' || user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm') && (
               <Collapsible 
-                className="rounded-lg overflow-hidden"
+                className="space-y-1"
                 defaultOpen={['courses', 'modules', 'lessons', 'coursesConfig', 'courseStats'].includes(activeTab)}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Cursos"
               >
-                <BookOpen className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3 truncate">Cursos</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="font-medium">Cursos</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('coursesList')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'coursesList' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'coursesList' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Cursos"
                 >
-                  <BookOpen className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Cursos</span>}
+                  <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'coursesList' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Cursos</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('modules')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'modules' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'modules' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Módulos"
                 >
-                  <Layers className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Módulos</span>}
+                  <Layers className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'modules' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Módulos</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('lessons')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'lessons' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'lessons' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Aulas"
                 >
-                  <Video className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Aulas</span>}
+                  <Video className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'lessons' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Aulas</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('courseStats')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'courseStats' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'courseStats' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Estatísticas"
                 >
-                  <BarChart3 className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Estatísticas</span>}
+                  <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'courseStats' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Estatísticas</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('coursesConfig')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'coursesConfig' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'coursesConfig' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Configurações"
                 >
-                  <Settings className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Configurações</span>}
+                  <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'coursesConfig' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Configurações</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'comments' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'comments' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Comentários"
                 >
                   <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
@@ -1310,32 +1320,34 @@ const AdminDashboard = () => {
             {/* Marketing - Oculto para suporte */}
             {user?.nivelacesso !== 'suporte' && (
               <Collapsible 
-                className="rounded-lg overflow-hidden mb-1"
+                className="space-y-1"
                 defaultOpen={['popups'].includes(activeTab)}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Marketing"
               >
-                <BellRing className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3 truncate">Marketing</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="font-medium">Marketing</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('popups')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'popups' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'popups' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Popups"
                 >
-                  <BellRing className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Popups</span>}
+                  <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'popups' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Gerenciar Popups</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1344,52 +1356,58 @@ const AdminDashboard = () => {
             {/* Reports - Visível para suporte */}
             {(user?.nivelacesso === 'suporte' || user?.nivelacesso === 'admin') && (
               <Collapsible 
-                className="rounded-lg overflow-hidden mb-1"
+                className="space-y-1"
                 defaultOpen={['reports'].includes(activeTab)}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Reports"
               >
-                <FlagIcon className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3 truncate">Reports</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="font-medium">Reports</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('reports')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'reports' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'reports' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Reports"
                 >
-                  <FlagIcon className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Reports</span>}
+                  <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'reports' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Gerenciar Reports</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('collaboration-requests')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'collaboration-requests' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'collaboration-requests' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Colaboração"
                 >
-                  <Users className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Colaboração</span>}
+                  <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'collaboration-requests' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Gerenciar Colaboração</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('affiliate-requests')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'affiliate-requests' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    activeTab === 'affiliate-requests' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Afiliação"
                 >
-                  <Award className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Afiliação</span>}
+                  <Award className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    activeTab === 'affiliate-requests' ? 'text-orange-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span className="font-medium">Gerenciar Afiliação</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
