@@ -7863,7 +7863,21 @@ app.use('/api/reports-v2', (req, res, next) => {
                 END
               ELSE 0
             END
-          ) as monthly_revenue
+          ) as monthly_revenue,
+          SUM(
+            CASE 
+              WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+                CASE 
+                  WHEN origemassinatura = 'hotmart' THEN 7.00
+                  WHEN tipoplano = 'mensal' THEN 29.90
+                  WHEN tipoplano = 'anual' THEN 197.00
+                  WHEN tipoplano = 'vitalicio' THEN 497.00
+                  ELSE 29.90
+                END
+              ELSE 0
+            END
+          ) as period_revenue,
+          COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
         FROM users
       `);
 
@@ -7935,6 +7949,17 @@ app.use('/api/reports-v2', (req, res, next) => {
       const downloadData = downloadStats.rows[0];
       const commentData = commentStats.rows[0];
       const courseData = courseStats.rows[0];
+
+      // Logs para debug dos dados financeiros reais
+      console.log("🔍 [DASHBOARD-FINANCIAL] Dados financeiros do período:", {
+        period: period,
+        dateInterval: dateInterval,
+        total_revenue: userData.monthly_revenue,
+        period_revenue: userData.period_revenue,
+        new_premium_users_period: userData.new_premium_users_period,
+        premium_users: userData.premium_users,
+        total_users: userData.total_users
+      });
       const categoriesData = categoriesStats.rows[0];
       const formatsData = formatsStats.rows[0];
 
@@ -7999,18 +8024,18 @@ app.use('/api/reports-v2', (req, res, next) => {
         premiumRate: userData.total_users > 0 ? 
           Math.round((userData.premium_users / userData.total_users) * 100) : 0,
         
-        // Receita calculada baseada no período selecionado
-        periodRevenue: Math.round(Number(userData.new_users_period) * 97), // R$ 97 por novo usuário premium no período
+        // Receita real baseada nos dados do banco de dados no período selecionado
+        periodRevenue: Number(userData.period_revenue || 0),
         monthlyRevenue: Number(userData.monthly_revenue || 0),
         revenueThisWeek: Math.round(Number(userData.monthly_revenue || 0) * 0.25),
         
-        // Taxa de conversão específica do período
-        conversionRate: userData.new_users_period > 0 ? 
-          Math.round((Number(userData.new_users_period) * 0.35 / Number(userData.new_users_period)) * 100) : 35,
+        // Taxa de conversão real baseada nos dados do período
+        conversionRate: userData.total_users > 0 ? 
+          Math.round((Number(userData.premium_users) / Number(userData.total_users)) * 100) : 0,
         
-        // Ticket médio do período
-        averageTicket: userData.new_users_period > 0 ? 
-          Math.round((Number(userData.new_users_period) * 97) / Math.max(Number(userData.new_users_period), 1)) : 97,
+        // Ticket médio real baseado na receita e novos assinantes do período
+        averageTicket: userData.new_premium_users_period > 0 ? 
+          Math.round(Number(userData.period_revenue || 0) / Number(userData.new_premium_users_period)) : 0,
         
         // Métricas de crescimento específicas do período selecionado
         period: period,
