@@ -1019,7 +1019,7 @@ const AdminDashboard = () => {
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
       <div 
         className={`
-          fixed lg:relative z-40 h-full bg-gray-50 border-r border-gray-200/80
+          fixed lg:relative z-40 h-full bg-white border-r border-gray-200/80
           transition-all duration-300 ease-in-out overflow-hidden
           ${sidebarOpen 
             ? 'w-64 translate-x-0' 
@@ -1604,7 +1604,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 overflow-auto transition-all duration-300 bg-white border-l border-blue-100 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
+      <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 border-l border-blue-100 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
         <header className="bg-white border-b border-blue-100 shadow-sm">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
