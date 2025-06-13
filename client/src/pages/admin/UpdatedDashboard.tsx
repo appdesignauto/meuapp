@@ -1533,14 +1533,14 @@ const AdminDashboard = () => {
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'financeiro' && 'Dashboard Financeiro'}
-                {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
+                {activeTab === 'subscriptions' && 'Assinaturas'}
                 {activeTab === 'settings' && 'Configurações'}
-                {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
+                {activeTab === 'coursesList' && 'Cursos'}
 
-                {activeTab === 'modules' && 'Módulos dos Cursos'}
-                {activeTab === 'lessons' && 'Aulas dos Cursos'}
-                {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
-                {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
+                {activeTab === 'modules' && 'Módulos'}
+                {activeTab === 'lessons' && 'Aulas'}
+                {activeTab === 'coursesConfig' && 'Configurações'}
+                {activeTab === 'courseStats' && 'Estatísticas'}
                 {activeTab === 'comments' && 'Gerenciamento de Comentários'}
                 {activeTab === 'popups' && 'Gerenciamento de Popups'}
               </h1>
