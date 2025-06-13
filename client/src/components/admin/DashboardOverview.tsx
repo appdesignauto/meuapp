@@ -95,10 +95,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              R$ {(stats.monthlyRevenue || 0).toLocaleString('pt-BR')}
+              R$ {(stats.periodRevenue || 0).toLocaleString('pt-BR')}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Baseado em {stats.premiumUsers || 0} assinantes ativos
+              Receita do período selecionado
             </p>
           </CardContent>
         </Card>
@@ -131,10 +131,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats.premiumRate || 0}%
+              {stats.conversionRate || 0}%
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {stats.newUsersThisPeriod || 0} novos usuários no período
+              Taxa de conversão no período
             </p>
           </CardContent>
         </Card>
@@ -149,10 +149,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              R$ {((stats.monthlyRevenue || 0) / Math.max(stats.premiumUsers || 1, 1)).toLocaleString('pt-BR')}
+              R$ {(stats.averageTicket || 97).toLocaleString('pt-BR')}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              +R$ 0,00 por assinante
+              Ticket médio do período
             </p>
           </CardContent>
         </Card>
