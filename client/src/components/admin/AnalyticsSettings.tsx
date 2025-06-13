@@ -167,58 +167,58 @@ const AnalyticsSettings: React.FC = () => {
           <CardTitle>Configurações do Meta Pixel</CardTitle>
           <CardDescription>Configure o Meta Pixel e o Facebook Ads API para rastreamento de eventos</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="metaPixelId">Meta Pixel ID</Label>
+            <Label htmlFor="metaPixelId" className="text-sm font-medium">Meta Pixel ID</Label>
             <Input
               id="metaPixelId"
               value={analytics?.metaPixelId || ''}
               onChange={(e) => handleInputChange('metaPixelId', e.target.value)}
-              placeholder="1231231545"
+              placeholder="12312315456"
+              className="bg-gray-50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="metaAccessToken">Token de Acesso da API</Label>
+            <Label htmlFor="metaAccessToken" className="text-sm font-medium">Token de Acesso da API</Label>
             <Input
               id="metaAccessToken"
               type="password"
               value={analytics?.metaAdsAccessToken || ''}
               onChange={(e) => handleInputChange('metaAdsAccessToken', e.target.value)}
               placeholder="Digite o token de acesso da API"
+              className="bg-gray-50"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="metaAdAccountId">ID da Conta de Anúncios</Label>
-            <Input
-              id="metaAdAccountId"
-              value={analytics?.metaAdAccountId || ''}
-              onChange={(e) => handleInputChange('metaAdAccountId', e.target.value)}
-              placeholder="Digite o ID da conta de anúncios"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="metaPixelEnabled"
+                checked={analytics?.metaPixelEnabled || false}
+                onCheckedChange={(checked) => handleInputChange('metaPixelEnabled', checked)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <Label htmlFor="metaPixelEnabled" className="text-sm font-medium">Ativar Meta Pixel</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="metaAdsEnabled"
+                checked={analytics?.metaAdsEnabled || false}
+                onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <Label htmlFor="metaAdsEnabled" className="text-sm font-medium">Ativar Conversions API</Label>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="metaPixelEnabled"
-              checked={analytics?.metaPixelEnabled || false}
-              onCheckedChange={(checked) => handleInputChange('metaPixelEnabled', checked)}
-            />
-            <Label htmlFor="metaPixelEnabled">Ativar Meta Pixel</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="metaAdsEnabled"
-              checked={analytics?.metaAdsEnabled || false}
-              onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
-            />
-            <Label htmlFor="metaAdsEnabled">Ativar Conversions API</Label>
-          </div>
-
-          <div className="flex justify-end pt-4">
-            <Button onClick={handleSave} disabled={isLoading}>
+          <div className="flex justify-end pt-6">
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+            >
               {isLoading ? (
                 <>
                   <Save className="mr-2 h-4 w-4 animate-spin" />
