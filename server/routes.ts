@@ -7802,7 +7802,11 @@ app.use('/api/reports-v2', (req, res, next) => {
   });
 
   // Endpoint específico para resumo geral do dashboard (seguindo plano estruturado)
-  app.get('/api/dashboard/resumo-geral', isAuthenticated, async (req, res) => {
+  app.get('/api/dashboard/resumo-geral', async (req, res) => {
+    // Verificar autenticação usando o mesmo padrão das outras rotas
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Acesso não autorizado' });
+    }
     try {
       const [
         faturamentoTotal,
