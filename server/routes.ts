@@ -7857,37 +7857,45 @@ app.use('/api/reports-v2', (req, res, next) => {
         FROM users
       `);
 
-      // Estatísticas de artes
+      // Estatísticas de artes com período dinâmico
       const artStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_arts,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as arts_period,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as arts_prev_period,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as arts_week,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as arts_month
         FROM arts
       `);
 
-      // Estatísticas de posts da comunidade
+      // Estatísticas de posts da comunidade com período dinâmico
       const communityStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_posts,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as posts_period,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as posts_prev_period,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '1 day' THEN 1 END) as posts_today,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as posts_month
         FROM "communityPosts"
       `);
 
-      // Estatísticas de downloads com crescimento
+      // Estatísticas de downloads com período dinâmico
       const downloadStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_downloads,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as downloads_period,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as downloads_prev_period,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_month,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_prev_month
         FROM downloads
       `);
 
-      // Estatísticas de comentários com crescimento
+      // Estatísticas de comentários com período dinâmico
       const commentStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_comments,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as comments_period,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as comments_prev_period,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_month,
           COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_prev_month
         FROM "communityComments"
@@ -7920,22 +7928,22 @@ app.use('/api/reports-v2', (req, res, next) => {
       const categoriesData = categoriesStats.rows[0];
       const formatsData = formatsStats.rows[0];
 
-      // Calcular percentuais de crescimento reais baseado no período
+      // Calcular percentuais de crescimento reais baseado no período dinâmico
       const userGrowthPercent = userData.new_users_prev_period > 0 ? 
         Math.round(((userData.new_users_period - userData.new_users_prev_period) / userData.new_users_prev_period) * 100) : 0;
       
-      const artGrowthPercent = artData.arts_week > 0 ? 
-        Math.round((artData.arts_week / artData.total_arts) * 100) : 0;
+      const artGrowthPercent = artData.arts_prev_period > 0 ? 
+        Math.round(((artData.arts_period - artData.arts_prev_period) / artData.arts_prev_period) * 100) : 0;
 
-      const communityGrowthPercent = communityData.posts_month > 0 ? 
-        Math.round((communityData.posts_month / communityData.total_posts) * 100) : 0;
+      const communityGrowthPercent = communityData.posts_prev_period > 0 ? 
+        Math.round(((communityData.posts_period - communityData.posts_prev_period) / communityData.posts_prev_period) * 100) : 0;
 
-      // Calcular percentuais de crescimento para downloads e comentários
-      const downloadGrowthPercent = downloadData.downloads_prev_month > 0 ? 
-        Math.round(((downloadData.downloads_month - downloadData.downloads_prev_month) / downloadData.downloads_prev_month) * 100) : 0;
+      // Calcular percentuais de crescimento para downloads e comentários baseado no período dinâmico
+      const downloadGrowthPercent = downloadData.downloads_prev_period > 0 ? 
+        Math.round(((downloadData.downloads_period - downloadData.downloads_prev_period) / downloadData.downloads_prev_period) * 100) : 0;
       
-      const commentGrowthPercent = commentData.comments_prev_month > 0 ? 
-        Math.round(((commentData.comments_month - commentData.comments_prev_month) / commentData.comments_prev_month) * 100) : 0;
+      const commentGrowthPercent = commentData.comments_prev_period > 0 ? 
+        Math.round(((commentData.comments_period - commentData.comments_prev_period) / commentData.comments_prev_period) * 100) : 0;
 
       res.json({
         // Estatísticas principais
@@ -7948,17 +7956,25 @@ app.use('/api/reports-v2', (req, res, next) => {
         userGrowthPercent,
 
         totalArts: Number(artData.total_arts),
+        artsThisPeriod: Number(artData.arts_period),
+        artsPrevPeriod: Number(artData.arts_prev_period),
         artsThisWeek: Number(artData.arts_week),
         artsThisMonth: Number(artData.arts_month),
         artGrowthPercent,
 
         totalPosts: Number(communityData.total_posts),
+        postsThisPeriod: Number(communityData.posts_period),
+        postsPrevPeriod: Number(communityData.posts_prev_period),
         postsToday: Number(communityData.posts_today),
         postsThisMonth: Number(communityData.posts_month),
         communityGrowthPercent,
 
         totalDownloads: Number(downloadData.total_downloads),
+        downloadsThisPeriod: Number(downloadData.downloads_period),
+        downloadsPrevPeriod: Number(downloadData.downloads_prev_period),
         totalComments: Number(commentData.total_comments),
+        commentsThisPeriod: Number(commentData.comments_period),
+        commentsPrevPeriod: Number(commentData.comments_prev_period),
         
         // Percentuais de crescimento reais
         downloadGrowthPercent,
