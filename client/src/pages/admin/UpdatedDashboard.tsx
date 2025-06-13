@@ -1082,6 +1082,23 @@ const AdminDashboard = () => {
               </button>
             )}
             
+            {/* Financeiro / Receita - apenas para admin */}
+            {hasTabAccess('stats') && (
+              <button
+                onClick={() => setActiveTab('revenue')}
+                className={`flex items-center w-full rounded-xl text-base transition-all duration-200 ${
+                  activeTab === 'revenue' 
+                    ? 'bg-blue-50 text-blue-700 shadow-sm' 
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                } ${!sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3'}`}
+                title="Financeiro / Receita"
+              >
+                <DollarSign className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  activeTab === 'revenue' ? 'text-blue-600' : 'text-gray-600'
+                }`} />
+                {sidebarOpen && <span className="font-semibold">Financeiro / Receita</span>}
+              </button>
+            )}
 
             
             {/* Usuários - dropdown com assinaturas */}
