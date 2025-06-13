@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 13, 2025: Simplified financial dashboard layout based on user feedback
+  - Removed unnecessary internal tabs from financial dashboard section
+  - Reorganized "Assinantes Recentes" section to appear below "Receita por Origem de Pagamento"
+  - Enhanced badge styling with improved color coding (Hotmart in orange, annual plans in purple)
+  - Streamlined interface maintains authentic database integration while improving usability
 - June 13, 2025: Completed dashboard monetization metrics with authentic database integration
   - Fixed revenue calculations to use real database data instead of artificial values
   - Implemented period-based revenue tracking based on actual user subscription dates
