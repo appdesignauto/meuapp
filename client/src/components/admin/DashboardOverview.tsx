@@ -166,10 +166,6 @@ const DashboardOverview = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-gray-900">{stats.videoLessons || 84}</p>
-                <Badge variant="secondary" className="text-xs">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Taxa Premium
-                </Badge>
               </div>
             </div>
 
@@ -206,10 +202,6 @@ const DashboardOverview = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-gray-900">{stats.formats || 8}</p>
-                <Badge variant="outline" className="text-xs">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Tempo Médio
-                </Badge>
               </div>
             </div>
 
@@ -269,9 +261,6 @@ const DashboardOverview = () => {
               <div className="text-right">
                 <p className="text-lg font-bold text-gray-900">
                   {stats.rating || 4.8}★
-                </p>
-                <p className="text-xs text-gray-600">
-                  {stats.avgTime || 42}min
                 </p>
               </div>
             </div>
