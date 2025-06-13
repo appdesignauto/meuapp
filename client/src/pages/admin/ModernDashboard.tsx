@@ -204,7 +204,7 @@ const ModernDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50/50">
+    <div className="flex h-screen bg-gray-50/50 overflow-hidden">
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -225,8 +225,8 @@ const ModernDashboard = () => {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <div className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
+      {/* Desktop Sidebar - Altura fixa */}
+      <div className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300 h-screen fixed ${
         sidebarOpen ? 'w-56' : 'w-16'
       }`}>
         <DesktopSidebar 
@@ -243,8 +243,10 @@ const ModernDashboard = () => {
         />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Content - Margem para compensar sidebar fixa */}
+      <div className={`flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300 ${
+        sidebarOpen ? 'ml-56' : 'ml-16'
+      }`}>
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -291,8 +293,8 @@ const ModernDashboard = () => {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        {/* Page Content - Área rolável */}
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">
             {renderContent()}
           </div>
