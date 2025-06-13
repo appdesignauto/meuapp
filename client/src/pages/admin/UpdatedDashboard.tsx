@@ -1619,27 +1619,36 @@ const AdminDashboard = () => {
                 <PanelRight className="w-5 h-5" />
               </button>
               
-              <h1 className="text-xl font-semibold">
-                {activeTab === 'arts' && 'Artes e Designs'}
-                {activeTab === 'categories' && 'Categorias'}
-                {activeTab === 'formats' && 'Formatos'}
-                {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
-                {activeTab === 'users' && 'Usuários'}
-                {activeTab === 'collections' && 'Coleções'}
-                {activeTab === 'community' && 'Comunidade'}
-                {activeTab === 'stats' && 'Visão Geral'}
-                {activeTab === 'financeiro' && 'Dashboard Financeiro'}
-                {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
-                {activeTab === 'settings' && 'Configurações'}
-                {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
-
-                {activeTab === 'modules' && 'Módulos dos Cursos'}
-                {activeTab === 'lessons' && 'Aulas dos Cursos'}
-                {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
-                {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
-                {activeTab === 'comments' && 'Gerenciamento de Comentários'}
-                {activeTab === 'popups' && 'Gerenciamento de Popups'}
-              </h1>
+              {activeTab === 'financeiro' ? (
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                    Dashboard Financeiro
+                  </h1>
+                  <p className="text-sm text-gray-500">
+                    Métricas essenciais de receita e crescimento
+                  </p>
+                </div>
+              ) : (
+                <h1 className="text-xl font-semibold">
+                  {activeTab === 'arts' && 'Artes e Designs'}
+                  {activeTab === 'categories' && 'Categorias'}
+                  {activeTab === 'formats' && 'Formatos'}
+                  {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
+                  {activeTab === 'users' && 'Usuários'}
+                  {activeTab === 'collections' && 'Coleções'}
+                  {activeTab === 'community' && 'Comunidade'}
+                  {activeTab === 'stats' && 'Visão Geral'}
+                  {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
+                  {activeTab === 'settings' && 'Configurações'}
+                  {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
+                  {activeTab === 'modules' && 'Módulos dos Cursos'}
+                  {activeTab === 'lessons' && 'Aulas dos Cursos'}
+                  {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
+                  {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
+                  {activeTab === 'comments' && 'Gerenciamento de Comentários'}
+                  {activeTab === 'popups' && 'Gerenciamento de Popups'}
+                </h1>
+              )}
             </div>
             
             <div className="flex items-center flex-wrap gap-2">

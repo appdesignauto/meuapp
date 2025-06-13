@@ -182,13 +182,6 @@ function SaasDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard SaaS - Financeiro</h2>
-          <p className="text-gray-600">Métricas essenciais de receita e crescimento</p>
-        </div>
-      </div>
-
       {/* Métricas de Receita e Crescimento */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* MRR - Monthly Recurring Revenue */}
