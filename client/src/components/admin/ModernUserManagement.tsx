@@ -15,8 +15,6 @@ import {
   Activity,
   Eye,
   EyeOff,
-  Lock,
-  Info,
   Download,
   Upload,
   Settings,
@@ -75,7 +73,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SaasDashboard from "@/components/admin/SaasDashboard";
+import { SaasDashboard } from "@/components/admin/SaasDashboard";
 import SimpleSubscriptionDashboard from "@/components/admin/SimpleSubscriptionDashboard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -911,7 +909,9 @@ const ModernUserManagement = () => {
             </div>
           </div>
 
-          <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-6 max-h-[60vh] overflow-y-auto">
+          {/* Form Content with better scrolling */}
+          <div className="max-h-[60vh] overflow-y-auto pr-2">
+            <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-6">
               {/* Step 1: Basic Information */}
               {createUserStep === 1 && (
                 <div className="space-y-6">
@@ -991,7 +991,6 @@ const ModernUserManagement = () => {
                       <SelectTrigger className="h-11 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400">
                         <SelectValue placeholder="Selecione o nível de acesso" />
                       </SelectTrigger>
-                      <SelectContent>
                         {Object.entries(roleConfig).map(([key, config]) => (
                           <SelectItem key={key} value={key}>
                             <div className="flex items-center gap-2">
@@ -1080,13 +1079,14 @@ const ModernUserManagement = () => {
                         {/* Transaction ID for Hotmart/Doppus manual entries */}
                         {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
                           <div>
-                            <Label htmlFor="transactionId">ID da Transação / Observações</Label>
+                            <Label htmlFor="observacaoadmin">ID da Transação / Observações</Label>
                             <Input
-                              id="transactionId"
                               placeholder={`ID da transação ${selectedOrigemAssinatura === "hotmart" ? "Hotmart" : "Doppus"} ou observações sobre a compra`}
+                              value={createForm.watch("observacaoadmin") || ""}
+                              onChange={(e) => createForm.setValue("observacaoadmin", e.target.value)}
                             />
                             <p className="text-sm text-muted-foreground mt-1">
-                              Útil para rastrear a compra caso o webhook tenha falhado
+                              💡 Útil para rastrear a compra caso o webhook tenha falhado
                             </p>
                           </div>
                         )}
@@ -1539,7 +1539,7 @@ const ModernUserManagement = () => {
               <Checkbox
                 id="edit-isactive"
                 checked={editForm.watch("isactive")}
-                onCheckedChange={(checked) => editForm.setValue("isactive", !!checked)}
+                onCheckedChange={(checked) => editForm.setValue("isactive", checked)}
               />
               <Label htmlFor="edit-isactive">Usuário ativo</Label>
             </div>
@@ -1816,8 +1816,8 @@ const ModernUserManagement = () => {
                   )}
 
                   {/* Assinatura Premium - Só mostra se a data for posterior ao cadastro */}
-                  {(selectedUserForHistory.dataassinatura && 
-                   new Date(selectedUserForHistory.dataassinatura) >= new Date(selectedUserForHistory.criadoem)) && (
+                  {selectedUserForHistory.dataassinatura && 
+                   new Date(selectedUserForHistory.dataassinatura) >= new Date(selectedUserForHistory.criadoem) && (
                     <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
                       <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
                         <Crown className="w-4 h-4 text-white" />
@@ -1858,7 +1858,9 @@ const ModernUserManagement = () => {
                 </h4>
                 <div className="pl-7">
                   <div className="bg-gray-50 p-4 rounded-lg min-h-[100px]">
-                    <span className="text-gray-500 italic">Histórico do usuário</span>
+                    {selectedUserForHistory.observacaoadmin || (
+                      <span className="text-gray-500 italic">Nenhuma observação registrada</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1866,6 +1868,7 @@ const ModernUserManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };
