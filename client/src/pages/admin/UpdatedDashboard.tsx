@@ -1483,19 +1483,19 @@ const AdminDashboard = () => {
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-8' : 'flex flex-col items-center'} space-y-1 mt-1`}>
                 {hasTabAccess('settings') && (
                   <button
                     onClick={() => setActiveTab('settings')}
-                    className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                       activeTab === 'settings' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     } ${!sidebarOpen ? 'justify-center' : ''}`}
                     title="Configurações do Site"
                   >
-                    <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                    <Settings className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                       activeTab === 'settings' ? 'text-blue-600' : 'text-gray-500'
                     }`} />
-                    {sidebarOpen && <span className="font-medium">Configurações do Site</span>}
+                    {sidebarOpen && <span>Configurações do Site</span>}
                   </button>
                 )}
 
@@ -1504,18 +1504,18 @@ const AdminDashboard = () => {
                     <Link 
                       href="/admin/logo-upload"
                       title="Gerenciar Logo"
-                      className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
+                      className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
-                      <Image className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
-                      {sidebarOpen && <span className="font-medium">Gerenciar Logo</span>}
+                      <Image className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
+                      {sidebarOpen && <span>Gerenciar Logo</span>}
                     </Link>
                     <Link 
                       href="/admin/storage-test"
                       title="Testar Armazenamento"
-                      className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
+                      className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
-                      <HardDrive className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
-                      {sidebarOpen && <span className="font-medium">Testar Armazenamento</span>}
+                      <HardDrive className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
+                      {sidebarOpen && <span>Testar Armazenamento</span>}
                     </Link>
                     <button
                       onClick={() => setActiveTab('analytics')}
