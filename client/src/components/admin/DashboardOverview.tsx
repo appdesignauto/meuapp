@@ -131,10 +131,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats.conversionRate || 0}%
+              {stats.taxaConversao || 0}%
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Taxa de conversão no período
+              Taxa de conversão de usuários
             </p>
           </CardContent>
         </Card>
@@ -149,10 +149,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              R$ {(stats.averageTicket || 97).toLocaleString('pt-BR')}
+              R$ {(stats.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Ticket médio do período
+              Valor médio por assinatura
             </p>
           </CardContent>
         </Card>
@@ -172,7 +172,7 @@ const DashboardOverview = () => {
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 <span className="text-sm text-gray-600">Usuários Gratuitos</span>
               </div>
-              <span className="font-semibold">{(stats.totalUsers || 0) - (stats.premiumUsers || 0)}</span>
+              <span className="font-semibold">{stats.usuariosGratuitos || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">

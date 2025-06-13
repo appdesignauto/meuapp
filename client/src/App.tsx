@@ -297,18 +297,7 @@ function AppRoutes() {
         component={TestSubscriptionSettingsPage}
         roles={['admin']} 
       />
-      <ProtectedRoute 
-        path="/admin/test-resumo-geral" 
-        component={() => {
-          const TestResumoGeral = lazy(() => import("@/pages/admin/TestResumoGeral"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <TestResumoGeral />
-            </Suspense>
-          );
-        }}
-        roles={['admin']} 
-      />
+
       
       {/* Rota alternativa sem proteção para teste */}
       <Route path="/test-subscription-settings">
