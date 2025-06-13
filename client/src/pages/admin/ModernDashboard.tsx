@@ -225,8 +225,8 @@ const ModernDashboard = () => {
         </div>
       )}
 
-      {/* Desktop Sidebar - Altura fixa */}
-      <div className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300 h-screen fixed ${
+      {/* Desktop Sidebar - Normal layout */}
+      <div className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
         sidebarOpen ? 'w-56' : 'w-16'
       }`}>
         <DesktopSidebar 
@@ -243,10 +243,8 @@ const ModernDashboard = () => {
         />
       </div>
 
-      {/* Main Content - Margem para compensar sidebar fixa */}
-      <div className={`flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300 ${
-        sidebarOpen ? 'ml-56' : 'ml-16'
-      }`}>
+      {/* Main Content - Layout flexível */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
           <div className="px-4 sm:px-6 lg:px-8">
