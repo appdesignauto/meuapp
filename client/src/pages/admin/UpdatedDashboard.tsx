@@ -1019,7 +1019,7 @@ const AdminDashboard = () => {
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
       <div 
         className={`
-          fixed lg:relative z-40 h-full bg-white border-r border-gray-200/80
+          fixed lg:relative z-40 h-full bg-white
           transition-all duration-300 ease-in-out overflow-hidden
           ${sidebarOpen 
             ? 'w-64 translate-x-0' 
@@ -1027,7 +1027,7 @@ const AdminDashboard = () => {
           }
         `}
       >
-        <div className={`py-4 border-b border-gray-200/80 flex items-center ${sidebarOpen ? 'px-4 justify-between' : 'px-2 justify-center'}`}>
+        <div className={`py-4 flex items-center ${sidebarOpen ? 'px-4 justify-between' : 'px-2 justify-center'}`}>
           <div className="flex items-center min-w-0">
             {/* Ícone DA personalizado - clicável para expandir quando recolhido */}
             <div 
