@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const DashboardOverview = () => {
-  const [dateFilter, setDateFilter] = useState('30d');
+  const [dateFilter, setDateFilter] = useState('all');
   
   // Query para obter estatísticas reais do dashboard
   const { data: dashboardStats, isLoading } = useQuery({

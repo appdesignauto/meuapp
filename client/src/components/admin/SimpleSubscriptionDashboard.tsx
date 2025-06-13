@@ -67,7 +67,7 @@ function SimpleSubscriptionDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [originFilter, setOriginFilter] = useState('all');
-  const [selectedPeriod, setSelectedPeriod] = useState('30');
+  const [selectedPeriod, setSelectedPeriod] = useState('all');
 
   // Buscar dados dos usuários
   const { data: usersData, isLoading, refetch } = useQuery({
