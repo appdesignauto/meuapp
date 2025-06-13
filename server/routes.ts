@@ -8162,7 +8162,7 @@ app.use('/api/reports-v2', (req, res, next) => {
       }
 
       // Receita por origem (Hotmart, Doppus, Manual)
-      const revenueBySource = period === 'all'
+      const revenueBySourceResult = period === 'all'
         ? await db.execute(sql`
             SELECT 
               origemassinatura as source,
@@ -8198,9 +8198,10 @@ app.use('/api/reports-v2', (req, res, next) => {
             GROUP BY origemassinatura, tipoplano
             ORDER BY estimated_revenue DESC
           `);
+      const revenueBySource = revenueBySourceResult.rows || [];
 
       // Receita mensal (últimos 12 meses)
-      const monthlyRevenue = await db.execute(sql`
+      const monthlyRevenueResult = await db.execute(sql`
         SELECT 
           TO_CHAR(DATE_TRUNC('month', dataassinatura), 'YYYY-MM') as month,
           COUNT(*) as new_subscriptions,
@@ -8217,9 +8218,10 @@ app.use('/api/reports-v2', (req, res, next) => {
         GROUP BY DATE_TRUNC('month', dataassinatura), tipoplano
         ORDER BY month DESC
       `);
+      const monthlyRevenue = monthlyRevenueResult.rows || [];
 
       // MRR (Receita Recorrente Mensal) - apenas planos mensais ativos
-      const mrrData = await db.execute(sql`
+      const mrrResult = await db.execute(sql`
         SELECT 
           COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) as monthly_subscribers,
           COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) as annual_subscribers,
@@ -8230,9 +8232,10 @@ app.use('/api/reports-v2', (req, res, next) => {
           AND tipoplano IS NOT NULL
           AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE)
       `);
+      const mrrData = mrrResult.rows || [];
 
       // Ticket médio por plano
-      const averageTicketByPlan = await db.execute(sql`
+      const averageTicketByPlanResult = await db.execute(sql`
         SELECT 
           tipoplano as plan_type,
           COUNT(*) as subscribers,
@@ -8246,9 +8249,10 @@ app.use('/api/reports-v2', (req, res, next) => {
           AND tipoplano IS NOT NULL
         GROUP BY tipoplano
       `);
+      const averageTicketByPlan = averageTicketByPlanResult.rows || [];
 
       // Taxa de churn (cancelamentos vs assinantes ativos)
-      const churnData = await db.execute(sql`
+      const churnResult = await db.execute(sql`
         SELECT 
           COUNT(CASE WHEN nivelacesso IN ('premium', 'designer') 
                      AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE) THEN 1 END) as active_subscribers,
@@ -8258,9 +8262,10 @@ app.use('/api/reports-v2', (req, res, next) => {
         FROM users 
         WHERE origemassinatura IS NOT NULL
       `);
+      const churnData = churnResult.rows || [];
 
       // Faturamento por tipo de plano
-      const revenueByPlanType = await db.execute(sql`
+      const revenueByPlanTypeResult = await db.execute(sql`
         SELECT 
           tipoplano as plan_type,
           COUNT(*) as subscribers,
@@ -8275,9 +8280,10 @@ app.use('/api/reports-v2', (req, res, next) => {
         GROUP BY tipoplano
         ORDER BY total_revenue DESC
       `);
+      const revenueByPlanType = revenueByPlanTypeResult.rows || [];
 
       // Assinantes recentes (últimos 30 dias)
-      const recentSubscribers = await db.execute(sql`
+      const recentSubscribersResult = await db.execute(sql`
         SELECT 
           id,
           name,
@@ -8297,6 +8303,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         ORDER BY dataassinatura DESC
         LIMIT 50
       `);
+      const recentSubscribers = recentSubscribersResult.rows || [];
 
       // Calcular totais
       const totalMRR = Number(mrrData[0]?.monthly_mrr || 0) + Number(mrrData[0]?.annual_mrr_monthly || 0);
@@ -8305,8 +8312,9 @@ app.use('/api/reports-v2', (req, res, next) => {
       const churnRate = activeSubscribers > 0 ? 
         Math.round((churnedSubscribers / (activeSubscribers + churnedSubscribers)) * 100) : 0;
 
-      const totalRevenue = revenueByPlanType.reduce((sum, plan) => 
-        sum + Number(plan.total_revenue || 0), 0);
+      const totalRevenue = revenueByPlanType.length > 0 ? 
+        revenueByPlanType.reduce((sum: any, plan: any) => 
+          sum + Number(plan.total_revenue || 0), 0) : 0;
 
       res.json({
         period,
@@ -8317,28 +8325,28 @@ app.use('/api/reports-v2', (req, res, next) => {
           churnRate,
           averageTicket: activeSubscribers > 0 ? Math.round(totalRevenue / activeSubscribers) : 0
         },
-        revenueBySource: revenueBySource.map(item => ({
+        revenueBySource: Array.isArray(revenueBySource) ? revenueBySource.map((item: any) => ({
           source: item.source || 'Desconhecido',
           planType: item.plan_type || 'Indefinido',
           subscribers: Number(item.subscribers || 0),
           revenue: Number(item.estimated_revenue || 0)
-        })),
-        monthlyRevenue: monthlyRevenue.map(item => ({
+        })) : [],
+        monthlyRevenue: Array.isArray(monthlyRevenue) ? monthlyRevenue.map((item: any) => ({
           month: item.month,
           subscriptions: Number(item.new_subscriptions || 0),
           revenue: Number(item.monthly_revenue || 0)
-        })),
-        averageTicketByPlan: averageTicketByPlan.map(item => ({
+        })) : [],
+        averageTicketByPlan: Array.isArray(averageTicketByPlan) ? averageTicketByPlan.map((item: any) => ({
           planType: item.plan_type || 'Indefinido',
           subscribers: Number(item.subscribers || 0),
           price: Number(item.plan_price || 0)
-        })),
-        revenueByPlanType: revenueByPlanType.map(item => ({
+        })) : [],
+        revenueByPlanType: Array.isArray(revenueByPlanType) ? revenueByPlanType.map((item: any) => ({
           planType: item.plan_type || 'Indefinido',
           subscribers: Number(item.subscribers || 0),
           revenue: Number(item.total_revenue || 0)
-        })),
-        recentSubscribers: recentSubscribers.map(item => ({
+        })) : [],
+        recentSubscribers: Array.isArray(recentSubscribers) ? recentSubscribers.map((item: any) => ({
           id: item.id,
           name: item.name,
           email: item.email,
@@ -8346,7 +8354,7 @@ app.use('/api/reports-v2', (req, res, next) => {
           source: item.source,
           subscriptionDate: item.subscription_date,
           planValue: Number(item.plan_value || 0)
-        }))
+        })) : []
       });
 
     } catch (error) {
