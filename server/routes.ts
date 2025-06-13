@@ -8161,75 +8161,84 @@ app.use('/api/reports-v2', (req, res, next) => {
         }
       }
 
-      // Receita por origem (Hotmart, Doppus, Manual)
+      // Receita por origem (Hotmart, Doppus, Manual) - incluindo todos os assinantes premium
       const revenueBySourceResult = period === 'all'
         ? await db.execute(sql`
             SELECT 
-              origemassinatura as source,
-              tipoplano as plan_type,
+              COALESCE(origemassinatura, 'auto') as source,
+              COALESCE(tipoplano, 'mensal') as plan_type,
               COUNT(*) as subscribers,
               CASE 
+                WHEN origemassinatura = 'hotmart' THEN COUNT(*) * 7.00
+                WHEN origemassinatura = 'doppus' THEN COUNT(*) * 39.80  
                 WHEN tipoplano = 'anual' THEN COUNT(*) * 197
                 WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
                 ELSE COUNT(*) * 19.90
               END as estimated_revenue
             FROM users 
-            WHERE origemassinatura IS NOT NULL 
-              AND tipoplano IS NOT NULL
-              AND nivelacesso IN ('premium', 'designer')
-            GROUP BY origemassinatura, tipoplano
+            WHERE nivelacesso IN ('premium', 'designer') 
+              AND isactive = true
+            GROUP BY COALESCE(origemassinatura, 'auto'), COALESCE(tipoplano, 'mensal')
             ORDER BY estimated_revenue DESC
           `)
         : await db.execute(sql`
             SELECT 
-              origemassinatura as source,
-              tipoplano as plan_type,
+              COALESCE(origemassinatura, 'auto') as source,
+              COALESCE(tipoplano, 'mensal') as plan_type,
               COUNT(*) as subscribers,
               CASE 
+                WHEN origemassinatura = 'hotmart' THEN COUNT(*) * 7.00
+                WHEN origemassinatura = 'doppus' THEN COUNT(*) * 39.80
                 WHEN tipoplano = 'anual' THEN COUNT(*) * 197
                 WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
                 ELSE COUNT(*) * 19.90
               END as estimated_revenue
             FROM users 
-            WHERE origemassinatura IS NOT NULL 
-              AND tipoplano IS NOT NULL
-              AND nivelacesso IN ('premium', 'designer')
-              AND dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)}
-            GROUP BY origemassinatura, tipoplano
+            WHERE nivelacesso IN ('premium', 'designer') 
+              AND isactive = true
+              AND (dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} OR dataassinatura IS NULL)
+            GROUP BY COALESCE(origemassinatura, 'auto'), COALESCE(tipoplano, 'mensal')
             ORDER BY estimated_revenue DESC
           `);
       const revenueBySource = revenueBySourceResult.rows || [];
 
-      // Receita mensal (últimos 12 meses)
+      // Receita mensal (últimos 12 meses) - incluindo todos os assinantes premium
       const monthlyRevenueResult = await db.execute(sql`
         SELECT 
-          TO_CHAR(DATE_TRUNC('month', dataassinatura), 'YYYY-MM') as month,
+          TO_CHAR(DATE_TRUNC('month', COALESCE(dataassinatura, criadoem)), 'YYYY-MM') as month,
           COUNT(*) as new_subscriptions,
-          CASE 
-            WHEN tipoplano = 'anual' THEN COUNT(*) * 197
-            WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
-            ELSE COUNT(*) * 19.90
-          END as monthly_revenue
+          SUM(
+            CASE 
+              WHEN origemassinatura = 'hotmart' THEN 7.00
+              WHEN origemassinatura = 'doppus' THEN 39.80
+              WHEN tipoplano = 'anual' THEN 197
+              WHEN tipoplano = 'mensal' THEN 19.90
+              ELSE 19.90
+            END
+          ) as monthly_revenue
         FROM users 
-        WHERE dataassinatura >= CURRENT_DATE - INTERVAL '12 months'
-          AND origemassinatura IS NOT NULL 
-          AND tipoplano IS NOT NULL
+        WHERE COALESCE(dataassinatura, criadoem) >= CURRENT_DATE - INTERVAL '12 months'
           AND nivelacesso IN ('premium', 'designer')
-        GROUP BY DATE_TRUNC('month', dataassinatura), tipoplano
+          AND isactive = true
+        GROUP BY DATE_TRUNC('month', COALESCE(dataassinatura, criadoem))
         ORDER BY month DESC
       `);
       const monthlyRevenue = monthlyRevenueResult.rows || [];
 
-      // MRR (Receita Recorrente Mensal) - apenas planos mensais ativos
+      // MRR (Receita Recorrente Mensal) - incluindo todos os assinantes ativos
       const mrrResult = await db.execute(sql`
         SELECT 
           COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) as monthly_subscribers,
           COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) as annual_subscribers,
-          COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) * 19.90 as monthly_mrr,
-          COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) * (197/12) as annual_mrr_monthly
+          COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) as hotmart_subscribers,
+          COUNT(CASE WHEN origemassinatura = 'doppus' THEN 1 END) as doppus_subscribers,
+          (COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) * 19.90) +
+          (COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) * (197/12)) +
+          (COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) * 7.00) +
+          (COUNT(CASE WHEN origemassinatura = 'doppus' THEN 1 END) * 39.80) as total_mrr
         FROM users 
         WHERE nivelacesso IN ('premium', 'designer')
-          AND tipoplano IS NOT NULL
+          AND isactive = true
           AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE)
       `);
       const mrrData = mrrResult.rows || [];
@@ -8282,31 +8291,33 @@ app.use('/api/reports-v2', (req, res, next) => {
       `);
       const revenueByPlanType = revenueByPlanTypeResult.rows || [];
 
-      // Assinantes recentes (últimos 30 dias)
+      // Assinantes recentes (últimos 30 dias) - incluindo todos os usuários premium
       const recentSubscribersResult = await db.execute(sql`
         SELECT 
           id,
           name,
           email,
-          tipoplano as plan_type,
-          origemassinatura as source,
-          dataassinatura as subscription_date,
+          COALESCE(tipoplano, 'mensal') as plan_type,
+          COALESCE(origemassinatura, 'auto') as source,
+          COALESCE(dataassinatura, criadoem) as subscription_date,
           CASE 
+            WHEN origemassinatura = 'hotmart' THEN 7.00
+            WHEN origemassinatura = 'doppus' THEN 39.80
             WHEN tipoplano = 'anual' THEN 197
             WHEN tipoplano = 'mensal' THEN 19.90
             ELSE 19.90
           END as plan_value
         FROM users 
-        WHERE dataassinatura >= CURRENT_DATE - INTERVAL '30 days'
+        WHERE COALESCE(dataassinatura, criadoem) >= CURRENT_DATE - INTERVAL '30 days'
           AND nivelacesso IN ('premium', 'designer')
-          AND origemassinatura IS NOT NULL
-        ORDER BY dataassinatura DESC
+          AND isactive = true
+        ORDER BY COALESCE(dataassinatura, criadoem) DESC
         LIMIT 50
       `);
       const recentSubscribers = recentSubscribersResult.rows || [];
 
-      // Calcular totais
-      const totalMRR = Number(mrrData[0]?.monthly_mrr || 0) + Number(mrrData[0]?.annual_mrr_monthly || 0);
+      // Calcular totais incluindo todos os assinantes (Hotmart, Doppus, etc.)
+      const totalMRR = Number(mrrData[0]?.total_mrr || 0);
       const activeSubscribers = Number(churnData[0]?.active_subscribers || 0);
       const churnedSubscribers = Number(churnData[0]?.churned_subscribers || 0);
       const churnRate = activeSubscribers > 0 ? 
