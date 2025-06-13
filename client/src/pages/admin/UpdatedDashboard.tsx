@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   Image,
   Users,
+  User,
   ListChecks,
   MessageSquare,
   BarChart3,
@@ -1548,6 +1549,15 @@ const AdminDashboard = () => {
           </nav>
         </div>
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
+          <Link 
+            href="/painel/perfil"
+            title="Perfil"
+            className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
+            ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
+          >
+            <User className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+            {sidebarOpen && <span>Perfil</span>}
+          </Link>
           <Link 
             href="/"
             title="Ir para o Site"
