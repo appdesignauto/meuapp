@@ -1053,7 +1053,7 @@ const AdminDashboard = () => {
             </button>
           )}
         </div>
-        <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
+        <div className={`py-6 overflow-hidden ${sidebarOpen ? 'px-5' : 'px-3'}`}>
           
 
           <nav className="space-y-2">
@@ -1101,10 +1101,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
                 <CollapsibleTrigger 
-                  className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                  className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                   title="Usuários"
                 >
-                  <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                  <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                   {sidebarOpen && (
                     <>
                       <span className="font-semibold">Usuários</span>
@@ -1157,10 +1157,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Conteúdo"
               >
-                <Layers className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                <Layers className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                 {sidebarOpen && (
                   <>
                     <span className="font-semibold">Conteúdo</span>
@@ -1244,10 +1244,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Cursos"
               >
-                <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                 {sidebarOpen && (
                   <>
                     <span className="font-semibold">Cursos</span>
@@ -1340,10 +1340,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Marketing"
               >
-                <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                 {sidebarOpen && (
                   <>
                     <span className="font-semibold">Marketing</span>
@@ -1376,10 +1376,10 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Reports"
               >
-                <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+                <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
                 {sidebarOpen && (
                   <>
                     <span className="font-semibold">Reports</span>
@@ -1579,10 +1579,10 @@ const AdminDashboard = () => {
           <button
             onClick={handleLogout}
             title="Sair"
-            className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
-            ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
+            className={`flex items-center w-full py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-sm font-medium
+            ${sidebarOpen ? 'px-4 justify-start' : 'px-3 justify-center'}`}
           >
-            <LogOut className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+            <LogOut className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
             {sidebarOpen && <span>Sair</span>}
           </button>
         </div>
