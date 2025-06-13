@@ -1254,7 +1254,7 @@ const AdminDashboard = () => {
                   title="Cursos"
                 >
                   <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'coursesList' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'coursesList' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Cursos</span>}
                 </button>
@@ -1266,7 +1266,7 @@ const AdminDashboard = () => {
                   title="Módulos"
                 >
                   <Layers className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'modules' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'modules' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Módulos</span>}
                 </button>
@@ -1278,7 +1278,7 @@ const AdminDashboard = () => {
                   title="Aulas"
                 >
                   <Video className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'lessons' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'lessons' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Aulas</span>}
                 </button>
@@ -1290,7 +1290,7 @@ const AdminDashboard = () => {
                   title="Estatísticas"
                 >
                   <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'courseStats' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'courseStats' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Estatísticas</span>}
                 </button>
@@ -1302,7 +1302,7 @@ const AdminDashboard = () => {
                   title="Configurações"
                 >
                   <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'coursesConfig' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'coursesConfig' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Configurações</span>}
                 </button>
@@ -1348,7 +1348,7 @@ const AdminDashboard = () => {
                   title="Gerenciar Popups"
                 >
                   <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'popups' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'popups' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Gerenciar Popups</span>}
                 </button>
@@ -1384,7 +1384,7 @@ const AdminDashboard = () => {
                   title="Gerenciar Reports"
                 >
                   <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'reports' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'reports' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Gerenciar Reports</span>}
                 </button>
@@ -1396,7 +1396,7 @@ const AdminDashboard = () => {
                   title="Gerenciar Colaboração"
                 >
                   <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'collaboration-requests' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'collaboration-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Gerenciar Colaboração</span>}
                 </button>
@@ -1408,7 +1408,7 @@ const AdminDashboard = () => {
                   title="Gerenciar Afiliação"
                 >
                   <Award className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'affiliate-requests' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'affiliate-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Gerenciar Afiliação</span>}
                 </button>
@@ -1444,7 +1444,7 @@ const AdminDashboard = () => {
                   title="Gerenciar Ferramentas"
                 >
                   <Wrench className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                    activeTab === 'ferramentas' ? 'text-orange-600' : 'text-gray-500'
+                    activeTab === 'ferramentas' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
                   {sidebarOpen && <span className="font-medium">Gerenciar Ferramentas</span>}
                 </button>
@@ -1481,7 +1481,7 @@ const AdminDashboard = () => {
                     title="Configurações do Site"
                   >
                     <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                      activeTab === 'settings' ? 'text-orange-600' : 'text-gray-500'
+                      activeTab === 'settings' ? 'text-blue-600' : 'text-gray-500'
                     }`} />
                     {sidebarOpen && <span className="font-medium">Configurações do Site</span>}
                   </button>
@@ -1513,7 +1513,7 @@ const AdminDashboard = () => {
                       title="Analytics"
                     >
                       <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                        activeTab === 'analytics' ? 'text-orange-600' : 'text-gray-500'
+                        activeTab === 'analytics' ? 'text-blue-600' : 'text-gray-500'
                       }`} />
                       {sidebarOpen && <span className="font-medium">Analytics</span>}
                     </button>
