@@ -187,7 +187,7 @@ const AdminDashboard = () => {
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<any | null>(null);
-  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('todos'); // Filtro por curso
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<number | null>(null); // Filtro por curso
   const [moduleViewMode, setModuleViewMode] = useState<'grid' | 'list'>('grid'); // Modo de visualização (grid ou lista)
   const [moduleForm, setModuleForm] = useState<any>({
     courseId: '', // String vazia para forçar seleção explícita
@@ -204,6 +204,7 @@ const AdminDashboard = () => {
   const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
   const [isConfirmDeleteLessonOpen, setIsConfirmDeleteLessonOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState<any | null>(null);
+  const [selectedModuleFilter, setSelectedModuleFilter] = useState<number | null>(null);
   const [lessonForm, setLessonForm] = useState<any>({
     moduleId: 0,
     title: '',
@@ -328,6 +329,18 @@ const AdminDashboard = () => {
   
   // Estado local para gerenciar edições antes de salvar
   const [courseSettings, setCourseSettings] = useState(courseSettingsData);
+  
+  // Filtragem de módulos baseada no curso selecionado
+  const filteredModules = modules.filter((module: any) => {
+    if (!selectedCourseFilter) return true;
+    return module.courseId === selectedCourseFilter;
+  });
+  
+  // Filtragem de aulas baseada no módulo selecionado
+  const filteredLessons = lessons.filter((lesson: any) => {
+    if (!selectedModuleFilter) return true;
+    return lesson.moduleId === selectedModuleFilter;
+  });
   
   // Atualiza o estado local quando os dados da API são carregados ou quando o curso selecionado muda
   useEffect(() => {
@@ -1940,7 +1953,7 @@ const AdminDashboard = () => {
                               </div>
                             </TableCell>
                           </TableRow>
-                        ) : filteredModules.length === 0 ? (
+                        ) : (filteredModules || []).length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={6} className="text-center py-4 text-gray-500">
                               Nenhum módulo encontrado.
