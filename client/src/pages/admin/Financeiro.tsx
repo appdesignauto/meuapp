@@ -1,7 +1,6 @@
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import AdminLayout from '@/components/layout/AdminLayout';
-import SaasDashboard from '@/components/admin/SaasDashboard';
 import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
 
 const FinanceiroPage = () => {
@@ -16,20 +15,7 @@ const FinanceiroPage = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="saas" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="saas">Dashboard SaaS</TabsTrigger>
-              <TabsTrigger value="subscriptions">Dashboard Assinaturas</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="saas" className="space-y-6 mt-6">
-              <SaasDashboard />
-            </TabsContent>
-
-            <TabsContent value="subscriptions" className="space-y-6 mt-6">
-              <SimpleSubscriptionDashboard />
-            </TabsContent>
-          </Tabs>
+          <SimpleSubscriptionDashboard />
         </div>
       </div>
     </AdminLayout>
