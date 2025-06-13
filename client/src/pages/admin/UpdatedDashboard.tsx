@@ -131,6 +131,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import GerenciarFerramentas from './ferramentas/GerenciarFerramentas';
 import GerenciarCategorias from './ferramentas/GerenciarCategorias';
+import DashboardOverview from '@/components/admin/DashboardOverview';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -1788,69 +1789,9 @@ const AdminDashboard = () => {
 
             
             <TabsContent value="stats">
-              {/* Header com filtro de data */}
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Visão geral da plataforma</h2>
-                  <p className="text-gray-500 mt-1">Métricas e estatísticas da plataforma DesignAuto</p>
-                </div>
-                <Select defaultValue="hoje">
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hoje">Hoje</SelectItem>
-                    <SelectItem value="semana">Esta semana</SelectItem>
-                    <SelectItem value="mes">Este mês</SelectItem>
-                    <SelectItem value="trimestre">Trimestre</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Cards principais de estatísticas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* Usuários Totais */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Users className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">1,245</div>
-                      <div className="text-xs text-green-600 font-medium flex items-center justify-end">
-                        <span className="mr-1">+12%</span>
-                        <span className="text-gray-500">este mês</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Usuários Totais</h3>
-                    <p className="text-xs text-gray-500 mt-1">327 premium ativos</p>
-                  </div>
-                </div>
-
-                {/* Total de Artes */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Image className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">2,847</div>
-                      <div className="text-xs text-green-600 font-medium flex items-center justify-end">
-                        <span className="mr-1">+8%</span>
-                        <span className="text-gray-500">esta semana</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Total de Artes</h3>
-                    <p className="text-xs text-gray-500 mt-1">156 adicionadas esta semana</p>
-                  </div>
-                </div>
-
-                {/* Posts Comunidade */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+              {/* Dashboard com dados reais da plataforma */}
+              <DashboardOverview />
+            </TabsContent>
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-2 bg-green-100 rounded-lg">
                       <MessageSquare className="h-6 w-6 text-green-600" />
