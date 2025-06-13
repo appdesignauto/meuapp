@@ -1434,13 +1434,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Ferramentas"
               >
                 <Wrench className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="font-medium">Ferramentas</span>
+                    <span className="font-semibold">Ferramentas</span>
                     <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
@@ -1470,13 +1470,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Configurações"
               >
                 <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="font-medium">Configurações</span>
+                    <span className="font-semibold">Configurações</span>
                     <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
