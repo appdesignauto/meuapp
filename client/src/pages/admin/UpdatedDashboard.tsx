@@ -1022,14 +1022,16 @@ const AdminDashboard = () => {
           transition-all duration-300 ease-in-out overflow-hidden
         `}
       >
-        <div className="py-4 px-4 border-b border-gray-200/80 flex justify-center items-center">
-          {siteSettings?.logoUrl && (
-            <img 
-              src={siteSettings.logoUrl} 
-              alt="DesignAuto Logo" 
-              className="h-8 w-auto object-contain"
-            />
-          )}
+        <div className="py-4 px-4 border-b border-gray-200/80 flex items-center">
+          <div className="flex items-center">
+            {/* Ícone DA personalizado */}
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+              <span className="text-white font-bold text-sm">DA</span>
+            </div>
+            {sidebarOpen && (
+              <h1 className="text-lg font-semibold text-gray-900 transition-opacity duration-300">DesignAuto</h1>
+            )}
+          </div>
           <button 
             className={`text-gray-400 hover:text-gray-600 p-1.5 rounded-md transition-colors ${!sidebarOpen ? 'lg:mx-auto' : ''}`}
             onClick={() => setSidebarOpen(!sidebarOpen)}
