@@ -7812,6 +7812,11 @@ app.use('/api/reports-v2', (req, res, next) => {
       let prevDateStart = '30 days';
       
       switch (period) {
+        case 'today':
+          dateInterval = '1 day';
+          prevDateInterval = '2 days';
+          prevDateStart = '1 day';
+          break;
         case '7d':
           dateInterval = '7 days';
           prevDateInterval = '14 days';
@@ -7826,6 +7831,11 @@ app.use('/api/reports-v2', (req, res, next) => {
           dateInterval = '365 days';
           prevDateInterval = '730 days';
           prevDateStart = '365 days';
+          break;
+        case 'all':
+          dateInterval = '10 years';
+          prevDateInterval = '20 years';
+          prevDateStart = '10 years';
           break;
         default: // 30d
           dateInterval = '30 days';
