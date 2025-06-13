@@ -1126,29 +1126,45 @@ const AdminDashboard = () => {
                       </>
                     )}
                   </CollapsibleTrigger>
-                  <CollapsibleContent className={`mt-2 ${sidebarOpen ? 'pl-11' : 'flex flex-col items-center'} space-y-1`}>
+                  <CollapsibleContent className={`mt-2 ${sidebarOpen ? 'pl-3' : 'flex flex-col items-center'} space-y-1`}>
                   {hasTabAccess('users') && (
                     <button
                       onClick={() => setActiveTab('users')}
-                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                        activeTab === 'users' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                      } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                      className={`group flex items-center w-full py-2.5 px-3 rounded-lg transition-all duration-200 ${
+                        activeTab === 'users' 
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
+                          : 'text-slate-600 hover:bg-white hover:shadow-md hover:shadow-slate-200/50 hover:text-purple-600'
+                      } ${!sidebarOpen ? 'justify-center' : ''}`}
                       title="Gerenciar Usuários"
                     >
-                      <Users className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                      {sidebarOpen && <span className="truncate text-sm">Gerenciar Usuários</span>}
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-md ${
+                        activeTab === 'users' ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-purple-100'
+                      } ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`}>
+                        <Users className={`w-3.5 h-3.5 ${
+                          activeTab === 'users' ? 'text-white' : 'text-slate-500 group-hover:text-purple-600'
+                        }`} />
+                      </div>
+                      {sidebarOpen && <span className="text-sm font-medium">Gerenciar Usuários</span>}
                     </button>
                   )}
                   {hasTabAccess('subscriptions') && (
                     <button
                       onClick={() => setActiveTab('subscriptions')}
-                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                        activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                      } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                      className={`group flex items-center w-full py-2.5 px-3 rounded-lg transition-all duration-200 ${
+                        activeTab === 'subscriptions' 
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
+                          : 'text-slate-600 hover:bg-white hover:shadow-md hover:shadow-slate-200/50 hover:text-purple-600'
+                      } ${!sidebarOpen ? 'justify-center' : ''}`}
                       title="Assinaturas"
                     >
-                      <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                      {sidebarOpen && <span className="truncate text-sm">Assinaturas</span>}
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-md ${
+                        activeTab === 'subscriptions' ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-purple-100'
+                      } ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`}>
+                        <CreditCard className={`w-3.5 h-3.5 ${
+                          activeTab === 'subscriptions' ? 'text-white' : 'text-slate-500 group-hover:text-purple-600'
+                        }`} />
+                      </div>
+                      {sidebarOpen && <span className="text-sm font-medium">Assinaturas</span>}
                     </button>
                   )}
                 </CollapsibleContent>
@@ -1511,24 +1527,28 @@ const AdminDashboard = () => {
             )}
           </nav>
         </div>
-        <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-2 flex flex-col items-center'} border-t`}>
+        <div className={`mt-auto ${sidebarOpen ? 'p-6' : 'p-3 flex flex-col items-center'} border-t border-slate-200`}>
           <Link 
             href="/"
             title="Voltar ao site"
-            className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 mb-2
+            className={`group flex items-center w-full py-3 rounded-xl text-slate-600 hover:bg-white hover:shadow-md hover:shadow-slate-200/50 mb-2 transition-all duration-200
             ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
           >
-            <Home className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-            {sidebarOpen && <span>Voltar ao site</span>}
+            <div className={`flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-blue-100 ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`}>
+              <Home className="w-4 h-4 text-slate-600 group-hover:text-blue-600" />
+            </div>
+            {sidebarOpen && <span className="font-medium">Voltar ao site</span>}
           </Link>
           <button
             onClick={handleLogout}
             title="Sair"
-            className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100
+            className={`group flex items-center w-full py-3 rounded-xl text-slate-600 hover:bg-white hover:shadow-md hover:shadow-slate-200/50 hover:text-red-600 transition-all duration-200
             ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
           >
-            <LogOut className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-            {sidebarOpen && <span>Sair</span>}
+            <div className={`flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-red-100 ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`}>
+              <LogOut className="w-4 h-4 text-slate-600 group-hover:text-red-600" />
+            </div>
+            {sidebarOpen && <span className="font-medium">Sair</span>}
           </button>
         </div>
       </div>
