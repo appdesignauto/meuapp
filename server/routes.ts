@@ -8209,16 +8209,12 @@ app.use('/api/reports-v2', (req, res, next) => {
 
 
 
-      // Calcular receita total e MRR corrigidos
-      const totalRevenue = hotmartRevenue + doppusRevenue + annualRevenue + monthlyRevenueCalc + manualRevenue;
-      const totalMRR = 
-        (Number(counts.hotmart_count || 0) * 7.00) +
-        (Number(counts.doppus_count || 0) * 39.80) +
-        (Number(counts.annual_count || 0) * (197/12)) +
-        (Number(counts.monthly_count || 0) * 19.90) +
-        (Number(counts.manual_count || 0) * 19.90);
+      // Calcular apenas dados autênticos de assinantes reais
+      const totalRevenue = hotmartRevenue + doppusRevenue;
+      const totalMRR = hotmartRevenue + doppusRevenue; // MRR é receita mensal recorrente real
       
-      const totalActiveSubscribers = Number(counts.total_subscribers || 0);
+      // Contar apenas assinantes pagantes reais (Hotmart + Doppus)
+      const totalActiveSubscribers = Number(counts.hotmart_count || 0) + Number(counts.doppus_count || 0);
       const averageTicket = totalActiveSubscribers > 0 ? Math.round(totalRevenue / totalActiveSubscribers) : 0;
 
       // Construir dados de receita por tipo de plano
@@ -8308,7 +8304,15 @@ app.use('/api/reports-v2', (req, res, next) => {
           subscribers: Number(item.subscribers || 0),
           revenue: Number(item.total_revenue || 0)
         })) : [],
-        recentSubscribers: []
+        recentSubscribers: recentSubscribersResult.rows.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          planType: user.plan_type,
+          source: user.source,
+          subscriptionDate: user.subscription_date,
+          planValue: Number(user.plan_value || 0)
+        }))
       });
 
     } catch (error) {
