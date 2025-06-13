@@ -1028,8 +1028,12 @@ const AdminDashboard = () => {
       >
         <div className={`py-4 border-b border-gray-200/80 flex items-center ${sidebarOpen ? 'px-4 justify-between' : 'px-2 justify-center'}`}>
           <div className="flex items-center min-w-0">
-            {/* Ícone DA personalizado */}
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+            {/* Ícone DA personalizado - clicável para expandir quando recolhido */}
+            <div 
+              className={`w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${!sidebarOpen ? 'cursor-pointer hover:bg-blue-700 transition-colors' : ''}`}
+              onClick={!sidebarOpen ? () => setSidebarOpen(true) : undefined}
+              title={!sidebarOpen ? "Expandir menu" : undefined}
+            >
               <span className="text-white font-bold text-sm">DA</span>
             </div>
             {sidebarOpen && (
@@ -1040,26 +1044,15 @@ const AdminDashboard = () => {
           </div>
           {sidebarOpen && (
             <button 
-              className="text-gray-400 hover:text-gray-600 p-1 rounded-md transition-colors flex-shrink-0"
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-md transition-colors flex-shrink-0"
               onClick={() => setSidebarOpen(false)}
               aria-label="Recolher menu"
             >
-              <PanelLeft className="w-3 h-3" />
+              <PanelLeft className="w-4 h-4" />
             </button>
           )}
         </div>
         <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
-          {!sidebarOpen && (
-            <div className="flex justify-center mb-3">
-              <button 
-                className="text-gray-400 hover:text-blue-600 p-1.5 rounded-md transition-colors bg-gray-50 hover:bg-blue-50"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Expandir menu"
-              >
-                <PanelRight className="w-3 h-3" />
-              </button>
-            </div>
-          )}
           
           <div className={`flex items-center mb-6 ${!sidebarOpen ? 'justify-center' : ''}`}>
             <div className={`${sidebarOpen ? 'mr-3' : ''}`}>
