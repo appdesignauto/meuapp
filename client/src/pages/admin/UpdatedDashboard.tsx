@@ -1635,15 +1635,6 @@ const AdminDashboard = () => {
         <main className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="comments">
-              <div className="mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Comentários</h2>
-                    <p className="text-gray-500 mt-1">Visualize, modere e gerencie os comentários dos usuários nas aulas</p>
-                  </div>
-                </div>
-              </div>
-              
               <CommentsManagement />
             </TabsContent>
             
@@ -1652,29 +1643,6 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="courseStats">
-              <div className="mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Estatísticas dos Cursos</h2>
-                    <p className="text-gray-500 mt-1">Análise de desempenho e métricas dos cursos</p>
-                  </div>
-                  <div className="flex gap-4">
-                    <Select defaultValue="7dias">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Período" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hoje">Hoje</SelectItem>
-                        <SelectItem value="7dias">Últimos 7 dias</SelectItem>
-                        <SelectItem value="30dias">Últimos 30 dias</SelectItem>
-                        <SelectItem value="90dias">Últimos 90 dias</SelectItem>
-                        <SelectItem value="total">Todo período</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              
               <CourseStatisticsPanel />
             </TabsContent>
 
@@ -3179,30 +3147,6 @@ const AdminDashboard = () => {
               <div className="mb-6 grid grid-cols-1 gap-6">
                 <div className="col-span-full">
                   <div className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-lg font-semibold">Cursos</h2>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setCurrentCourse(null);
-                          setCourseForm({
-                            title: '',
-                            description: '',
-                            thumbnailUrl: '',
-                            featuredImage: '',
-                            level: 'iniciante',
-                            status: 'active',
-                            isPublished: true,
-                            isPremium: false
-                          });
-                          setIsCourseDialogOpen(true);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Novo Curso
-                      </Button>
-                    </div>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
@@ -4104,47 +4048,24 @@ const AdminDashboard = () => {
             
             {/* Gerenciamento de Ferramentas */}
             <TabsContent value="analytics" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
-                    <p className="text-muted-foreground">
-                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
-                    </p>
-                  </div>
-                  <div className="grid gap-6">
-                    <AnalyticsSettings />
-                  </div>
-                </div>
-              </div>
+              <AnalyticsSettings />
             </TabsContent>
             
             <TabsContent value="ferramentas" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Ferramentas</h2>
-                    <p className="text-muted-foreground">
-                      Gerencie as ferramentas e categorias disponíveis no site.
-                    </p>
-                  </div>
-                  
-                  <Tabs defaultValue="ferramentas" className="w-full">
-                    <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
-                      <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
-                      <TabsTrigger value="categorias">Categorias</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="ferramentas" className="space-y-4">
-                      <GerenciarFerramentas />
-                    </TabsContent>
-                    
-                    <TabsContent value="categorias" className="space-y-4">
-                      <GerenciarCategorias />
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </div>
+              <Tabs defaultValue="ferramentas" className="w-full">
+                <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
+                  <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
+                  <TabsTrigger value="categorias">Categorias</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="ferramentas" className="space-y-4">
+                  <GerenciarFerramentas />
+                </TabsContent>
+                
+                <TabsContent value="categorias" className="space-y-4">
+                  <GerenciarCategorias />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           </Tabs>
         </main>
