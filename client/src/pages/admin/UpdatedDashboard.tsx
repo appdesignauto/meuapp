@@ -1063,13 +1063,13 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab('stats')}
                 className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm transition-colors ${
                   activeTab === 'stats' 
-                    ? 'bg-orange-50 text-orange-700' 
+                    ? 'bg-blue-50 text-blue-700' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Dashboard"
               >
                 <LayoutDashboard className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                  activeTab === 'stats' ? 'text-orange-600' : 'text-gray-500'
+                  activeTab === 'stats' ? 'text-blue-600' : 'text-gray-500'
                 }`} />
                 {sidebarOpen && <span className="font-medium">Dashboard</span>}
               </button>
@@ -1081,13 +1081,13 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab('financeiro')}
                 className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm transition-colors ${
                   activeTab === 'financeiro' 
-                    ? 'bg-orange-50 text-orange-700' 
+                    ? 'bg-blue-50 text-blue-700' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Financeiro"
               >
                 <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                  activeTab === 'financeiro' ? 'text-orange-600' : 'text-gray-500'
+                  activeTab === 'financeiro' ? 'text-blue-600' : 'text-gray-500'
                 }`} />
                 {sidebarOpen && <span className="font-medium">Financeiro</span>}
               </button>
@@ -1118,13 +1118,13 @@ const AdminDashboard = () => {
                     onClick={() => setActiveTab('users')}
                     className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
                       activeTab === 'users' 
-                        ? 'bg-orange-50 text-orange-700' 
+                        ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     } ${!sidebarOpen ? 'justify-center' : ''}`}
                     title="Gerenciar Usuários"
                   >
                     <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                      activeTab === 'users' ? 'text-orange-600' : 'text-gray-500'
+                      activeTab === 'users' ? 'text-blue-600' : 'text-gray-500'
                     }`} />
                     {sidebarOpen && <span className="font-medium">Gerenciar Usuários</span>}
                   </button>
@@ -1134,13 +1134,13 @@ const AdminDashboard = () => {
                     onClick={() => setActiveTab('subscriptions')}
                     className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
                       activeTab === 'subscriptions' 
-                        ? 'bg-orange-50 text-orange-700' 
+                        ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     } ${!sidebarOpen ? 'justify-center' : ''}`}
                     title="Assinaturas Hotmart"
                   >
                     <CreditCard className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                      activeTab === 'subscriptions' ? 'text-orange-600' : 'text-gray-500'
+                      activeTab === 'subscriptions' ? 'text-blue-600' : 'text-gray-500'
                     }`} />
                     {sidebarOpen && <span className="font-medium">Assinaturas Hotmart</span>}
                   </button>
@@ -1249,7 +1249,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('coursesList')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'coursesList' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'coursesList' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Cursos"
                 >
@@ -1261,7 +1261,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('modules')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'modules' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'modules' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Módulos"
                 >
@@ -1273,7 +1273,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('lessons')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'lessons' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'lessons' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Aulas"
                 >
@@ -1285,7 +1285,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('courseStats')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'courseStats' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'courseStats' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Estatísticas"
                 >
@@ -1297,7 +1297,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('coursesConfig')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'coursesConfig' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'coursesConfig' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Configurações"
                 >
@@ -1309,7 +1309,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('comments')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'comments' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'comments' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Comentários"
                 >
@@ -1343,7 +1343,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('popups')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'popups' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'popups' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Popups"
                 >
@@ -1379,7 +1379,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('reports')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'reports' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'reports' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Reports"
                 >
@@ -1391,7 +1391,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('collaboration-requests')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'collaboration-requests' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'collaboration-requests' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Colaboração"
                 >
@@ -1403,7 +1403,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('affiliate-requests')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'affiliate-requests' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'affiliate-requests' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Afiliação"
                 >
@@ -1439,7 +1439,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setActiveTab('ferramentas')}
                   className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                    activeTab === 'ferramentas' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Ferramentas"
                 >
@@ -1476,7 +1476,7 @@ const AdminDashboard = () => {
                   <button
                     onClick={() => setActiveTab('settings')}
                     className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                      activeTab === 'settings' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      activeTab === 'settings' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     } ${!sidebarOpen ? 'justify-center' : ''}`}
                     title="Configurações do Site"
                   >
@@ -1508,7 +1508,7 @@ const AdminDashboard = () => {
                     <button
                       onClick={() => setActiveTab('analytics')}
                       className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                        activeTab === 'analytics' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        activeTab === 'analytics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       } ${!sidebarOpen ? 'justify-center' : ''}`}
                       title="Analytics"
                     >
