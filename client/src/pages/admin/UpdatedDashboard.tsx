@@ -1554,6 +1554,27 @@ const AdminDashboard = () => {
         </div>
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
           <Link 
+            href="/painel/perfil"
+            className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
+            ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
+            title="Perfil"
+          >
+            <div className={`${sidebarOpen ? 'mr-3' : 'mx-auto'}`}>
+              {user?.profileimageurl ? (
+                <img 
+                  src={user.profileimageurl} 
+                  alt={user.name || 'Admin'} 
+                  className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-xs">
+                  {user?.name?.charAt(0) || 'A'}
+                </div>
+              )}
+            </div>
+            {sidebarOpen && <span>Perfil</span>}
+          </Link>
+          <Link 
             href="/"
             title="Ir para o Site"
             className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
