@@ -131,6 +131,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import GerenciarFerramentas from './ferramentas/GerenciarFerramentas';
 import GerenciarCategorias from './ferramentas/GerenciarCategorias';
+import GerenciarCursos from './GerenciarCursos';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -1993,22 +1994,51 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
 
-            {/* Financeiro */}
-            <TabsContent value="financeiro">
-              <SimpleSubscriptionDashboard />
+            {/* Conteúdo */}
+            <TabsContent value="content" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Gerenciamento de Conteúdo</h2>
+                    <p className="text-muted-foreground">
+                      Gerencie artes, categorias, formatos e tipos de arquivo da plataforma.
+                    </p>
+                  </div>
+                  
+                  <Tabs defaultValue="arts" className="w-full">
+                    <TabsList className="grid w-full md:w-auto grid-cols-4 mb-6">
+                      <TabsTrigger value="arts">Artes</TabsTrigger>
+                      <TabsTrigger value="categories">Categorias</TabsTrigger>
+                      <TabsTrigger value="formats">Formatos</TabsTrigger>
+                      <TabsTrigger value="fileTypes">Tipos de Arquivo</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="arts" className="space-y-4">
+                      <ArtsList />
+                    </TabsContent>
+                    
+                    <TabsContent value="categories" className="space-y-4">
+                      <CategoriesList />
+                    </TabsContent>
+                    
+                    <TabsContent value="formats" className="space-y-4">
+                      <FormatsList />
+                    </TabsContent>
+                    
+                    <TabsContent value="fileTypes" className="space-y-4">
+                      <FileTypesList />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
             </TabsContent>
 
-            {/* Arts */}
-            <TabsContent value="arts">
-              <PlatformMetrics />
-            </TabsContent>
-
-            {/* Users */}
+            {/* Usuários */}
             <TabsContent value="users">
               <ModernUserManagement />
             </TabsContent>
 
-            {/* Community */}
+            {/* Comunidade */}
             <TabsContent value="community">
               <div className="space-y-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -2041,57 +2071,100 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
 
-            {/* Settings */}
-            {hasTabAccess('settings') && (
-              <TabsContent value="settings">
-                <SiteSettings />
-              </TabsContent>
-            )}
-            
-            {/* Analytics */}
-            <TabsContent value="analytics" className="mt-0">
+            {/* Cursos */}
+            <TabsContent value="courses" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Gerenciar Cursos</h2>
                     <p className="text-muted-foreground">
-                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+                      Adicione e gerencie cursos, módulos e aulas da plataforma.
                     </p>
                   </div>
-                  <div className="grid gap-6">
-                    <AnalyticsSettings />
-                  </div>
+                  
+                  <Tabs defaultValue="courses" className="w-full">
+                    <TabsList className="grid w-full md:w-auto grid-cols-3 mb-6">
+                      <TabsTrigger value="courses">Cursos</TabsTrigger>
+                      <TabsTrigger value="modules">Módulos</TabsTrigger>
+                      <TabsTrigger value="lessons">Aulas</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="courses" className="space-y-4">
+                      <GerenciarCursos />
+                    </TabsContent>
+                    
+                    <TabsContent value="modules" className="space-y-4">
+                      <GerenciarCursos />
+                    </TabsContent>
+                    
+                    <TabsContent value="lessons" className="space-y-4">
+                      <GerenciarCursos />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
             </TabsContent>
-            
+
+            {/* Marketing */}
+            <TabsContent value="marketing" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Marketing</h2>
+                    <p className="text-muted-foreground">
+                      Ferramentas e configurações de marketing da plataforma.
+                    </p>
+                  </div>
+                  
+                  <Tabs defaultValue="analytics" className="w-full">
+                    <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
+                      <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                      <TabsTrigger value="subscriptions">Configurar Assinaturas</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="analytics" className="space-y-4">
+                      <AnalyticsSettings />
+                    </TabsContent>
+                    
+                    <TabsContent value="subscriptions" className="space-y-4">
+                      <SubscriptionSettings />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Reports */}
+            <TabsContent value="reports" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <SimpleSubscriptionDashboard />
+              </div>
+            </TabsContent>
+
+            {/* Ferramentas */}
             <TabsContent value="ferramentas" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight mb-2">Ferramentas</h2>
                     <p className="text-muted-foreground">
-                      Gerencie as ferramentas e categorias disponíveis no site.
+                      Gerencie as ferramentas disponíveis no site.
                     </p>
                   </div>
                   
-                  <Tabs defaultValue="ferramentas" className="w-full">
-                    <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
-                      <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
-                      <TabsTrigger value="categorias">Categorias</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="ferramentas" className="space-y-4">
-                      <GerenciarFerramentas />
-                    </TabsContent>
-                    
-                    <TabsContent value="categorias" className="space-y-4">
-                      <GerenciarCategorias />
-                    </TabsContent>
-                  </Tabs>
+                  <div className="grid gap-6">
+                    <GerenciarFerramentas />
+                  </div>
                 </div>
               </div>
             </TabsContent>
+
+            {/* Settings */}
+            {hasTabAccess('settings') && (
+              <TabsContent value="settings">
+                <SiteSettings />
+              </TabsContent>
+            )}
           </Tabs>
         </main>
       </div>
