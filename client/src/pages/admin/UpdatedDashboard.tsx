@@ -1120,7 +1120,7 @@ const AdminDashboard = () => {
             {(hasTabAccess('users') || hasTabAccess('subscriptions')) && (
               <Collapsible 
                 className="space-y-1"
-                defaultOpen={['users', 'subscriptions'].includes(activeTab)}
+                defaultOpen={false}
                 open={sidebarOpen ? undefined : false}
               >
                 <CollapsibleTrigger 
@@ -1176,7 +1176,7 @@ const AdminDashboard = () => {
             {user?.nivelacesso !== 'suporte' && (
               <Collapsible 
                 className="space-y-1"
-                defaultOpen={['arts', 'categories', 'formats', 'fileTypes', 'community'].includes(activeTab)}
+                defaultOpen={false}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
@@ -1253,7 +1253,7 @@ const AdminDashboard = () => {
             {(user?.nivelacesso === 'suporte' || user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm') && (
               <Collapsible 
                 className="space-y-1"
-                defaultOpen={['courses', 'modules', 'lessons', 'coursesConfig', 'courseStats'].includes(activeTab)}
+                defaultOpen={false}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
@@ -1347,7 +1347,7 @@ const AdminDashboard = () => {
             {user?.nivelacesso !== 'suporte' && (
               <Collapsible 
                 className="space-y-1"
-                defaultOpen={['popups'].includes(activeTab)}
+                defaultOpen={false}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
@@ -1383,7 +1383,7 @@ const AdminDashboard = () => {
             {(user?.nivelacesso === 'suporte' || user?.nivelacesso === 'admin') && (
               <Collapsible 
                 className="space-y-1"
-                defaultOpen={['reports'].includes(activeTab)}
+                defaultOpen={false}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
