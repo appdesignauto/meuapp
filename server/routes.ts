@@ -7832,14 +7832,28 @@ app.use('/api/reports-v2', (req, res, next) => {
           prevDateInterval = '60 days';
           prevDateStart = '30 days';
       }
-      // Estatísticas de usuários
+      // Estatísticas de usuários com período dinâmico
       const userStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_users,
           COUNT(CASE WHEN nivelacesso = 'premium' OR acessovitalicio = true THEN 1 END) as premium_users,
           COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as new_users_month,
-          COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week
+          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as new_users_period,
+          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as new_users_prev_period,
+          COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
+          SUM(
+            CASE 
+              WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+                CASE 
+                  WHEN origemassinatura = 'hotmart' THEN 7.00
+                  WHEN tipoplano = 'mensal' THEN 29.90
+                  WHEN tipoplano = 'anual' THEN 197.00
+                  WHEN tipoplano = 'vitalicio' THEN 497.00
+                  ELSE 29.90
+                END
+              ELSE 0
+            END
+          ) as monthly_revenue
         FROM users
       `);
 
@@ -7906,9 +7920,9 @@ app.use('/api/reports-v2', (req, res, next) => {
       const categoriesData = categoriesStats.rows[0];
       const formatsData = formatsStats.rows[0];
 
-      // Calcular percentuais de crescimento (simulado baseado em dados reais)
-      const userGrowthPercent = userData.new_users_month > 0 ? 
-        Math.round((userData.new_users_month / userData.total_users) * 100) : 0;
+      // Calcular percentuais de crescimento reais baseado no período
+      const userGrowthPercent = userData.new_users_prev_period > 0 ? 
+        Math.round(((userData.new_users_period - userData.new_users_prev_period) / userData.new_users_prev_period) * 100) : 0;
       
       const artGrowthPercent = artData.arts_week > 0 ? 
         Math.round((artData.arts_week / artData.total_arts) * 100) : 0;
@@ -7928,7 +7942,8 @@ app.use('/api/reports-v2', (req, res, next) => {
         totalUsers: Number(userData.total_users),
         premiumUsers: Number(userData.premium_users),
         activeUsers: Number(userData.active_users),
-        newUsersMonth: Number(userData.new_users_month),
+        newUsersMonth: Number(userData.new_users_period),
+        newUsersPrevPeriod: Number(userData.new_users_prev_period),
         activeWeek: Number(userData.active_week),
         userGrowthPercent,
 
@@ -7954,13 +7969,17 @@ app.use('/api/reports-v2', (req, res, next) => {
         totalModules: Number(courseData.total_modules),
         totalLessons: Number(courseData.total_lessons),
 
-        // Métricas calculadas
+        // Métricas de monetização
         premiumRate: userData.total_users > 0 ? 
           Math.round((userData.premium_users / userData.total_users) * 100) : 0,
         
-        // Receita simulada baseada em usuários premium (R$ 50 por usuário premium)
-        monthlyRevenue: Number(userData.premium_users) * 50,
-        revenueThisWeek: Math.round(Number(userData.premium_users) * 50 * 0.25),
+        // Receita real baseada nos planos dos usuários
+        monthlyRevenue: Number(userData.monthly_revenue || 0),
+        revenueThisWeek: Math.round(Number(userData.monthly_revenue || 0) * 0.25),
+        
+        // Métricas de crescimento específicas do período selecionado
+        period: period,
+        dateInterval: dateInterval,
         
         // Estatísticas detalhadas calculadas do banco
         videoLessons: Number(courseData.total_lessons),
