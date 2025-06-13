@@ -469,17 +469,18 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {menuSections.map((section: any) => {
           const visibleItems = section.items.filter((item: any) => hasTabAccess(item.id));
           if (visibleItems.length === 0) return null;
 
-          return (
-            <div key={section.title}>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                {section.title}
-              </p>
-              <div className="space-y-1">
+          const isExpanded = expandedSections.includes(section.title);
+          const hasActiveItem = visibleItems.some((item: any) => item.id === activeTab);
+
+          // Se não é colapsável ou tem apenas um item, renderiza diretamente
+          if (!section.collapsible || visibleItems.length === 1) {
+            return (
+              <div key={section.title} className="space-y-1">
                 {visibleItems.map((item: any) => (
                   <button
                     key={item.id}
@@ -498,6 +499,51 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
                   </button>
                 ))}
               </div>
+            );
+          }
+
+          // Renderiza seção colapsável
+          return (
+            <div key={section.title} className="space-y-1">
+              <button
+                onClick={() => toggleSection(section.title)}
+                className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-50 ${
+                  hasActiveItem ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                }`}
+              >
+                <div className="flex items-center">
+                  <section.icon className="h-4 w-4 mr-3" />
+                  <span>{section.title}</span>
+                </div>
+                {section.collapsible && (
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${
+                    isExpanded ? 'rotate-180' : ''
+                  }`} />
+                )}
+              </button>
+              
+              {/* Dropdown Items */}
+              {isExpanded && (
+                <div className="ml-6 space-y-1 border-l border-gray-200 pl-3">
+                  {visibleItems.map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                        activeTab === item.id
+                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <item.icon className="h-3 w-3 mr-2" />
+                      <span className="text-xs">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
