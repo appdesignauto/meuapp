@@ -7801,9 +7801,37 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  // Endpoint para estatísticas reais do dashboard
+  // Endpoint para estatísticas reais do dashboard com filtro de data
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
+      const period = req.query.period || '30d';
+      
+      // Calcular intervalos de data baseado no período
+      let dateInterval = '30 days';
+      let prevDateInterval = '60 days';
+      let prevDateStart = '30 days';
+      
+      switch (period) {
+        case '7d':
+          dateInterval = '7 days';
+          prevDateInterval = '14 days';
+          prevDateStart = '7 days';
+          break;
+        case '90d':
+          dateInterval = '90 days';
+          prevDateInterval = '180 days';
+          prevDateStart = '90 days';
+          break;
+        case '1y':
+          dateInterval = '365 days';
+          prevDateInterval = '730 days';
+          prevDateStart = '365 days';
+          break;
+        default: // 30d
+          dateInterval = '30 days';
+          prevDateInterval = '60 days';
+          prevDateStart = '30 days';
+      }
       // Estatísticas de usuários
       const userStats = await db.execute(sql`
         SELECT 
