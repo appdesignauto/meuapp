@@ -1255,66 +1255,66 @@ const AdminDashboard = () => {
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-8' : 'flex flex-col items-center'} space-y-1 mt-1`}>
                 <button
                   onClick={() => setActiveTab('coursesList')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'coursesList' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Cursos"
                 >
-                  <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <BookOpen className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'coursesList' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Cursos</span>}
+                  {sidebarOpen && <span>Cursos</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('modules')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'modules' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Módulos"
                 >
-                  <Layers className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <Layers className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'modules' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Módulos</span>}
+                  {sidebarOpen && <span>Módulos</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('lessons')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'lessons' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Aulas"
                 >
-                  <Video className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <Video className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'lessons' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Aulas</span>}
+                  {sidebarOpen && <span>Aulas</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('courseStats')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'courseStats' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Estatísticas"
                 >
-                  <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <BarChart3 className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'courseStats' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Estatísticas</span>}
+                  {sidebarOpen && <span>Estatísticas</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('coursesConfig')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'coursesConfig' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Configurações"
                 >
-                  <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <Settings className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'coursesConfig' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Configurações</span>}
+                  {sidebarOpen && <span>Configurações</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
