@@ -28,7 +28,7 @@ import Designers from "@/pages/Designers";
 import DesignerProfile from "@/pages/DesignerProfile";
 import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
-import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
+import ModernDashboard from "@/pages/admin/ModernDashboard";
 import FinanceiroPage from "@/pages/admin/Financeiro";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
@@ -269,7 +269,7 @@ function AppRoutes() {
       {/* Rotas Administrativas */}
       <ProtectedRoute 
         path="/admin" 
-        component={UpdatedDashboard} 
+        component={ModernDashboard} 
         roles={['admin', 'designer_adm', 'suporte']} 
       />
       <ProtectedRoute 
