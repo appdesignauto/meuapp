@@ -1018,9 +1018,11 @@ const AdminDashboard = () => {
       <div 
         className={`
           fixed lg:relative z-40 h-full bg-white border-r border-gray-200/80
-          ${sidebarOpen ? 'w-64' : 'w-0 lg:w-16'} 
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          transition-all duration-300 ease-in-out ${sidebarOpen ? 'overflow-hidden' : 'lg:overflow-visible overflow-hidden'}
+          transition-all duration-300 ease-in-out overflow-hidden
+          ${sidebarOpen 
+            ? 'w-64 translate-x-0' 
+            : 'w-16 lg:translate-x-0 -translate-x-full'
+          }
         `}
       >
         <div className={`py-4 border-b border-gray-200/80 flex items-center ${sidebarOpen ? 'px-4 justify-between' : 'px-2 justify-center'}`}>
