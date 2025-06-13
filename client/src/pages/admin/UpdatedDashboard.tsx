@@ -1056,20 +1056,20 @@ const AdminDashboard = () => {
         <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
           
 
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {/* Dashboard principal - apenas para admin */}
             {hasTabAccess('stats') && (
               <button
                 onClick={() => setActiveTab('stats')}
-                className={`flex items-center w-full px-3 py-2.5 rounded-lg text-base transition-colors ${
+                className={`flex items-center w-full px-4 py-3 rounded-xl text-base transition-all duration-200 ${
                   activeTab === 'stats' 
-                    ? 'bg-blue-50 text-blue-700' 
+                    ? 'bg-blue-50 text-blue-700 shadow-sm' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                } ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Dashboard"
               >
                 <LayoutDashboard className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                  activeTab === 'stats' ? 'text-blue-600' : 'text-gray-500'
+                  activeTab === 'stats' ? 'text-blue-600' : 'text-gray-600'
                 }`} />
                 {sidebarOpen && <span className="font-semibold">Dashboard</span>}
               </button>
@@ -1079,15 +1079,15 @@ const AdminDashboard = () => {
             {hasTabAccess('financeiro') && (
               <button
                 onClick={() => setActiveTab('financeiro')}
-                className={`flex items-center w-full px-3 py-2.5 rounded-lg text-base transition-colors ${
+                className={`flex items-center w-full px-4 py-3 rounded-xl text-base transition-all duration-200 ${
                   activeTab === 'financeiro' 
-                    ? 'bg-blue-50 text-blue-700' 
+                    ? 'bg-blue-50 text-blue-700 shadow-sm' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                } ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
                 title="Financeiro"
               >
                 <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                  activeTab === 'financeiro' ? 'text-blue-600' : 'text-gray-500'
+                  activeTab === 'financeiro' ? 'text-blue-600' : 'text-gray-600'
                 }`} />
                 {sidebarOpen && <span className="font-semibold">Financeiro</span>}
               </button>
@@ -1570,10 +1570,10 @@ const AdminDashboard = () => {
           <Link 
             href="/"
             title="Ir para o Site"
-            className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
-            ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
+            className={`flex items-center w-full py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-sm font-medium
+            ${sidebarOpen ? 'px-4 justify-start' : 'px-3 justify-center'}`}
           >
-            <Home className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+            <Home className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
             {sidebarOpen && <span>Ir para o Site</span>}
           </Link>
           <button
