@@ -911,9 +911,7 @@ const ModernUserManagement = () => {
             </div>
           </div>
 
-          {/* Form Content with better scrolling */}
-          <div className="max-h-[60vh] overflow-y-auto pr-2">
-            <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-6">
+          <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-6 max-h-[60vh] overflow-y-auto">
               {/* Step 1: Basic Information */}
               {createUserStep === 1 && (
                 <div className="space-y-6">
@@ -1082,14 +1080,13 @@ const ModernUserManagement = () => {
                         {/* Transaction ID for Hotmart/Doppus manual entries */}
                         {(selectedOrigemAssinatura === "hotmart" || selectedOrigemAssinatura === "doppus") && (
                           <div>
-                            <Label htmlFor="observacaoadmin">ID da Transação / Observações</Label>
+                            <Label htmlFor="transactionId">ID da Transação / Observações</Label>
                             <Input
+                              id="transactionId"
                               placeholder={`ID da transação ${selectedOrigemAssinatura === "hotmart" ? "Hotmart" : "Doppus"} ou observações sobre a compra`}
-                              value={createForm.watch("observacaoadmin") || ""}
-                              onChange={(e) => createForm.setValue("observacaoadmin", e.target.value)}
                             />
                             <p className="text-sm text-muted-foreground mt-1">
-                              💡 Útil para rastrear a compra caso o webhook tenha falhado
+                              Útil para rastrear a compra caso o webhook tenha falhado
                             </p>
                           </div>
                         )}
@@ -1542,7 +1539,7 @@ const ModernUserManagement = () => {
               <Checkbox
                 id="edit-isactive"
                 checked={editForm.watch("isactive")}
-                onCheckedChange={(checked) => editForm.setValue("isactive", checked)}
+                onCheckedChange={(checked) => editForm.setValue("isactive", !!checked)}
               />
               <Label htmlFor="edit-isactive">Usuário ativo</Label>
             </div>
@@ -1861,9 +1858,7 @@ const ModernUserManagement = () => {
                 </h4>
                 <div className="pl-7">
                   <div className="bg-gray-50 p-4 rounded-lg min-h-[100px]">
-                    {selectedUserForHistory.observacaoadmin || (
-                      <span className="text-gray-500 italic">Nenhuma observação registrada</span>
-                    )}
+                    <span className="text-gray-500 italic">Histórico do usuário</span>
                   </div>
                 </div>
               </div>
@@ -1871,7 +1866,6 @@ const ModernUserManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 };
