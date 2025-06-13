@@ -1061,7 +1061,7 @@ const AdminDashboard = () => {
             {hasTabAccess('stats') && (
               <button
                 onClick={() => setActiveTab('stats')}
-                className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                className={`flex items-center w-full px-3 py-2.5 rounded-lg text-base transition-colors ${
                   activeTab === 'stats' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -1071,7 +1071,7 @@ const AdminDashboard = () => {
                 <LayoutDashboard className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
                   activeTab === 'stats' ? 'text-blue-600' : 'text-gray-500'
                 }`} />
-                {sidebarOpen && <span className="font-medium">Dashboard</span>}
+                {sidebarOpen && <span className="font-semibold">Dashboard</span>}
               </button>
             )}
             
@@ -1079,7 +1079,7 @@ const AdminDashboard = () => {
             {hasTabAccess('financeiro') && (
               <button
                 onClick={() => setActiveTab('financeiro')}
-                className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                className={`flex items-center w-full px-3 py-2.5 rounded-lg text-base transition-colors ${
                   activeTab === 'financeiro' 
                     ? 'bg-blue-50 text-blue-700' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -1089,7 +1089,7 @@ const AdminDashboard = () => {
                 <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
                   activeTab === 'financeiro' ? 'text-blue-600' : 'text-gray-500'
                 }`} />
-                {sidebarOpen && <span className="font-medium">Financeiro</span>}
+                {sidebarOpen && <span className="font-semibold">Financeiro</span>}
               </button>
             )}
             
@@ -1244,13 +1244,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Cursos"
               >
                 <BookOpen className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="font-medium">Cursos</span>
+                    <span className="font-semibold">Cursos</span>
                     <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
@@ -1338,13 +1338,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Marketing"
               >
                 <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="font-medium">Marketing</span>
+                    <span className="font-semibold">Marketing</span>
                     <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
@@ -1374,13 +1374,13 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-sm ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-3 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors text-base ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Reports"
               >
                 <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
                 {sidebarOpen && (
                   <>
-                    <span className="font-medium">Reports</span>
+                    <span className="font-semibold">Reports</span>
                     <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180 text-gray-400" />
                   </>
                 )}
