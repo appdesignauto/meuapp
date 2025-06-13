@@ -121,11 +121,13 @@ import FileTypesList from '@/components/admin/FileTypesList';
 import PopupManagement from '@/components/admin/PopupManagement';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
+import { useSiteSettings } from '@/hooks/use-site-settings';
 import GerenciarFerramentas from './ferramentas/GerenciarFerramentas';
 import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
+  const { data: siteSettings } = useSiteSettings();
   // Define aba padrão baseada no nível de acesso
   const getDefaultTab = () => {
     if (user?.nivelacesso === 'suporte') {
@@ -1022,10 +1024,16 @@ const AdminDashboard = () => {
       >
         <div className="py-4 px-4 border-b border-gray-200/80 flex justify-between items-center">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white font-bold text-sm">DA</span>
-            </div>
-            <h1 className={`text-lg font-semibold text-gray-900 ${!sidebarOpen ? 'lg:opacity-0 lg:w-0' : ''} transition-opacity duration-300`}>DesignAuto</h1>
+            {siteSettings?.logoUrl && (
+              <img 
+                src={siteSettings.logoUrl} 
+                alt="DesignAuto Logo" 
+                className={`h-8 object-contain ${sidebarOpen ? 'mr-3' : ''}`}
+              />
+            )}
+            {sidebarOpen && (
+              <h1 className="text-lg font-semibold text-gray-900 transition-opacity duration-300">DesignAuto</h1>
+            )}
           </div>
           <button 
             className={`text-gray-400 hover:text-gray-600 p-1.5 rounded-md transition-colors ${!sidebarOpen ? 'lg:mx-auto' : ''}`}
@@ -1038,9 +1046,17 @@ const AdminDashboard = () => {
         <div className="px-4 py-5 overflow-hidden">
           <div className={`flex items-center mb-6 ${!sidebarOpen ? 'justify-center' : ''}`}>
             <div className={`${sidebarOpen ? 'mr-3' : ''}`}>
-              <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-medium text-sm">
-                {user?.name?.charAt(0) || 'A'}
-              </div>
+              {user?.profileimageurl ? (
+                <img 
+                  src={user.profileimageurl} 
+                  alt={user.name || 'Admin'} 
+                  className="w-9 h-9 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-sm">
+                  {user?.name?.charAt(0) || 'A'}
+                </div>
+              )}
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
@@ -1524,21 +1540,21 @@ const AdminDashboard = () => {
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
           <Link 
             href="/"
-            title="para o Site"
+            title="Ir para o Site"
             className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
             ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
           >
             <Home className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
-            {sidebarOpen && <span>para o Site</span>}
+            {sidebarOpen && <span>Ir para o Site</span>}
           </Link>
           <button
             onClick={handleLogout}
-            title="Configurações"
+            title="Sair"
             className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
             ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
           >
-            <Settings className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
-            {sidebarOpen && <span>Configurações</span>}
+            <LogOut className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-500`} />
+            {sidebarOpen && <span>Sair</span>}
           </button>
         </div>
       </div>
