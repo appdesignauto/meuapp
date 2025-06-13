@@ -313,8 +313,8 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
-        {menuSections.map((section) => {
-          const visibleItems = section.items.filter(item => hasTabAccess(item.id));
+        {menuSections.map((section: any) => {
+          const visibleItems = section.items.filter((item: any) => hasTabAccess(item.id));
           if (visibleItems.length === 0) return null;
 
           return (
@@ -325,7 +325,7 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
                 </p>
               )}
               <div className="space-y-1">
-                {visibleItems.map((item) => (
+                {visibleItems.map((item: any) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
@@ -372,7 +372,7 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
 };
 
 // Mobile Sidebar Component
-const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, setMobileMenuOpen, handleLogout }) => {
+const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, setMobileMenuOpen, handleLogout }: any) => {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -398,8 +398,8 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
-        {menuSections.map((section) => {
-          const visibleItems = section.items.filter(item => hasTabAccess(item.id));
+        {menuSections.map((section: any) => {
+          const visibleItems = section.items.filter((item: any) => hasTabAccess(item.id));
           if (visibleItems.length === 0) return null;
 
           return (
@@ -408,7 +408,7 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
                 {section.title}
               </p>
               <div className="space-y-1">
-                {visibleItems.map((item) => (
+                {visibleItems.map((item: any) => (
                   <button
                     key={item.id}
                     onClick={() => {

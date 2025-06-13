@@ -361,7 +361,7 @@ function AppRoutes() {
       />
       <ProtectedRoute 
         path="/admin/:page" 
-        component={UpdatedDashboard}
+        component={ModernDashboard}
         roles={['admin', 'designer_adm']} 
       />
       
