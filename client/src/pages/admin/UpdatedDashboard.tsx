@@ -1060,7 +1060,7 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab('stats')}
                 className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
                   activeTab === 'stats' 
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                    ? 'bg-blue-50 text-blue-700' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Visão Geral"
@@ -1076,7 +1076,7 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab('financeiro')}
                 className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
                   activeTab === 'financeiro' 
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                    ? 'bg-blue-50 text-blue-700' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Financeiro"
@@ -1113,7 +1113,7 @@ const AdminDashboard = () => {
                       onClick={() => setActiveTab('users')}
                       className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
                         activeTab === 'users' 
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                          ? 'bg-blue-50 text-blue-700' 
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       } ${!sidebarOpen ? 'justify-center' : ''}`}
                       title="Gerenciar Usuários"
@@ -1127,7 +1127,7 @@ const AdminDashboard = () => {
                       onClick={() => setActiveTab('subscriptions')}
                       className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
                         activeTab === 'subscriptions' 
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                          ? 'bg-blue-50 text-blue-700' 
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       } ${!sidebarOpen ? 'justify-center' : ''}`}
                       title="Assinaturas"
