@@ -44,7 +44,6 @@ import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
-import DashboardSaas from "@/pages/dashboard-saas";
 
 // Páginas do Footer
 import About from "@/pages/About";

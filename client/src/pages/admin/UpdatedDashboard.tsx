@@ -9,7 +9,6 @@ import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import SubscriptionDashboard from '@/components/admin/SubscriptionDashboard';
 import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
-import SaasDashboard from '@/components/admin/SaasDashboard';
 import PlatformMetrics from '@/components/admin/PlatformMetrics';
 import {
   LayoutGrid,
@@ -1075,23 +1074,7 @@ const AdminDashboard = () => {
               </button>
             )}
             
-            {/* Financeiro - apenas para admin */}
-            {hasTabAccess('financeiro') && (
-              <button
-                onClick={() => setActiveTab('financeiro')}
-                className={`flex items-center w-full rounded-xl text-base transition-all duration-200 ${
-                  activeTab === 'financeiro' 
-                    ? 'bg-blue-50 text-blue-700 shadow-sm' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                } ${!sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3'}`}
-                title="Financeiro"
-              >
-                <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                  activeTab === 'financeiro' ? 'text-blue-600' : 'text-gray-600'
-                }`} />
-                {sidebarOpen && <span className="font-semibold">Financeiro</span>}
-              </button>
-            )}
+
             
             {/* Usuários - dropdown com assinaturas */}
             {(hasTabAccess('users') || hasTabAccess('subscriptions')) && (
@@ -1796,9 +1779,7 @@ const AdminDashboard = () => {
               <CourseStatisticsPanel />
             </TabsContent>
 
-            <TabsContent value="financeiro">
-              <SaasDashboard />
-            </TabsContent>
+
             
             <TabsContent value="stats">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
