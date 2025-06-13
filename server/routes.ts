@@ -7984,14 +7984,27 @@ app.use('/api/reports-v2', (req, res, next) => {
           prevDateInterval = '60 days';
           prevDateStart = '30 days';
       }
+      // Definir condições de data baseadas no período
+      let dateCondition, prevDateCondition, revenueCondition;
+      
+      if (period === 'hoje') {
+        dateCondition = sql`criadoem >= CURRENT_DATE AND criadoem < CURRENT_DATE + INTERVAL '1 day'`;
+        prevDateCondition = sql`criadoem >= CURRENT_DATE - INTERVAL '1 day' AND criadoem < CURRENT_DATE`;
+        revenueCondition = sql`dataassinatura >= CURRENT_DATE AND dataassinatura < CURRENT_DATE + INTERVAL '1 day'`;
+      } else {
+        dateCondition = sql`criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)}`;
+        prevDateCondition = sql`criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)}`;
+        revenueCondition = sql`dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)}`;
+      }
+
       // Estatísticas de usuários com período dinâmico
       const userStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_users,
           COUNT(CASE WHEN nivelacesso = 'premium' OR acessovitalicio = true THEN 1 END) as premium_users,
           COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as new_users_period,
-          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as new_users_prev_period,
+          COUNT(CASE WHEN ${dateCondition} THEN 1 END) as new_users_period,
+          COUNT(CASE WHEN ${prevDateCondition} THEN 1 END) as new_users_prev_period,
           COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
           SUM(
             CASE 
@@ -8008,7 +8021,7 @@ app.use('/api/reports-v2', (req, res, next) => {
           ) as monthly_revenue,
           SUM(
             CASE 
-              WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+              WHEN ${revenueCondition} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
                 CASE 
                   WHEN origemassinatura = 'hotmart' THEN 7.00
                   WHEN tipoplano = 'mensal' THEN 29.90
@@ -8019,7 +8032,7 @@ app.use('/api/reports-v2', (req, res, next) => {
               ELSE 0
             END
           ) as period_revenue,
-          COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
+          COUNT(CASE WHEN ${revenueCondition} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
         FROM users
       `);
 
@@ -8113,19 +8126,38 @@ app.use('/api/reports-v2', (req, res, next) => {
       const commentGrowthPercent = commentData.comments_prev_period > 0 ? 
         Math.round(((commentData.comments_period - commentData.comments_prev_period) / commentData.comments_prev_period) * 100) : 0;
 
-      // Calcular valores corretos para o frontend
-      const faturamento = Number(userData.monthly_revenue || 0);
-      const assinantes = Number(userData.premium_users || 0);
-      const totalUsuarios = Number(userData.total_users || 0);
-      const usuariosGratuitos = totalUsuarios - assinantes;
+      // Calcular valores baseados no período selecionado
+      let faturamento, assinantes, totalUsuarios, usuariosGratuitos, taxaConversao, ticketMedio;
       
-      // Taxa de conversão: percentual de usuários que se tornaram premium
-      const taxaConversao = totalUsuarios > 0 ? 
-        Math.round((assinantes / totalUsuarios) * 100) : 0;
-      
-      // Ticket médio: receita total dividida por número de assinantes premium
-      const ticketMedio = assinantes > 0 ? 
-        Math.round((faturamento / assinantes) * 100) / 100 : 0;
+      if (period === 'hoje' || period === '7d') {
+        // Para "hoje" e "7d", usar dados do período específico
+        faturamento = Number(userData.period_revenue || 0);
+        assinantes = Number(userData.new_premium_users_period || 0);
+        totalUsuarios = Number(userData.new_users_period || 0);
+        usuariosGratuitos = Math.max(0, totalUsuarios - assinantes);
+        
+        // Taxa de conversão no período
+        taxaConversao = totalUsuarios > 0 ? 
+          Math.round((assinantes / totalUsuarios) * 100) : 0;
+        
+        // Ticket médio no período
+        ticketMedio = assinantes > 0 ? 
+          Math.round((faturamento / assinantes) * 100) / 100 : 0;
+      } else {
+        // Para períodos maiores (30d, 90d, 1y), usar dados acumulados
+        faturamento = Number(userData.monthly_revenue || 0);
+        assinantes = Number(userData.premium_users || 0);
+        totalUsuarios = Number(userData.total_users || 0);
+        usuariosGratuitos = totalUsuarios - assinantes;
+        
+        // Taxa de conversão total
+        taxaConversao = totalUsuarios > 0 ? 
+          Math.round((assinantes / totalUsuarios) * 100) : 0;
+        
+        // Ticket médio total
+        ticketMedio = assinantes > 0 ? 
+          Math.round((faturamento / assinantes) * 100) / 100 : 0;
+      }
 
       res.json({
         // Dados financeiros principais (nomes corretos para o frontend)
