@@ -1018,11 +1018,12 @@ const AdminDashboard = () => {
       <div 
         className={`
           fixed lg:relative z-40 h-full bg-white border-r border-gray-200/80
-          ${sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-16'} 
+          ${sidebarOpen ? 'w-64' : 'w-0 lg:w-16'} 
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           transition-all duration-300 ease-in-out overflow-hidden
         `}
       >
-        <div className={`py-4 px-4 border-b border-gray-200/80 flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+        <div className={`py-4 border-b border-gray-200/80 flex items-center ${sidebarOpen ? 'px-4 justify-between' : 'px-2 justify-center'}`}>
           <div className="flex items-center min-w-0">
             {/* Ícone DA personalizado */}
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -1037,14 +1038,23 @@ const AdminDashboard = () => {
           {sidebarOpen && (
             <button 
               className="text-gray-400 hover:text-gray-600 p-1 rounded-md transition-colors flex-shrink-0"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => setSidebarOpen(false)}
               aria-label="Recolher menu"
             >
               <PanelLeft className="w-4 h-4" />
             </button>
           )}
+          {!sidebarOpen && (
+            <button 
+              className="hidden lg:block absolute top-4 right-2 text-gray-400 hover:text-gray-600 p-1 rounded-md transition-colors"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Expandir menu"
+            >
+              <PanelRight className="w-3 h-3" />
+            </button>
+          )}
         </div>
-        <div className="px-4 py-5 overflow-hidden">
+        <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
           <div className={`flex items-center mb-6 ${!sidebarOpen ? 'justify-center' : ''}`}>
             <div className={`${sidebarOpen ? 'mr-3' : ''}`}>
               {user?.profileimageurl ? (
