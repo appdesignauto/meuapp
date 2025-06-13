@@ -1053,7 +1053,7 @@ const AdminDashboard = () => {
             </button>
           )}
         </div>
-        <div className={`py-6 overflow-hidden ${sidebarOpen ? 'px-5' : 'px-3'}`}>
+        <div className={`py-4 overflow-hidden ${sidebarOpen ? 'px-5' : 'px-2'}`}>
           
 
           <nav className="space-y-2">
@@ -1061,11 +1061,11 @@ const AdminDashboard = () => {
             {hasTabAccess('stats') && (
               <button
                 onClick={() => setActiveTab('stats')}
-                className={`flex items-center w-full px-4 py-3 rounded-xl text-base transition-all duration-200 ${
+                className={`flex items-center w-full rounded-xl text-base transition-all duration-200 ${
                   activeTab === 'stats' 
                     ? 'bg-blue-50 text-blue-700 shadow-sm' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
+                } ${!sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3'}`}
                 title="Dashboard"
               >
                 <LayoutDashboard className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
@@ -1079,11 +1079,11 @@ const AdminDashboard = () => {
             {hasTabAccess('financeiro') && (
               <button
                 onClick={() => setActiveTab('financeiro')}
-                className={`flex items-center w-full px-4 py-3 rounded-xl text-base transition-all duration-200 ${
+                className={`flex items-center w-full rounded-xl text-base transition-all duration-200 ${
                   activeTab === 'financeiro' 
                     ? 'bg-blue-50 text-blue-700 shadow-sm' 
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
+                } ${!sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3'}`}
                 title="Financeiro"
               >
                 <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
@@ -1101,7 +1101,7 @@ const AdminDashboard = () => {
                 open={sidebarOpen ? undefined : false}
               >
                 <CollapsibleTrigger 
-                  className={`flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'lg:justify-center lg:px-3' : ''}`}
+                  className={`flex items-center w-full text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 text-base ${!sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3'}`}
                   title="Usuários"
                 >
                   <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
