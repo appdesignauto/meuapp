@@ -24,11 +24,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const DashboardOverview = () => {
   const [dateFilter, setDateFilter] = useState('30d');
   
-  // Query para obter estatísticas reais do dashboard
+  // Query para obter estatísticas reais do dashboard usando a nova API estruturada
   const { data: dashboardStats, isLoading } = useQuery({
-    queryKey: ['/api/dashboard/stats', dateFilter],
+    queryKey: ['/api/dashboard/resumo-geral'],
     queryFn: async () => {
-      const response = await fetch(`/api/dashboard/stats?period=${dateFilter}`);
+      const response = await fetch('/api/dashboard/resumo-geral');
       if (!response.ok) {
         throw new Error('Falha ao carregar estatísticas');
       }
@@ -95,10 +95,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              R$ {(stats.periodRevenue || 0).toLocaleString('pt-BR')}
+              R$ {(stats.faturamento || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Receita do período selecionado
+              Faturamento total acumulado
             </p>
           </CardContent>
         </Card>
@@ -113,10 +113,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats.premiumUsers || 0}
+              {stats.assinantes || 0}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              +{stats.userGrowthPercent || 0}% crescimento no período
+              De {stats.usuariosTotais || 0} usuários totais
             </p>
           </CardContent>
         </Card>
