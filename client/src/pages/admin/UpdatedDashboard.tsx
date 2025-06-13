@@ -1527,26 +1527,27 @@ const AdminDashboard = () => {
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
           <Link 
             href="/painel/perfil"
-            className={`flex items-center mb-2 hover:bg-gray-50 rounded-lg p-2 transition-colors ${!sidebarOpen ? 'justify-center' : ''}`}
+            className={`flex items-center mb-2 hover:bg-orange-50 rounded-lg p-3 transition-colors border border-orange-100 bg-gradient-to-r from-orange-50 to-gray-50 shadow-sm ${!sidebarOpen ? 'justify-center' : ''}`}
             title="Ir para Perfil"
           >
-            <div className={`${sidebarOpen ? 'mr-3' : ''}`}>
+            <div className={`relative ${sidebarOpen ? 'mr-3' : ''}`}>
               {user?.profileimageurl ? (
                 <img 
                   src={user.profileimageurl} 
                   alt={user.name || 'Admin'} 
-                  className="w-9 h-9 rounded-full object-cover border border-gray-200"
+                  className="w-9 h-9 rounded-full object-cover border-2 border-orange-200 shadow-sm"
                 />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-sm">
+                <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-medium text-sm border-2 border-orange-200 shadow-sm">
                   {user?.name?.charAt(0) || 'A'}
                 </div>
               )}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
-                <p className="font-medium text-gray-900 truncate text-sm">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="font-semibold text-gray-900 truncate text-sm">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-orange-600 truncate font-medium">
                   {user?.nivelacesso === 'admin' ? 'Administrador' : 
                    user?.nivelacesso === 'designer_adm' ? 'Designer Admin' : 
                    user?.nivelacesso === 'suporte' ? 'Suporte' : 'Usuário'}
