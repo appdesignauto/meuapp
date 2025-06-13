@@ -1054,58 +1054,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/revenue-chart", async (req, res) => {
-    try {
-      // Dados de receita dos últimos 6 meses baseados em crescimento real
-      const currentUsers = await db.execute(sql`
-        SELECT COUNT(*) as premium_users FROM users 
-        WHERE "nivelacesso" = 'premium' AND "isactive" = true
-      `);
-      
-      const premiumCount = Number(currentUsers.rows[0]?.premium_users) || 0;
-      const monthlyPrice = 27.90;
-      
-      const months = [
-        { month: "Jan", revenue: (premiumCount * 0.7) * monthlyPrice, subscribers: Math.floor(premiumCount * 0.7) },
-        { month: "Feb", revenue: (premiumCount * 0.8) * monthlyPrice, subscribers: Math.floor(premiumCount * 0.8) },
-        { month: "Mar", revenue: (premiumCount * 0.85) * monthlyPrice, subscribers: Math.floor(premiumCount * 0.85) },
-        { month: "Abr", revenue: (premiumCount * 0.92) * monthlyPrice, subscribers: Math.floor(premiumCount * 0.92) },
-        { month: "Mai", revenue: (premiumCount * 0.96) * monthlyPrice, subscribers: Math.floor(premiumCount * 0.96) },
-        { month: "Jun", revenue: premiumCount * monthlyPrice, subscribers: premiumCount }
-      ];
 
-      res.json(months);
-    } catch (error) {
-      console.error("Erro ao buscar dados de receita:", error);
-      res.status(500).json({ message: "Erro ao buscar dados de receita" });
-    }
-  });
 
-  app.get("/api/dashboard/user-segments", async (req, res) => {
-    try {
-      const segmentsResult = await db.execute(sql`
-        SELECT 
-          "nivelacesso" as segment,
-          COUNT(*) as count,
-          COUNT(*) * 100.0 / SUM(COUNT(*)) OVER() as percentage
-        FROM users 
-        WHERE "isactive" = true 
-        GROUP BY "nivelacesso"
-      `);
 
-      const segments = segmentsResult.rows.map((row: any) => ({
-        segment: row.segment === 'premium' ? 'Premium' : 'Free',
-        count: Number(row.count),
-        percentage: Number(row.percentage),
-        revenue: row.segment === 'premium' ? Number(row.count) * 27.90 : 0
-      }));
-
-      res.json(segments);
-    } catch (error) {
-      console.error("Erro ao buscar segmentos de usuários:", error);
-      res.status(500).json({ message: "Erro ao buscar segmentos" });
-    }
-  });
 
   // Versão em português da API de categorias (compatibilidade com frontend)
   app.get("/api/categorias", async (req, res) => {
