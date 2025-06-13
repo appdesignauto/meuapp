@@ -7950,16 +7950,7 @@ app.use('/api/reports-v2', (req, res, next) => {
       const commentData = commentStats.rows[0];
       const courseData = courseStats.rows[0];
 
-      // Logs para debug dos dados financeiros reais
-      console.log("🔍 [DASHBOARD-FINANCIAL] Dados financeiros do período:", {
-        period: period,
-        dateInterval: dateInterval,
-        total_revenue: userData.monthly_revenue,
-        period_revenue: userData.period_revenue,
-        new_premium_users_period: userData.new_premium_users_period,
-        premium_users: userData.premium_users,
-        total_users: userData.total_users
-      });
+
       const categoriesData = categoriesStats.rows[0];
       const formatsData = formatsStats.rows[0];
 
