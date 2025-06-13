@@ -187,7 +187,7 @@ const AdminDashboard = () => {
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<any | null>(null);
-  const [selectedCourseFilter, setSelectedCourseFilter] = useState<number | null>(null); // Filtro por curso
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('todos'); // Filtro por curso
   const [moduleViewMode, setModuleViewMode] = useState<'grid' | 'list'>('grid'); // Modo de visualização (grid ou lista)
   const [moduleForm, setModuleForm] = useState<any>({
     courseId: '', // String vazia para forçar seleção explícita
@@ -204,7 +204,6 @@ const AdminDashboard = () => {
   const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
   const [isConfirmDeleteLessonOpen, setIsConfirmDeleteLessonOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState<any | null>(null);
-  const [selectedModuleFilter, setSelectedModuleFilter] = useState<number | null>(null);
   const [lessonForm, setLessonForm] = useState<any>({
     moduleId: 0,
     title: '',
@@ -329,18 +328,6 @@ const AdminDashboard = () => {
   
   // Estado local para gerenciar edições antes de salvar
   const [courseSettings, setCourseSettings] = useState(courseSettingsData);
-  
-  // Filtragem de módulos baseada no curso selecionado
-  const filteredModules = modules.filter((module: any) => {
-    if (!selectedCourseFilter) return true;
-    return module.courseId === selectedCourseFilter;
-  });
-  
-  // Filtragem de aulas baseada no módulo selecionado
-  const filteredLessons = lessons.filter((lesson: any) => {
-    if (!selectedModuleFilter) return true;
-    return lesson.moduleId === selectedModuleFilter;
-  });
   
   // Atualiza o estado local quando os dados da API são carregados ou quando o curso selecionado muda
   useEffect(() => {
@@ -1511,19 +1498,19 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className={`flex-1 overflow-auto transition-all duration-300 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
-        <header className="bg-white border-b border-gray-100">
-          <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between">
-            <div className="flex items-center mb-4 sm:mb-0">
+        <header className="bg-white shadow-sm">
+          <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
+            <div className="flex items-center mb-3 sm:mb-0">
               {/* Botão de alternância do menu (visível apenas em telas menores) */}
               <button 
-                className="sm:hidden mr-4 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-blue-600 transition-all"
+                className="sm:hidden mr-3 text-gray-600 hover:text-blue-600"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Abrir menu lateral"
               >
                 <PanelRight className="w-5 h-5" />
               </button>
               
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold">
                 {activeTab === 'arts' && 'Artes e Designs'}
                 {activeTab === 'categories' && 'Categorias'}
                 {activeTab === 'formats' && 'Formatos'}
@@ -1532,17 +1519,17 @@ const AdminDashboard = () => {
                 {activeTab === 'collections' && 'Coleções'}
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
-                {activeTab === 'financeiro' && 'Financeiro'}
-                {activeTab === 'subscriptions' && 'Assinaturas'}
+                {activeTab === 'financeiro' && 'Dashboard Financeiro'}
+                {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
                 {activeTab === 'settings' && 'Configurações'}
-                {activeTab === 'coursesList' && 'Cursos'}
+                {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
 
-                {activeTab === 'modules' && 'Módulos'}
-                {activeTab === 'lessons' && 'Aulas'}
-                {activeTab === 'coursesConfig' && 'Configurações'}
-                {activeTab === 'courseStats' && 'Estatísticas'}
-                {activeTab === 'comments' && 'Comentários'}
-                {activeTab === 'popups' && 'Popups'}
+                {activeTab === 'modules' && 'Módulos dos Cursos'}
+                {activeTab === 'lessons' && 'Aulas dos Cursos'}
+                {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
+                {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
+                {activeTab === 'comments' && 'Gerenciamento de Comentários'}
+                {activeTab === 'popups' && 'Gerenciamento de Popups'}
               </h1>
             </div>
             
@@ -1645,10 +1632,18 @@ const AdminDashboard = () => {
           </div>
         </header>
         
-        <main className="p-6 bg-gray-50 min-h-screen">
-          <div className="max-w-7xl mx-auto">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsContent value="comments">
+        <main className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="comments">
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Comentários</h2>
+                    <p className="text-gray-500 mt-1">Visualize, modere e gerencie os comentários dos usuários nas aulas</p>
+                  </div>
+                </div>
+              </div>
+              
               <CommentsManagement />
             </TabsContent>
             
@@ -1657,6 +1652,29 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="courseStats">
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Estatísticas dos Cursos</h2>
+                    <p className="text-gray-500 mt-1">Análise de desempenho e métricas dos cursos</p>
+                  </div>
+                  <div className="flex gap-4">
+                    <Select defaultValue="7dias">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Período" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hoje">Hoje</SelectItem>
+                        <SelectItem value="7dias">Últimos 7 dias</SelectItem>
+                        <SelectItem value="30dias">Últimos 30 dias</SelectItem>
+                        <SelectItem value="90dias">Últimos 90 dias</SelectItem>
+                        <SelectItem value="total">Todo período</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              
               <CourseStatisticsPanel />
             </TabsContent>
 
@@ -1725,6 +1743,7 @@ const AdminDashboard = () => {
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold mb-4">Cursos</h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -1772,6 +1791,7 @@ const AdminDashboard = () => {
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold mb-4">Conteúdo</h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -1906,299 +1926,49 @@ const AdminDashboard = () => {
             
             <TabsContent value="modules" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Select 
-                        onValueChange={(value) => {
-                          setSelectedCourseFilter(value === 'all' ? null : Number(value));
-                        }}
-                        value={selectedCourseFilter?.toString() || 'all'}
-                      >
-                        <SelectTrigger className="w-[280px]">
-                          <SelectValue placeholder="Filtrar por curso" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos os cursos</SelectItem>
-                          {courses.map((course) => (
-                            <SelectItem key={course.id} value={course.id.toString()}>
-                              {course.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* Conteúdo da tabela de módulos */}
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[100px]">Imagem</TableHead>
-                          <TableHead>Título</TableHead>
-                          <TableHead>Curso</TableHead>
-                          <TableHead>Nível</TableHead>
-                          <TableHead>Ordem</TableHead>
-                          <TableHead className="text-right">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoadingModules ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-4">
-                              <div className="flex justify-center">
-                                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ) : (filteredModules || []).length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                              Nenhum módulo encontrado.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          (filteredModules || []).map((module: any) => (
-                            <TableRow key={module.id}>
-                              <TableCell>
-                                <div className="w-16 h-9 bg-gray-100 rounded overflow-hidden">
-                                  {module.thumbnailUrl ? (
-                                    <img 
-                                      src={module.thumbnailUrl} 
-                                      alt={module.title} 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <BookOpen className="w-5 h-5 text-gray-400" />
-                                    </div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{module.title}</TableCell>
-                              <TableCell>
-                                {courses.find(c => c.id === module.courseId)?.title || 'Curso não encontrado'}
-                              </TableCell>
-                              <TableCell>
-                                {module.level === 'iniciante' && 'Iniciante'}
-                                {module.level === 'intermediario' && 'Intermediário'}
-                                {module.level === 'avancado' && 'Avançado'}
-                              </TableCell>
-                              <TableCell>{module.order}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setCurrentModule(module);
-                                      setModuleForm({
-                                        courseId: module.courseId,
-                                        title: module.title,
-                                        description: module.description,
-                                        thumbnailUrl: module.thumbnailUrl,
-                                        level: module.level,
-                                        order: module.order,
-                                        isActive: module.isActive,
-                                        isPremium: module.isPremium
-                                      });
-                                      setIsModuleDialogOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setCurrentModule(module);
-                                      setIsConfirmDeleteModuleOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Módulos dos Cursos</h2>
+                  <Button 
+                    onClick={() => {
+                      setCurrentModule(null);
+                      setModuleForm({
+                        courseId: '', // Começamos com courseId vazio para forçar escolha explícita
+                        title: '',
+                        description: '',
+                        thumbnailUrl: '',
+                        level: 'iniciante',
+                        order: 0,
+                        isActive: true,
+                        isPremium: false
+                      });
+                      setIsModuleDialogOpen(true);
+                    }}
+                    className="flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Módulo
+                  </Button>
                 </div>
-              </div>
-
-              {/* Diálogo para adicionar/editar módulo */}
-              <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
-                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      {currentModule ? 'Editar Módulo' : 'Adicionar Módulo'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Preencha todos os campos obrigatórios (*) para criar ou editar um módulo
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="grid gap-2 md:col-span-2">
-                        <Label htmlFor="moduleCourse">Curso *</Label>
-                        <Select
-                          name="courseId"
-                          value={moduleForm.courseId ? moduleForm.courseId.toString() : ''}
-                          onValueChange={(value) => {
-                            setModuleForm({
-                              ...moduleForm,
-                              courseId: parseInt(value)
-                            });
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um curso" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {courses.map((course) => (
-                              <SelectItem key={course.id} value={course.id.toString()}>
-                                {course.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-gray-500 mt-1">
-                          O módulo será vinculado ao curso selecionado
-                        </p>
-                      </div>
-                      <div className="grid gap-2 md:col-span-2">
-                        <Label htmlFor="moduleTitle">Título do módulo *</Label>
-                        <Input
-                          id="moduleTitle"
-                          name="title"
-                          value={moduleForm.title}
-                          onChange={handleModuleFormChange}
-                          placeholder="Ex: Introdução ao Design"
-                        />
-                      </div>
-                      <div className="grid gap-2 md:col-span-2">
-                        <Label htmlFor="moduleDescription">Descrição *</Label>
-                        <Textarea
-                          id="moduleDescription"
-                          name="description"
-                          value={moduleForm.description}
-                          onChange={handleModuleFormChange}
-                          placeholder="Breve descrição sobre o módulo"
-                          rows={3}
-                        />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <Label htmlFor="moduleOrder">Ordem *</Label>
-                        <Input
-                          id="moduleOrder"
-                          name="order"
-                          type="number"
-                          value={moduleForm.order}
-                          onChange={handleModuleFormChange}
-                          placeholder="Ordem do módulo"
-                          min={1}
-                        />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <Label htmlFor="moduleLevel">Nível *</Label>
-                        <Select
-                          name="level"
-                          value={moduleForm.level}
-                          onValueChange={(value) => 
-                            setModuleForm({...moduleForm, level: value})
-                          }
-                        >
-                          <SelectTrigger id="moduleLevel" className="h-10">
-                            <SelectValue placeholder="Selecione o nível" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="iniciante">Iniciante</SelectItem>
-                            <SelectItem value="intermediario">Intermediário</SelectItem>
-                            <SelectItem value="avancado">Avançado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                  <DialogFooter className="flex justify-between gap-3 border-t pt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setIsModuleDialogOpen(false);
-                        setCurrentModule(null);
-                        setModuleForm({
-                          courseId: '',
-                          title: '',
-                          description: '',
-                          thumbnailUrl: '',
-                          level: 'iniciante',
-                          order: 0,
-                          isActive: true,
-                          isPremium: false
-                        });
-                      }}
-                      className="gap-2"
+                
+                <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+                  {/* Filtro de curso */}
+                  <div className="flex-1">
+                    <Select
+                      value={selectedCourseFilter}
+                      onValueChange={setSelectedCourseFilter}
                     >
-                      <XCircle className="h-4 w-4" />
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={handleModuleSubmit}
-                      disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
-                      className="gap-2"
-                    >
-                      {createModuleMutation.isPending || updateModuleMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Salvando...
-                        </>
-                      ) : currentModule ? (
-                        <>
-                          <CheckCircle2 className="h-4 w-4" />
-                          Atualizar módulo
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="h-4 w-4" />
-                          Criar módulo
-                        </>
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </TabsContent>
-            
-            <TabsContent value="lessons" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Select 
-                        onValueChange={(value) => {
-                          setSelectedModuleFilter(value === 'all' ? null : Number(value));
-                        }}
-                        value={selectedModuleFilter?.toString() || 'all'}
-                      >
-                        <SelectTrigger className="w-[280px]">
-                          <SelectValue placeholder="Filtrar por módulo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos os módulos</SelectItem>
-                          {modules.map((module: any) => (
-                            <SelectItem key={module.id} value={module.id.toString()}>
-                              {module.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      <SelectTrigger className="w-full md:w-[220px]">
+                        <SelectValue placeholder="Filtrar por curso" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos os cursos</SelectItem>
+                        {courses.map((course: any) => (
+                          <SelectItem key={course.id} value={course.id.toString()}>
+                            {course.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   {/* Controles direita: Ordenação e Modo de Visualização */}
@@ -2886,6 +2656,7 @@ const AdminDashboard = () => {
             <TabsContent value="lessons" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Aulas dos Cursos</h2>
                   <Button 
                     onClick={() => {
                       setCurrentLesson(null);
@@ -3408,6 +3179,30 @@ const AdminDashboard = () => {
               <div className="mb-6 grid grid-cols-1 gap-6">
                 <div className="col-span-full">
                   <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-lg font-semibold">Cursos</h2>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setCurrentCourse(null);
+                          setCourseForm({
+                            title: '',
+                            description: '',
+                            thumbnailUrl: '',
+                            featuredImage: '',
+                            level: 'iniciante',
+                            status: 'active',
+                            isPublished: true,
+                            isPremium: false
+                          });
+                          setIsCourseDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Novo Curso
+                      </Button>
+                    </div>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
@@ -3868,6 +3663,20 @@ const AdminDashboard = () => {
               <div className="mb-6 grid grid-cols-1 gap-6">
                 <div className="col-span-full">
                   <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-lg font-semibold">Configurações de Cursos</h2>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // Recarregar configurações atuais
+                          queryClient.invalidateQueries({ queryKey: ['/api/courses/settings'] });
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Atualizar
+                      </Button>
+                    </div>
                     
                     {isLoadingCourseSettings || isLoadingCourses ? (
                       <div className="py-8 text-center">
@@ -4147,6 +3956,7 @@ const AdminDashboard = () => {
                         </div>
                         
                         <div className="grid gap-3 mt-4">
+                          <h3 className="text-md font-medium">Configurações Avançadas</h3>
                           <Separator />
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -4294,27 +4104,49 @@ const AdminDashboard = () => {
             
             {/* Gerenciamento de Ferramentas */}
             <TabsContent value="analytics" className="mt-0">
-              <AnalyticsSettings />
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
+                    <p className="text-muted-foreground">
+                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+                    </p>
+                  </div>
+                  <div className="grid gap-6">
+                    <AnalyticsSettings />
+                  </div>
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="ferramentas" className="mt-0">
-              <Tabs defaultValue="ferramentas" className="w-full">
-                <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
-                  <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
-                  <TabsTrigger value="categorias">Categorias</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="ferramentas" className="space-y-4">
-                  <GerenciarFerramentas />
-                </TabsContent>
-                
-                <TabsContent value="categorias" className="space-y-4">
-                  <GerenciarCategorias />
-                </TabsContent>
-              </Tabs>
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Ferramentas</h2>
+                    <p className="text-muted-foreground">
+                      Gerencie as ferramentas e categorias disponíveis no site.
+                    </p>
+                  </div>
+                  
+                  <Tabs defaultValue="ferramentas" className="w-full">
+                    <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
+                      <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
+                      <TabsTrigger value="categorias">Categorias</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="ferramentas" className="space-y-4">
+                      <GerenciarFerramentas />
+                    </TabsContent>
+                    
+                    <TabsContent value="categorias" className="space-y-4">
+                      <GerenciarCategorias />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
             </TabsContent>
-            </Tabs>
-          </div>
+          </Tabs>
         </main>
       </div>
       
