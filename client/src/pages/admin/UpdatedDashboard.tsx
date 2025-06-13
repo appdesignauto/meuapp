@@ -1318,13 +1318,15 @@ const AdminDashboard = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'comments' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Comentários"
                 >
-                  <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Comentários</span>}
+                  <MessageSquare className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
+                    activeTab === 'comments' ? 'text-blue-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span>Comentários</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1349,18 +1351,18 @@ const AdminDashboard = () => {
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-8' : 'flex flex-col items-center'} space-y-1 mt-1`}>
                 <button
                   onClick={() => setActiveTab('popups')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'popups' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Popups"
                 >
-                  <BellRing className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <BellRing className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'popups' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Gerenciar Popups</span>}
+                  {sidebarOpen && <span>Gerenciar Popups</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1385,30 +1387,30 @@ const AdminDashboard = () => {
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-8' : 'flex flex-col items-center'} space-y-1 mt-1`}>
                 <button
                   onClick={() => setActiveTab('reports')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'reports' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Reports"
                 >
-                  <FlagIcon className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <FlagIcon className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'reports' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Gerenciar Reports</span>}
+                  {sidebarOpen && <span>Gerenciar Reports</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('collaboration-requests')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'collaboration-requests' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Colaboração"
                 >
-                  <Users className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <Users className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'collaboration-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Gerenciar Colaboração</span>}
+                  {sidebarOpen && <span>Gerenciar Colaboração</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('affiliate-requests')}
@@ -1445,18 +1447,18 @@ const AdminDashboard = () => {
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-6' : 'flex flex-col items-center'} space-y-1`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-8' : 'flex flex-col items-center'} space-y-1 mt-1`}>
                 <button
                   onClick={() => setActiveTab('ferramentas')}
-                  className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
                     activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                   title="Gerenciar Ferramentas"
                 >
-                  <Wrench className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                  <Wrench className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'ferramentas' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Gerenciar Ferramentas</span>}
+                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
