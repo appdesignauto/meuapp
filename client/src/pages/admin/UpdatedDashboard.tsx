@@ -1753,6 +1753,9 @@ const AdminDashboard = () => {
           </div>
         </header>
         
+        {/* Linha divisória sutil */}
+        <div className="h-px bg-gradient-to-r from-blue-200 via-blue-100 to-transparent mx-6"></div>
+        
         <main className="p-6 pt-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="comments">
