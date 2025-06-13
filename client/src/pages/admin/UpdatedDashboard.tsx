@@ -1622,7 +1622,7 @@ const AdminDashboard = () => {
                 {activeTab === 'categories' && 'Categorias'}
                 {activeTab === 'formats' && 'Formatos'}
                 {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
-                {activeTab === 'users' && 'Usuários'}
+                {activeTab === 'users' && 'Gerenciar Usuários'}
                 {activeTab === 'collections' && 'Coleções'}
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}

@@ -1510,21 +1510,35 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Gerenciamento de Usuários</h2>
-          <p className="text-muted-foreground">
-            Gerencie os usuários, designers e administradores do sistema
-          </p>
+      {/* Header Section - Novo padrão profissional */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Gerenciar Usuários</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Visualize e gerencie todos os usuários da plataforma
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <UserPlusIcon className="h-4 w-4" />
+            Novo Usuário
+          </Button>
         </div>
-        
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="flex items-center gap-1"
-        >
-          <UserPlusIcon className="h-4 w-4" />
-          Novo Usuário
-        </Button>
+
+        {/* Barra de busca */}
+        <div className="relative max-w-md">
+          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar usuários..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-white border-gray-200"
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
