@@ -118,7 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 13, 2025. Initial setup
+- June 13, 2025: Implemented comprehensive dashboard monetization metrics with smart date filtering
+  - Added dynamic date filter (7d, 30d, 90d, 1y) for all dashboard statistics
+  - Enhanced backend with period-based database queries and real-time growth calculations
+  - Integrated authentic revenue tracking based on user subscription plans
+  - Created business intelligence metrics including conversion rates and user distribution
+- June 13, 2025: Initial setup
 
 ## User Preferences
 
