@@ -1071,53 +1071,59 @@ const AdminDashboard = () => {
               </button>
             )}
             
-            {/* Assinaturas - apenas para admin */}
-            {hasTabAccess('subscriptions') && (
-              <button
-                onClick={() => setActiveTab('subscriptions')}
-                className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                  activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-                title="Assinaturas"
+            {/* Usuários - dropdown com assinaturas */}
+            {(hasTabAccess('users') || hasTabAccess('subscriptions')) && (
+              <Collapsible 
+                className="rounded-lg overflow-hidden"
+                defaultOpen={['users', 'subscriptions'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
               >
-                <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-                {sidebarOpen && <span className="ml-3 truncate">Assinaturas</span>}
-              </button>
-            )}
-            
-            {/* Usuários - apenas para admin */}
-            {hasTabAccess('users') && (
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                  activeTab === 'users' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-                title="Gerenciar Usuários"
-              >
-                <Users className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-                {sidebarOpen && <span className="ml-3 truncate">Usuários</span>}
-              </button>
-            )}
-            
-            {/* Comunidade - para admin e designer_adm */}
-            {hasTabAccess('community') && (
-              <button
-                onClick={() => setActiveTab('community')}
-                className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                  activeTab === 'community' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-                title="Comunidade"
-              >
-                <MessageSquare className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-                {sidebarOpen && <span className="ml-3 truncate">Comunidade</span>}
-              </button>
+                <CollapsibleTrigger 
+                  className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                  title="Usuários"
+                >
+                  <Users className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                  {sidebarOpen && (
+                    <>
+                      <span className="ml-3 truncate">Usuários</span>
+                      <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    </>
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
+                  {hasTabAccess('users') && (
+                    <button
+                      onClick={() => setActiveTab('users')}
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                        activeTab === 'users' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                      } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                      title="Gerenciar Usuários"
+                    >
+                      <Users className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="truncate text-sm">Gerenciar Usuários</span>}
+                    </button>
+                  )}
+                  {hasTabAccess('subscriptions') && (
+                    <button
+                      onClick={() => setActiveTab('subscriptions')}
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                        activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                      } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                      title="Assinaturas"
+                    >
+                      <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="truncate text-sm">Assinaturas</span>}
+                    </button>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             )}
             
             {/* Gerenciamento de Conteúdo - Oculto para suporte */}
             {user?.nivelacesso !== 'suporte' && (
               <Collapsible 
                 className="rounded-lg overflow-hidden"
-                defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
+                defaultOpen={['arts', 'categories', 'formats', 'fileTypes', 'community'].includes(activeTab)}
                 open={sidebarOpen ? undefined : false}
               >
               <CollapsibleTrigger 
@@ -1173,6 +1179,18 @@ const AdminDashboard = () => {
                   <FileType className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Tipos de Arquivo</span>}
                 </button>
+                {hasTabAccess('community') && (
+                  <button
+                    onClick={() => setActiveTab('community')}
+                    className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                      activeTab === 'community' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                    } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                    title="Comunidade"
+                  >
+                    <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                    {sidebarOpen && <span className="truncate text-sm">Comunidade</span>}
+                  </button>
+                )}
 
               </CollapsibleContent>
             </Collapsible>
