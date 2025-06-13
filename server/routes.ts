@@ -7904,18 +7904,25 @@ app.use('/api/reports-v2', (req, res, next) => {
       `);
 
       // Estatísticas de downloads com período dinâmico (incluindo downloads sem data para período "all")
-      const downloadStats = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_downloads,
-          COUNT(CASE 
-            WHEN ${period === 'all' ? 'TRUE' : `"createdAt" >= CURRENT_DATE - INTERVAL '${dateInterval}'`} 
-            THEN 1 
-          END) as downloads_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as downloads_prev_period,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_month,
-          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_prev_month
-        FROM downloads
-      `);
+      const downloadStats = period === 'all' 
+        ? await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_downloads,
+              COUNT(*) as downloads_period,
+              0 as downloads_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_month,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_prev_month
+            FROM downloads
+          `)
+        : await db.execute(sql`
+            SELECT 
+              COUNT(*) as total_downloads,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as downloads_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND "createdAt" < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as downloads_prev_period,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_month,
+              COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_prev_month
+            FROM downloads
+          `);
 
       // Estatísticas de comentários com período dinâmico
       const commentStats = await db.execute(sql`
