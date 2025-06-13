@@ -204,7 +204,7 @@ const AnalyticsSettings: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="metaPixelEnabled"
-                    checked={analytics?.metaPixelEnabled || false}
+                    checked={analytics?.metaPixelEnabled ?? true}
                     onCheckedChange={(checked) => handleInputChange('metaPixelEnabled', checked)}
                     className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />
@@ -214,7 +214,7 @@ const AnalyticsSettings: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="metaAdsEnabled"
-                    checked={analytics?.metaAdsEnabled || false}
+                    checked={analytics?.metaAdsEnabled ?? true}
                     onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
                     className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />

@@ -8508,8 +8508,8 @@ app.use('/api/reports-v2', (req, res, next) => {
         const [newSettings] = await db.insert(analyticsSettings)
           .values({
             metaPixelId: '',
-            metaAdsEnabled: false,
-            metaPixelEnabled: false,
+            metaAdsEnabled: true,
+            metaPixelEnabled: true,
             ga4Enabled: false,
             gtmEnabled: false,
             clarityEnabled: false,
