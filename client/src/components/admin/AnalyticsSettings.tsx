@@ -82,7 +82,10 @@ const AnalyticsSettings: React.FC = () => {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Atualizar o cache imediatamente com os dados salvos
+      queryClient.setQueryData(['/api/analytics/settings'], data);
+      // Invalidar para garantir sincronia
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/settings'] });
       toast({
         title: 'Configurações salvas',
@@ -104,12 +107,20 @@ const AnalyticsSettings: React.FC = () => {
     }
   }, [analyticsData]);
 
+  // Resetar o estado local quando os dados são recarregados
+  useEffect(() => {
+    if (analyticsData && !saveAnalyticsMutation.isPending) {
+      setAnalytics(analyticsData);
+    }
+  }, [analyticsData, saveAnalyticsMutation.isPending]);
+
   const handleInputChange = (field: keyof AnalyticsSettings, value: any) => {
     setAnalytics(prev => prev ? { ...prev, [field]: value } : null);
   };
 
   const handleSave = () => {
     if (analytics) {
+      console.log('Salvando configurações:', analytics);
       saveAnalyticsMutation.mutate(analytics);
     }
   };
