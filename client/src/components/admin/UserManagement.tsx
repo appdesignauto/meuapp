@@ -76,7 +76,6 @@ import {
   PaletteIcon,
   HeadphonesIcon,
   ShieldIcon,
-  InfoIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -548,7 +547,7 @@ const UserManagement = () => {
     // Para usuários de outros níveis de acesso, o acesso vitalício é decidido automaticamente
     else {
       // Se for papel administrativo, força acesso vitalício = true
-      if (['admin', 'suporte', 'designer', 'designer_adm'].includes(nivelAcesso)) {
+      if (nivelAcesso && ['admin', 'suporte', 'designer', 'designer_adm'].includes(nivelAcesso)) {
         form.setValue('acessovitalicio', true);
       } 
       // Se for usuário padrão, força acesso vitalício = false
