@@ -1485,7 +1485,7 @@ const AdminDashboard = () => {
                     <Settings className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                       activeTab === 'settings' ? 'text-blue-600' : 'text-gray-500'
                     }`} />
-                    {sidebarOpen && <span>Configurações do Site</span>}
+                    {sidebarOpen && <span>Config do Site</span>}
                   </button>
                 )}
 
