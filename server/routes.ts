@@ -7801,225 +7801,6 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  // Endpoint do resumo geral do dashboard com filtro de período funcional
-  app.get('/api/dashboard/resumo-geral', async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Acesso não autorizado' });
-    }
-    
-    try {
-      const period = req.query.period || '30d';
-      console.log(`[DASHBOARD RESUMO] Período solicitado: ${period}`);
-      
-      // Calcular datas baseado no período
-      let days = 30;
-      let prevDays = 60;
-      let prevStartDays = 30;
-      
-      switch (period) {
-        case '7d':
-          days = 7;
-          prevDays = 14;
-          prevStartDays = 7;
-          break;
-        case '90d':
-          days = 90;
-          prevDays = 180;
-          prevStartDays = 90;
-          break;
-        case '1y':
-          days = 365;
-          prevDays = 730;
-          prevStartDays = 365;
-          break;
-        default: // 30d
-          days = 30;
-          prevDays = 60;
-          prevStartDays = 30;
-      }
-
-      // Calcular datas exatas
-      const now = new Date();
-      const periodStart = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
-      const prevPeriodStart = new Date(now.getTime() - (prevDays * 24 * 60 * 60 * 1000));
-      const prevPeriodEnd = new Date(now.getTime() - (prevStartDays * 24 * 60 * 60 * 1000));
-
-      // Executar consultas separadamente com tratamento de erro individual
-      let userData, artData, communityData, downloadData, commentData;
-
-      try {
-        // Estatísticas de usuários
-        userData = await db.execute(sql`
-          SELECT 
-            COUNT(*)::int as total_users,
-            COUNT(*) FILTER (WHERE "nivelacesso" IN ('premium', 'designer'))::int as active_subscriptions,
-            COUNT(*) FILTER (WHERE "nivelacesso" = 'free')::int as free_users,
-            COUNT(*) FILTER (WHERE "criadoem" >= NOW() - INTERVAL '30 days')::int as new_users_period,
-            COUNT(*) FILTER (WHERE "criadoem" >= NOW() - INTERVAL '60 days' AND "criadoem" < NOW() - INTERVAL '30 days')::int as new_users_prev_period,
-            COUNT(*) FILTER (WHERE "ultimologin" >= NOW() - INTERVAL '7 days')::int as active_week,
-            COUNT(*) FILTER (WHERE "ultimologin" >= NOW() - INTERVAL '30 days')::int as active_users,
-            COALESCE(SUM(
-              CASE 
-                WHEN "tipoplano" = 'mensal' THEN 29.90
-                WHEN "tipoplano" = 'anual' THEN 197.00
-                WHEN "tipoplano" = 'vitalicio' THEN 497.00
-                WHEN "origemassinatura" = 'hotmart' THEN 7.00
-                ELSE 0 
-              END
-            ), 0)::numeric as total_revenue,
-            COALESCE(SUM(
-              CASE 
-                WHEN "dataassinatura" >= NOW() - INTERVAL '30 days' THEN
-                  CASE 
-                    WHEN "tipoplano" = 'mensal' THEN 29.90
-                    WHEN "tipoplano" = 'anual' THEN 197.00
-                    WHEN "tipoplano" = 'vitalicio' THEN 497.00
-                    WHEN "origemassinatura" = 'hotmart' THEN 7.00
-                    ELSE 0 
-                  END
-                ELSE 0
-              END
-            ), 0)::numeric as period_revenue
-          FROM users 
-          WHERE "isactive" = true
-        `);
-        
-        // Estatísticas de artes
-        artData = await db.execute(sql`
-          SELECT 
-            COUNT(*)::int as total_arts,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as arts_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as arts_prev_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days')::int as arts_week,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as arts_month
-          FROM arts 
-          WHERE "isVisible" = true
-        `);
-        
-        // Estatísticas da comunidade
-        communityData = await db.execute(sql`
-          SELECT 
-            COUNT(*)::int as total_posts,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as posts_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as posts_prev_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days')::int as posts_week,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as posts_month
-          FROM "communityPosts"
-        `);
-        
-        // Estatísticas de downloads
-        downloadData = await db.execute(sql`
-          SELECT 
-            COUNT(*)::int as total_downloads,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as downloads_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as downloads_prev_period
-          FROM downloads
-        `);
-        
-        // Estatísticas de comentários
-        commentData = await db.execute(sql`
-          SELECT 
-            COUNT(*)::int as total_comments,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '30 days')::int as comments_period,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '60 days' AND "createdAt" < NOW() - INTERVAL '30 days')::int as comments_prev_period
-          FROM "communityComments"
-        `);
-      } catch (error) {
-        console.error('[DASHBOARD ERROR] Erro nas consultas SQL:', error);
-        throw error;
-      }
-
-      // Extrair dados das consultas (acessar primeira linha dos resultados)
-      const userRow = userData.rows[0];
-      const artRow = artData.rows[0];
-      const communityRow = communityData.rows[0];
-      const downloadRow = downloadData.rows[0];
-      const commentRow = commentData.rows[0];
-
-      // Calcular percentuais de crescimento
-      const userGrowthPercent = userRow.new_users_prev_period > 0 ? 
-        ((Number(userRow.new_users_period) - Number(userRow.new_users_prev_period)) / Number(userRow.new_users_prev_period)) * 100 : 0;
-
-      const artGrowthPercent = artRow.arts_prev_period > 0 ? 
-        ((Number(artRow.arts_period) - Number(artRow.arts_prev_period)) / Number(artRow.arts_prev_period)) * 100 : 0;
-
-      const communityGrowthPercent = communityRow.posts_prev_period > 0 ? 
-        ((Number(communityRow.posts_period) - Number(communityRow.posts_prev_period)) / Number(communityRow.posts_prev_period)) * 100 : 0;
-      
-      const downloadGrowthPercent = downloadRow.downloads_prev_period > 0 ? 
-        ((Number(downloadRow.downloads_period) - Number(downloadRow.downloads_prev_period)) / Number(downloadRow.downloads_prev_period)) * 100 : 0;
-
-      const commentGrowthPercent = commentRow.comments_prev_period > 0 ? 
-        ((Number(commentRow.comments_period) - Number(commentRow.comments_prev_period)) / Number(commentRow.comments_prev_period)) * 100 : 0;
-
-      // Métricas calculadas
-      const totalUsuarios = Number(userRow.total_users);
-      const assinantes = Number(userRow.active_subscriptions);
-      const usuariosGratuitos = Number(userRow.free_users);
-      const faturamentoTotal = Number(userRow.total_revenue);
-      const receitaPeriodo = Number(userRow.period_revenue);
-      const taxaConversao = totalUsuarios > 0 ? (assinantes / totalUsuarios) * 100 : 0;
-      const ticketMedio = assinantes > 0 ? faturamentoTotal / assinantes : 0;
-
-      res.json({
-        // Métricas financeiras principais
-        faturamento: faturamentoTotal,
-        assinantes: assinantes,
-        premiumUsers: assinantes, // alias para compatibilidade
-        totalUsers: totalUsuarios,
-        usuariosGratuitos: usuariosGratuitos,
-        taxaConversao: taxaConversao,
-        ticketMedio: ticketMedio,
-        
-        // Estatísticas de crescimento
-        newUsersMonth: Number(userRow.new_users_period),
-        newUsersPrevPeriod: Number(userRow.new_users_prev_period),
-        activeUsers: Number(userRow.active_users),
-        activeWeek: Number(userRow.active_week),
-        userGrowthPercent,
-
-        // Estatísticas de conteúdo
-        totalArts: Number(artRow.total_arts),
-        artsThisPeriod: Number(artRow.arts_period),
-        artsPrevPeriod: Number(artRow.arts_prev_period),
-        artsThisWeek: Number(artRow.arts_week),
-        artsThisMonth: Number(artRow.arts_month),
-        artGrowthPercent,
-
-        // Estatísticas da comunidade
-        totalPosts: Number(communityRow.total_posts),
-        postsThisPeriod: Number(communityRow.posts_period),
-        postsPrevPeriod: Number(communityRow.posts_prev_period),
-        postsThisWeek: Number(communityRow.posts_week),
-        postsThisMonth: Number(communityRow.posts_month),
-        communityGrowthPercent,
-
-        // Estatísticas de downloads
-        totalDownloads: Number(downloadRow.total_downloads),
-        downloadsThisPeriod: Number(downloadRow.downloads_period),
-        downloadsPrevPeriod: Number(downloadRow.downloads_prev_period),
-        downloadGrowthPercent,
-
-        // Estatísticas de comentários
-        totalComments: Number(commentRow.total_comments),
-        commentsThisPeriod: Number(commentRow.comments_period),
-        commentsPrevPeriod: Number(commentRow.comments_prev_period),
-        commentGrowthPercent,
-
-        // Receitas por período
-        monthlyRevenue: receitaPeriodo,
-        periodRevenue: receitaPeriodo
-      });
-
-    } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-      res.status(500).json({ 
-        message: 'Erro ao carregar dados do dashboard.', 
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Erro interno'
-      });
-    }
-  });
-
   // Endpoint para estatísticas reais do dashboard com filtro de data
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
@@ -8061,27 +7842,14 @@ app.use('/api/reports-v2', (req, res, next) => {
           prevDateInterval = '60 days';
           prevDateStart = '30 days';
       }
-      // Definir condições de data baseadas no período
-      let dateCondition, prevDateCondition, revenueCondition;
-      
-      if (period === 'hoje') {
-        dateCondition = sql`criadoem >= CURRENT_DATE AND criadoem < CURRENT_DATE + INTERVAL '1 day'`;
-        prevDateCondition = sql`criadoem >= CURRENT_DATE - INTERVAL '1 day' AND criadoem < CURRENT_DATE`;
-        revenueCondition = sql`dataassinatura >= CURRENT_DATE AND dataassinatura < CURRENT_DATE + INTERVAL '1 day'`;
-      } else {
-        dateCondition = sql`criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)}`;
-        prevDateCondition = sql`criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)}`;
-        revenueCondition = sql`dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)}`;
-      }
-
       // Estatísticas de usuários com período dinâmico
       const userStats = await db.execute(sql`
         SELECT 
           COUNT(*) as total_users,
           COUNT(CASE WHEN nivelacesso = 'premium' OR acessovitalicio = true THEN 1 END) as premium_users,
           COUNT(CASE WHEN isactive = true THEN 1 END) as active_users,
-          COUNT(CASE WHEN ${dateCondition} THEN 1 END) as new_users_period,
-          COUNT(CASE WHEN ${prevDateCondition} THEN 1 END) as new_users_prev_period,
+          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} THEN 1 END) as new_users_period,
+          COUNT(CASE WHEN criadoem >= CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateInterval}'`)} AND criadoem < CURRENT_DATE - INTERVAL ${sql.raw(`'${prevDateStart}'`)} THEN 1 END) as new_users_prev_period,
           COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
           SUM(
             CASE 
@@ -8098,7 +7866,7 @@ app.use('/api/reports-v2', (req, res, next) => {
           ) as monthly_revenue,
           SUM(
             CASE 
-              WHEN ${revenueCondition} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
+              WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
                 CASE 
                   WHEN origemassinatura = 'hotmart' THEN 7.00
                   WHEN tipoplano = 'mensal' THEN 29.90
@@ -8109,7 +7877,7 @@ app.use('/api/reports-v2', (req, res, next) => {
               ELSE 0
             END
           ) as period_revenue,
-          COUNT(CASE WHEN ${revenueCondition} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
+          COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN 1 END) as new_premium_users_period
         FROM users
       `);
 
@@ -8203,57 +7971,16 @@ app.use('/api/reports-v2', (req, res, next) => {
       const commentGrowthPercent = commentData.comments_prev_period > 0 ? 
         Math.round(((commentData.comments_period - commentData.comments_prev_period) / commentData.comments_prev_period) * 100) : 0;
 
-      // Calcular valores baseados no período selecionado
-      let faturamento, assinantes, totalUsuarios, usuariosGratuitos, taxaConversao, ticketMedio;
-      
-      if (period === 'hoje' || period === '7d') {
-        // Para "hoje" e "7d", usar dados do período específico
-        faturamento = Number(userData.period_revenue || 0);
-        assinantes = Number(userData.new_premium_users_period || 0);
-        totalUsuarios = Number(userData.new_users_period || 0);
-        usuariosGratuitos = Math.max(0, totalUsuarios - assinantes);
-        
-        // Taxa de conversão no período
-        taxaConversao = totalUsuarios > 0 ? 
-          Math.round((assinantes / totalUsuarios) * 100) : 0;
-        
-        // Ticket médio no período
-        ticketMedio = assinantes > 0 ? 
-          Math.round((faturamento / assinantes) * 100) / 100 : 0;
-      } else {
-        // Para períodos maiores (30d, 90d, 1y), usar dados acumulados
-        faturamento = Number(userData.monthly_revenue || 0);
-        assinantes = Number(userData.premium_users || 0);
-        totalUsuarios = Number(userData.total_users || 0);
-        usuariosGratuitos = totalUsuarios - assinantes;
-        
-        // Taxa de conversão total
-        taxaConversao = totalUsuarios > 0 ? 
-          Math.round((assinantes / totalUsuarios) * 100) : 0;
-        
-        // Ticket médio total
-        ticketMedio = assinantes > 0 ? 
-          Math.round((faturamento / assinantes) * 100) / 100 : 0;
-      }
-
       res.json({
-        // Dados financeiros principais (nomes corretos para o frontend)
-        faturamento: faturamento,
-        assinantes: assinantes,
-        premiumUsers: assinantes, // alias para compatibilidade
-        totalUsers: totalUsuarios,
-        usuariosGratuitos: usuariosGratuitos,
-        taxaConversao: taxaConversao,
-        ticketMedio: ticketMedio,
-        
-        // Estatísticas de crescimento
+        // Estatísticas principais
+        totalUsers: Number(userData.total_users),
+        premiumUsers: Number(userData.premium_users),
+        activeUsers: Number(userData.active_users),
         newUsersMonth: Number(userData.new_users_period),
         newUsersPrevPeriod: Number(userData.new_users_prev_period),
-        activeUsers: Number(userData.active_users),
         activeWeek: Number(userData.active_week),
         userGrowthPercent,
 
-        // Estatísticas de conteúdo
         totalArts: Number(artData.total_arts),
         artsThisPeriod: Number(artData.arts_period),
         artsPrevPeriod: Number(artData.arts_prev_period),
@@ -8261,7 +7988,6 @@ app.use('/api/reports-v2', (req, res, next) => {
         artsThisMonth: Number(artData.arts_month),
         artGrowthPercent,
 
-        // Estatísticas da comunidade
         totalPosts: Number(communityData.total_posts),
         postsThisPeriod: Number(communityData.posts_period),
         postsPrevPeriod: Number(communityData.posts_prev_period),
@@ -8269,13 +7995,14 @@ app.use('/api/reports-v2', (req, res, next) => {
         postsThisMonth: Number(communityData.posts_month),
         communityGrowthPercent,
 
-        // Estatísticas de interação
         totalDownloads: Number(downloadData.total_downloads),
         downloadsThisPeriod: Number(downloadData.downloads_period),
         downloadsPrevPeriod: Number(downloadData.downloads_prev_period),
         totalComments: Number(commentData.total_comments),
         commentsThisPeriod: Number(commentData.comments_period),
         commentsPrevPeriod: Number(commentData.comments_prev_period),
+        
+        // Percentuais de crescimento reais
         downloadGrowthPercent,
         commentGrowthPercent,
 
@@ -8283,23 +8010,30 @@ app.use('/api/reports-v2', (req, res, next) => {
         totalCourses: Number(courseData.total_courses),
         totalModules: Number(courseData.total_modules),
         totalLessons: Number(courseData.total_lessons),
-        videoLessons: Number(courseData.total_lessons),
 
-        // Receita detalhada
+        // Métricas de monetização dinâmicas baseadas no período
+        premiumRate: userData.total_users > 0 ? 
+          Math.round((userData.premium_users / userData.total_users) * 100) : 0,
+        
+        // Receita real baseada nos dados do banco de dados no período selecionado
         periodRevenue: Number(userData.period_revenue || 0),
-        monthlyRevenue: faturamento,
-        revenueThisWeek: Math.round(faturamento * 0.25),
+        monthlyRevenue: Number(userData.monthly_revenue || 0),
+        revenueThisWeek: Math.round(Number(userData.monthly_revenue || 0) * 0.25),
         
-        // Taxa premium e outras métricas
-        premiumRate: taxaConversao,
-        conversionRate: taxaConversao, // alias para compatibilidade
-        averageTicket: ticketMedio, // alias para compatibilidade
+        // Taxa de conversão real baseada nos dados do período
+        conversionRate: userData.total_users > 0 ? 
+          Math.round((Number(userData.premium_users) / Number(userData.total_users)) * 100) : 0,
         
-        // Configurações do período
+        // Ticket médio real baseado na receita e novos assinantes do período
+        averageTicket: userData.new_premium_users_period > 0 ? 
+          Math.round(Number(userData.period_revenue || 0) / Number(userData.new_premium_users_period)) : 0,
+        
+        // Métricas de crescimento específicas do período selecionado
         period: period,
         dateInterval: dateInterval,
         
-        // Estatísticas detalhadas
+        // Estatísticas detalhadas calculadas do banco
+        videoLessons: Number(courseData.total_lessons),
         categories: Number(categoriesData.total_categories),
         formats: Number(formatsData.total_formats),
         downloads: Number(downloadData.total_downloads),

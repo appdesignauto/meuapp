@@ -297,7 +297,6 @@ function AppRoutes() {
         component={TestSubscriptionSettingsPage}
         roles={['admin']} 
       />
-
       
       {/* Rota alternativa sem proteção para teste */}
       <Route path="/test-subscription-settings">

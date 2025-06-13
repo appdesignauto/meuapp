@@ -24,11 +24,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const DashboardOverview = () => {
   const [dateFilter, setDateFilter] = useState('30d');
   
-  // Query para obter estatísticas reais do dashboard usando a nova API estruturada
+  // Query para obter estatísticas reais do dashboard
   const { data: dashboardStats, isLoading } = useQuery({
-    queryKey: ['/api/dashboard/resumo-geral'],
+    queryKey: ['/api/dashboard/stats', dateFilter],
     queryFn: async () => {
-      const response = await fetch('/api/dashboard/resumo-geral');
+      const response = await fetch(`/api/dashboard/stats?period=${dateFilter}`);
       if (!response.ok) {
         throw new Error('Falha ao carregar estatísticas');
       }
@@ -95,10 +95,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              R$ {(stats.faturamento || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {(stats.periodRevenue || 0).toLocaleString('pt-BR')}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Faturamento total acumulado
+              Receita do período selecionado
             </p>
           </CardContent>
         </Card>
@@ -113,10 +113,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats.assinantes || 0}
+              {stats.premiumUsers || 0}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              De {stats.usuariosTotais || 0} usuários totais
+              +{stats.userGrowthPercent || 0}% crescimento no período
             </p>
           </CardContent>
         </Card>
@@ -131,10 +131,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats.taxaConversao || 0}%
+              {stats.conversionRate || 0}%
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Taxa de conversão de usuários
+              Taxa de conversão no período
             </p>
           </CardContent>
         </Card>
@@ -149,10 +149,10 @@ const DashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              R$ {(stats.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {(stats.averageTicket || 97).toLocaleString('pt-BR')}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Valor médio por assinatura
+              Ticket médio do período
             </p>
           </CardContent>
         </Card>
@@ -172,7 +172,7 @@ const DashboardOverview = () => {
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 <span className="text-sm text-gray-600">Usuários Gratuitos</span>
               </div>
-              <span className="font-semibold">{stats.usuariosGratuitos || 0}</span>
+              <span className="font-semibold">{(stats.totalUsers || 0) - (stats.premiumUsers || 0)}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
