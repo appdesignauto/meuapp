@@ -418,26 +418,31 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
-        <Link 
-          href="/"
-          className={`flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors ${
-            !sidebarOpen ? 'justify-center' : ''
-          }`}
-        >
-          <Home className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
-          {sidebarOpen && <span>Voltar ao site</span>}
-        </Link>
-        <button
-          onClick={handleLogout}
-          className={`flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors ${
-            !sidebarOpen ? 'justify-center' : ''
-          }`}
-        >
-          <LogOut className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
-          {sidebarOpen && <span>Sair</span>}
-        </button>
+      {/* Footer com linha sutil */}
+      <div className="mt-auto">
+        <div className="px-4 py-2">
+          <div className="border-t border-gray-100"></div>
+        </div>
+        <div className="p-4 space-y-2">
+          <Link 
+            href="/"
+            className={`flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors ${
+              !sidebarOpen ? 'justify-center' : ''
+            }`}
+          >
+            <Home className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
+            {sidebarOpen && <span>Voltar ao site</span>}
+          </Link>
+          <button
+            onClick={handleLogout}
+            className={`flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors ${
+              !sidebarOpen ? 'justify-center' : ''
+            }`}
+          >
+            <LogOut className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
+            {sidebarOpen && <span>Sair</span>}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -549,22 +554,27 @@ const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, us
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
-        <Link 
-          href="/"
-          className="flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-        >
-          <Home className="h-4 w-4 mr-3" />
-          <span>Voltar ao site</span>
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-        >
-          <LogOut className="h-4 w-4 mr-3" />
-          <span>Sair</span>
-        </button>
+      {/* Footer com linha sutil */}
+      <div className="mt-auto">
+        <div className="px-4 py-2">
+          <div className="border-t border-gray-100"></div>
+        </div>
+        <div className="p-4 space-y-2">
+          <Link 
+            href="/"
+            className="flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <Home className="h-4 w-4 mr-3" />
+            <span>Voltar ao site</span>
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <LogOut className="h-4 w-4 mr-3" />
+            <span>Sair</span>
+          </button>
+        </div>
       </div>
     </div>
   );
