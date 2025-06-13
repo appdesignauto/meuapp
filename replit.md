@@ -118,6 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 13, 2025: Implemented comprehensive tracking system with Meta Pixel and Google Tag Manager
+  - Created functional Meta Pixel integration with automatic configuration from database
+  - Built Google Tag Manager system with DataLayer implementation and GA4 support
+  - Developed React hooks for both tracking systems (useMetaPixel, useGoogleTagManager)
+  - Configured automatic event tracking for page views, art downloads, form submissions
+  - Set Meta Pixel and Conversions API to be activated by default in new installations
+  - Integrated GA4 through GTM for centralized analytics management
+  - Created comprehensive test suite for verifying tracking functionality
 - June 13, 2025: Fixed critical SQL errors in financial API with authentic revenue calculations
   - Resolved GROUP BY SQL syntax errors preventing financial data retrieval
   - Corrected revenue calculations to show authentic values: R$ 14,00 total (2 Hotmart subscribers × R$ 7,00 each)
