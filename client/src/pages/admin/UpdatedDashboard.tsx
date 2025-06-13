@@ -1636,6 +1636,7 @@ const AdminDashboard = () => {
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
+                  {activeTab === 'analytics' && 'Analytics e Rastreamento'}
                 </h1>
               </div>
             </div>
