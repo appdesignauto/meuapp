@@ -1539,7 +1539,11 @@ const AdminDashboard = () => {
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
           <Link 
             href="/painel/perfil"
-            className={`flex items-center mb-2 hover:bg-blue-50 rounded-lg p-3 transition-colors border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 shadow-sm ${!sidebarOpen ? 'justify-center' : ''}`}
+            className={`flex items-center hover:bg-blue-50 rounded-xl transition-all duration-200 border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 shadow-sm ${
+              !sidebarOpen 
+                ? 'justify-center p-2 mx-1 mb-3' 
+                : 'p-3 mb-2'
+            }`}
             title="Ir para Perfil"
           >
             <div className={`relative ${sidebarOpen ? 'mr-3' : ''}`}>
@@ -1547,14 +1551,23 @@ const AdminDashboard = () => {
                 <img 
                   src={user.profileimageurl} 
                   alt={user.name || 'Admin'} 
-                  className="w-9 h-9 rounded-full object-cover border-2 border-blue-200 shadow-sm"
+                  className={`rounded-full object-cover border-2 border-blue-200 shadow-sm ${
+                    !sidebarOpen ? 'w-8 h-8' : 'w-9 h-9'
+                  }`}
                 />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium text-sm border-2 border-blue-200 shadow-sm">
+                <div className={`rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium border-2 border-blue-200 shadow-sm ${
+                  !sidebarOpen ? 'w-8 h-8 text-xs' : 'w-9 h-9 text-sm'
+                }`}>
                   {user?.name?.charAt(0) || 'A'}
                 </div>
               )}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
+              {!sidebarOpen && (
+                <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-white shadow-sm"></div>
+              )}
+              {sidebarOpen && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
+              )}
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
@@ -1570,8 +1583,9 @@ const AdminDashboard = () => {
           <Link 
             href="/"
             title="Ir para o Site"
-            className={`flex items-center w-full py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-sm font-medium
-            ${sidebarOpen ? 'px-4 justify-start' : 'px-3 justify-center'}`}
+            className={`flex items-center w-full rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-sm font-medium ${
+              !sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3 justify-start'
+            }`}
           >
             <Home className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
             {sidebarOpen && <span>Ir para o Site</span>}
@@ -1579,10 +1593,11 @@ const AdminDashboard = () => {
           <button
             onClick={handleLogout}
             title="Sair"
-            className={`flex items-center w-full py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-sm font-medium
-            ${sidebarOpen ? 'px-4 justify-start' : 'px-3 justify-center'}`}
+            className={`flex items-center w-full rounded-xl text-red-700 hover:bg-red-50 hover:text-red-800 transition-all duration-200 text-sm font-medium ${
+              !sidebarOpen ? 'justify-center px-3 py-3 mx-1' : 'px-4 py-3 justify-start'
+            }`}
           >
-            <LogOut className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-gray-600`} />
+            <LogOut className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} text-red-600`} />
             {sidebarOpen && <span>Sair</span>}
           </button>
         </div>
