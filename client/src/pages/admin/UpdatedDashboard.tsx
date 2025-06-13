@@ -1055,35 +1055,7 @@ const AdminDashboard = () => {
         </div>
         <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
           
-          <Link 
-            href="/painel/perfil"
-            className={`flex items-center mb-6 hover:bg-gray-50 rounded-lg p-2 transition-colors ${!sidebarOpen ? 'justify-center' : ''}`}
-            title="Ir para Perfil"
-          >
-            <div className={`${sidebarOpen ? 'mr-3' : ''}`}>
-              {user?.profileimageurl ? (
-                <img 
-                  src={user.profileimageurl} 
-                  alt={user.name || 'Admin'} 
-                  className="w-9 h-9 rounded-full object-cover border border-gray-200"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-sm">
-                  {user?.name?.charAt(0) || 'A'}
-                </div>
-              )}
-            </div>
-            {sidebarOpen && (
-              <div className="overflow-hidden">
-                <p className="font-medium text-gray-900 truncate text-sm">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user?.nivelacesso === 'admin' ? 'Administrador' : 
-                   user?.nivelacesso === 'designer_adm' ? 'Designer Admin' : 
-                   user?.nivelacesso === 'suporte' ? 'Suporte' : 'Usuário'}
-                </p>
-              </div>
-            )}
-          </Link>
+
           <nav className="space-y-1">
             {/* Dashboard principal - apenas para admin */}
             {hasTabAccess('stats') && (
@@ -1555,24 +1527,32 @@ const AdminDashboard = () => {
         <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-3 flex flex-col items-center'} border-t border-gray-200/80 space-y-1`}>
           <Link 
             href="/painel/perfil"
-            className={`flex items-center w-full py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium
-            ${sidebarOpen ? 'px-3 justify-start' : 'px-2 justify-center'}`}
-            title="Perfil"
+            className={`flex items-center mb-2 hover:bg-gray-50 rounded-lg p-2 transition-colors ${!sidebarOpen ? 'justify-center' : ''}`}
+            title="Ir para Perfil"
           >
-            <div className={`${sidebarOpen ? 'mr-3' : 'mx-auto'}`}>
+            <div className={`${sidebarOpen ? 'mr-3' : ''}`}>
               {user?.profileimageurl ? (
                 <img 
                   src={user.profileimageurl} 
                   alt={user.name || 'Admin'} 
-                  className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                  className="w-9 h-9 rounded-full object-cover border border-gray-200"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-xs">
+                <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-sm">
                   {user?.name?.charAt(0) || 'A'}
                 </div>
               )}
             </div>
-            {sidebarOpen && <span>Perfil</span>}
+            {sidebarOpen && (
+              <div className="overflow-hidden">
+                <p className="font-medium text-gray-900 truncate text-sm">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.nivelacesso === 'admin' ? 'Administrador' : 
+                   user?.nivelacesso === 'designer_adm' ? 'Designer Admin' : 
+                   user?.nivelacesso === 'suporte' ? 'Suporte' : 'Usuário'}
+                </p>
+              </div>
+            )}
           </Link>
           <Link 
             href="/"
