@@ -8180,7 +8180,7 @@ app.use('/api/reports-v2', (req, res, next) => {
       const hotmartRevenue = Number(counts.hotmart_count || 0) * 7.00;
       const doppusRevenue = Number(counts.doppus_count || 0) * 39.80;
       const annualRevenue = Number(counts.annual_count || 0) * 197;
-      const monthlyRevenue = Number(counts.monthly_count || 0) * 19.90;
+      const monthlyRevenueCalc = Number(counts.monthly_count || 0) * 19.90;
       const manualRevenue = Number(counts.manual_count || 0) * 19.90;
       
       // Construir dados de resposta sem duplicação
@@ -8203,126 +8203,14 @@ app.use('/api/reports-v2', (req, res, next) => {
         revenueBySource.push({
           source: 'auto',
           subscribers: Number(counts.annual_count || 0) + Number(counts.monthly_count || 0) + Number(counts.manual_count || 0),
-          estimated_revenue: annualRevenue + monthlyRevenue + manualRevenue
+          estimated_revenue: annualRevenue + monthlyRevenueCalc + manualRevenue
         });
       }
 
-      // Receita mensal (últimos 12 meses) - incluindo todos os assinantes premium
-      const monthlyRevenueResult = await db.execute(sql`
-        SELECT 
-          TO_CHAR(DATE_TRUNC('month', COALESCE(dataassinatura, criadoem)), 'YYYY-MM') as month,
-          COUNT(*) as new_subscriptions,
-          SUM(
-            CASE 
-              WHEN origemassinatura = 'hotmart' THEN 7.00
-              WHEN origemassinatura = 'doppus' THEN 39.80
-              WHEN tipoplano = 'anual' THEN 197
-              WHEN tipoplano = 'mensal' THEN 19.90
-              ELSE 19.90
-            END
-          ) as monthly_revenue
-        FROM users 
-        WHERE COALESCE(dataassinatura, criadoem) >= CURRENT_DATE - INTERVAL '12 months'
-          AND nivelacesso IN ('premium', 'designer')
-          AND isactive = true
-        GROUP BY DATE_TRUNC('month', COALESCE(dataassinatura, criadoem))
-        ORDER BY month DESC
-      `);
-      const monthlyRevenue = monthlyRevenueResult.rows || [];
 
-      // MRR (Receita Recorrente Mensal) - incluindo todos os assinantes ativos
-      const mrrResult = await db.execute(sql`
-        SELECT 
-          COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) as monthly_subscribers,
-          COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) as annual_subscribers,
-          COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) as hotmart_subscribers,
-          COUNT(CASE WHEN origemassinatura = 'doppus' THEN 1 END) as doppus_subscribers,
-          (COUNT(CASE WHEN tipoplano = 'mensal' THEN 1 END) * 19.90) +
-          (COUNT(CASE WHEN tipoplano = 'anual' THEN 1 END) * (197/12)) +
-          (COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) * 7.00) +
-          (COUNT(CASE WHEN origemassinatura = 'doppus' THEN 1 END) * 39.80) as total_mrr
-        FROM users 
-        WHERE nivelacesso IN ('premium', 'designer')
-          AND isactive = true
-          AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE)
-      `);
-      const mrrData = mrrResult.rows || [];
-
-      // Ticket médio por plano
-      const averageTicketByPlanResult = await db.execute(sql`
-        SELECT 
-          tipoplano as plan_type,
-          COUNT(*) as subscribers,
-          CASE 
-            WHEN tipoplano = 'anual' THEN 197
-            WHEN tipoplano = 'mensal' THEN 19.90
-            ELSE 19.90
-          END as plan_price
-        FROM users 
-        WHERE nivelacesso IN ('premium', 'designer')
-          AND tipoplano IS NOT NULL
-        GROUP BY tipoplano
-      `);
-      const averageTicketByPlan = averageTicketByPlanResult.rows || [];
-
-      // Taxa de churn (cancelamentos vs assinantes ativos)
-      const churnResult = await db.execute(sql`
-        SELECT 
-          COUNT(CASE WHEN nivelacesso IN ('premium', 'designer') 
-                     AND (dataexpiracao IS NULL OR dataexpiracao > CURRENT_DATE) THEN 1 END) as active_subscribers,
-          COUNT(CASE WHEN nivelacesso NOT IN ('premium', 'designer') 
-                     AND origemassinatura IS NOT NULL THEN 1 END) as churned_subscribers,
-          COUNT(CASE WHEN dataassinatura >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as new_subscribers_30d
-        FROM users 
-        WHERE origemassinatura IS NOT NULL
-      `);
-      const churnData = churnResult.rows || [];
-
-      // Faturamento por tipo de plano
-      const revenueByPlanTypeResult = await db.execute(sql`
-        SELECT 
-          tipoplano as plan_type,
-          COUNT(*) as subscribers,
-          CASE 
-            WHEN tipoplano = 'anual' THEN COUNT(*) * 197
-            WHEN tipoplano = 'mensal' THEN COUNT(*) * 19.90
-            ELSE COUNT(*) * 19.90
-          END as total_revenue
-        FROM users 
-        WHERE nivelacesso IN ('premium', 'designer')
-          AND tipoplano IS NOT NULL
-        GROUP BY tipoplano
-        ORDER BY total_revenue DESC
-      `);
-      const revenueByPlanType = revenueByPlanTypeResult.rows || [];
-
-      // Assinantes recentes (últimos 30 dias) - incluindo todos os usuários premium
-      const recentSubscribersResult = await db.execute(sql`
-        SELECT 
-          id,
-          name,
-          email,
-          COALESCE(tipoplano, 'mensal') as plan_type,
-          COALESCE(origemassinatura, 'auto') as source,
-          COALESCE(dataassinatura, criadoem) as subscription_date,
-          CASE 
-            WHEN origemassinatura = 'hotmart' THEN 7.00
-            WHEN origemassinatura = 'doppus' THEN 39.80
-            WHEN tipoplano = 'anual' THEN 197
-            WHEN tipoplano = 'mensal' THEN 19.90
-            ELSE 19.90
-          END as plan_value
-        FROM users 
-        WHERE COALESCE(dataassinatura, criadoem) >= CURRENT_DATE - INTERVAL '30 days'
-          AND nivelacesso IN ('premium', 'designer')
-          AND isactive = true
-        ORDER BY COALESCE(dataassinatura, criadoem) DESC
-        LIMIT 50
-      `);
-      const recentSubscribers = recentSubscribersResult.rows || [];
 
       // Calcular receita total e MRR corrigidos
-      const totalRevenue = hotmartRevenue + doppusRevenue + annualRevenue + monthlyRevenue + manualRevenue;
+      const totalRevenue = hotmartRevenue + doppusRevenue + annualRevenue + monthlyRevenueCalc + manualRevenue;
       const totalMRR = 
         (Number(counts.hotmart_count || 0) * 7.00) +
         (Number(counts.doppus_count || 0) * 39.80) +
@@ -8360,7 +8248,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         revenueByPlanType.push({
           plan_type: 'Plano Mensal',
           subscribers: Number(counts.monthly_count),
-          total_revenue: monthlyRevenue
+          total_revenue: monthlyRevenueCalc
         });
       }
 
