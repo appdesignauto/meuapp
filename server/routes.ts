@@ -989,70 +989,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Dashboard SaaS APIs - Dados reais do sistema
-  app.get("/api/dashboard/metrics", async (req, res) => {
-    try {
-      // Cálculos baseados em dados reais do banco
-      const userStatsResult = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_users,
-          COUNT(CASE WHEN "nivelacesso" = 'premium' THEN 1 END) as premium_users,
-          COUNT(CASE WHEN "nivelacesso" = 'usuario' THEN 1 END) as free_users,
-          COUNT(CASE WHEN "dataassinatura" >= NOW() - INTERVAL '30 days' THEN 1 END) as new_users_30,
-          COUNT(CASE WHEN "dataassinatura" >= NOW() - INTERVAL '7 days' THEN 1 END) as new_users_7
-        FROM users 
-        WHERE "isactive" = true
-      `);
 
-      const artsResult = await db.execute(sql`
-        SELECT COUNT(*) as total_arts FROM arts WHERE "isVisible" = true
-      `);
-
-      const userStats = userStatsResult.rows[0];
-      const totalArts = artsResult.rows[0]?.total_arts || 0;
-
-      // Cálculos financeiros baseados em usuários premium
-      const premiumUsers = Number(userStats?.premium_users) || 0;
-      const monthlyPrice = 27.90; // Preço padrão mensal
-      const mrr = premiumUsers * monthlyPrice;
-      const arr = mrr * 12;
-
-      const metrics = {
-        financial: {
-          mrr: mrr,
-          arr: arr,
-          revenue30Days: mrr,
-          revenue7Days: mrr / 4,
-          churnRate: 5.2,
-          ltv: monthlyPrice * 24 // 24 meses médio
-        },
-        users: {
-          totalUsers: Number(userStats?.total_users) || 0,
-          activeSubscriptions: premiumUsers,
-          freeUsers: Number(userStats?.free_users) || 0,
-          premiumUsers: premiumUsers,
-          newUsers30Days: Number(userStats?.new_users_30) || 0,
-          newUsers7Days: Number(userStats?.new_users_7) || 0
-        },
-        retention: {
-          day1: 85.3,
-          day7: 68.7,
-          day30: 42.1,
-          churnRate: 5.2
-        },
-        growth: {
-          userGrowthRate: 12.5,
-          revenueGrowthRate: 15.8,
-          conversionRate: premiumUsers > 0 ? (premiumUsers / Number(userStats?.total_users)) * 100 : 0
-        }
-      };
-
-      res.json(metrics);
-    } catch (error) {
-      console.error("Erro ao buscar métricas do dashboard:", error);
-      res.status(500).json({ message: "Erro ao buscar métricas" });
-    }
-  });
 
 
 
