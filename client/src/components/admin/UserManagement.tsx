@@ -1579,20 +1579,7 @@ const UserManagement = () => {
             <CardTitle className="text-lg">Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="col-span-1 sm:col-span-2">
-                <Label htmlFor="search" className="flex items-center gap-2">
-                  <SearchIcon className="h-4 w-4 text-muted-foreground" />
-                  Buscar
-                </Label>
-                <Input
-                  id="search"
-                  placeholder="Buscar por nome, email ou username"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="role-filter" className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4 text-muted-foreground" />

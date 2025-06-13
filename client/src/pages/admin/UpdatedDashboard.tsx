@@ -1743,10 +1743,10 @@ const AdminDashboard = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="comments">
               <div className="mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Comentários</h2>
-                    <p className="text-gray-500 mt-1">Visualize, modere e gerencie os comentários dos usuários nas aulas</p>
+                    <h1 className="text-2xl font-semibold text-gray-900">Gerenciar Comentários</h1>
+                    <p className="text-sm text-gray-600 mt-1">Visualize e modere comentários dos usuários nas aulas</p>
                   </div>
                 </div>
               </div>
@@ -1760,10 +1760,10 @@ const AdminDashboard = () => {
             
             <TabsContent value="courseStats">
               <div className="mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Estatísticas dos Cursos</h2>
-                    <p className="text-gray-500 mt-1">Análise de desempenho e métricas dos cursos</p>
+                    <h1 className="text-2xl font-semibold text-gray-900">Estatísticas dos Cursos</h1>
+                    <p className="text-sm text-gray-600 mt-1">Análise de desempenho e métricas dos cursos</p>
                   </div>
                   <div className="flex gap-4">
                     <Select defaultValue="7dias">
@@ -4214,9 +4214,9 @@ const AdminDashboard = () => {
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
-                    <p className="text-muted-foreground">
-                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+                    <h1 className="text-2xl font-semibold text-gray-900">Analytics e Rastreamento</h1>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Configure serviços de analytics para monitorar desempenho
                     </p>
                   </div>
                   <div className="grid gap-6">
@@ -4230,9 +4230,9 @@ const AdminDashboard = () => {
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Ferramentas</h2>
-                    <p className="text-muted-foreground">
-                      Gerencie as ferramentas e categorias disponíveis no site.
+                    <h1 className="text-2xl font-semibold text-gray-900">Ferramentas</h1>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Gerencie ferramentas e categorias disponíveis na plataforma
                     </p>
                   </div>
                   
