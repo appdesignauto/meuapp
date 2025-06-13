@@ -29,16 +29,18 @@ const AdminDashboard = () => {
   return (
     <AdminLayout title="Painel Administrativo">
       <div className="space-y-6">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:grid-cols-none lg:inline-flex">
-            <TabsTrigger value="overview">Dashboard</TabsTrigger>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="arts">Artes</TabsTrigger>
-            <TabsTrigger value="community">Comunidade</TabsTrigger>
-            <TabsTrigger value="courses">Cursos</TabsTrigger>
-            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="overview" className="space-y-8">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:grid-cols-none lg:inline-flex bg-gray-50 p-1 h-auto rounded-lg">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Dashboard</TabsTrigger>
+              <TabsTrigger value="users" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Usuários</TabsTrigger>
+              <TabsTrigger value="arts" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Artes</TabsTrigger>
+              <TabsTrigger value="community" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Comunidade</TabsTrigger>
+              <TabsTrigger value="courses" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Cursos</TabsTrigger>
+              <TabsTrigger value="financeiro" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Financeiro</TabsTrigger>
+              <TabsTrigger value="stats" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 py-2.5 font-medium">Estatísticas</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
             {/* Dashboard Header */}
@@ -66,79 +68,79 @@ const AdminDashboard = () => {
             {/* Métricas Principais */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {/* Card Usuários */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <Users className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                    <Users className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">1,245</div>
-                    <div className="text-xs text-green-600 font-medium">+12% este mês</div>
+                    <div className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">+12% este mês</div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">Usuários Totais</div>
-                  <div className="text-xs text-gray-500">327 premium ativos</div>
+                  <div className="text-sm font-semibold text-gray-900 mb-2">Usuários Totais</div>
+                  <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-lg inline-block">327 premium ativos</div>
                 </div>
               </div>
 
               {/* Card Artes */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <Image className="w-6 h-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                    <Image className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">2,847</div>
-                    <div className="text-xs text-green-600 font-medium">+8% este mês</div>
+                    <div className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">+8% este mês</div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">Total de Artes</div>
-                  <div className="text-xs text-gray-500">156 adicionadas esta semana</div>
+                  <div className="text-sm font-semibold text-gray-900 mb-2">Total de Artes</div>
+                  <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-lg inline-block">156 adicionadas esta semana</div>
                 </div>
               </div>
 
               {/* Card Comunidade */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6 text-emerald-600" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                    <MessageSquare className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">489</div>
-                    <div className="text-xs text-green-600 font-medium">+15% este mês</div>
+                    <div className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">+15% este mês</div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">Posts Comunidade</div>
-                  <div className="text-xs text-gray-500">73 interações hoje</div>
+                  <div className="text-sm font-semibold text-gray-900 mb-2">Posts Comunidade</div>
+                  <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-lg inline-block">73 interações hoje</div>
                 </div>
               </div>
 
               {/* Card Receita */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-6 h-6 text-amber-600" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                    <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">R$ 18.2k</div>
-                    <div className="text-xs text-green-600 font-medium">+23% este mês</div>
+                    <div className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">+23% este mês</div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">Receita Mensal</div>
-                  <div className="text-xs text-gray-500">R$ 1.8k esta semana</div>
+                  <div className="text-sm font-semibold text-gray-900 mb-2">Receita Mensal</div>
+                  <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-lg inline-block">R$ 1.8k esta semana</div>
                 </div>
               </div>
             </div>
 
             {/* Estatísticas Detalhadas */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6 mb-8">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Estatísticas Detalhadas</h3>
-                <p className="text-sm text-gray-500 mt-1">Métricas de performance da plataforma</p>
+            <div className="bg-white rounded-xl border border-gray-100 p-8 mb-8 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-gray-900">Estatísticas Detalhadas</h3>
+                <p className="text-sm text-gray-500 mt-2">Métricas de performance da plataforma em tempo real</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-4">
@@ -219,49 +221,58 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="arts">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Gerenciar Artes</h2>
-                  <p className="text-sm text-gray-500 mt-1">Administre todas as artes da plataforma</p>
+                  <h2 className="text-xl font-bold text-gray-900">Gerenciar Artes</h2>
+                  <p className="text-sm text-gray-500 mt-2">Administre todas as artes da plataforma DesignAuto</p>
                 </div>
                 <Button 
                   onClick={() => setIsMultiFormOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md transition-all duration-200 px-6 py-2.5"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Nova Arte
                 </Button>
               </div>
-              <div className="text-center py-12">
-                <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Funcionalidade de gerenciamento de artes em desenvolvimento.</p>
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Image className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Sistema de Artes</h3>
+                <p className="text-gray-500 max-w-md mx-auto">Funcionalidade de gerenciamento completo de artes em desenvolvimento para oferecer melhor experiência.</p>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="community">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Gerenciar Comunidade</h2>
-                <p className="text-sm text-gray-500 mt-1">Modere posts e interações da comunidade</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-gray-900">Gerenciar Comunidade</h2>
+                <p className="text-sm text-gray-500 mt-2">Modere posts e interações da comunidade DesignAuto</p>
               </div>
-              <div className="text-center py-12">
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Funcionalidade de gerenciamento da comunidade em desenvolvimento.</p>
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <MessageSquare className="w-8 h-8 text-emerald-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Sistema de Comunidade</h3>
+                <p className="text-gray-500 max-w-md mx-auto">Funcionalidade de moderação e gerenciamento da comunidade em desenvolvimento para melhor experiência.</p>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="courses">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Gerenciar Cursos</h2>
-                <p className="text-sm text-gray-500 mt-1">Administre cursos e vídeo-aulas</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition-shadow duration-200">
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-gray-900">Gerenciar Cursos</h2>
+                <p className="text-sm text-gray-500 mt-2">Administre cursos e vídeo-aulas da plataforma</p>
               </div>
-              <div className="text-center py-12">
-                <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Funcionalidade de gerenciamento de cursos em desenvolvimento.</p>
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Video className="w-8 h-8 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Sistema de Cursos</h3>
+                <p className="text-gray-500 max-w-md mx-auto">Funcionalidade de gerenciamento completo de cursos e vídeo-aulas em desenvolvimento.</p>
               </div>
             </div>
           </TabsContent>

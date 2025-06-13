@@ -342,8 +342,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
 
           {/* Page content */}
-          <div className="p-6 bg-gray-50">
-            {children}
+          <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-80px)] overflow-auto">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
           </div>
         </main>
       </div>
