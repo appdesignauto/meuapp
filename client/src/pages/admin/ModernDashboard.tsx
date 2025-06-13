@@ -209,7 +209,7 @@ const ModernDashboard = () => {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl">
+          <div className="fixed inset-y-0 left-0 w-56 bg-white shadow-xl">
             <MobileSidebar 
               menuSections={menuSections}
               activeTab={activeTab}
@@ -227,7 +227,7 @@ const ModernDashboard = () => {
 
       {/* Desktop Sidebar */}
       <div className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
-        sidebarOpen ? 'w-64' : 'w-16'
+        sidebarOpen ? 'w-56' : 'w-16'
       }`}>
         <DesktopSidebar 
           menuSections={menuSections}
