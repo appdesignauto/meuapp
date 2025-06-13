@@ -1,82 +1,100 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Save, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Save, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AnalyticsSettings {
+  id?: number;
   metaPixelId: string;
-  metaAccessToken: string;
+  metaAdsAccessToken: string;
   metaAdAccountId: string;
   metaPixelEnabled: boolean;
-  metaConversionsApiEnabled: boolean;
+  metaAdsEnabled: boolean;
   ga4MeasurementId: string;
   ga4Enabled: boolean;
   gtmContainerId: string;
   gtmEnabled: boolean;
   clarityProjectId: string;
   clarityEnabled: boolean;
-  pinterestTagId: string;
-  pinterestEnabled: boolean;
+  hotjarSiteId: string;
+  hotjarEnabled: boolean;
+  linkedinPartnerId: string;
+  linkedinEnabled: boolean;
   tiktokPixelId: string;
   tiktokEnabled: boolean;
-  customScripts: string;
-  customScriptsEnabled: boolean;
-  trackingEnabled: boolean;
-  trackingConsentEnabled: boolean;
-  trackingCookieExpiry: number;
+  amplitudeApiKey: string;
+  amplitudeEnabled: boolean;
+  mixpanelToken: string;
+  mixpanelEnabled: boolean;
+  trackPageviews: boolean;
+  trackClicks: boolean;
+  trackFormSubmissions: boolean;
+  trackArtsViewed: boolean;
+  trackArtsDownloaded: boolean;
+  customScriptHead: string;
+  customScriptBody: string;
+  customScriptEnabled: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  updatedBy?: number;
 }
 
-const AnalyticsSettings = () => {
+const AnalyticsSettings: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
   const [analytics, setAnalytics] = useState<AnalyticsSettings | null>(null);
 
+  // Buscar configurações existentes
   const { data: analyticsData, isLoading: isLoadingData } = useQuery({
     queryKey: ['/api/analytics/settings'],
     queryFn: async () => {
       const response = await fetch('/api/analytics/settings');
       if (!response.ok) {
-        throw new Error('Falha ao carregar configurações de analytics');
+        throw new Error('Erro ao buscar configurações de analytics');
       }
-      return await response.json();
+      return response.json();
     }
   });
 
+  // Mutation para salvar configurações
   const saveAnalyticsMutation = useMutation({
     mutationFn: async (data: AnalyticsSettings) => {
       const response = await fetch('/api/analytics/settings', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       });
+      
       if (!response.ok) {
-        throw new Error('Falha ao salvar configurações');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao salvar configurações');
       }
-      return await response.json();
+      
+      return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Sucesso!",
-        description: "Configurações de analytics salvas com sucesso.",
-      });
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/settings'] });
-    },
-    onError: (error: any) => {
       toast({
-        title: "Erro",
-        description: error.message || "Erro ao salvar configurações",
-        variant: "destructive",
+        title: 'Configurações salvas',
+        description: 'As configurações de analytics foram atualizadas com sucesso.',
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
   });
 
   useEffect(() => {
@@ -132,6 +150,17 @@ const AnalyticsSettings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Aviso de Conformidade */}
+      <Alert className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Importante</AlertTitle>
+        <AlertDescription className="text-sm">
+          Estas configurações afetam como o site rastreia as atividades dos usuários. 
+          Certifique-se de que seu site esteja em conformidade com leis de privacidade aplicáveis, 
+          como LGPD e GDPR, e de que sua Política de Privacidade reflita o uso dessas tecnologias.
+        </AlertDescription>
+      </Alert>
+
       {/* Meta Pixel */}
       <Card>
         <CardHeader>
@@ -145,7 +174,7 @@ const AnalyticsSettings = () => {
               id="metaPixelId"
               value={analytics?.metaPixelId || ''}
               onChange={(e) => handleInputChange('metaPixelId', e.target.value)}
-              placeholder="Digite o ID do Meta Pixel"
+              placeholder="1231231545"
             />
           </div>
 
@@ -154,8 +183,8 @@ const AnalyticsSettings = () => {
             <Input
               id="metaAccessToken"
               type="password"
-              value={analytics?.metaAccessToken || ''}
-              onChange={(e) => handleInputChange('metaAccessToken', e.target.value)}
+              value={analytics?.metaAdsAccessToken || ''}
+              onChange={(e) => handleInputChange('metaAdsAccessToken', e.target.value)}
               placeholder="Digite o token de acesso da API"
             />
           </div>
@@ -181,28 +210,29 @@ const AnalyticsSettings = () => {
 
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="metaConversionsApiEnabled"
-              checked={analytics?.metaConversionsApiEnabled || false}
-              onCheckedChange={(checked) => handleInputChange('metaConversionsApiEnabled', checked)}
+              id="metaAdsEnabled"
+              checked={analytics?.metaAdsEnabled || false}
+              onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
             />
-            <Label htmlFor="metaConversionsApiEnabled">Ativar Conversions API</Label>
+            <Label htmlFor="metaAdsEnabled">Ativar Conversions API</Label>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Save className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar Configurações
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Configurações
-              </>
-            )}
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

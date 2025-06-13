@@ -8496,5 +8496,170 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // ===== ROTAS DE ANALYTICS =====
+  
+  // Rota para obter configurações de analytics
+  app.get("/api/analytics/settings", async (req, res) => {
+    try {
+      const [settings] = await db.select().from(analyticsSettings);
+      
+      if (!settings) {
+        // Criar configurações padrão se não existirem
+        const [newSettings] = await db.insert(analyticsSettings)
+          .values({
+            metaPixelId: '',
+            metaAdsEnabled: false,
+            metaPixelEnabled: false,
+            ga4Enabled: false,
+            gtmEnabled: false,
+            clarityEnabled: false,
+            hotjarEnabled: false,
+            linkedinEnabled: false,
+            tiktokEnabled: false,
+            amplitudeEnabled: false,
+            mixpanelEnabled: false,
+            trackPageviews: true,
+            trackClicks: false,
+            trackFormSubmissions: false,
+            trackArtsViewed: true,
+            trackArtsDownloaded: true,
+            customScriptEnabled: false,
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        return res.json(newSettings);
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error('Erro ao buscar configurações de analytics:', error);
+      res.status(500).json({ success: false, message: 'Erro ao buscar configurações de analytics' });
+    }
+  });
+
+  // Rota para atualizar configurações de analytics
+  app.put("/api/analytics/settings", isAdmin, async (req, res) => {
+    try {
+      const {
+        metaPixelId,
+        metaAdsAccessToken,
+        metaAdAccountId,
+        metaPixelEnabled,
+        metaAdsEnabled,
+        ga4MeasurementId,
+        ga4Enabled,
+        gtmContainerId,
+        gtmEnabled,
+        clarityProjectId,
+        clarityEnabled,
+        hotjarSiteId,
+        hotjarEnabled,
+        linkedinPartnerId,
+        linkedinEnabled,
+        tiktokPixelId,
+        tiktokEnabled,
+        amplitudeApiKey,
+        amplitudeEnabled,
+        mixpanelToken,
+        mixpanelEnabled,
+        trackPageviews,
+        trackClicks,
+        trackFormSubmissions,
+        trackArtsViewed,
+        trackArtsDownloaded,
+        customScriptHead,
+        customScriptBody,
+        customScriptEnabled
+      } = req.body;
+
+      const [settings] = await db.select().from(analyticsSettings);
+      
+      if (!settings) {
+        // Criar nova configuração
+        const [newSettings] = await db.insert(analyticsSettings)
+          .values({
+            metaPixelId: metaPixelId || '',
+            metaAdsAccessToken: metaAdsAccessToken || '',
+            metaAdAccountId: metaAdAccountId || '',
+            metaPixelEnabled: !!metaPixelEnabled,
+            metaAdsEnabled: !!metaAdsEnabled,
+            ga4MeasurementId: ga4MeasurementId || '',
+            ga4Enabled: !!ga4Enabled,
+            gtmContainerId: gtmContainerId || '',
+            gtmEnabled: !!gtmEnabled,
+            clarityProjectId: clarityProjectId || '',
+            clarityEnabled: !!clarityEnabled,
+            hotjarSiteId: hotjarSiteId || '',
+            hotjarEnabled: !!hotjarEnabled,
+            linkedinPartnerId: linkedinPartnerId || '',
+            linkedinEnabled: !!linkedinEnabled,
+            tiktokPixelId: tiktokPixelId || '',
+            tiktokEnabled: !!tiktokEnabled,
+            amplitudeApiKey: amplitudeApiKey || '',
+            amplitudeEnabled: !!amplitudeEnabled,
+            mixpanelToken: mixpanelToken || '',
+            mixpanelEnabled: !!mixpanelEnabled,
+            trackPageviews: trackPageviews !== false,
+            trackClicks: !!trackClicks,
+            trackFormSubmissions: !!trackFormSubmissions,
+            trackArtsViewed: trackArtsViewed !== false,
+            trackArtsDownloaded: trackArtsDownloaded !== false,
+            customScriptHead: customScriptHead || '',
+            customScriptBody: customScriptBody || '',
+            customScriptEnabled: !!customScriptEnabled,
+            updatedAt: new Date(),
+            updatedBy: req.user?.id
+          })
+          .returning();
+        
+        return res.json({ success: true, data: newSettings, message: 'Configurações de analytics criadas com sucesso' });
+      } else {
+        // Atualizar configuração existente
+        const [updatedSettings] = await db.update(analyticsSettings)
+          .set({
+            metaPixelId: metaPixelId || '',
+            metaAdsAccessToken: metaAdsAccessToken || '',
+            metaAdAccountId: metaAdAccountId || '',
+            metaPixelEnabled: !!metaPixelEnabled,
+            metaAdsEnabled: !!metaAdsEnabled,
+            ga4MeasurementId: ga4MeasurementId || '',
+            ga4Enabled: !!ga4Enabled,
+            gtmContainerId: gtmContainerId || '',
+            gtmEnabled: !!gtmEnabled,
+            clarityProjectId: clarityProjectId || '',
+            clarityEnabled: !!clarityEnabled,
+            hotjarSiteId: hotjarSiteId || '',
+            hotjarEnabled: !!hotjarEnabled,
+            linkedinPartnerId: linkedinPartnerId || '',
+            linkedinEnabled: !!linkedinEnabled,
+            tiktokPixelId: tiktokPixelId || '',
+            tiktokEnabled: !!tiktokEnabled,
+            amplitudeApiKey: amplitudeApiKey || '',
+            amplitudeEnabled: !!amplitudeEnabled,
+            mixpanelToken: mixpanelToken || '',
+            mixpanelEnabled: !!mixpanelEnabled,
+            trackPageviews: trackPageviews !== false,
+            trackClicks: !!trackClicks,
+            trackFormSubmissions: !!trackFormSubmissions,
+            trackArtsViewed: trackArtsViewed !== false,
+            trackArtsDownloaded: trackArtsDownloaded !== false,
+            customScriptHead: customScriptHead || '',
+            customScriptBody: customScriptBody || '',
+            customScriptEnabled: !!customScriptEnabled,
+            updatedAt: new Date(),
+            updatedBy: req.user?.id
+          })
+          .where(eq(analyticsSettings.id, settings.id))
+          .returning();
+        
+        return res.json({ success: true, data: updatedSettings, message: 'Configurações de analytics atualizadas com sucesso' });
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar configurações de analytics:', error);
+      res.status(500).json({ success: false, message: 'Erro ao atualizar configurações de analytics' });
+    }
+  });
+
   return httpServer;
 }
