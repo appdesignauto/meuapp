@@ -7833,15 +7833,21 @@ app.use('/api/reports-v2', (req, res, next) => {
         FROM "communityPosts"
       `);
 
-      // Estatísticas de downloads
+      // Estatísticas de downloads com crescimento
       const downloadStats = await db.execute(sql`
-        SELECT COUNT(*) as total_downloads
+        SELECT 
+          COUNT(*) as total_downloads,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_month,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as downloads_prev_month
         FROM downloads
       `);
 
-      // Estatísticas de comentários
+      // Estatísticas de comentários com crescimento
       const commentStats = await db.execute(sql`
-        SELECT COUNT(*) as total_comments
+        SELECT 
+          COUNT(*) as total_comments,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_month,
+          COUNT(CASE WHEN "createdAt" >= CURRENT_DATE - INTERVAL '60 days' AND "createdAt" < CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as comments_prev_month
         FROM "communityComments"
       `);
 
@@ -7882,6 +7888,13 @@ app.use('/api/reports-v2', (req, res, next) => {
       const communityGrowthPercent = communityData.posts_month > 0 ? 
         Math.round((communityData.posts_month / communityData.total_posts) * 100) : 0;
 
+      // Calcular percentuais de crescimento para downloads e comentários
+      const downloadGrowthPercent = downloadData.downloads_prev_month > 0 ? 
+        Math.round(((downloadData.downloads_month - downloadData.downloads_prev_month) / downloadData.downloads_prev_month) * 100) : 0;
+      
+      const commentGrowthPercent = commentData.comments_prev_month > 0 ? 
+        Math.round(((commentData.comments_month - commentData.comments_prev_month) / commentData.comments_prev_month) * 100) : 0;
+
       res.json({
         // Estatísticas principais
         totalUsers: Number(userData.total_users),
@@ -7903,6 +7916,10 @@ app.use('/api/reports-v2', (req, res, next) => {
 
         totalDownloads: Number(downloadData.total_downloads),
         totalComments: Number(commentData.total_comments),
+        
+        // Percentuais de crescimento reais
+        downloadGrowthPercent,
+        commentGrowthPercent,
 
         // Estatísticas de cursos
         totalCourses: Number(courseData.total_courses),

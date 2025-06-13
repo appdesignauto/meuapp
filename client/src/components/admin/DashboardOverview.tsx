@@ -182,10 +182,6 @@ const DashboardOverview = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-gray-900">{stats.categories || 15}</p>
-                <Badge variant="outline" className="text-xs">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Crescimento
-                </Badge>
               </div>
             </div>
 
@@ -218,11 +214,13 @@ const DashboardOverview = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-gray-900">
-                  {(stats.downloads || 12800).toLocaleString('pt-BR')}
+                  {(stats.downloads || stats.totalDownloads || 0).toLocaleString('pt-BR')}
                 </p>
-                <p className="text-xs text-green-600 font-medium">
-                  {stats.premiumRate || 26.3}%
-                </p>
+                {stats.downloadGrowthPercent !== undefined && stats.downloadGrowthPercent !== 0 && (
+                  <p className="text-xs text-green-600 font-medium">
+                    {stats.downloadGrowthPercent > 0 ? '+' : ''}{stats.downloadGrowthPercent}%
+                  </p>
+                )}
               </div>
             </div>
 
@@ -239,11 +237,13 @@ const DashboardOverview = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-gray-900">
-                  {(stats.comments || 1200).toLocaleString('pt-BR')}
+                  {(stats.comments || stats.totalComments || 0).toLocaleString('pt-BR')}
                 </p>
-                <p className="text-xs text-green-600 font-medium">
-                  +{stats.growth || 18.2}%
-                </p>
+                {stats.commentGrowthPercent !== undefined && stats.commentGrowthPercent !== 0 && (
+                  <p className="text-xs text-green-600 font-medium">
+                    {stats.commentGrowthPercent > 0 ? '+' : ''}{stats.commentGrowthPercent}%
+                  </p>
+                )}
               </div>
             </div>
 
