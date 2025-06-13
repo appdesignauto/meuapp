@@ -1412,7 +1412,7 @@ const AdminDashboard = () => {
                   <Award className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
                     activeTab === 'affiliate-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Gerenciar Afiliação</span>}
+                  {sidebarOpen && <span className="font-medium">Afiliação</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
