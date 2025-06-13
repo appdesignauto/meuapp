@@ -57,6 +57,7 @@ const ModernDashboard = () => {
   const [, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['Conteúdo']); // Inicialmente Conteúdo expandido
 
   // Função para verificar se o usuário tem acesso a uma aba específica
   const hasTabAccess = (tabName: string): boolean => {
@@ -82,16 +83,28 @@ const ModernDashboard = () => {
     setLocation('/auth');
   };
 
-  // Menu items configuration
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionTitle) 
+        ? prev.filter(title => title !== sectionTitle)
+        : [...prev, sectionTitle]
+    );
+  };
+
+  // Menu items configuration with collapsible groups
   const menuSections = [
     {
-      title: 'Visão Geral',
+      title: 'Dashboard',
+      icon: LayoutDashboard,
+      collapsible: false,
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, access: ['admin', 'designer_adm'] },
       ]
     },
     {
       title: 'Conteúdo',
+      icon: FileImage,
+      collapsible: true,
       items: [
         { id: 'arts', label: 'Artes e Designs', icon: Image, access: ['admin', 'designer_adm'] },
         { id: 'categories', label: 'Categorias', icon: ListChecks, access: ['admin', 'designer_adm'] },
@@ -101,42 +114,54 @@ const ModernDashboard = () => {
     },
     {
       title: 'Usuários',
+      icon: Users,
+      collapsible: true,
       items: [
-        { id: 'users', label: 'Usuários', icon: Users, access: ['admin', 'suporte'] },
+        { id: 'users', label: 'Gerenciar Usuários', icon: Users, access: ['admin', 'suporte'] },
         { id: 'subscriptions', label: 'Assinaturas', icon: CreditCard, access: ['admin', 'suporte'] },
       ]
     },
     {
       title: 'Cursos',
+      icon: BookOpen,
+      collapsible: true,
       items: [
-        { id: 'courses', label: 'Cursos', icon: BookOpen, access: ['admin', 'designer_adm'] },
+        { id: 'courses', label: 'Gerenciar Cursos', icon: BookOpen, access: ['admin', 'designer_adm'] },
         { id: 'modules', label: 'Módulos', icon: Layers, access: ['admin', 'designer_adm'] },
         { id: 'lessons', label: 'Aulas', icon: Video, access: ['admin', 'designer_adm'] },
       ]
     },
     {
       title: 'Ferramentas',
+      icon: Zap,
+      collapsible: false,
       items: [
         { id: 'ferramentas', label: 'Ferramentas', icon: Zap, access: ['admin', 'designer_adm'] },
       ]
     },
     {
       title: 'Comunidade',
+      icon: MessageSquare,
+      collapsible: true,
       items: [
-        { id: 'community', label: 'Comunidade', icon: MessageSquare, access: ['admin', 'designer_adm', 'suporte'] },
+        { id: 'community', label: 'Posts e Comentários', icon: MessageSquare, access: ['admin', 'designer_adm', 'suporte'] },
         { id: 'reports', label: 'Denúncias', icon: Flag, access: ['admin', 'suporte'] },
       ]
     },
     {
       title: 'Marketing',
+      icon: BellRing,
+      collapsible: false,
       items: [
         { id: 'popups', label: 'Popups', icon: BellRing, access: ['admin'] },
       ]
     },
     {
       title: 'Configurações',
+      icon: Settings,
+      collapsible: true,
       items: [
-        { id: 'settings', label: 'Site', icon: Settings, access: ['admin'] },
+        { id: 'settings', label: 'Configurações Site', icon: Settings, access: ['admin'] },
         { id: 'analytics', label: 'Analytics', icon: BarChart3, access: ['admin'] },
       ]
     }
@@ -193,6 +218,8 @@ const ModernDashboard = () => {
               user={user}
               setMobileMenuOpen={setMobileMenuOpen}
               handleLogout={handleLogout}
+              expandedSections={expandedSections}
+              toggleSection={toggleSection}
             />
           </div>
         </div>
@@ -211,6 +238,8 @@ const ModernDashboard = () => {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           handleLogout={handleLogout}
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
         />
       </div>
 
@@ -274,7 +303,7 @@ const ModernDashboard = () => {
 };
 
 // Desktop Sidebar Component
-const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, sidebarOpen, setSidebarOpen, handleLogout }: any) => {
+const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, sidebarOpen, setSidebarOpen, handleLogout, expandedSections, toggleSection }: any) => {
   return (
     <div className="flex flex-col h-full">
       {/* Logo Header */}
@@ -312,19 +341,18 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {menuSections.map((section: any) => {
           const visibleItems = section.items.filter((item: any) => hasTabAccess(item.id));
           if (visibleItems.length === 0) return null;
 
-          return (
-            <div key={section.title}>
-              {sidebarOpen && (
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  {section.title}
-                </p>
-              )}
-              <div className="space-y-1">
+          const isExpanded = expandedSections.includes(section.title);
+          const hasActiveItem = visibleItems.some((item: any) => item.id === activeTab);
+
+          // Se não é colapsável ou tem apenas um item, renderiza diretamente
+          if (!section.collapsible || visibleItems.length === 1) {
+            return (
+              <div key={section.title} className="space-y-1">
                 {visibleItems.map((item: any) => (
                   <button
                     key={item.id}
@@ -341,6 +369,50 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
                   </button>
                 ))}
               </div>
+            );
+          }
+
+          // Renderiza seção colapsável
+          return (
+            <div key={section.title} className="space-y-1">
+              <button
+                onClick={() => sidebarOpen && toggleSection(section.title)}
+                className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-50 ${
+                  hasActiveItem ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                } ${!sidebarOpen ? 'justify-center' : 'justify-between'}`}
+                title={section.title}
+              >
+                <div className="flex items-center">
+                  <section.icon className={`h-4 w-4 ${!sidebarOpen ? '' : 'mr-3'}`} />
+                  {sidebarOpen && <span>{section.title}</span>}
+                </div>
+                {sidebarOpen && section.collapsible && (
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${
+                    isExpanded ? 'rotate-180' : ''
+                  }`} />
+                )}
+              </button>
+              
+              {/* Dropdown Items */}
+              {sidebarOpen && isExpanded && (
+                <div className="ml-6 space-y-1 border-l border-gray-200 pl-3">
+                  {visibleItems.map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                        activeTab === item.id
+                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                      title={item.label}
+                    >
+                      <item.icon className="h-3 w-3 mr-2" />
+                      <span className="text-xs">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -372,7 +444,7 @@ const DesktopSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, u
 };
 
 // Mobile Sidebar Component
-const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, setMobileMenuOpen, handleLogout }: any) => {
+const MobileSidebar = ({ menuSections, activeTab, setActiveTab, hasTabAccess, user, setMobileMenuOpen, handleLogout, expandedSections, toggleSection }: any) => {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
