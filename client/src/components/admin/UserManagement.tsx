@@ -76,6 +76,7 @@ import {
   PaletteIcon,
   HeadphonesIcon,
   ShieldIcon,
+  InfoIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -547,7 +548,7 @@ const UserManagement = () => {
     // Para usuários de outros níveis de acesso, o acesso vitalício é decidido automaticamente
     else {
       // Se for papel administrativo, força acesso vitalício = true
-      if (nivelAcesso && ['admin', 'suporte', 'designer', 'designer_adm'].includes(nivelAcesso)) {
+      if (['admin', 'suporte', 'designer', 'designer_adm'].includes(nivelAcesso)) {
         form.setValue('acessovitalicio', true);
       } 
       // Se for usuário padrão, força acesso vitalício = false
@@ -1042,7 +1043,7 @@ const UserManagement = () => {
         data.acessovitalicio = false;
       }
       // 2. Para papéis administrativos (admin, suporte, designer, designer_adm)
-      else if (data.nivelacesso && ['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
+      else if (['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
         data.tipoplano = null as any;
         data.origemassinatura = null as any;
         data.dataassinatura = null as any;
