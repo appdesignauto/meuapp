@@ -1511,19 +1511,19 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className={`flex-1 overflow-auto transition-all duration-300 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
-        <header className="bg-white shadow-sm">
-          <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
-            <div className="flex items-center mb-3 sm:mb-0">
+        <header className="bg-white border-b border-gray-100">
+          <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between">
+            <div className="flex items-center mb-4 sm:mb-0">
               {/* Botão de alternância do menu (visível apenas em telas menores) */}
               <button 
-                className="sm:hidden mr-3 text-gray-600 hover:text-blue-600"
+                className="sm:hidden mr-4 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-blue-600 transition-all"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Abrir menu lateral"
               >
                 <PanelRight className="w-5 h-5" />
               </button>
               
-              <h1 className="text-xl font-semibold">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 {activeTab === 'arts' && 'Artes e Designs'}
                 {activeTab === 'categories' && 'Categorias'}
                 {activeTab === 'formats' && 'Formatos'}
@@ -1532,7 +1532,7 @@ const AdminDashboard = () => {
                 {activeTab === 'collections' && 'Coleções'}
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
-                {activeTab === 'financeiro' && 'Dashboard Financeiro'}
+                {activeTab === 'financeiro' && 'Financeiro'}
                 {activeTab === 'subscriptions' && 'Assinaturas'}
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'coursesList' && 'Cursos'}
@@ -1541,8 +1541,8 @@ const AdminDashboard = () => {
                 {activeTab === 'lessons' && 'Aulas'}
                 {activeTab === 'coursesConfig' && 'Configurações'}
                 {activeTab === 'courseStats' && 'Estatísticas'}
-                {activeTab === 'comments' && 'Gerenciamento de Comentários'}
-                {activeTab === 'popups' && 'Gerenciamento de Popups'}
+                {activeTab === 'comments' && 'Comentários'}
+                {activeTab === 'popups' && 'Popups'}
               </h1>
             </div>
             
@@ -1645,9 +1645,10 @@ const AdminDashboard = () => {
           </div>
         </header>
         
-        <main className="p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsContent value="comments">
+        <main className="p-6 bg-gray-50 min-h-screen">
+          <div className="max-w-7xl mx-auto">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsContent value="comments">
               <CommentsManagement />
             </TabsContent>
             
@@ -4312,7 +4313,8 @@ const AdminDashboard = () => {
                 </TabsContent>
               </Tabs>
             </TabsContent>
-          </Tabs>
+            </Tabs>
+          </div>
         </main>
       </div>
       
