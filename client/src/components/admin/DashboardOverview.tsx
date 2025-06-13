@@ -62,7 +62,7 @@ const DashboardOverview = () => {
       {/* Header com filtro de data */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard de Monetização</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Visão Geral</h2>
           <p className="text-sm text-gray-500">Acompanhe métricas financeiras e de crescimento da plataforma</p>
         </div>
         <div className="flex items-center space-x-2">
@@ -82,7 +82,6 @@ const DashboardOverview = () => {
           </Select>
         </div>
       </div>
-
       {/* Cards principais de monetização */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Faturamento Total */}
@@ -157,7 +156,6 @@ const DashboardOverview = () => {
           </CardContent>
         </Card>
       </div>
-
       {/* Seção de distribuição e métricas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Distribuição de Usuários */}
@@ -216,7 +214,6 @@ const DashboardOverview = () => {
           </CardContent>
         </Card>
       </div>
-
       {/* Cards principais de estatísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Usuários Totais */}
@@ -307,7 +304,6 @@ const DashboardOverview = () => {
           </CardContent>
         </Card>
       </div>
-
       {/* Estatísticas Detalhadas */}
       <Card>
         <CardHeader>
