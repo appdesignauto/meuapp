@@ -98,7 +98,7 @@ const DashboardOverview = () => {
               R$ {(stats.monthlyRevenue || 0).toLocaleString('pt-BR')}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              +7% em relação ao período anterior
+              Baseado em {stats.premiumUsers || 0} assinantes ativos
             </p>
           </CardContent>
         </Card>
@@ -116,7 +116,7 @@ const DashboardOverview = () => {
               {stats.premiumUsers || 0}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              +25% novos assinantes
+              +{stats.userGrowthPercent || 0}% crescimento no período
             </p>
           </CardContent>
         </Card>
@@ -134,7 +134,7 @@ const DashboardOverview = () => {
               {stats.premiumRate || 0}%
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              +3% este período
+              {stats.newUsersThisPeriod || 0} novos usuários no período
             </p>
           </CardContent>
         </Card>
@@ -194,24 +194,24 @@ const DashboardOverview = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Métricas de Crescimento</CardTitle>
-            <p className="text-sm text-gray-500">Indicadores de performance nos últimos 30 dias</p>
+            <p className="text-sm text-gray-500">Indicadores de performance no período selecionado</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Novos Cadastros</span>
-              <span className="font-semibold">+{stats.newUsersMonth || 0}</span>
+              <span className="font-semibold">+{stats.newUsersThisPeriod || 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Conversões para Premium</span>
-              <span className="font-semibold">+{Math.round((stats.premiumUsers || 0) * 0.2)}</span>
+              <span className="text-sm text-gray-600">Artes Criadas</span>
+              <span className="font-semibold">+{stats.artsThisPeriod || 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Churn Rate</span>
-              <span className="font-semibold">2.1%</span>
+              <span className="text-sm text-gray-600">Posts da Comunidade</span>
+              <span className="font-semibold">+{stats.postsThisPeriod || 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">LTV Médio</span>
-              <span className="font-semibold">R$ {((stats.monthlyRevenue || 0) * 12).toLocaleString('pt-BR')}</span>
+              <span className="text-sm text-gray-600">Downloads</span>
+              <span className="font-semibold">+{stats.downloadsThisPeriod || 0}</span>
             </div>
           </CardContent>
         </Card>
@@ -233,7 +233,7 @@ const DashboardOverview = () => {
             </div>
             <p className="text-xs text-green-600 flex items-center mt-1">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +12% este mês
+              +{stats.userGrowthPercent || 0}% no período
             </p>
             <p className="text-xs text-gray-500 mt-1">
               {stats.premiumUsers || 327} premium ativos
@@ -255,10 +255,10 @@ const DashboardOverview = () => {
             </div>
             <p className="text-xs text-green-600 flex items-center mt-1">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +8% esta semana
+              +{stats.artGrowthPercent || 0}% no período
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {stats.artsThisWeek || 156} adicionadas esta semana
+              {stats.artsThisPeriod || 0} criadas no período
             </p>
           </CardContent>
         </Card>
@@ -277,10 +277,10 @@ const DashboardOverview = () => {
             </div>
             <p className="text-xs text-green-600 flex items-center mt-1">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +15% este mês
+              +{stats.communityGrowthPercent || 0}% no período
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {stats.postsToday || 73} interações hoje
+              {stats.postsThisPeriod || 0} posts no período
             </p>
           </CardContent>
         </Card>
