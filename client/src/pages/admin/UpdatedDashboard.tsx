@@ -1605,7 +1605,7 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 border-l border-blue-100 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
-        <header className="bg-white shadow-sm relative">
+        <header className="bg-gray-50 shadow-sm relative">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             {/* Linha de separação limitada e centralizada */}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
