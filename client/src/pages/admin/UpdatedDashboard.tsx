@@ -37,6 +37,7 @@ import {
   Layers,
   PanelRight,
   PanelLeft,
+  ChevronRight,
   Video,
   Trash2,
   FileImage,
@@ -1049,9 +1050,9 @@ const AdminDashboard = () => {
         </div>
         <div className={`py-5 overflow-hidden ${sidebarOpen ? 'px-4' : 'px-2'}`}>
           {!sidebarOpen && (
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3">
               <button 
-                className="text-gray-400 hover:text-blue-600 p-1 rounded-md transition-colors"
+                className="text-gray-400 hover:text-blue-600 p-1.5 rounded-md transition-colors bg-gray-50 hover:bg-blue-50"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Expandir menu"
               >
