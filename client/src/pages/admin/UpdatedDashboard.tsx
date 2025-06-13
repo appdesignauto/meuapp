@@ -1448,7 +1448,7 @@ const AdminDashboard = () => {
                   <Wrench className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'ferramentas' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
+                  {sidebarOpen && <span>Gerenciar </span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
