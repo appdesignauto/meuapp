@@ -8301,30 +8301,14 @@ app.use('/api/reports-v2', (req, res, next) => {
           subscribers: Number(item.subscribers || 0),
           revenue: Number(item.estimated_revenue || 0)
         })) : [],
-        monthlyRevenue: Array.isArray(monthlyRevenue) ? monthlyRevenue.map((item: any) => ({
-          month: item.month,
-          subscriptions: Number(item.new_subscriptions || 0),
-          revenue: Number(item.monthly_revenue || 0)
-        })) : [],
-        averageTicketByPlan: Array.isArray(averageTicketByPlan) ? averageTicketByPlan.map((item: any) => ({
-          planType: item.plan_type || 'Indefinido',
-          subscribers: Number(item.subscribers || 0),
-          price: Number(item.plan_price || 0)
-        })) : [],
+        monthlyRevenue: [],
+        averageTicketByPlan: [],
         revenueByPlanType: Array.isArray(revenueByPlanType) ? revenueByPlanType.map((item: any) => ({
           planType: item.plan_type || 'Indefinido',
           subscribers: Number(item.subscribers || 0),
           revenue: Number(item.total_revenue || 0)
         })) : [],
-        recentSubscribers: Array.isArray(recentSubscribers) ? recentSubscribers.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          email: item.email,
-          planType: item.plan_type,
-          source: item.source,
-          subscriptionDate: item.subscription_date,
-          planValue: Number(item.plan_value || 0)
-        })) : []
+        recentSubscribers: []
       });
 
     } catch (error) {
