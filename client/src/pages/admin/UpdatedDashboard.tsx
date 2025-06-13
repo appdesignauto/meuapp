@@ -1620,11 +1620,14 @@ const AdminDashboard = () => {
               </button>
               
               {activeTab === 'financeiro' ? (
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                    Dashboard Financeiro
-                  </h1>
-                  <p className="text-sm text-gray-500">
+                <div className="mb-2">
+                  <div className="flex items-center mb-1">
+                    <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      Dashboard Financeiro
+                    </h1>
+                  </div>
+                  <p className="text-sm text-gray-500 ml-9">
                     Métricas essenciais de receita e crescimento
                   </p>
                 </div>
@@ -1750,7 +1753,7 @@ const AdminDashboard = () => {
           </div>
         </header>
         
-        <main className="p-6">
+        <main className="p-6 pt-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="comments">
               <div className="mb-6">
