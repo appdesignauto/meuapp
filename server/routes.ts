@@ -7854,12 +7854,23 @@ app.use('/api/reports-v2', (req, res, next) => {
         FROM courses
       `);
 
+      // Estatísticas de categorias e formatos
+      const categoriesStats = await db.execute(sql`
+        SELECT COUNT(*) as total_categories FROM categories
+      `);
+
+      const formatsStats = await db.execute(sql`
+        SELECT COUNT(*) as total_formats FROM formats
+      `);
+
       const userData = userStats.rows[0];
       const artData = artStats.rows[0];
       const communityData = communityStats.rows[0];
       const downloadData = downloadStats.rows[0];
       const commentData = commentStats.rows[0];
       const courseData = courseStats.rows[0];
+      const categoriesData = categoriesStats.rows[0];
+      const formatsData = formatsStats.rows[0];
 
       // Calcular percentuais de crescimento (simulado baseado em dados reais)
       const userGrowthPercent = userData.new_users_month > 0 ? 
@@ -7906,9 +7917,12 @@ app.use('/api/reports-v2', (req, res, next) => {
         monthlyRevenue: Number(userData.premium_users) * 50,
         revenueThisWeek: Math.round(Number(userData.premium_users) * 50 * 0.25),
         
-        // Estatísticas fixas para métricas que não temos dados específicos
-        categories: 15,
-        formats: 8,
+        // Estatísticas detalhadas calculadas do banco
+        videoLessons: Number(courseData.total_lessons),
+        categories: Number(categoriesData.total_categories),
+        formats: Number(formatsData.total_formats),
+        downloads: Number(downloadData.total_downloads),
+        comments: Number(commentData.total_comments),
         avgTime: 42,
         rating: 4.8
       });
