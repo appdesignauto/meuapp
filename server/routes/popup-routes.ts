@@ -39,10 +39,15 @@ const upload = multer({
   },
 });
 
-// Endpoint para registrar visualização de popup
+// Endpoint para registrar visualização de popup com controle de duplicação
 router.post('/track-view/:id', async (req, res) => {
   try {
     const popupId = parseInt(req.params.id);
+    const sessionId = req.body.sessionId || 'anonymous';
+    const userAgent = req.headers['user-agent'] || 'Desconhecido';
+    const ip = req.ip || req.connection.remoteAddress || 'IP não identificado';
+    
+    console.log(`[POPUP VIEW] ID: ${popupId}, Session: ${sessionId}, IP: ${ip}`);
     
     // Verificar se o popup existe e está ativo
     const popup = await db
@@ -52,8 +57,32 @@ router.post('/track-view/:id', async (req, res) => {
       .limit(1);
 
     if (popup.length === 0) {
+      console.log(`[POPUP VIEW] Popup ${popupId} não encontrado ou inativo`);
       return res.status(404).json({ error: 'Popup não encontrado ou inativo' });
     }
+
+    // Verificar se já foi registrada uma visualização para esta sessão nos últimos 30 minutos
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const recentView = await db
+      .select()
+      .from(popupViews)
+      .where(
+        and(
+          eq(popupViews.popupId, popupId),
+          eq(popupViews.sessionId, sessionId),
+          gte(popupViews.viewedAt, thirtyMinutesAgo)
+        )
+      )
+      .limit(1);
+
+    if (recentView.length > 0) {
+      console.log(`[POPUP VIEW] Visualização duplicada detectada para sessão ${sessionId} - ignorando`);
+      return res.json({ success: true, message: 'Visualização já registrada recentemente' });
+    }
+
+    // Buscar views atual antes do update
+    const currentViews = popup[0].views || 0;
+    console.log(`[POPUP VIEW] Views antes: ${currentViews}, incrementando para: ${currentViews + 1}`);
 
     // Incrementar contador de visualizações
     await db
@@ -64,6 +93,15 @@ router.post('/track-view/:id', async (req, res) => {
       })
       .where(eq(popups.id, popupId));
 
+    // Registrar na tabela de visualizações para controle de duplicação
+    await db.insert(popupViews).values({
+      popupId,
+      userId: req.isAuthenticated() ? req.user.id : null,
+      sessionId,
+      action: 'view',
+    });
+
+    console.log(`[POPUP VIEW] Visualização registrada com sucesso para popup ${popupId}`);
     res.json({ success: true, message: 'Visualização registrada' });
   } catch (error) {
     console.error('Erro ao registrar visualização:', error);
@@ -505,24 +543,34 @@ router.post('/view', async (req, res) => {
   try {
     const { popupId, sessionId, action } = req.body;
     const userId = req.isAuthenticated() ? req.user.id : null;
+    const userAgent = req.headers['user-agent'] || 'Desconhecido';
+    const ip = req.ip || req.connection.remoteAddress || 'IP não identificado';
     
-    // Verificar se popup existe
+    console.log(`[POPUP VIEW OLD] Chamada antiga detectada - ID: ${popupId}, IP: ${ip}, UserAgent: ${userAgent.substring(0, 50)}...`);
+    
+    // Verificar se popup existe e está ativo
     const existingPopup = await db.query.popups.findFirst({
-      where: eq(popups.id, popupId),
+      where: and(eq(popups.id, popupId), eq(popups.isActive, true)),
     });
     
     if (!existingPopup) {
+      console.log(`[POPUP VIEW OLD] Popup ${popupId} não encontrado ou inativo`);
       return res.status(404).json({ message: 'Popup não encontrado' });
     }
     
-    // Registrar visualização
-    await db.insert(popupViews).values({
-      popupId,
-      userId,
-      sessionId,
-      action: action || 'view',
-    });
+    // Usar o novo sistema de contagem direta nas colunas
+    console.log(`[POPUP VIEW OLD] Redirecionando para sistema novo - Views antes: ${existingPopup.views || 0}`);
     
+    // Incrementar contador de visualizações diretamente
+    await db
+      .update(popups)
+      .set({ 
+        views: sql`${popups.views} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(popups.id, popupId));
+    
+    console.log(`[POPUP VIEW OLD] Sistema antigo processado - nova contagem: ${(existingPopup.views || 0) + 1}`);
     res.status(201).json({ message: 'Visualização registrada com sucesso' });
   } catch (error) {
     console.error('Erro ao registrar visualização:', error);
