@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Removed Analytics configuration panel from admin dashboard due to persistent navigation conflicts
+  - Completely removed Analytics section from dashboard UI to eliminate tab switching bugs
+  - Deleted AnalyticsSettings component that was causing state management issues
+  - GTM integration system remains functional in background with database configuration
+  - Meta Pixel and tracking systems continue operating through existing infrastructure
+  - Focus maintained on dashboard core functionality without UI conflicts
 - June 14, 2025: Implemented complete Google Tag Manager integration with database configuration
   - Created comprehensive GTM configuration system in `/public/js/gtm/gtm-config.js`
   - Integrated GTM with existing analytics settings database for dynamic configuration

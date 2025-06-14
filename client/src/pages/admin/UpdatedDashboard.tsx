@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
+
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import CollaborationRequestsManagement from '@/components/admin/CollaborationRequestsManagement';
 import AffiliateRequestsManagement from '@/components/admin/AffiliateRequestsManagement';
@@ -1507,18 +1507,7 @@ const AdminDashboard = () => {
                       <HardDrive className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
                       {sidebarOpen && <span>Armazenamento</span>}
                     </Link>
-                    <button
-                      onClick={() => setActiveTab('analytics')}
-                      className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                        activeTab === 'analytics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } ${!sidebarOpen ? 'justify-center' : ''}`}
-                      title="Analytics"
-                    >
-                      <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                        activeTab === 'analytics' ? 'text-blue-600' : 'text-gray-500'
-                      }`} />
-                      {sidebarOpen && <span className="font-medium">Analytics</span>}
-                    </button>
+
                   </>
                 )}
               </CollapsibleContent>
@@ -1633,7 +1622,7 @@ const AdminDashboard = () => {
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
-                  {activeTab === 'analytics' && 'Analytics'}
+
                 </h1>
               </div>
             </div>
@@ -4030,22 +4019,7 @@ const AdminDashboard = () => {
               </TabsContent>
             )}
             
-            {/* Analytics e Rastreamento */}
-            <TabsContent value="analytics" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics</h2>
-                    <p className="text-muted-foreground">
-                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
-                    </p>
-                  </div>
-                  <div key={`analytics-${Date.now()}`}>
-                    <AnalyticsSettings />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
+
             
             <TabsContent value="ferramentas" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
