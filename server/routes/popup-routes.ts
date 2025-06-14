@@ -61,7 +61,30 @@ router.post('/track-view/:id', async (req, res) => {
       return res.status(404).json({ error: 'Popup não encontrado ou inativo' });
     }
 
-    // Sistema de deduplicação removido - todas as visualizações são contabilizadas
+    // Controle de duplicatas: verificar se já registrou nos últimos 30 segundos
+    const trackingKey = `${popupId}_${sessionId}_${ip}`;
+    const currentTime = Date.now();
+    
+    // Cache simples em memória para evitar duplicatas (em produção usaria Redis)
+    if (!global.popupViewCache) {
+      global.popupViewCache = new Map();
+    }
+    
+    const lastView = global.popupViewCache.get(trackingKey);
+    if (lastView && (currentTime - lastView) < 30000) { // 30 segundos
+      console.log(`[POPUP VIEW] Duplicata detectada para ${trackingKey}, ignorando`);
+      return res.json({ success: true, message: 'Visualização já registrada recentemente' });
+    }
+    
+    // Registrar timestamp atual
+    global.popupViewCache.set(trackingKey, currentTime);
+    
+    // Limpar cache antigo (manter apenas últimos 5 minutos)
+    for (const [key, timestamp] of global.popupViewCache.entries()) {
+      if (currentTime - timestamp > 300000) { // 5 minutos
+        global.popupViewCache.delete(key);
+      }
+    }
 
     // Buscar views atual antes do update
     const currentViews = popup[0].views || 0;

@@ -67,15 +67,19 @@ export function Popup({
     return 'balanced';
   };
 
-  // Registrar visualização sempre que o popup aparecer
+  // Controle rigoroso: apenas uma visualização por popup por instância
+  const [hasTracked, setHasTracked] = useState(false);
+  
   useEffect(() => {
-    // Registrar visualização usando o endpoint correto
-    apiRequest('POST', `/api/popups/track-view/${id}`, {
-      sessionId
-    }).catch(error => {
-      console.error('Erro ao registrar visualização:', error);
-    });
-  }, [id, sessionId]);
+    if (!hasTracked) {
+      setHasTracked(true);
+      apiRequest('POST', `/api/popups/track-view/${id}`, {
+        sessionId
+      }).catch(error => {
+        console.error('Erro ao registrar visualização:', error);
+      });
+    }
+  }, []); // Array vazio - executa apenas uma vez na montagem
 
   // Mostrar popup com delay e aplicar animação de entrada
   useEffect(() => {
