@@ -1591,57 +1591,36 @@ const AdminDashboard = () => {
                 <PanelRight className="w-5 h-5" />
               </button>
               
-              <div className="flex flex-col">
-                <div className="flex items-center">
-                  {activeTab === 'financeiro' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
-                  {activeTab === 'stats' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
-                  {activeTab === 'arts' && <Palette className="w-5 h-5 text-blue-600 mr-3" />}
-                  {activeTab === 'users' && <Users className="w-5 h-5 text-blue-600 mr-3" />}
-                  {activeTab === 'community' && <MessageSquare className="w-5 h-5 text-blue-600 mr-3" />}
-                  {activeTab === 'settings' && <Settings className="w-5 h-5 text-blue-600 mr-3" />}
-                  {activeTab === 'logo' && <Image className="w-5 h-5 text-blue-600 mr-3" />}
-                  
-                  <h1 className="text-xl font-bold text-gray-900">
-                    {activeTab === 'financeiro' && 'Dashboard Financeiro'}
-                    {activeTab === 'stats' && 'Dashboard'}
-                    {activeTab === 'arts' && 'Artes e Designs'}
-                    {activeTab === 'users' && 'Usuários'}
-                    {activeTab === 'community' && 'Comunidade'}
-                    {activeTab === 'settings' && 'Configurações'}
-                    {activeTab === 'logo' && 'Gerenciar Logo'}
-                    {activeTab === 'categories' && 'Categorias'}
-                    {activeTab === 'formats' && 'Formatos'}
-                    {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
-                    {activeTab === 'collections' && 'Coleções'}
-                    {activeTab === 'subscriptions' && 'Assinaturas'}
-                    {activeTab === 'coursesList' && 'Cursos'}
-                    {activeTab === 'modules' && 'Módulos'}
-                    {activeTab === 'lessons' && 'Aulas'}
-                    {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
-                    {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
-                    {activeTab === 'comments' && 'Comentários'}
-                    {activeTab === 'popups' && 'Popups'}
-                  </h1>
-                </div>
+              <div className="flex items-center">
+                {activeTab === 'financeiro' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'stats' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'arts' && <Palette className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'users' && <Users className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'community' && <MessageSquare className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'settings' && <Settings className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'logo' && <Image className="w-5 h-5 text-blue-600 mr-3" />}
                 
-                <p className="text-sm text-gray-500 mt-1 ml-8">
-                  {activeTab === 'financeiro' && 'Visualize receitas, assinantes e métricas de crescimento.'}
-                  {activeTab === 'stats' && 'Visão geral do sistema e estatísticas principais.'}
-                  {activeTab === 'arts' && 'Gerencie designs, categorias e coleções.'}
-                  {activeTab === 'users' && 'Administre usuários, permissões e assinaturas.'}
-                  {activeTab === 'community' && 'Gerencie posts, comentários e interações da comunidade.'}
-                  {activeTab === 'settings' && 'Configure as opções gerais do sistema.'}
-                  {activeTab === 'logo' && 'Faça upload, visualize e gerencie o logo do site.'}
-                  {activeTab === 'categories' && 'Organize designs por categorias temáticas.'}
-                  {activeTab === 'formats' && 'Gerencie formatos de posts e stories.'}
-                  {activeTab === 'fileTypes' && 'Configure tipos de arquivos suportados.'}
-                  {activeTab === 'collections' && 'Organize designs em coleções especiais.'}
-                  {activeTab === 'coursesList' && 'Gerencie cursos e conteúdo educativo.'}
-                  {activeTab === 'coursesConfig' && 'Configure aparência e funcionalidades dos cursos.'}
-                  {activeTab === 'courseStats' && 'Análise de desempenho e métricas dos cursos.'}
-                  {activeTab === 'comments' && 'Visualize, modere e gerencie os comentários dos usuários nas aulas.'}
-                  {activeTab === 'popups' && 'Configure popups promocionais e informativos.'}
-                </p>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {activeTab === 'financeiro' && 'Dashboard Financeiro'}
+                  {activeTab === 'stats' && 'Dashboard'}
+                  {activeTab === 'arts' && 'Artes e Designs'}
+                  {activeTab === 'users' && 'Usuários'}
+                  {activeTab === 'community' && 'Comunidade'}
+                  {activeTab === 'settings' && 'Configurações'}
+                  {activeTab === 'logo' && 'Gerenciar Logo'}
+                  {activeTab === 'categories' && 'Categorias'}
+                  {activeTab === 'formats' && 'Formatos'}
+                  {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
+                  {activeTab === 'collections' && 'Coleções'}
+                  {activeTab === 'subscriptions' && 'Assinaturas'}
+                  {activeTab === 'coursesList' && 'Cursos'}
+                  {activeTab === 'modules' && 'Módulos'}
+                  {activeTab === 'lessons' && 'Aulas'}
+                  {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
+                  {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
+                  {activeTab === 'comments' && 'Comentários'}
+                  {activeTab === 'popups' && 'Popups'}
+                </h1>
               </div>
             </div>
             
