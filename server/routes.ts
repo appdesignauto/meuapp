@@ -6981,6 +6981,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rotas para gerenciamento de analytics
   app.use('/api/analytics', analyticsRouter);
+
+  // Rota para obter configurações de analytics (completas para o admin)
+  app.get("/api/analytics/settings", async (req, res) => {
+    try {
+      console.log('🔍 Buscando configurações de analytics...');
+      const [settings] = await db.select().from(analyticsSettings);
+      
+      if (!settings) {
+        console.log('⚠️ Nenhuma configuração encontrada, criando padrão...');
+        // Criar configurações padrão se não existirem
+        const [newSettings] = await db.insert(analyticsSettings)
+          .values({
+            metaPixelId: '',
+            metaPixelEnabled: false,
+            ga4MeasurementId: '',
+            ga4Enabled: false,
+            gtmContainerId: '',
+            gtmEnabled: false,
+            clarityProjectId: '',
+            clarityEnabled: false,
+            hotjarSiteId: '',
+            hotjarEnabled: false,
+            linkedinPartnerId: '',
+            linkedinEnabled: false,
+            tiktokPixelId: '',
+            tiktokEnabled: false,
+            amplitudeApiKey: '',
+            amplitudeEnabled: false,
+            mixpanelToken: '',
+            mixpanelEnabled: false,
+            trackPageviews: true,
+            trackClicks: false,
+            trackFormSubmissions: false,
+            trackArtsViewed: true,
+            trackArtsDownloaded: true,
+            customScriptHead: '',
+            customScriptBody: '',
+            customScriptEnabled: false,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        console.log('✅ Configurações padrão criadas:', newSettings);
+        return res.json(newSettings);
+      }
+      
+      console.log('✅ Configurações encontradas:', {
+        metaPixelId: settings.metaPixelId,
+        ga4MeasurementId: settings.ga4MeasurementId,
+        gtmContainerId: settings.gtmContainerId
+      });
+      
+      res.json(settings);
+    } catch (error) {
+      console.error('❌ Erro ao buscar configurações de analytics:', error);
+      res.status(500).json({ message: "Erro ao buscar configurações de analytics" });
+    }
+  });
   
 
   // Implementação direta das rotas para evitar problemas de importação
