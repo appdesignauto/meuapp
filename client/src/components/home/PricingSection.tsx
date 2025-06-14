@@ -67,10 +67,10 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Anual - Destacado no meio */}
-          <div className="bg-green-500 rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105">
+          <div className="bg-blue-900 rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105">
             {/* Best Value Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-green-600 text-white text-xs font-bold px-4 py-1 rounded-full">
+              <div className="bg-blue-800 text-white text-xs font-bold px-4 py-1 rounded-full">
                 Melhor Valor
               </div>
             </div>
@@ -114,7 +114,7 @@ const PricingSection = () => {
               </li>
             </ul>
             
-            <Button className="w-full bg-white text-green-500 hover:bg-gray-50 py-3 rounded-full font-medium">
+            <Button className="w-full bg-white text-blue-900 hover:bg-gray-50 py-3 rounded-full font-medium">
               Começar Agora
             </Button>
           </div>
