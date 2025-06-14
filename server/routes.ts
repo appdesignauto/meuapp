@@ -8723,7 +8723,7 @@ app.use('/api/reports-v2', (req, res, next) => {
           premiumPercentage: Number(row.premiumPercentage) || 0
         }));
 
-        // Taxa de Conversão - dados fixos baseados na tabela
+        // Taxa de Conversão - incluindo artes com 0 visualizações para monitoramento
         const artsWithViews = await tx
           .select({
             id: arts.id,
@@ -8733,18 +8733,15 @@ app.use('/api/reports-v2', (req, res, next) => {
           })
           .from(arts)
           .leftJoin(downloads, eq(arts.id, downloads.artId))
-          .where(and(
-            eq(arts.isVisible, true),
-            sql`${arts.viewcount} > 0`
-          ))
+          .where(eq(arts.isVisible, true))
           .groupBy(arts.id, arts.title, arts.viewcount)
           .orderBy(sql`COUNT(${downloads.id}) DESC, ${arts.id} ASC`)
-          .limit(5);
+          .limit(10);
 
         const conversionRates = artsWithViews.map(art => {
-          const views = Number(art.viewcount) || 1; // Garantir pelo menos 1 para evitar divisão por zero
+          const views = Number(art.viewcount) || 0;
           const downloads = Number(art.downloads) || 0;
-          const conversionRate = Math.round((downloads / views) * 100);
+          const conversionRate = views > 0 ? Math.round((downloads / views) * 100) : 0;
           
           return {
             title: art.title,
@@ -8752,7 +8749,7 @@ app.use('/api/reports-v2', (req, res, next) => {
             downloads: downloads,
             conversionRate: conversionRate
           };
-        });
+        }).filter(art => art.downloads > 0 || art.views > 0);
 
         // Comparação Premium vs Gratuito - dentro da transação
         const premiumStats = await tx
