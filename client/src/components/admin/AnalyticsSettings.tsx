@@ -51,6 +51,7 @@ const AnalyticsSettings: React.FC = () => {
   const queryClient = useQueryClient();
   
   const [analytics, setAnalytics] = useState<AnalyticsSettings | null>(null);
+  const [activeTab, setActiveTab] = useState('meta-pixel');
 
   // Buscar configurações existentes
   const { data: analyticsData, isLoading: isLoadingData } = useQuery({
@@ -107,7 +108,7 @@ const AnalyticsSettings: React.FC = () => {
     }
   }, [analyticsData]);
 
-  // Resetar o estado local quando os dados são recarregados
+  // Resetar o estado local quando os dados são recarregados, mas manter a aba ativa
   useEffect(() => {
     if (analyticsData && !saveAnalyticsMutation.isPending) {
       setAnalytics(analyticsData);
@@ -173,7 +174,7 @@ const AnalyticsSettings: React.FC = () => {
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="meta-pixel" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
           <TabsTrigger value="google-tag-manager">Google Tag Manager</TabsTrigger>
