@@ -124,6 +124,7 @@ The system uses PostgreSQL with the following key entities:
   - Implemented comprehensive testing for all phone capture scenarios
   - Both systems now update existing users' phone numbers when available in webhook payloads
   - Phone data capture resolves WhatsApp validation errors in user management interface
+  - Final WhatsApp message template: "Olá, [nome], sou do suporte do App Design Auto, esta ai?"
 - June 14, 2025: Implemented WhatsApp communication integration in user management interface
   - Added WhatsApp icon column in user management table for direct communication
   - Integrated React Icons FaWhatsapp component for better compatibility and visibility
@@ -207,4 +208,4 @@ The system uses PostgreSQL with the following key entities:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-WhatsApp message template: Uses informal, direct format - "Olá [nome] sou do suporte da design auto. esta ai?"
+WhatsApp message template: Uses informal, direct format - "Olá, [nome], sou do suporte do App Design Auto, esta ai?"

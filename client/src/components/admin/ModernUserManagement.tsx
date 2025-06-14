@@ -548,7 +548,7 @@ const ModernUserManagement = () => {
       formattedPhone = '55' + cleanPhone; // Código do Brasil
     }
     
-    const message = `Olá ${userName} sou do suporte da design auto. esta ai?`;
+    const message = `Olá, ${userName}, sou do suporte do App Design Auto, esta ai?`;
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
     
