@@ -118,15 +118,15 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 14, 2025: Performance de Conteúdo dashboard reset for authentic tracking from zero
+- June 14, 2025: Performance de Conteúdo dashboard completely reset for fresh authentic tracking
   - Fixed SQL column reference errors in content performance endpoint by replacing raw SQL with Drizzle ORM
   - Resolved downloads table structure issues: added auto-increment ID and default timestamp for createdAt
   - Eliminated all Math.random() calls causing metric oscillations in conversion rates and view counts
   - Implemented database transactions and deterministic ordering to ensure consistent results
-  - Reset all viewcount fields to 0 for authentic monitoring starting from current date
-  - System now tracks real user interactions: 271 total arts, 11 historical downloads preserved
-  - Content performance analytics ready for genuine user engagement tracking from zero baseline
-  - Downloads tracking maintained: Feirão (2), Vendas (5), Seguro (2), Lavagem (1), Locação (1)
+  - Complete reset: all viewcount fields = 0 and downloads table cleared for fresh monitoring
+  - System ready for 100% authentic user engagement tracking from zero baseline
+  - Content performance analytics configured to track genuine user interactions from current date
+  - All metrics (views, downloads, conversion rates) now start from clean slate
 - June 14, 2025: Completed Microsoft Clarity configuration and optimized dashboard interface
   - Implemented Microsoft Clarity with Project ID "rz84poylxv" using official integration patterns
   - Added advanced user segmentation: device type, screen resolution, traffic source categorization, time segments
