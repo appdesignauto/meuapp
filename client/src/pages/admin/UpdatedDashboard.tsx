@@ -1792,24 +1792,6 @@ const AdminDashboard = () => {
             <TabsContent value="stats">
               {/* Dashboard com abas internas */}
               <div className="space-y-6">
-                {/* Header com filtro de período */}
-                <div className="flex justify-end items-center">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600">Período:</span>
-                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todo período</SelectItem>
-                        <SelectItem value="7d">7 dias</SelectItem>
-                        <SelectItem value="30d">30 dias</SelectItem>
-                        <SelectItem value="90d">90 dias</SelectItem>
-                        <SelectItem value="1y">1 ano</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
                 {/* Abas internas do Dashboard */}
                 <div className="bg-white rounded-lg shadow-sm border">
