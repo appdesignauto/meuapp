@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Implemented session-based popup view deduplication system (5-minute window)
+  - Added server-side session cache to prevent excessive view counting from same user/session
+  - Maintains accurate marketing metrics while eliminating spam counts
+  - System blocks duplicate views for 5 minutes per session, allows recount after cooldown period
+  - Automated cache cleanup every 30 minutes for optimal performance
 - June 14, 2025: Completed popup analytics system with authentic database tracking
   - Implemented real-time popup view and click tracking using dedicated database columns
   - Removed session-based deduplication to ensure all popup impressions are counted accurately

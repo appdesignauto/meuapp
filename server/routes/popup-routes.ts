@@ -61,28 +61,28 @@ router.post('/track-view/:id', async (req, res) => {
       return res.status(404).json({ error: 'Popup não encontrado ou inativo' });
     }
 
-    // Controle de duplicatas: verificar se já registrou nos últimos 30 segundos
-    const trackingKey = `${popupId}_${sessionId}_${ip}`;
+    // Deduplicação por sessão - Evita contagem excessiva (5 minutos)
+    const trackingKey = `${popupId}_${sessionId}`;
     const currentTime = Date.now();
     
-    // Cache simples em memória para evitar duplicatas (em produção usaria Redis)
-    if (!global.popupViewCache) {
-      global.popupViewCache = new Map();
+    // Cache de sessão para controle de visualizações
+    if (!global.popupSessionCache) {
+      global.popupSessionCache = new Map();
     }
     
-    const lastView = global.popupViewCache.get(trackingKey);
-    if (lastView && (currentTime - lastView) < 30000) { // 30 segundos
-      console.log(`[POPUP VIEW] Duplicata detectada para ${trackingKey}, ignorando`);
-      return res.json({ success: true, message: 'Visualização já registrada recentemente' });
+    const lastView = global.popupSessionCache.get(trackingKey);
+    if (lastView && (currentTime - lastView) < 300000) { // 5 minutos
+      console.log(`[POPUP VIEW] Duplicata por sessão detectada para ${trackingKey}, ignorando`);
+      return res.json({ success: true, message: 'Visualização já registrada nesta sessão' });
     }
     
     // Registrar timestamp atual
-    global.popupViewCache.set(trackingKey, currentTime);
+    global.popupSessionCache.set(trackingKey, currentTime);
     
-    // Limpar cache antigo (manter apenas últimos 5 minutos)
-    for (const [key, timestamp] of global.popupViewCache.entries()) {
-      if (currentTime - timestamp > 300000) { // 5 minutos
-        global.popupViewCache.delete(key);
+    // Limpar cache antigo (manter apenas últimos 30 minutos)
+    for (const [key, timestamp] of global.popupSessionCache.entries()) {
+      if (currentTime - timestamp > 1800000) { // 30 minutos
+        global.popupSessionCache.delete(key);
       }
     }
 
