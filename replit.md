@@ -118,12 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 14, 2025: Added professional pricing section to homepage with R$ 47/month and R$ 147/year plans
-  - Created PricingSection component with modern card-based design
-  - Highlighted annual plan as "Most Popular" with special badge and savings display
-  - Positioned strategically between testimonials and call-to-action
-  - Only visible to non-premium users to avoid redundancy
-  - Includes payment security guarantees and professional styling
+- June 14, 2025: Enhanced pricing section with 3-tier plan structure and dark theme design
+  - Updated PricingSection to include Mensal (R$ 47), Semestral (R$ 97), and Anual (R$ 147) plans
+  - Implemented dark background theme with gray-900 base for premium aesthetic
+  - Color-coded plan differentiation: blue (monthly), orange (6-month), purple (annual)
+  - Semestral plan marked as "Mais Popular", Annual as "Melhor Valor" with crown icon
+  - Enhanced responsive 3-column grid layout with distinct visual hierarchy
 - June 14, 2025: Updated marketing copy across entire platform from "+300 Artes Exclusivas" to "Milhares de Artes Exclusivas"
   - Modified Hero component badge display
   - Updated FeatureStats component text
