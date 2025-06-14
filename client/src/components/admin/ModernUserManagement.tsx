@@ -44,6 +44,7 @@ import {
   CreditCard,
   AlertTriangle
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -513,6 +514,19 @@ const ModernUserManagement = () => {
     }
   };
 
+  // Função para abrir WhatsApp
+  const handleWhatsAppContact = (user: User) => {
+    const userName = user.name || user.username;
+    const message = `Olá ${userName}! Sou do suporte da DesignAuto e estou entrando em contato para ajudá-lo. Como posso ajudá-lo hoje?`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "WhatsApp aberto",
+      description: `Mensagem personalizada para ${userName} criada com sucesso`,
+    });
+  };
+
 
 
   const formatDate = (dateString?: string | null) => {
@@ -796,6 +810,10 @@ const ModernUserManagement = () => {
                               <DropdownMenuItem onClick={() => handleViewUserDetails(user)}>
                                 <Eye className="w-4 h-4 mr-2" />
                                 Ver Detalhes
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleWhatsAppContact(user)} className="text-green-600">
+                                <FaWhatsapp className="w-4 h-4 mr-2" />
+                                Contatar WhatsApp
                               </DropdownMenuItem>
                               
                               <DropdownMenuSeparator />
