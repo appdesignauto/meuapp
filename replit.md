@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Updated marketing copy across entire platform from "+300 Artes Exclusivas" to "Milhares de Artes Exclusivas"
+  - Modified Hero component badge display
+  - Updated FeatureStats component text
+  - Enhanced PremiumFeatures component description  
+  - Revised PainelInicio premium benefits section
+  - Updated auth-page-backup promotional content
+  - Ensured consistent messaging throughout all user-facing components
 - June 14, 2025: Completed phone number capture implementation for both payment platform webhooks
   - Enhanced Hotmart webhook processor to extract phone from buyer.phone, buyer.address.phone, or customer.phone fields
   - Verified Doppus webhook processor already captures customer.phone correctly
