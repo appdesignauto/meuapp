@@ -1,0 +1,463 @@
+# Configuração Microsoft Clarity no Replit
+
+## 1. Instalação das Dependências
+
+### Para projetos React/Next.js:
+```bash
+npm install @microsoft/clarity
+```
+
+### Para projetos vanilla HTML/JS:
+Não é necessário instalar dependências adicionais.
+
+## 2. Configuração do Microsoft Clarity
+
+### Opção A: React/Next.js
+
+#### 1. Criar arquivo de configuração do Clarity:
+```javascript
+// utils/clarity.js
+export const CLARITY_PROJECT_ID = 'rz84poylxv'; // Seu Project ID
+
+// Inicializar Clarity
+export const initClarity = () => {
+  if (typeof window !== 'undefined') {
+    window.clarity = window.clarity || function(...args) {
+      (window.clarity.q = window.clarity.q || []).push(args);
+    };
+    
+    // Configurar Clarity
+    window.clarity('start', {
+      projectId: CLARITY_PROJECT_ID,
+      upload: 'https://www.clarity.ms/collect'
+    });
+  }
+};
+
+// Identificar usuário
+export const identifyUser = (userId, sessionId = null, pageId = null, userHint = null) => {
+  if (typeof window !== 'undefined' && window.clarity) {
+    window.clarity('identify', userId, sessionId, pageId, userHint);
+  }
+};
+
+// Marcar evento personalizado
+export const trackEvent = (eventName) => {
+  if (typeof window !== 'undefined' && window.clarity) {
+    window.clarity('event', eventName);
+  }
+};
+
+// Definir tags personalizadas
+export const setTag = (key, value) => {
+  if (typeof window !== 'undefined' && window.clarity) {
+    window.clarity('set', key, value);
+  }
+};
+
+// Parar gravação (para conformidade GDPR/LGPD)
+export const stopClarity = () => {
+  if (typeof window !== 'undefined' && window.clarity) {
+    window.clarity('stop');
+  }
+};
+```
+
+#### 2. Configurar no _app.js (Next.js) ou App.js (React):
+```javascript
+// pages/_app.js (Next.js) ou App.js (React)
+import { useEffect } from 'react';
+import Script from 'next/script'; // Apenas para Next.js
+import { initClarity, CLARITY_PROJECT_ID } from '../utils/clarity';
+
+function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    // Inicializar Clarity após carregar a página
+    initClarity();
+  }, []);
+
+  return (
+    <>
+      {/* Next.js - Método recomendado */}
+      <Script
+        id="clarity-script"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
+          `,
+        }}
+      />
+
+      {/* React puro - alternativa */}
+      {/*
+      <Helmet>
+        <script>
+          {`
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
+          `}
+        </script>
+      </Helmet>
+      */}
+      
+      <Component {...pageProps} />
+    </>
+  );
+}
+
+export default MyApp;
+```
+
+#### 3. Hook personalizado para facilitar o uso:
+```javascript
+// hooks/useClarity.js
+import { useEffect } from 'react';
+import { initClarity, identifyUser, trackEvent, setTag } from '../utils/clarity';
+
+export const useClarity = () => {
+  useEffect(() => {
+    initClarity();
+  }, []);
+
+  return {
+    identify: identifyUser,
+    track: trackEvent,
+    setTag: setTag
+  };
+};
+```
+
+### Opção B: HTML Vanilla
+
+#### Adicionar no `<head>` do seu HTML:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Microsoft Clarity -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "rz84poylxv");
+  </script>
+</head>
+<body>
+  <!-- Seu conteúdo aqui -->
+</body>
+</html>
+```
+
+## 3. Eventos e Rastreamento Personalizado
+
+### Configuração de eventos personalizados:
+```javascript
+// utils/clarityEvents.js
+import { trackEvent, setTag, identifyUser } from './clarity';
+
+// Rastrear cliques em botões
+export const trackButtonClick = (buttonName) => {
+  trackEvent(`button_click_${buttonName}`);
+};
+
+// Rastrear envio de formulários
+export const trackFormSubmit = (formName) => {
+  trackEvent(`form_submit_${formName}`);
+  setTag('last_form', formName);
+};
+
+// Rastrear navegação
+export const trackPageView = (pageName) => {
+  trackEvent(`page_view_${pageName}`);
+  setTag('current_page', pageName);
+};
+
+// Rastrear erros
+export const trackError = (errorType, errorMessage) => {
+  trackEvent(`error_${errorType}`);
+  setTag('last_error', errorMessage);
+};
+
+// Identificar usuário logado
+export const identifyLoggedUser = (userId, email = null, userType = null) => {
+  identifyUser(userId);
+  if (email) setTag('user_email', email);
+  if (userType) setTag('user_type', userType);
+};
+
+// Rastrear conversões
+export const trackConversion = (conversionType, value = null) => {
+  trackEvent(`conversion_${conversionType}`);
+  if (value) setTag('conversion_value', value);
+};
+```
+
+### Uso nos componentes:
+```javascript
+import { useClarity } from '../hooks/useClarity';
+import { 
+  trackButtonClick, 
+  trackFormSubmit, 
+  identifyLoggedUser 
+} from '../utils/clarityEvents';
+
+function MyComponent() {
+  const { identify, track, setTag } = useClarity();
+
+  const handleClick = () => {
+    trackButtonClick('hero-cta');
+    // Sua lógica aqui
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    trackFormSubmit('newsletter');
+    // Sua lógica de envio aqui
+  };
+
+  const handleLogin = (user) => {
+    identifyLoggedUser(user.id, user.email, user.plan);
+    // Sua lógica de login aqui
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>
+        Clique aqui
+      </button>
+      
+      <form onSubmit={handleSubmit}>
+        <input type="email" placeholder="Email" />
+        <button type="submit">Inscrever</button>
+      </form>
+    </div>
+  );
+}
+```
+
+## 4. Configuração no Replit
+
+### 1. Variáveis de Ambiente (Recomendado):
+```bash
+# No arquivo .env
+NEXT_PUBLIC_CLARITY_ID=rz84poylxv
+# ou
+REACT_APP_CLARITY_ID=rz84poylxv
+```
+
+### 2. Usar variáveis de ambiente no código:
+```javascript
+// utils/clarity.js
+export const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_ID || process.env.REACT_APP_CLARITY_ID;
+```
+
+### 3. Configurar no Replit:
+1. Vá em **Secrets** no painel lateral
+2. Adicione uma nova secret:
+   - Key: `NEXT_PUBLIC_CLARITY_ID` (ou `REACT_APP_CLARITY_ID`)
+   - Value: `rz84poylxv`
+
+## 5. Funcionalidades Avançadas
+
+### A. Heatmaps Customizados:
+```javascript
+// Marcar elementos importantes para heatmaps
+export const markImportantElement = (elementId, importance = 'high') => {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.setAttribute('data-clarity-region', importance);
+  }
+};
+
+// Mascarar elementos sensíveis
+export const maskSensitiveElement = (elementId) => {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.setAttribute('data-clarity-mask', 'true');
+  }
+};
+```
+
+### B. Segmentação de Usuários:
+```javascript
+// utils/claritySegmentation.js
+import { setTag } from './clarity';
+
+export const segmentUser = (userData) => {
+  // Segmentar por plano
+  if (userData.plan) {
+    setTag('user_plan', userData.plan);
+  }
+  
+  // Segmentar por localização
+  if (userData.country) {
+    setTag('user_country', userData.country);
+  }
+  
+  // Segmentar por fonte de tráfego
+  if (document.referrer) {
+    const referrer = new URL(document.referrer).hostname;
+    setTag('traffic_source', referrer);
+  }
+  
+  // Segmentar por dispositivo
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  setTag('device_type', isMobile ? 'mobile' : 'desktop');
+};
+```
+
+### C. A/B Testing Integration:
+```javascript
+// utils/clarityABTest.js
+import { setTag, trackEvent } from './clarity';
+
+export const trackABTest = (testName, variant) => {
+  setTag(`ab_test_${testName}`, variant);
+  trackEvent(`ab_test_${testName}_${variant}`);
+};
+
+// Exemplo de uso
+const runABTest = () => {
+  const variant = Math.random() > 0.5 ? 'A' : 'B';
+  trackABTest('button_color', variant);
+  return variant;
+};
+```
+
+## 6. Compliance GDPR/LGPD
+
+### Implementar consentimento:
+```javascript
+// utils/clarityConsent.js
+import { initClarity, stopClarity } from './clarity';
+
+export const handleClarityConsent = () => {
+  const consent = localStorage.getItem('clarity-consent');
+  
+  if (consent === 'granted') {
+    initClarity();
+  } else if (consent === 'denied') {
+    stopClarity();
+  } else {
+    showConsentBanner();
+  }
+};
+
+export const grantClarityConsent = () => {
+  localStorage.setItem('clarity-consent', 'granted');
+  initClarity();
+  hideConsentBanner();
+};
+
+export const denyClarityConsent = () => {
+  localStorage.setItem('clarity-consent', 'denied');
+  stopClarity();
+  hideConsentBanner();
+};
+
+const showConsentBanner = () => {
+  // Implementar banner de consentimento
+  console.log('Mostrar banner de consentimento para Clarity');
+};
+
+const hideConsentBanner = () => {
+  // Esconder banner de consentimento
+  console.log('Esconder banner de consentimento');
+};
+```
+
+## 7. Verificação da Instalação
+
+### 1. Console do navegador:
+```javascript
+// No console do navegador, digite:
+clarity('event', 'test_event');
+console.log('Clarity loaded:', typeof clarity === 'function');
+```
+
+### 2. Microsoft Clarity Dashboard:
+- Acesse https://clarity.microsoft.com/
+- Vá no seu projeto `rz84poylxv`
+- Verifique se há sessões sendo registradas
+
+### 3. Network Tab:
+- Abra DevTools > Network
+- Procure por requests para `clarity.ms`
+- Deve aparecer requests sendo enviados
+
+## 8. Debugging e Troubleshooting
+
+### Problemas Comuns:
+```javascript
+// Debug helper
+export const debugClarity = () => {
+  console.log('Clarity status:', {
+    loaded: typeof window.clarity === 'function',
+    projectId: CLARITY_PROJECT_ID,
+    queue: window.clarity?.q?.length || 0
+  });
+};
+
+// Verificar se está funcionando
+export const testClarity = () => {
+  if (typeof window.clarity === 'function') {
+    window.clarity('event', 'debug_test');
+    console.log('✅ Clarity test event sent');
+  } else {
+    console.log('❌ Clarity not loaded');
+  }
+};
+```
+
+### Issues comuns:
+1. **Script não carrega**: Verificar bloqueadores de anúncio
+2. **Dados não aparecem**: Clarity pode levar alguns minutos para processar
+3. **CORS errors**: Normal em desenvolvimento local
+4. **Performance**: Clarity é leve, mas pode impactar sites muito complexos
+
+## 9. Integração com Outras Ferramentas
+
+### Sincronizar com Google Analytics:
+```javascript
+// utils/analytics-clarity-sync.js
+import { setTag as setClarityTag } from './clarity';
+import { event as gtag_event } from './gtag';
+
+export const syncAnalytics = (eventName, eventData) => {
+  // Enviar para ambos
+  gtag_event({
+    action: eventName,
+    category: eventData.category,
+    label: eventData.label
+  });
+  
+  setClarityTag('last_ga_event', eventName);
+  window.clarity('event', eventName);
+};
+```
+
+## 10. Próximos Passos
+
+1. **Configure filtros** no dashboard do Clarity
+2. **Implemente heatmaps personalizados** para elementos críticos
+3. **Configure alertas** para comportamentos anômalos
+4. **Integre com ferramentas de A/B testing**
+5. **Analise sessões regularmente** para insights de UX
+
+## 11. Recursos Úteis
+
+- **Dashboard**: https://clarity.microsoft.com/
+- **Documentação**: https://docs.microsoft.com/en-us/clarity/
+- **Suporte**: https://clarity.microsoft.com/support
+- **Status**: https://clarity.microsoft.com/status
+
+**Seu Project ID**: `rz84poylxv`
