@@ -1792,9 +1792,8 @@ const AdminDashboard = () => {
             <TabsContent value="stats">
               {/* Dashboard com abas internas */}
               <div className="space-y-6">
-                {/* Header com título e filtro de período */}
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+                {/* Header com filtro de período */}
+                <div className="flex justify-end items-center">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">Período:</span>
                     <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
