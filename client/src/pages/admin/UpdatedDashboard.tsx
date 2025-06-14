@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
+import SimpleLogo from '@/components/admin/SimpleLogo';
 
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import CollaborationRequestsManagement from '@/components/admin/CollaborationRequestsManagement';
@@ -1491,16 +1492,18 @@ const AdminDashboard = () => {
 
                 {user?.nivelacesso === 'admin' && (
                   <>
-                    <Link 
-                      href="/admin/logo-upload"
+                    <button
+                      onClick={() => setActiveTab('logo')}
+                      className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                        activeTab === 'logo' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      } ${!sidebarOpen ? 'justify-center' : ''}`}
                       title="Gerenciar Logo"
-                      className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
-                      <Image className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
-                      {sidebarOpen && <span>Gerenciar Logo</span>}
-                    </Link>
-
-
+                      <Image className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                        activeTab === 'logo' ? 'text-blue-600' : 'text-gray-500'
+                      }`} />
+                      {sidebarOpen && <span className="font-medium">Gerenciar Logo</span>}
+                    </button>
                   </>
                 )}
               </CollapsibleContent>
@@ -1615,6 +1618,7 @@ const AdminDashboard = () => {
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
+                  {activeTab === 'logo' && 'Gerenciar Logo'}
 
                 </h1>
               </div>
@@ -4038,6 +4042,36 @@ const AdminDashboard = () => {
                       <GerenciarCategorias />
                     </TabsContent>
                   </Tabs>
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* Gerenciar Logo */}
+            <TabsContent value="logo" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Gerenciar Logo</h2>
+                    <p className="text-muted-foreground">
+                      Faça upload, visualize e gerencie o logo do site.
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <SimpleLogo />
+                  </div>
+                  
+                  <div className="mt-8 bg-gray-50 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold mb-4">Instruções</h3>
+                    <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                      <li>Selecione uma imagem para usar como logo do site.</li>
+                      <li>Formatos recomendados: PNG, SVG ou WebP com fundo transparente.</li>
+                      <li>Tamanho ideal: altura de 40-60px, largura proporcional.</li>
+                      <li>Tamanho máximo do arquivo: 2MB.</li>
+                      <li>Após o upload, a página será recarregada para aplicar as mudanças.</li>
+                      <li>Se o logo não aparecer imediatamente no cabeçalho, tente limpar o cache do navegador.</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </TabsContent>
