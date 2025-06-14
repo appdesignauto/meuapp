@@ -1400,7 +1400,7 @@ const AdminDashboard = () => {
                   <Users className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'collaboration-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span>Gerenciar Colaboração</span>}
+                  {sidebarOpen && <span>Colaboração</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('affiliate-requests')}
