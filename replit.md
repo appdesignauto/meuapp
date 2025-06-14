@@ -123,6 +123,7 @@ The system uses PostgreSQL with the following key entities:
   - Applied blue-700 to button text and borders while maintaining transparent backgrounds
   - Added green outlined borders to discount values with rounded pill styling
   - Maintained orange accents only for badges while discount highlights use green borders
+  - Applied custom brand color (#103560) to annual plan highlight with darker badge tone (#0c2a4d)
   - Created unified brand experience across mensal, anual, and semestral pricing displays
 - June 14, 2025: Updated pricing section with specific feature list and layout reorganization
   - Applied user's exact feature specifications: "Acesso a todas as artes", "Edições ilimitadas", "Atualizações semanais", "Aplicativo exclusivo", "Suporte prioritário", "Sem compromisso"
