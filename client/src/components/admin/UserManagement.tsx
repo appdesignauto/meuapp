@@ -76,7 +76,7 @@ import {
   PaletteIcon,
   HeadphonesIcon,
   ShieldIcon,
-  InfoIcon,
+  MessageCircleIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -2870,13 +2870,14 @@ const UserTable = ({
                 )}
               </div>
             </TableHead>
+            <TableHead className="text-center">WhatsApp</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-8">
+              <TableCell colSpan={10} className="text-center py-8">
                 <div className="flex justify-center">
                   <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -2888,7 +2889,7 @@ const UserTable = ({
             </TableRow>
           ) : users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-8">
+              <TableCell colSpan={10} className="text-center py-8">
                 <p className="text-muted-foreground">Nenhum usuário encontrado com os filtros atuais.</p>
                 <Button variant="link" onClick={() => window.location.reload()}>
                   Redefinir filtros
@@ -2919,6 +2920,24 @@ const UserTable = ({
                   ) : (
                     <span className="text-muted-foreground text-xs">Nunca</span>
                   )}
+                </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-green-50 hover:text-green-600"
+                    onClick={() => {
+                      const message = `Olá ${user.name || user.username}, tudo bem? Sou da equipe DesignAuto e gostaria de conversar com você.`;
+                      const phoneNumber = user.phone || '';
+                      const whatsappUrl = phoneNumber 
+                        ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
+                        : `https://wa.me/?text=${encodeURIComponent(message)}`;
+                      window.open(whatsappUrl, '_blank');
+                    }}
+                    title="Enviar mensagem no WhatsApp"
+                  >
+                    <MessageCircleIcon className="h-4 w-4" />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
