@@ -118,13 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 14, 2025: Applied consistent brand color (#103560) across all pricing plan elements
+- June 14, 2025: Applied consistent brand color (#103560) across all pricing plan elements with visual connection to title
   - Replaced all blue-700 colors with custom brand color #103560 for complete visual consistency
-  - Applied #103560 to all pricing amounts, button text and borders across all three plans
+  - Applied #103560 to all pricing amounts, button text and borders across monthly and semi-annual plans
+  - Updated annual plan to use blue-600 background to match "ARTES AUTOMOTIVAS" title gradient color
+  - Enhanced annual plan badge with blue-800 for proper contrast against blue-600 background
   - Added green outlined borders to discount values with rounded pill styling
   - Maintained orange accents only for badges while discount highlights use green borders
-  - Annual plan uses #103560 background with darker badge tone (#0c2a4d) for contrast
-  - Created unified brand experience with single color palette across mensal, anual, and semestral pricing displays
+  - Created unified brand experience connecting pricing section with main title visual identity
 - June 14, 2025: Updated pricing section with specific feature list and layout reorganization
   - Applied user's exact feature specifications: "Acesso a todas as artes", "Edições ilimitadas", "Atualizações semanais", "Aplicativo exclusivo", "Suporte prioritário", "Sem compromisso"
   - Reorganized plan layout: Mensal → Anual (highlighted center) → Semestral
