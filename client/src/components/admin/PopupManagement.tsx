@@ -1097,8 +1097,8 @@ export default function PopupManagement() {
               </div>
             </form>
           </Tabs>
-        </div>
-      )}
+          </div>
+        )}
         </TabsContent>
       </Tabs>
     </div>
