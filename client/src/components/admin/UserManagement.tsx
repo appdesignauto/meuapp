@@ -2871,7 +2871,6 @@ const UserTable = ({
                 )}
               </div>
             </TableHead>
-            <TableHead className="text-center">WhatsApp</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -2922,24 +2921,7 @@ const UserTable = ({
                     <span className="text-muted-foreground text-xs">Nunca</span>
                   )}
                 </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-green-50 hover:text-green-600 text-green-600"
-                    onClick={() => {
-                      const message = `Olá ${user.name || user.username}, tudo bem? Sou da equipe DesignAuto e gostaria de conversar com você.`;
-                      const phoneNumber = user.phone || '';
-                      const whatsappUrl = phoneNumber 
-                        ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
-                        : `https://wa.me/?text=${encodeURIComponent(message)}`;
-                      window.open(whatsappUrl, '_blank');
-                    }}
-                    title="Enviar mensagem no WhatsApp"
-                  >
-                    <FaWhatsapp className="h-5 w-5" />
-                  </Button>
-                </TableCell>
+
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -2979,6 +2961,20 @@ const UserTable = ({
                       >
                         <HistoryIcon className="h-4 w-4 mr-2" />
                         Histórico de atividades
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          const message = `Olá ${user.name || user.username}, tudo bem? Sou da equipe DesignAuto e gostaria de conversar com você.`;
+                          const phoneNumber = user.phone || '';
+                          const whatsappUrl = phoneNumber 
+                            ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
+                            : `https://wa.me/?text=${encodeURIComponent(message)}`;
+                          window.open(whatsappUrl, '_blank');
+                        }}
+                        className="text-green-600"
+                      >
+                        <FaWhatsapp className="h-4 w-4 mr-2" />
+                        Contatar no WhatsApp
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
