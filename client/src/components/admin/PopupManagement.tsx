@@ -20,6 +20,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { ButtonCustomization } from './button-customization';
+import PopupAnalytics from './PopupAnalytics';
 
 interface Popup {
   id: number;
@@ -129,6 +130,7 @@ export default function PopupManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [buttonRadius, setButtonRadius] = useState<number>(4);
   const [buttonWidth, setButtonWidth] = useState<string>('auto');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'management'>('analytics');
   const { toast } = useToast();
 
   // Buscar popups existentes
@@ -392,18 +394,30 @@ export default function PopupManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <p className="text-gray-500">Crie e gerencie popups promocionais para exibir em seu site</p>
-        <Button 
-          onClick={() => {
-            resetForm();
-            setIsFormOpen(true);
-          }}
-          className="flex items-center gap-1"
-        >
-          <Plus size={18} /> Novo Popup
-        </Button>
-      </div>
+      {/* Navegação por abas */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'analytics' | 'management')}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="analytics">Estatísticas</TabsTrigger>
+          <TabsTrigger value="management">Gerenciar Popups</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="analytics" className="space-y-6">
+          <PopupAnalytics />
+        </TabsContent>
+        
+        <TabsContent value="management" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <p className="text-gray-500">Crie e gerencie popups promocionais para exibir em seu site</p>
+            <Button 
+              onClick={() => {
+                resetForm();
+                setIsFormOpen(true);
+              }}
+              className="flex items-center gap-1"
+            >
+              <Plus size={18} /> Novo Popup
+            </Button>
+          </div>
       
       {/* Lista de popups */}
       {!isFormOpen && (
@@ -1085,6 +1099,8 @@ export default function PopupManagement() {
           </Tabs>
         </div>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
