@@ -8787,14 +8787,14 @@ app.use('/api/reports-v2', (req, res, next) => {
         .where(eq(arts.isVisible, true));
       
       const response = {
-        period,
+        period: req.query.period as string || 'all',
         summary: {
-          totalArts: parseInt(totalStats.total_arts) || 0,
-          totalDownloads: parseInt(totalStats.total_downloads) || 0,
-          uniqueDownloaders: parseInt(totalStats.unique_downloaders) || 0,
-          activeCategories: parseInt(totalStats.active_categories) || 0,
-          avgDownloadsPerArt: totalStats.total_arts > 0 ? 
-            Math.round(totalStats.total_downloads / totalStats.total_arts) : 0
+          totalArts: Number(totalArtsCount[0]?.count) || 0,
+          totalDownloads: Number(totalDownloadsCount[0]?.count) || 0,
+          uniqueDownloaders: Number(uniqueDownloadersCount[0]?.count) || 0,
+          activeCategories: Number(activeCategoriesCount[0]?.count) || 0,
+          avgDownloadsPerArt: totalArtsCount[0]?.count > 0 ? 
+            Math.round(Number(totalDownloadsCount[0]?.count) / Number(totalArtsCount[0]?.count)) : 0
         },
         topArts,
         categoryPerformance,
@@ -8803,7 +8803,7 @@ app.use('/api/reports-v2', (req, res, next) => {
       };
       
       console.log("✅ Performance de conteúdo calculada:", {
-        period,
+        period: req.query.period as string || 'all',
         topArtsCount: topArts.length,
         categoriesCount: categoryPerformance.length,
         conversionRatesCount: conversionRates.length
