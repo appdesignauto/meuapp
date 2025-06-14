@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,13 +45,18 @@ interface AnalyticsSettings {
   updatedBy?: number;
 }
 
+// Estado global para as abas (fora do componente React)
+let globalActiveTab: 'meta-pixel' | 'google-tag-manager' | 'google-analytics' = 'meta-pixel';
+
 const AnalyticsSettings: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const [analytics, setAnalytics] = useState<AnalyticsSettings | null>(null);
-  const [activeTab, setActiveTab] = useState<'meta-pixel' | 'google-tag-manager' | 'google-analytics'>('meta-pixel');
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [, forceRender] = useState({});
+
+  // Força re-render quando necessário
+  const triggerRender = () => setForceRender({});
 
   // Buscar configurações existentes
   const { data: analyticsData, isLoading: isLoadingData } = useQuery({
@@ -65,13 +70,12 @@ const AnalyticsSettings: React.FC = () => {
     }
   });
 
-  // Inicializar dados apenas uma vez
+  // Inicializar dados
   useEffect(() => {
-    if (analyticsData && !isInitialized) {
+    if (analyticsData && !analytics) {
       setAnalytics(analyticsData);
-      setIsInitialized(true);
     }
-  }, [analyticsData, isInitialized]);
+  }, [analyticsData, analytics]);
 
   // Mutation para salvar configurações
   const saveAnalyticsMutation = useMutation({
@@ -108,19 +112,21 @@ const AnalyticsSettings: React.FC = () => {
     }
   });
 
-  const handleInputChange = useCallback((field: keyof AnalyticsSettings, value: any) => {
+  const handleInputChange = (field: keyof AnalyticsSettings, value: any) => {
     setAnalytics(prev => prev ? { ...prev, [field]: value } : null);
-  }, []);
+  };
 
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     if (analytics) {
       saveAnalyticsMutation.mutate(analytics);
     }
-  }, [analytics, saveAnalyticsMutation]);
+  };
 
-  const handleTabChange = useCallback((tab: 'meta-pixel' | 'google-tag-manager' | 'google-analytics') => {
-    setActiveTab(tab);
-  }, []);
+  // Função para mudança de aba - não usa React state
+  const handleTabChange = (tab: 'meta-pixel' | 'google-tag-manager' | 'google-analytics') => {
+    globalActiveTab = tab;
+    triggerRender();
+  };
 
   const isLoading = saveAnalyticsMutation.isPending;
 
@@ -170,43 +176,43 @@ const AnalyticsSettings: React.FC = () => {
         </AlertDescription>
       </Alert>
 
-      {/* Navegação das Abas */}
+      {/* Navegação das Abas - Usando div com onClick simples */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
+        <div
           onClick={() => handleTabChange('meta-pixel')}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'meta-pixel'
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${
+            globalActiveTab === 'meta-pixel'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           Meta Pixel
-        </button>
-        <button
+        </div>
+        <div
           onClick={() => handleTabChange('google-tag-manager')}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'google-tag-manager'
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${
+            globalActiveTab === 'google-tag-manager'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           Google Tag Manager
-        </button>
-        <button
+        </div>
+        <div
           onClick={() => handleTabChange('google-analytics')}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'google-analytics'
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${
+            globalActiveTab === 'google-analytics'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           Google Analytics 4
-        </button>
+        </div>
       </div>
 
       {/* Conteúdo das Abas */}
-      {activeTab === 'meta-pixel' && (
-        <Card>
+      {globalActiveTab === 'meta-pixel' && (
+        <Card key="meta-pixel">
           <CardHeader>
             <CardTitle>Configurações do Meta Pixel</CardTitle>
             <CardDescription>Configure o Meta Pixel e o Facebook Ads API para rastreamento de eventos</CardDescription>
@@ -259,8 +265,8 @@ const AnalyticsSettings: React.FC = () => {
         </Card>
       )}
 
-      {activeTab === 'google-tag-manager' && (
-        <Card>
+      {globalActiveTab === 'google-tag-manager' && (
+        <Card key="google-tag-manager">
           <CardHeader>
             <CardTitle>Configurações do Google Tag Manager</CardTitle>
             <CardDescription>Configure o GTM para gerenciar tags e scripts de rastreamento</CardDescription>
@@ -301,8 +307,8 @@ const AnalyticsSettings: React.FC = () => {
         </Card>
       )}
 
-      {activeTab === 'google-analytics' && (
-        <Card>
+      {globalActiveTab === 'google-analytics' && (
+        <Card key="google-analytics">
           <CardHeader>
             <CardTitle>Configurações do Google Analytics 4</CardTitle>
             <CardDescription>Configure o GA4 para análise detalhada de comportamento</CardDescription>
