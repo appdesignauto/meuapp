@@ -1,8 +1,11 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, queryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Target, 
   TrendingUp, 
@@ -11,7 +14,8 @@ import {
   Users, 
   Crown,
   BarChart3,
-  PieChart
+  PieChart,
+  RotateCcw
 } from 'lucide-react';
 
 interface PopupStats {

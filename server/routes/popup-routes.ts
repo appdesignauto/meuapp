@@ -39,6 +39,94 @@ const upload = multer({
   },
 });
 
+// Endpoint para registrar visualização de popup
+router.post('/track-view/:id', async (req, res) => {
+  try {
+    const popupId = parseInt(req.params.id);
+    
+    // Verificar se o popup existe e está ativo
+    const popup = await db
+      .select()
+      .from(popups)
+      .where(and(eq(popups.id, popupId), eq(popups.isActive, true)))
+      .limit(1);
+
+    if (popup.length === 0) {
+      return res.status(404).json({ error: 'Popup não encontrado ou inativo' });
+    }
+
+    // Incrementar contador de visualizações
+    await db
+      .update(popups)
+      .set({ 
+        views: sql`${popups.views} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(popups.id, popupId));
+
+    res.json({ success: true, message: 'Visualização registrada' });
+  } catch (error) {
+    console.error('Erro ao registrar visualização:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Endpoint para registrar clique no botão do popup
+router.post('/track-click/:id', async (req, res) => {
+  try {
+    const popupId = parseInt(req.params.id);
+    
+    // Verificar se o popup existe e está ativo
+    const popup = await db
+      .select()
+      .from(popups)
+      .where(and(eq(popups.id, popupId), eq(popups.isActive, true)))
+      .limit(1);
+
+    if (popup.length === 0) {
+      return res.status(404).json({ error: 'Popup não encontrado ou inativo' });
+    }
+
+    // Incrementar contador de cliques
+    await db
+      .update(popups)
+      .set({ 
+        clicks: sql`${popups.clicks} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(popups.id, popupId));
+
+    res.json({ success: true, message: 'Clique registrado' });
+  } catch (error) {
+    console.error('Erro ao registrar clique:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Endpoint para zerar estatísticas de todos os popups
+router.post('/reset-stats', async (req, res) => {
+  try {
+    // Verificar se o usuário é admin
+    if (!req.user || req.user.nivelacesso !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    // Zerar views e clicks de todos os popups
+    await db
+      .update(popups)
+      .set({ 
+        views: 0,
+        clicks: 0,
+        updatedAt: new Date()
+      });
+
+    res.json({ success: true, message: 'Estatísticas zeradas com sucesso' });
+  } catch (error) {
+    console.error('Erro ao zerar estatísticas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Obter estatísticas dos popups para analytics
 router.get('/analytics', async (req, res) => {
   try {

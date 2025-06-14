@@ -806,6 +806,8 @@ export const popups = pgTable("popups", {
   frequency: integer("frequency").default(1), // 1 = show every time, 2 = show every 2 times, etc.
   delay: integer("delay").default(2), // delay in seconds before showing the popup
   isActive: boolean("isActive").default(true),
+  views: integer("views").default(0), // Contador de visualizações
+  clicks: integer("clicks").default(0), // Contador de cliques no botão
   createdBy: integer("createdBy").notNull().references(() => users.id),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
