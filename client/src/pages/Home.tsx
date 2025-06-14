@@ -9,7 +9,7 @@ import ArtGallery from '@/components/home/ArtGallery';
 import TrendingPopular from '@/components/home/TrendingPopular';
 import PremiumFeatures from '@/components/home/PremiumFeatures';
 import Testimonials from '@/components/home/Testimonials';
-import CallToAction from '@/components/home/CallToAction';
+
 import FeatureStats from '@/components/home/FeatureStats';
 import QuickAccess from '@/components/home/QuickAccess';
 import PricingSection from '@/components/home/PricingSection';
@@ -105,7 +105,6 @@ const Home = () => {
           <PremiumFeatures />
           <Testimonials />
           <PricingSection />
-          <CallToAction />
         </>
       )}
     </>

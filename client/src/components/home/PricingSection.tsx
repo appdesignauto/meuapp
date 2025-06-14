@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button';
 
 const PricingSection = () => {
   return (
-    <section className="relative py-16 bg-gray-50">
+    <section className="relative py-16 bg-neutral-900">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Escolha seu plano
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Pronto para revolucionar suas vendas?
           </h2>
-          <p className="text-gray-600 text-lg">
+          <p className="text-neutral-300 text-lg">
             Escolha apenas a forma de pagamento que melhor se adapta a você.
           </p>
         </div>
