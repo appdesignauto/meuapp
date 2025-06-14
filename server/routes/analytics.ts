@@ -309,19 +309,95 @@ router.put('/admin/settings', isAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
     }
     
-    // Atualiza apenas os campos fornecidos no body
-    const updateData = {
-      ...req.body,
-      updatedAt: new Date()
+    // Extract and validate only the allowed fields
+    const {
+      metaPixelId,
+      metaPixelEnabled,
+      metaAdsAccessToken,
+      metaAdAccountId,
+      metaAdsEnabled,
+      ga4MeasurementId,
+      ga4Enabled,
+      ga4ApiSecret,
+      gtmContainerId,
+      gtmEnabled,
+      googleAdsCustomerId,
+      googleAdsConversionId,
+      googleAdsConversionLabel,
+      googleAdsEnabled,
+      clarityProjectId,
+      clarityEnabled,
+      hotjarSiteId,
+      hotjarEnabled,
+      linkedinPartnerId,
+      linkedinEnabled,
+      tiktokPixelId,
+      tiktokEnabled,
+      amplitudeApiKey,
+      amplitudeEnabled,
+      mixpanelToken,
+      mixpanelEnabled,
+      trackPageviews,
+      trackClicks,
+      trackFormSubmissions,
+      trackArtsViewed,
+      trackArtsDownloaded,
+      customScriptHead,
+      customScriptBody,
+      customScriptEnabled
+    } = req.body;
+    
+    // Build update object with only defined values
+    const updateData: any = {
+      updatedAt: new Date().toISOString()
     };
+    
+    // Only include fields that are explicitly provided
+    if (metaPixelId !== undefined) updateData.metaPixelId = metaPixelId || '';
+    if (metaPixelEnabled !== undefined) updateData.metaPixelEnabled = !!metaPixelEnabled;
+    if (metaAdsAccessToken !== undefined) updateData.metaAdsAccessToken = metaAdsAccessToken || null;
+    if (metaAdAccountId !== undefined) updateData.metaAdAccountId = metaAdAccountId || '';
+    if (metaAdsEnabled !== undefined) updateData.metaAdsEnabled = !!metaAdsEnabled;
+    if (ga4MeasurementId !== undefined) updateData.ga4MeasurementId = ga4MeasurementId || '';
+    if (ga4Enabled !== undefined) updateData.ga4Enabled = !!ga4Enabled;
+    if (ga4ApiSecret !== undefined) updateData.ga4ApiSecret = ga4ApiSecret || null;
+    if (gtmContainerId !== undefined) updateData.gtmContainerId = gtmContainerId || '';
+    if (gtmEnabled !== undefined) updateData.gtmEnabled = !!gtmEnabled;
+    if (googleAdsCustomerId !== undefined) updateData.googleAdsCustomerId = googleAdsCustomerId || '';
+    if (googleAdsConversionId !== undefined) updateData.googleAdsConversionId = googleAdsConversionId || '';
+    if (googleAdsConversionLabel !== undefined) updateData.googleAdsConversionLabel = googleAdsConversionLabel || '';
+    if (googleAdsEnabled !== undefined) updateData.googleAdsEnabled = !!googleAdsEnabled;
+    if (clarityProjectId !== undefined) updateData.clarityProjectId = clarityProjectId || null;
+    if (clarityEnabled !== undefined) updateData.clarityEnabled = !!clarityEnabled;
+    if (hotjarSiteId !== undefined) updateData.hotjarSiteId = hotjarSiteId || null;
+    if (hotjarEnabled !== undefined) updateData.hotjarEnabled = !!hotjarEnabled;
+    if (linkedinPartnerId !== undefined) updateData.linkedinPartnerId = linkedinPartnerId || null;
+    if (linkedinEnabled !== undefined) updateData.linkedinEnabled = !!linkedinEnabled;
+    if (tiktokPixelId !== undefined) updateData.tiktokPixelId = tiktokPixelId || null;
+    if (tiktokEnabled !== undefined) updateData.tiktokEnabled = !!tiktokEnabled;
+    if (amplitudeApiKey !== undefined) updateData.amplitudeApiKey = amplitudeApiKey || null;
+    if (amplitudeEnabled !== undefined) updateData.amplitudeEnabled = !!amplitudeEnabled;
+    if (mixpanelToken !== undefined) updateData.mixpanelToken = mixpanelToken || null;
+    if (mixpanelEnabled !== undefined) updateData.mixpanelEnabled = !!mixpanelEnabled;
+    if (trackPageviews !== undefined) updateData.trackPageviews = !!trackPageviews;
+    if (trackClicks !== undefined) updateData.trackClicks = !!trackClicks;
+    if (trackFormSubmissions !== undefined) updateData.trackFormSubmissions = !!trackFormSubmissions;
+    if (trackArtsViewed !== undefined) updateData.trackArtsViewed = !!trackArtsViewed;
+    if (trackArtsDownloaded !== undefined) updateData.trackArtsDownloaded = !!trackArtsDownloaded;
+    if (customScriptHead !== undefined) updateData.customScriptHead = customScriptHead || null;
+    if (customScriptBody !== undefined) updateData.customScriptBody = customScriptBody || null;
+    if (customScriptEnabled !== undefined) updateData.customScriptEnabled = !!customScriptEnabled;
+    
+    console.log('🔄 Atualizando configurações de analytics:', updateData);
     
     await db.update(analyticsSettings)
       .set(updateData)
       .where(eq(analyticsSettings.id, settings.id));
     
+    console.log('✅ Configurações de analytics atualizadas com sucesso');
     res.json({ success: true, message: 'Configurações de analytics atualizadas com sucesso' });
   } catch (error) {
-    console.error('Erro ao atualizar configurações de analytics:', error);
+    console.error('❌ Erro ao atualizar configurações de analytics:', error);
     res.status(500).json({ success: false, message: 'Erro ao atualizar configurações de analytics' });
   }
 });
