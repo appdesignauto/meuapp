@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Completed phone number capture implementation for both payment platform webhooks
+  - Enhanced Hotmart webhook processor to extract phone from buyer.phone, buyer.address.phone, or customer.phone fields
+  - Verified Doppus webhook processor already captures customer.phone correctly
+  - Implemented comprehensive testing for all phone capture scenarios
+  - Both systems now update existing users' phone numbers when available in webhook payloads
+  - Phone data capture resolves WhatsApp validation errors in user management interface
 - June 14, 2025: Implemented WhatsApp communication integration in user management interface
   - Added WhatsApp icon column in user management table for direct communication
   - Integrated React Icons FaWhatsapp component for better compatibility and visibility
