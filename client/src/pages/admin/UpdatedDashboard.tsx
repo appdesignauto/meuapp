@@ -4040,7 +4040,9 @@ const AdminDashboard = () => {
                       Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
                     </p>
                   </div>
-                  <AnalyticsSettings />
+                  <div key={`analytics-${Date.now()}`}>
+                    <AnalyticsSettings />
+                  </div>
                 </div>
               </div>
             </TabsContent>
