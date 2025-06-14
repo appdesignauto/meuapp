@@ -60,7 +60,7 @@ const PricingSection = () => {
             
             <Button 
               variant="outline" 
-              className="w-full border-orange-500 text-orange-500 hover:bg-orange-50 py-3 rounded-full font-medium"
+              className="w-full border-blue-700 text-blue-700 hover:bg-blue-50 py-3 rounded-full font-medium"
             >
               Começar Agora
             </Button>
@@ -169,7 +169,7 @@ const PricingSection = () => {
             
             <Button 
               variant="outline" 
-              className="w-full border-orange-500 text-orange-500 hover:bg-orange-50 py-3 rounded-full font-medium"
+              className="w-full border-blue-700 text-blue-700 hover:bg-blue-50 py-3 rounded-full font-medium"
             >
               Começar Agora
             </Button>
