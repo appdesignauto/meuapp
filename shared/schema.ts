@@ -1212,6 +1212,7 @@ export const analyticsSettings = pgTable('analyticsSettings', {
   metaPixelId: text('metaPixelId'),
   metaAdsEnabled: boolean('metaAdsEnabled').default(false),
   metaAdsAccessToken: text('metaAdsAccessToken'),
+  metaAdAccountId: text('metaAdAccountId'),
   
   // Google Analytics 4
   ga4MeasurementId: text('ga4MeasurementId'),
@@ -1219,6 +1220,11 @@ export const analyticsSettings = pgTable('analyticsSettings', {
   
   // Google Tag Manager
   gtmContainerId: text('gtmContainerId'),
+  
+  // Google Ads
+  googleAdsCustomerId: text('googleAdsCustomerId'),
+  googleAdsConversionId: text('googleAdsConversionId'),
+  googleAdsConversionLabel: text('googleAdsConversionLabel'),
   
   // Microsoft Clarity
   clarityProjectId: text('clarityProjectId'),
@@ -1240,6 +1246,7 @@ export const analyticsSettings = pgTable('analyticsSettings', {
   metaPixelEnabled: boolean('metaPixelEnabled').default(false),
   ga4Enabled: boolean('ga4Enabled').default(false),
   gtmEnabled: boolean('gtmEnabled').default(false),
+  googleAdsEnabled: boolean('googleAdsEnabled').default(false),
   clarityEnabled: boolean('clarityEnabled').default(false),
   hotjarEnabled: boolean('hotjarEnabled').default(false),
   linkedinEnabled: boolean('linkedinEnabled').default(false),
@@ -1269,9 +1276,13 @@ export const analyticsSettings = pgTable('analyticsSettings', {
 export const insertAnalyticsSettingsSchema = createInsertSchema(analyticsSettings, {
   metaPixelId: z.string().trim().optional(),
   metaAdsAccessToken: z.string().trim().optional(),
+  metaAdAccountId: z.string().trim().optional(),
   ga4MeasurementId: z.string().trim().optional(),
   ga4ApiSecret: z.string().trim().optional(), 
   gtmContainerId: z.string().trim().optional(),
+  googleAdsCustomerId: z.string().trim().optional(),
+  googleAdsConversionId: z.string().trim().optional(),
+  googleAdsConversionLabel: z.string().trim().optional(),
   clarityProjectId: z.string().trim().optional(),
   hotjarSiteId: z.string().trim().optional(),
   linkedinPartnerId: z.string().trim().optional(),

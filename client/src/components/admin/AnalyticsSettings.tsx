@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Save, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Save, AlertCircle, Facebook, Chrome, BarChart3, Settings, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AnalyticsSettings {
@@ -20,6 +22,10 @@ interface AnalyticsSettings {
   ga4Enabled: boolean;
   gtmContainerId: string;
   gtmEnabled: boolean;
+  googleAdsCustomerId: string;
+  googleAdsConversionId: string;
+  googleAdsConversionLabel: string;
+  googleAdsEnabled: boolean;
   clarityProjectId: string;
   clarityEnabled: boolean;
   hotjarSiteId: string;
