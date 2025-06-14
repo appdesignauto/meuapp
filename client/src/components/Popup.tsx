@@ -107,22 +107,20 @@ export function Popup({
   }, [delay, animation]);
 
   const handleButtonClick = () => {
+    // Registrar clique ANTES de executar ações para garantir contabilização
+    apiRequest('POST', `/api/popups/track-click/${id}`, {
+      sessionId
+    }).catch(error => {
+      console.error('Erro ao registrar clique:', error);
+    });
+    
     // Se tiver URL, abrir em nova aba
     if (buttonUrl) {
       window.open(buttonUrl, '_blank');
     }
     
-    // Fechar popup imediatamente para melhorar a experiência do usuário
+    // Fechar popup após registrar o clique
     onClose();
-    
-    // Registrar clique no botão em segundo plano sem bloquear a interface
-    apiRequest('POST', '/api/popups/view', {
-      popupId: id,
-      sessionId,
-      action: 'click'
-    }).catch(error => {
-      console.error('Erro ao registrar clique:', error);
-    });
   };
 
   const handleDismiss = () => {

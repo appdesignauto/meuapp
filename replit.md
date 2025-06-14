@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Completed popup analytics system with authentic database tracking
+  - Implemented real-time popup view and click tracking using dedicated database columns
+  - Fixed duplicate counting issue by consolidating tracking endpoints and adding session-based deduplication
+  - Connected frontend popup component to proper tracking endpoints for automatic metrics collection
+  - System now displays genuine analytics: individual popup statistics, conversion rates, and user interaction data
+  - All popup metrics (views, clicks, conversion rates) now reflect authentic user interactions from PostgreSQL database
 - June 13, 2025: Fixed critical SQL errors in financial API with authentic revenue calculations
   - Resolved GROUP BY SQL syntax errors preventing financial data retrieval
   - Corrected revenue calculations to show authentic values: R$ 14,00 total (2 Hotmart subscribers × R$ 7,00 each)
