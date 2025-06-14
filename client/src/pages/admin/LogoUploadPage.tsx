@@ -11,7 +11,7 @@ const LogoUploadPage = () => {
   const { toast } = useToast();
 
   // Verificar se o usuário é admin
-  const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
+  const isAuthorized = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm';
 
   if (!isAuthorized) {
     // Redirecionar para home se não for autorizado
