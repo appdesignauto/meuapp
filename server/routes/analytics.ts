@@ -273,6 +273,32 @@ router.put('/admin/tiktok', isAdmin, async (req, res) => {
   }
 });
 
+// Rota unificada para atualizar todas as configurações de analytics
+router.put('/admin/settings', isAdmin, async (req, res) => {
+  try {
+    const [settings] = await db.select().from(analyticsSettings);
+    
+    if (!settings) {
+      return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
+    }
+    
+    // Atualiza apenas os campos fornecidos no body
+    const updateData = {
+      ...req.body,
+      updatedAt: new Date()
+    };
+    
+    await db.update(analyticsSettings)
+      .set(updateData)
+      .where(eq(analyticsSettings.id, settings.id));
+    
+    res.json({ success: true, message: 'Configurações de analytics atualizadas com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar configurações de analytics:', error);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar configurações de analytics' });
+  }
+});
+
 // Rota para atualizar configurações de custom scripts
 router.put('/admin/custom-scripts', isAdmin, async (req, res) => {
   try {
