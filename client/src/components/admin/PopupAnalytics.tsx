@@ -246,10 +246,7 @@ const PopupAnalytics: React.FC = () => {
                     <tr key={popup.id} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-sm font-medium text-gray-900">#{popup.id}</td>
                       <td className="p-3">
-                        <div>
-                          <div className="font-medium text-gray-900">{popup.title}</div>
-                          <div className="text-xs text-gray-500">{popup.position} • {popup.size}</div>
-                        </div>
+                        <div className="font-medium text-gray-900">{popup.title}</div>
                       </td>
                       <td className="p-3 text-center">
                         <Badge 
