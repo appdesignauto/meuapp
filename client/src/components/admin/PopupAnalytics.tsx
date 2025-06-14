@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Target, 
   TrendingUp, 
@@ -12,7 +13,9 @@ import {
   Users, 
   Crown,
   Activity,
-  BarChart3
+  BarChart3,
+  PieChart,
+  Calendar
 } from 'lucide-react';
 
 interface PopupStats {
@@ -25,14 +28,40 @@ interface PopupStats {
   premiumUsers: number;
 }
 
+interface IndividualPopupStats {
+  id: number;
+  title: string;
+  views: number;
+  clicks: number;
+  conversionRate: number;
+  isActive: boolean;
+  createdAt: string;
+  position: string;
+  size: string;
+}
+
 const PopupAnalytics: React.FC = () => {
-  // Buscar estatísticas dos popups
+  const [activeTab, setActiveTab] = useState<'overview' | 'individual'>('overview');
+
+  // Buscar estatísticas gerais dos popups
   const { data: stats, isLoading } = useQuery({
     queryKey: ['/api/popups/analytics'],
     queryFn: async () => {
       const response = await fetch('/api/popups/analytics');
       if (!response.ok) {
         throw new Error('Erro ao buscar estatísticas dos popups');
+      }
+      return response.json();
+    }
+  });
+
+  // Buscar estatísticas individuais dos popups
+  const { data: individualStats, isLoading: isLoadingIndividual } = useQuery({
+    queryKey: ['/api/popups/individual-stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/popups/individual-stats');
+      if (!response.ok) {
+        throw new Error('Erro ao buscar estatísticas individuais dos popups');
       }
       return response.json();
     }
