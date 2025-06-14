@@ -125,6 +125,7 @@ The system uses PostgreSQL with the following key entities:
   - Built fully responsive 3-column grid with mobile-first approach and proper spacing
   - Standardized feature lists across all plans with consistent "Começar Agora" CTAs
   - Applied clean gray-50 background with white cards and orange accent highlights
+  - Updated features to DesignAuto brand identity: "Acesso a todas as artes", "Edições ilimitadas", "Atualizações semanais", "Aplicativo exclusivo", "Suporte prioritário", "Sem compromisso"
 - June 14, 2025: Updated marketing copy across entire platform from "+300 Artes Exclusivas" to "Milhares de Artes Exclusivas"
   - Modified Hero component badge display
   - Updated FeatureStats component text

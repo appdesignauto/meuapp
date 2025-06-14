@@ -34,19 +34,19 @@ const PricingSection = () => {
             <ul className="space-y-3 mb-8 text-sm">
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Acesso a todas as funcionalidades</span>
+                <span className="text-gray-700">Acesso a todas as artes</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Dashboard personalizado</span>
+                <span className="text-gray-700">Edições ilimitadas</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Mardomo no WhatsApp</span>
+                <span className="text-gray-700">Atualizações semanais</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Empresarial e Pessoal</span>
+                <span className="text-gray-700">Aplicativo exclusivo</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
@@ -90,19 +90,19 @@ const PricingSection = () => {
             <ul className="space-y-3 mb-8 text-sm">
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Acesso a todas as funcionalidades</span>
+                <span>Acesso a todas as artes</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Dashboard personalizado</span>
+                <span>Edições ilimitadas</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Mardomo no WhatsApp</span>
+                <span>Atualizações semanais</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Empresarial e Pessoal</span>
+                <span>Aplicativo exclusivo</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
@@ -143,19 +143,19 @@ const PricingSection = () => {
             <ul className="space-y-3 mb-8 text-sm">
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Acesso a todas as funcionalidades</span>
+                <span className="text-gray-700">Acesso a todas as artes</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Dashboard personalizado</span>
+                <span className="text-gray-700">Edições ilimitadas</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Mardomo no WhatsApp</span>
+                <span className="text-gray-700">Atualizações semanais</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-700">Empresarial e Pessoal</span>
+                <span className="text-gray-700">Aplicativo exclusivo</span>
               </li>
               <li className="flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
