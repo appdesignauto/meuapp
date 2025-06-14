@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -51,7 +50,8 @@ const AnalyticsSettings: React.FC = () => {
   const queryClient = useQueryClient();
   
   const [analytics, setAnalytics] = useState<AnalyticsSettings | null>(null);
-  const [activeTab, setActiveTab] = useState('meta-pixel');
+  const [activeTab, setActiveTab] = useState<'meta-pixel' | 'google-tag-manager' | 'google-analytics'>('meta-pixel');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Buscar configurações existentes
   const { data: analyticsData, isLoading: isLoadingData } = useQuery({
@@ -64,6 +64,14 @@ const AnalyticsSettings: React.FC = () => {
       return response.json();
     }
   });
+
+  // Inicializar dados apenas uma vez
+  useEffect(() => {
+    if (analyticsData && !isInitialized) {
+      setAnalytics(analyticsData);
+      setIsInitialized(true);
+    }
+  }, [analyticsData, isInitialized]);
 
   // Mutation para salvar configurações
   const saveAnalyticsMutation = useMutation({
@@ -84,9 +92,7 @@ const AnalyticsSettings: React.FC = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      // Atualizar o cache imediatamente com os dados salvos
       queryClient.setQueryData(['/api/analytics/settings'], data);
-      // Invalidar para garantir sincronia
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/settings'] });
       toast({
         title: 'Configurações salvas',
@@ -102,29 +108,19 @@ const AnalyticsSettings: React.FC = () => {
     }
   });
 
-  useEffect(() => {
-    if (analyticsData) {
-      setAnalytics(analyticsData);
-    }
-  }, [analyticsData]);
-
-  // Resetar o estado local quando os dados são recarregados, mas manter a aba ativa
-  useEffect(() => {
-    if (analyticsData && !saveAnalyticsMutation.isPending) {
-      setAnalytics(analyticsData);
-    }
-  }, [analyticsData, saveAnalyticsMutation.isPending]);
-
-  const handleInputChange = (field: keyof AnalyticsSettings, value: any) => {
+  const handleInputChange = useCallback((field: keyof AnalyticsSettings, value: any) => {
     setAnalytics(prev => prev ? { ...prev, [field]: value } : null);
-  };
+  }, []);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (analytics) {
-      console.log('Salvando configurações:', analytics);
       saveAnalyticsMutation.mutate(analytics);
     }
-  };
+  }, [analytics, saveAnalyticsMutation]);
+
+  const handleTabChange = useCallback((tab: 'meta-pixel' | 'google-tag-manager' | 'google-analytics') => {
+    setActiveTab(tab);
+  }, []);
 
   const isLoading = saveAnalyticsMutation.isPending;
 
@@ -174,155 +170,178 @@ const AnalyticsSettings: React.FC = () => {
         </AlertDescription>
       </Alert>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
-          <TabsTrigger value="google-tag-manager">Google Tag Manager</TabsTrigger>
-          <TabsTrigger value="google-analytics">Google Analytics 4</TabsTrigger>
-        </TabsList>
+      {/* Navegação das Abas */}
+      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+        <button
+          onClick={() => handleTabChange('meta-pixel')}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            activeTab === 'meta-pixel'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Meta Pixel
+        </button>
+        <button
+          onClick={() => handleTabChange('google-tag-manager')}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            activeTab === 'google-tag-manager'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Google Tag Manager
+        </button>
+        <button
+          onClick={() => handleTabChange('google-analytics')}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            activeTab === 'google-analytics'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Google Analytics 4
+        </button>
+      </div>
 
-        {/* Aba Meta Pixel */}
-        <TabsContent value="meta-pixel">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações do Meta Pixel</CardTitle>
-              <CardDescription>Configure o Meta Pixel e o Facebook Ads API para rastreamento de eventos</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="metaPixelId" className="text-sm font-medium">Meta Pixel ID</Label>
-                <Input
-                  id="metaPixelId"
-                  value={analytics?.metaPixelId || ''}
-                  onChange={(e) => handleInputChange('metaPixelId', e.target.value)}
-                  placeholder="12312315456"
-                  className="bg-gray-50"
-                />
-              </div>
+      {/* Conteúdo das Abas */}
+      {activeTab === 'meta-pixel' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações do Meta Pixel</CardTitle>
+            <CardDescription>Configure o Meta Pixel e o Facebook Ads API para rastreamento de eventos</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="metaPixelId" className="text-sm font-medium">Meta Pixel ID</Label>
+              <Input
+                id="metaPixelId"
+                value={analytics?.metaPixelId || ''}
+                onChange={(e) => handleInputChange('metaPixelId', e.target.value)}
+                placeholder="12312315456"
+                className="bg-gray-50"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="metaAccessToken" className="text-sm font-medium">Token de Acesso da API</Label>
-                <Input
-                  id="metaAccessToken"
-                  type="password"
-                  value={analytics?.metaAdsAccessToken || ''}
-                  onChange={(e) => handleInputChange('metaAdsAccessToken', e.target.value)}
-                  placeholder="Digite o token de acesso da API"
-                  className="bg-gray-50"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="metaAdsAccessToken" className="text-sm font-medium">Token de Acesso da API</Label>
+              <Input
+                id="metaAdsAccessToken"
+                type="password"
+                value={analytics?.metaAdsAccessToken || ''}
+                onChange={(e) => handleInputChange('metaAdsAccessToken', e.target.value)}
+                placeholder="Digite o token de acesso da API"
+                className="bg-gray-50"
+              />
+              <p className="text-xs text-gray-500">Token para a API de Conversões do Facebook</p>
+            </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="metaPixelEnabled"
-                    checked={analytics?.metaPixelEnabled ?? true}
-                    onCheckedChange={(checked) => handleInputChange('metaPixelEnabled', checked)}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
-                  <Label htmlFor="metaPixelEnabled" className="text-sm font-medium">Ativar Meta Pixel</Label>
-                </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="metaPixelEnabled"
+                checked={analytics?.metaPixelEnabled || false}
+                onCheckedChange={(checked) => handleInputChange('metaPixelEnabled', checked)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <Label htmlFor="metaPixelEnabled" className="text-sm font-medium">Ativar Meta Pixel</Label>
+            </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="metaAdsEnabled"
-                    checked={analytics?.metaAdsEnabled ?? true}
-                    onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
-                  <Label htmlFor="metaAdsEnabled" className="text-sm font-medium">Ativar Conversions API</Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="metaAdsEnabled"
+                checked={analytics?.metaAdsEnabled || false}
+                onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <Label htmlFor="metaAdsEnabled" className="text-sm font-medium">Ativar Conversions API</Label>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Aba Google Tag Manager */}
-        <TabsContent value="google-tag-manager">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações do Google Tag Manager</CardTitle>
-              <CardDescription>Configure o GTM para gerenciar tags e scripts de rastreamento</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="gtmContainerId" className="text-sm font-medium">ID do Container GTM</Label>
-                <Input
-                  id="gtmContainerId"
-                  value={analytics?.gtmContainerId || ''}
-                  onChange={(e) => handleInputChange('gtmContainerId', e.target.value)}
-                  placeholder="GTM-XXXXXXX"
-                  className="bg-gray-50"
-                />
-              </div>
+      {activeTab === 'google-tag-manager' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações do Google Tag Manager</CardTitle>
+            <CardDescription>Configure o GTM para gerenciar tags e scripts de rastreamento</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="gtmContainerId" className="text-sm font-medium">ID do Container GTM</Label>
+              <Input
+                id="gtmContainerId"
+                value={analytics?.gtmContainerId || ''}
+                onChange={(e) => handleInputChange('gtmContainerId', e.target.value)}
+                placeholder="GTM-XXXXXXX"
+                className="bg-gray-50"
+              />
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="gtmEnabled"
-                  checked={analytics?.gtmEnabled || false}
-                  onCheckedChange={(checked) => handleInputChange('gtmEnabled', checked)}
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-                <Label htmlFor="gtmEnabled" className="text-sm font-medium">Ativar Google Tag Manager</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="gtmEnabled"
+                checked={analytics?.gtmEnabled || false}
+                onCheckedChange={(checked) => handleInputChange('gtmEnabled', checked)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <Label htmlFor="gtmEnabled" className="text-sm font-medium">Ativar Google Tag Manager</Label>
+            </div>
 
-              <Alert className="mt-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Instruções de Configuração</AlertTitle>
-                <AlertDescription>
-                  1. Acesse o Google Tag Manager e crie um container para seu site<br/>
-                  2. Copie o ID do container (formato: GTM-XXXXXXX)<br/>
-                  3. Cole aqui e ative o rastreamento<br/>
-                  4. Configure suas tags no painel do GTM
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <Alert className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Instruções de Configuração</AlertTitle>
+              <AlertDescription>
+                1. Acesse o Google Tag Manager e crie um container para seu site<br/>
+                2. Copie o ID do container (formato: GTM-XXXXXXX)<br/>
+                3. Cole aqui e ative o rastreamento<br/>
+                4. Configure suas tags no painel do GTM
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Aba Google Analytics 4 */}
-        <TabsContent value="google-analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações do Google Analytics 4</CardTitle>
-              <CardDescription>Configure o GA4 para análise detalhada de comportamento</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="ga4MeasurementId" className="text-sm font-medium">ID de Medição GA4</Label>
-                <Input
-                  id="ga4MeasurementId"
-                  value={analytics?.ga4MeasurementId || ''}
-                  onChange={(e) => handleInputChange('ga4MeasurementId', e.target.value)}
-                  placeholder="G-XXXXXXXXXX"
-                  className="bg-gray-50"
-                />
-              </div>
+      {activeTab === 'google-analytics' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações do Google Analytics 4</CardTitle>
+            <CardDescription>Configure o GA4 para análise detalhada de comportamento</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="ga4MeasurementId" className="text-sm font-medium">ID de Medição GA4</Label>
+              <Input
+                id="ga4MeasurementId"
+                value={analytics?.ga4MeasurementId || ''}
+                onChange={(e) => handleInputChange('ga4MeasurementId', e.target.value)}
+                placeholder="G-XXXXXXXXXX"
+                className="bg-gray-50"
+              />
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="ga4Enabled"
-                  checked={analytics?.ga4Enabled || false}
-                  onCheckedChange={(checked) => handleInputChange('ga4Enabled', checked)}
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-                <Label htmlFor="ga4Enabled" className="text-sm font-medium">Ativar Google Analytics 4</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="ga4Enabled"
+                checked={analytics?.ga4Enabled || false}
+                onCheckedChange={(checked) => handleInputChange('ga4Enabled', checked)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <Label htmlFor="ga4Enabled" className="text-sm font-medium">Ativar Google Analytics 4</Label>
+            </div>
 
-              <Alert className="mt-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Como obter o ID de Medição</AlertTitle>
-                <AlertDescription>
-                  1. Acesse Google Analytics 4<br/>
-                  2. Vá em Administrador → Propriedade → Fluxos de dados<br/>
-                  3. Selecione seu fluxo da web<br/>
-                  4. Copie o ID de medição (formato: G-XXXXXXXXXX)
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            <Alert className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Como obter o ID de Medição</AlertTitle>
+              <AlertDescription>
+                1. Acesse Google Analytics 4<br/>
+                2. Vá em Administrador → Propriedade → Fluxos de dados<br/>
+                3. Selecione seu fluxo da web<br/>
+                4. Copie o ID de medição (formato: G-XXXXXXXXXX)
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Botão de Salvar Global */}
       <div className="flex justify-end pt-6">
