@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Finalized pricing section design with optimized color hierarchy and badge sizing
+  - Applied unified blue color scheme: blue-600 for prices/buttons, blue-500 for "Mais Popular" badge
+  - Implemented green-500 for "Melhor Valor" badge and discount badges creating clear value messaging
+  - Reduced discount badge sizes (text-xs, px-2 py-0.5) for cleaner proportions while maintaining original text
+  - Achieved complete visual harmony connecting pricing section to main title branding
 - June 14, 2025: Applied unified blue-600 color scheme across entire pricing section connecting to title branding
   - Updated all pricing amounts (R$47, R$36,70, R$29,70) to use blue-600 matching "ARTES AUTOMOTIVAS" title
   - Applied blue-600 to all button text and borders across all three plans for complete visual consistency

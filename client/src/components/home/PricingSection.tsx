@@ -123,7 +123,7 @@ const PricingSection = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-6 relative hover:shadow-lg transition-all duration-300">
             {/* Popular Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-orange-500 text-white text-xs font-bold px-4 py-1 rounded-full">
+              <div className="bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-full">
                 Mais Popular
               </div>
             </div>
