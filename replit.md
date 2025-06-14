@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Added professional pricing section to homepage with R$ 47/month and R$ 147/year plans
+  - Created PricingSection component with modern card-based design
+  - Highlighted annual plan as "Most Popular" with special badge and savings display
+  - Positioned strategically between testimonials and call-to-action
+  - Only visible to non-premium users to avoid redundancy
+  - Includes payment security guarantees and professional styling
 - June 14, 2025: Updated marketing copy across entire platform from "+300 Artes Exclusivas" to "Milhares de Artes Exclusivas"
   - Modified Hero component badge display
   - Updated FeatureStats component text

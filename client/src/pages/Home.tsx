@@ -12,6 +12,7 @@ import Testimonials from '@/components/home/Testimonials';
 import CallToAction from '@/components/home/CallToAction';
 import FeatureStats from '@/components/home/FeatureStats';
 import QuickAccess from '@/components/home/QuickAccess';
+import PricingSection from '@/components/home/PricingSection';
 
 const Home = () => {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -103,6 +104,7 @@ const Home = () => {
           <FeatureStats />
           <PremiumFeatures />
           <Testimonials />
+          <PricingSection />
           <CallToAction />
         </>
       )}
