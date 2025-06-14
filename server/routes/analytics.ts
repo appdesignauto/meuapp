@@ -45,8 +45,33 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Rota específica para configurações do Meta Pixel (para o script dinâmico)
+// Rota específica para configurações completas do admin
 router.get('/settings', async (req, res) => {
+  try {
+    console.log('🔍 [Analytics Router] Buscando configurações completas...');
+    const [settings] = await db.select().from(analyticsSettings);
+    
+    if (!settings) {
+      console.log('⚠️ [Analytics Router] Nenhuma configuração encontrada');
+      return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
+    }
+    
+    console.log('✅ [Analytics Router] Configurações encontradas:', {
+      metaPixelId: settings.metaPixelId,
+      ga4MeasurementId: settings.ga4MeasurementId,
+      gtmContainerId: settings.gtmContainerId
+    });
+    
+    // Retorna todas as configurações para o painel admin
+    res.json(settings);
+  } catch (error) {
+    console.error('❌ [Analytics Router] Erro ao buscar configurações:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar configurações de analytics' });
+  }
+});
+
+// Rota específica para configurações do Meta Pixel (para o script dinâmico)
+router.get('/meta-pixel', async (req, res) => {
   try {
     const [settings] = await db.select().from(analyticsSettings);
     
