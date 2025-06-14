@@ -347,10 +347,8 @@ router.put('/admin/settings', isAdmin, async (req, res) => {
       customScriptEnabled
     } = req.body;
     
-    // Build update object with only defined values
-    const updateData: any = {
-      updatedAt: new Date().toISOString()
-    };
+    // Build update object with only defined values - no manual updatedAt since Drizzle handles it
+    const updateData: any = {};
     
     // Only include fields that are explicitly provided
     if (metaPixelId !== undefined) updateData.metaPixelId = metaPixelId || '';
