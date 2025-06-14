@@ -26,6 +26,18 @@ router.post('/hotmart-fixed', async (req, res) => {
       const transactionId = payload.data?.purchase?.transaction;
       const planName = payload.data?.subscription?.plan?.name?.toLowerCase();
       const planType = planName?.includes('anual') ? 'anual' : 'mensal';
+      
+      // Extrair telefone se disponível no webhook
+      const phone = payload.data?.buyer?.phone || 
+                   payload.data?.buyer?.address?.phone || 
+                   payload.data?.customer?.phone ||
+                   null;
+      
+      if (phone) {
+        console.log('📞 [WEBHOOK] Telefone capturado:', phone);
+      } else {
+        console.log('📞 [WEBHOOK] Nenhum telefone encontrado no payload');
+      }
       const now = new Date();
       let endDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
@@ -37,10 +49,10 @@ router.post('/hotmart-fixed', async (req, res) => {
         const username = email.split('@')[0]; // Username baseado no email
         const tempPassword = 'auto@123'; // Password padrão do sistema
         await pool.query(`
-          INSERT INTO users (email, name, username, password, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed)
-          VALUES ($1, $2, $3, $4, 'premium', 'hotmart', $5, $6, $7, false, true, true);
-        `, [email, name, username, tempPassword, planType, now, endDate]);
-        console.log(`✅ Novo usuário criado: ${name}`);
+          INSERT INTO users (email, name, username, password, nivelacesso, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, isactive, emailconfirmed, phone)
+          VALUES ($1, $2, $3, $4, 'premium', 'hotmart', $5, $6, $7, false, true, true, $8);
+        `, [email, name, username, tempPassword, planType, now, endDate, phone]);
+        console.log(`✅ Novo usuário criado: ${name}${phone ? ` com telefone: ${phone}` : ''}`);
       } else {
         // Atualiza usuário existente PRESERVANDO completamente a data de assinatura original
         const userData = existingUser.rows[0];
@@ -55,10 +67,10 @@ router.post('/hotmart-fixed', async (req, res) => {
           // Se a assinatura expirou, trata como renovação real (atualiza data de assinatura)
           if (isExpired) {
             await pool.query(`
-              UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', dataassinatura = $4
+              UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', dataassinatura = $4, phone = COALESCE($5, phone)
               WHERE email = $1;
-            `, [email, planType, endDate, now]);
-            console.log(`🔄 RENOVAÇÃO REAL - Usuário ${name} com assinatura expirada, data atualizada`);
+            `, [email, planType, endDate, now, phone]);
+            console.log(`🔄 RENOVAÇÃO REAL - Usuário ${name} com assinatura expirada, data atualizada${phone ? ` e telefone: ${phone}` : ''}`);
             console.log(`📅 Nova data de assinatura: ${now.toISOString()}`);
             console.log(`📅 Nova data de expiração: ${endDate.toISOString()}`);
           } else {
@@ -72,10 +84,10 @@ router.post('/hotmart-fixed', async (req, res) => {
             }
             
             await pool.query(`
-              UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart'
+              UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', phone = COALESCE($4, phone)
               WHERE email = $1;
-            `, [email, planType, preservedEndDate]);
-            console.log(`🔁 REDISPARO - Preservando data original para: ${name}`);
+            `, [email, planType, preservedEndDate, phone]);
+            console.log(`🔁 REDISPARO - Preservando data original para: ${name}${phone ? ` e atualizando telefone: ${phone}` : ''}`);
             console.log(`📅 Data assinatura original mantida: ${originalDate.toISOString()}`);
             console.log(`📅 Expiração recalculada: ${preservedEndDate.toISOString()}`);
             
@@ -85,10 +97,10 @@ router.post('/hotmart-fixed', async (req, res) => {
         } else {
           // Se não há data de assinatura original, trata como novo usuário
           await pool.query(`
-            UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', dataassinatura = $4
+            UPDATE users SET nivelacesso = 'premium', tipoplano = $2, dataexpiracao = $3, origemassinatura = 'hotmart', dataassinatura = $4, phone = COALESCE($5, phone)
             WHERE email = $1;
-          `, [email, planType, endDate, now]);
-          console.log(`✅ Usuário atualizado (sem data original): ${name}`);
+          `, [email, planType, endDate, now, phone]);
+          console.log(`✅ Usuário atualizado (sem data original): ${name}${phone ? ` com telefone: ${phone}` : ''}`);
         }
       }
 
