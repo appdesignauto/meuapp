@@ -118,13 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 14, 2025: Redesigned pricing section with professional corporate design system
-  - Completely rebuilt PricingSection with enterprise-grade visual design using slate color palette
-  - Implemented clean B2B SaaS layout: Starter (R$ 47), Professional (R$ 97), Enterprise (R$ 147)
-  - Added professional trust indicators: Shield (security), Users (social proof), Award (guarantee)
-  - Enhanced with corporate UX patterns: rounded-3xl cards, subtle shadows, gradient highlights
-  - Professional highlighting system with blue gradient for "Professional" plan and scale transform
-  - Integrated business-focused CTAs with ArrowRight icons and descriptive plan subtitles
+- June 14, 2025: Implemented clean pricing section following user's exact design specifications
+  - Created simplified layout with "Escolha seu plano" title and clear value proposition
+  - Implemented orange-highlighted pricing: Mensal (R$47), Semestral (R$36,70/mês), Anual (R$29,70/mês)
+  - Added distinctive badges: "Mais Popular" (orange) for semestral, "Melhor Valor" (green) for annual
+  - Built fully responsive 3-column grid with mobile-first approach and proper spacing
+  - Standardized feature lists across all plans with consistent "Começar Agora" CTAs
+  - Applied clean gray-50 background with white cards and orange accent highlights
 - June 14, 2025: Updated marketing copy across entire platform from "+300 Artes Exclusivas" to "Milhares de Artes Exclusivas"
   - Modified Hero component badge display
   - Updated FeatureStats component text
