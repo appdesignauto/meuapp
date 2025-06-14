@@ -118,13 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 14, 2025: Applied consistent brand color (vibrant blue) across all pricing plan elements
-  - Updated all pricing amounts to use blue-700 instead of orange for visual consistency
-  - Applied blue-700 to button text and borders while maintaining transparent backgrounds
+- June 14, 2025: Applied consistent brand color (#103560) across all pricing plan elements
+  - Replaced all blue-700 colors with custom brand color #103560 for complete visual consistency
+  - Applied #103560 to all pricing amounts, button text and borders across all three plans
   - Added green outlined borders to discount values with rounded pill styling
   - Maintained orange accents only for badges while discount highlights use green borders
-  - Applied custom brand color (#103560) to annual plan highlight with darker badge tone (#0c2a4d)
-  - Created unified brand experience across mensal, anual, and semestral pricing displays
+  - Annual plan uses #103560 background with darker badge tone (#0c2a4d) for contrast
+  - Created unified brand experience with single color palette across mensal, anual, and semestral pricing displays
 - June 14, 2025: Updated pricing section with specific feature list and layout reorganization
   - Applied user's exact feature specifications: "Acesso a todas as artes", "Edições ilimitadas", "Atualizações semanais", "Aplicativo exclusivo", "Suporte prioritário", "Sem compromisso"
   - Reorganized plan layout: Mensal → Anual (highlighted center) → Semestral
