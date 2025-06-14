@@ -1591,39 +1591,40 @@ const AdminDashboard = () => {
                 <PanelRight className="w-5 h-5" />
               </button>
               
-              <div className="flex items-center">
-                {activeTab === 'financeiro' && <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />}
-                {activeTab === 'stats' && <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />}
-                {activeTab === 'arts' && <Palette className="w-6 h-6 text-blue-600 mr-3" />}
-                {activeTab === 'users' && <Users className="w-6 h-6 text-blue-600 mr-3" />}
-                {activeTab === 'community' && <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />}
-                {activeTab === 'settings' && <Settings className="w-6 h-6 text-blue-600 mr-3" />}
-                {activeTab === 'logo' && <Image className="w-6 h-6 text-blue-600 mr-3" />}
+              <div className="flex flex-col">
+                <div className="flex items-center">
+                  {activeTab === 'financeiro' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
+                  {activeTab === 'stats' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
+                  {activeTab === 'arts' && <Palette className="w-5 h-5 text-blue-600 mr-3" />}
+                  {activeTab === 'users' && <Users className="w-5 h-5 text-blue-600 mr-3" />}
+                  {activeTab === 'community' && <MessageSquare className="w-5 h-5 text-blue-600 mr-3" />}
+                  {activeTab === 'settings' && <Settings className="w-5 h-5 text-blue-600 mr-3" />}
+                  {activeTab === 'logo' && <Image className="w-5 h-5 text-blue-600 mr-3" />}
+                  
+                  <h1 className="text-xl font-bold text-gray-900">
+                    {activeTab === 'financeiro' && 'Dashboard Financeiro'}
+                    {activeTab === 'stats' && 'Dashboard'}
+                    {activeTab === 'arts' && 'Artes e Designs'}
+                    {activeTab === 'users' && 'Usuários'}
+                    {activeTab === 'community' && 'Comunidade'}
+                    {activeTab === 'settings' && 'Configurações'}
+                    {activeTab === 'logo' && 'Gerenciar Logo'}
+                    {activeTab === 'categories' && 'Categorias'}
+                    {activeTab === 'formats' && 'Formatos'}
+                    {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
+                    {activeTab === 'collections' && 'Coleções'}
+                    {activeTab === 'subscriptions' && 'Assinaturas'}
+                    {activeTab === 'coursesList' && 'Cursos'}
+                    {activeTab === 'modules' && 'Módulos'}
+                    {activeTab === 'lessons' && 'Aulas'}
+                    {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
+                    {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
+                    {activeTab === 'comments' && 'Comentários'}
+                    {activeTab === 'popups' && 'Popups'}
+                  </h1>
+                </div>
                 
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {activeTab === 'financeiro' && 'Dashboard Financeiro'}
-                  {activeTab === 'stats' && 'Dashboard'}
-                  {activeTab === 'arts' && 'Artes e Designs'}
-                  {activeTab === 'users' && 'Usuários'}
-                  {activeTab === 'community' && 'Comunidade'}
-                  {activeTab === 'settings' && 'Configurações'}
-                  {activeTab === 'logo' && 'Gerenciar Logo'}
-                  {activeTab === 'categories' && 'Categorias'}
-                  {activeTab === 'formats' && 'Formatos'}
-                  {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
-                  {activeTab === 'collections' && 'Coleções'}
-                  {activeTab === 'subscriptions' && 'Assinaturas'}
-                  {activeTab === 'coursesList' && 'Cursos'}
-                  {activeTab === 'modules' && 'Módulos'}
-                  {activeTab === 'lessons' && 'Aulas'}
-                  {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
-                  {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
-                  {activeTab === 'comments' && 'Comentários'}
-                  {activeTab === 'popups' && 'Popups'}
-                  {activeTab === 'logo' && 'Gerenciar Logo'}
-
-                </h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-1 ml-8">
                   {activeTab === 'financeiro' && 'Visualize receitas, assinantes e métricas de crescimento.'}
                   {activeTab === 'stats' && 'Visão geral do sistema e estatísticas principais.'}
                   {activeTab === 'arts' && 'Gerencie designs, categorias e coleções.'}
