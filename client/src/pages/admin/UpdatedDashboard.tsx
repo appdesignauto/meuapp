@@ -1633,7 +1633,7 @@ const AdminDashboard = () => {
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
-                  {activeTab === 'analytics' && 'Analytics e Rastreamento'}
+                  {activeTab === 'analytics' && 'Analytics'}
                 </h1>
               </div>
             </div>
@@ -4035,7 +4035,7 @@ const AdminDashboard = () => {
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics</h2>
                     <p className="text-muted-foreground">
                       Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
                     </p>
@@ -4078,7 +4078,10 @@ const AdminDashboard = () => {
         </main>
       </div>
       {/* Diálogo de criação de arte multi-formato */}
-      <SimpleFormMultiDialog open={isMultiFormOpen} onOpenChange={setIsMultiFormOpen} />
+      <SimpleFormMultiDialog 
+        isOpen={isMultiFormOpen} 
+        onClose={() => setIsMultiFormOpen(false)} 
+      />
     </div>
   );
 };
