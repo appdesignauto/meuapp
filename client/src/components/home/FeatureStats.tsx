@@ -9,7 +9,7 @@ const FeatureStats = () => {
             <div className="bg-blue-50 p-2.5 rounded-full mb-2">
               <Images className="text-blue-600 h-5 w-5" />
             </div>
-            <span className="text-neutral-700 text-sm">+300 Artes Editáveis</span>
+            <span className="text-neutral-700 text-sm">Milhares de Artes Editáveis</span>
           </div>
           <div className="flex flex-col items-center text-center p-3">
             <div className="bg-blue-50 p-2.5 rounded-full mb-2">

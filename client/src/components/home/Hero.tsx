@@ -67,7 +67,7 @@ const Hero = () => {
           <div className="flex justify-center items-center mb-4">
             <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] sm:text-xs font-medium inline-flex items-center border border-primary/20 shadow-sm">
               <span className="text-blue-500 mr-1">★</span>
-              +300 Artes Exclusivas
+              Milhares de Artes Exclusivas
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-primary/90 mb-4 leading-tight px-2">

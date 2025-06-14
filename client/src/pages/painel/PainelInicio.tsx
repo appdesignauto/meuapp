@@ -393,7 +393,7 @@ export default function PainelInicio() {
                   <CheckCircle2 className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Acesso a mais de 300 artes exclusivas</p>
+                  <p className="text-sm font-medium">Acesso a milhares de artes exclusivas</p>
                   <p className="text-xs text-muted-foreground">Baixe sem limites designs profissionais para seu negócio</p>
                 </div>
               </div>
