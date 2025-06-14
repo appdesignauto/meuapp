@@ -78,6 +78,7 @@ import {
   ShieldIcon,
   MessageCircleIcon,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InsertUser, NivelAcesso, OrigemAssinatura, TipoPlano } from "@shared/schema";
@@ -2431,7 +2432,7 @@ const UserManagement = () => {
   );
 };
 
-// Componente de tabela de usuários
+// Componente de tabela de usuários - Updated with WhatsApp integration
 interface UserTableProps {
   users: UserWithStats[];
   isLoading: boolean;
@@ -2925,7 +2926,7 @@ const UserTable = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="hover:bg-green-50 hover:text-green-600"
+                    className="hover:bg-green-50 hover:text-green-600 text-green-600"
                     onClick={() => {
                       const message = `Olá ${user.name || user.username}, tudo bem? Sou da equipe DesignAuto e gostaria de conversar com você.`;
                       const phoneNumber = user.phone || '';
@@ -2936,7 +2937,7 @@ const UserTable = ({
                     }}
                     title="Enviar mensagem no WhatsApp"
                   >
-                    <MessageCircleIcon className="h-4 w-4" />
+                    <FaWhatsapp className="h-5 w-5" />
                   </Button>
                 </TableCell>
                 <TableCell className="text-right">

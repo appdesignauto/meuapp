@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Implemented WhatsApp communication integration in user management interface
+  - Added WhatsApp icon column in user management table for direct communication
+  - Integrated React Icons FaWhatsapp component for better compatibility and visibility
+  - Positioned WhatsApp button before actions column for easy access
+  - Implemented automatic message generation with user name personalization
+  - Enhanced user management workflow with instant communication capabilities
 - June 14, 2025: Performance de Conteúdo dashboard completely reset for fresh authentic tracking
   - Fixed SQL column reference errors in content performance endpoint by replacing raw SQL with Drizzle ORM
   - Resolved downloads table structure issues: added auto-increment ID and default timestamp for createdAt
