@@ -8661,172 +8661,182 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  // ENDPOINT: Performance de Conteúdo
+  // ENDPOINT: Performance de Conteúdo - VERSÃO ESTÁVEL
   app.get("/api/content/performance", isAdmin, async (req, res) => {
     try {
       console.log("📊 Calculando performance de conteúdo...");
       
-      // Consultas simplificadas usando Drizzle ORM
-      
-      // Top 10 Artes Mais Baixadas
-      const topArtsWithDownloads = await db
-        .select({
-          id: arts.id,
-          title: arts.title,
-          isPremium: arts.isPremium,
-          categoryName: categories.name,
-          downloads: sql<number>`COUNT(${downloads.id})`,
-          uniqueUsers: sql<number>`COUNT(DISTINCT ${downloads.userId})`
-        })
-        .from(arts)
-        .leftJoin(downloads, eq(arts.id, downloads.artId))
-        .leftJoin(categories, eq(arts.categoryId, categories.id))
-        .where(eq(arts.isVisible, true))
-        .groupBy(arts.id, arts.title, arts.isPremium, categories.name)
-        .orderBy(sql`COUNT(${downloads.id}) DESC`)
-        .limit(10);
-
-      const topArts = topArtsWithDownloads.map(row => ({
-        id: row.id,
-        title: row.title,
-        isPremium: row.isPremium,
-        category: row.categoryName || 'Sem categoria',
-        downloads: Number(row.downloads) || 0,
-        uniqueUsers: Number(row.uniqueUsers) || 0
-      }));
-
-      // Performance por Categoria  
-      const categoryStats = await db
-        .select({
-          category: categories.name,
-          totalArts: sql<number>`COUNT(DISTINCT ${arts.id})`,
-          totalDownloads: sql<number>`COUNT(${downloads.id})`,
-          uniqueUsers: sql<number>`COUNT(DISTINCT ${downloads.userId})`,
-          premiumPercentage: sql<number>`ROUND(AVG(CASE WHEN ${arts.isPremium} THEN 1 ELSE 0 END) * 100, 1)`
-        })
-        .from(categories)
-        .innerJoin(arts, eq(categories.id, arts.categoryId))
-        .leftJoin(downloads, eq(arts.id, downloads.artId))
-        .where(eq(arts.isVisible, true))
-        .groupBy(categories.id, categories.name)
-        .having(sql`COUNT(DISTINCT ${arts.id}) > 0`)
-        .orderBy(sql`COUNT(${downloads.id}) DESC`)
-        .limit(8);
-
-      const categoryPerformance = categoryStats.map(row => ({
-        category: row.category,
-        totalArts: Number(row.totalArts) || 0,
-        totalDownloads: Number(row.totalDownloads) || 0,
-        uniqueUsers: Number(row.uniqueUsers) || 0,
-        premiumPercentage: Number(row.premiumPercentage) || 0
-      }));
-
-      // Taxa de Conversão - baseada em dados reais
-      const artsWithViews = await db
-        .select({
-          id: arts.id,
-          title: arts.title,
-          viewcount: arts.viewcount,
-          downloads: sql<number>`COUNT(${downloads.id})`
-        })
-        .from(arts)
-        .leftJoin(downloads, eq(arts.id, downloads.artId))
-        .where(eq(arts.isVisible, true))
-        .groupBy(arts.id, arts.title, arts.viewcount)
-        .orderBy(sql`COUNT(${downloads.id}) DESC`)
-        .limit(5);
-
-      const conversionRates = artsWithViews.map(art => {
-        const views = Number(art.viewcount) || 0;
-        const downloads = Number(art.downloads) || 0;
-        const conversionRate = views > 0 ? Math.round((downloads / views) * 100) : 0;
+      // Usar transação para garantir consistência dos dados
+      const result = await db.transaction(async (tx) => {
         
-        return {
-          title: art.title,
-          views: views,
-          downloads: downloads,
-          conversionRate: conversionRate
-        };
-      });
+        // Top 10 Artes Mais Baixadas - consulta determinística
+        const topArtsWithDownloads = await tx
+          .select({
+            id: arts.id,
+            title: arts.title,
+            isPremium: arts.isPremium,
+            categoryName: categories.name,
+            downloads: sql<number>`COUNT(${downloads.id})`,
+            uniqueUsers: sql<number>`COUNT(DISTINCT ${downloads.userId})`
+          })
+          .from(arts)
+          .leftJoin(downloads, eq(arts.id, downloads.artId))
+          .leftJoin(categories, eq(arts.categoryId, categories.id))
+          .where(eq(arts.isVisible, true))
+          .groupBy(arts.id, arts.title, arts.isPremium, categories.name)
+          .orderBy(sql`COUNT(${downloads.id}) DESC, ${arts.id} ASC`)
+          .limit(10);
 
-      // Comparação Premium vs Gratuito
-      const premiumStats = await db
-        .select({
-          isPremium: arts.isPremium,
-          totalArts: sql<number>`COUNT(DISTINCT ${arts.id})`,
-          totalDownloads: sql<number>`COUNT(${downloads.id})`,
-          uniqueUsers: sql<number>`COUNT(DISTINCT ${downloads.userId})`
-        })
-        .from(arts)
-        .leftJoin(downloads, eq(arts.id, downloads.artId))
-        .where(eq(arts.isVisible, true))
-        .groupBy(arts.isPremium)
-        .orderBy(desc(arts.isPremium));
+        const topArts = topArtsWithDownloads.map(row => ({
+          id: row.id,
+          title: row.title,
+          isPremium: row.isPremium,
+          category: row.categoryName || 'Sem categoria',
+          downloads: Number(row.downloads) || 0,
+          uniqueUsers: Number(row.uniqueUsers) || 0
+        }));
 
-      const premiumComparison = {
-        premium: { totalArts: 0, totalDownloads: 0, uniqueUsers: 0, avgDownloadsPerArt: 0 },
-        free: { totalArts: 0, totalDownloads: 0, uniqueUsers: 0, avgDownloadsPerArt: 0 }
-      };
-      
-      premiumStats.forEach(row => {
-        const data = {
+        // Performance por Categoria - ordenação determinística
+        const categoryStats = await tx
+          .select({
+            categoryId: categories.id,
+            category: categories.name,
+            totalArts: sql<number>`COUNT(DISTINCT ${arts.id})`,
+            totalDownloads: sql<number>`COUNT(${downloads.id})`,
+            uniqueUsers: sql<number>`COUNT(DISTINCT ${downloads.userId})`,
+            premiumPercentage: sql<number>`ROUND(AVG(CASE WHEN ${arts.isPremium} THEN 1 ELSE 0 END) * 100, 1)`
+          })
+          .from(categories)
+          .innerJoin(arts, eq(categories.id, arts.categoryId))
+          .leftJoin(downloads, eq(arts.id, downloads.artId))
+          .where(eq(arts.isVisible, true))
+          .groupBy(categories.id, categories.name)
+          .having(sql`COUNT(DISTINCT ${arts.id}) > 0`)
+          .orderBy(sql`COUNT(${downloads.id}) DESC, ${categories.id} ASC`)
+          .limit(8);
+
+        const categoryPerformance = categoryStats.map(row => ({
+          category: row.category,
           totalArts: Number(row.totalArts) || 0,
           totalDownloads: Number(row.totalDownloads) || 0,
           uniqueUsers: Number(row.uniqueUsers) || 0,
-          avgDownloadsPerArt: row.totalArts > 0 ? Math.round((Number(row.totalDownloads) / Number(row.totalArts)) * 100) / 100 : 0
+          premiumPercentage: Number(row.premiumPercentage) || 0
+        }));
+
+        // Taxa de Conversão - dados fixos baseados na tabela
+        const artsWithViews = await tx
+          .select({
+            id: arts.id,
+            title: arts.title,
+            viewcount: arts.viewcount,
+            downloads: sql<number>`COUNT(${downloads.id})`
+          })
+          .from(arts)
+          .leftJoin(downloads, eq(arts.id, downloads.artId))
+          .where(and(
+            eq(arts.isVisible, true),
+            sql`${arts.viewcount} > 0`
+          ))
+          .groupBy(arts.id, arts.title, arts.viewcount)
+          .orderBy(sql`COUNT(${downloads.id}) DESC, ${arts.id} ASC`)
+          .limit(5);
+
+        const conversionRates = artsWithViews.map(art => {
+          const views = Number(art.viewcount) || 1; // Garantir pelo menos 1 para evitar divisão por zero
+          const downloads = Number(art.downloads) || 0;
+          const conversionRate = Math.round((downloads / views) * 100);
+          
+          return {
+            title: art.title,
+            views: views,
+            downloads: downloads,
+            conversionRate: conversionRate
+          };
+        });
+
+        // Comparação Premium vs Gratuito - dentro da transação
+        const premiumStats = await tx
+          .select({
+            isPremium: arts.isPremium,
+            totalArts: sql<number>`COUNT(DISTINCT ${arts.id})`,
+            totalDownloads: sql<number>`COUNT(${downloads.id})`,
+            uniqueUsers: sql<number>`COUNT(DISTINCT ${downloads.userId})`
+          })
+          .from(arts)
+          .leftJoin(downloads, eq(arts.id, downloads.artId))
+          .where(eq(arts.isVisible, true))
+          .groupBy(arts.isPremium)
+          .orderBy(desc(arts.isPremium));
+
+        const premiumComparison = {
+          premium: { totalArts: 0, totalDownloads: 0, uniqueUsers: 0, avgDownloadsPerArt: 0 },
+          free: { totalArts: 0, totalDownloads: 0, uniqueUsers: 0, avgDownloadsPerArt: 0 }
         };
         
-        if (row.isPremium) {
-          premiumComparison.premium = data;
-        } else {
-          premiumComparison.free = data;
-        }
-      });
+        premiumStats.forEach(row => {
+          const data = {
+            totalArts: Number(row.totalArts) || 0,
+            totalDownloads: Number(row.totalDownloads) || 0,
+            uniqueUsers: Number(row.uniqueUsers) || 0,
+            avgDownloadsPerArt: row.totalArts > 0 ? Math.round((Number(row.totalDownloads) / Number(row.totalArts)) * 100) / 100 : 0
+          };
+          
+          if (row.isPremium) {
+            premiumComparison.premium = data;
+          } else {
+            premiumComparison.free = data;
+          }
+        });
 
-      // Estatísticas Gerais usando Drizzle
-      const totalArtsCount = await db
-        .select({ count: sql<number>`COUNT(DISTINCT ${arts.id})` })
-        .from(arts)
-        .where(eq(arts.isVisible, true));
+        // Estatísticas Gerais - dentro da transação
+        const totalArtsCount = await tx
+          .select({ count: sql<number>`COUNT(DISTINCT ${arts.id})` })
+          .from(arts)
+          .where(eq(arts.isVisible, true));
 
-      const totalDownloadsCount = await db
-        .select({ count: sql<number>`COUNT(${downloads.id})` })
-        .from(downloads)
-        .innerJoin(arts, eq(downloads.artId, arts.id))
-        .where(eq(arts.isVisible, true));
+        const totalDownloadsCount = await tx
+          .select({ count: sql<number>`COUNT(${downloads.id})` })
+          .from(downloads)
+          .innerJoin(arts, eq(downloads.artId, arts.id))
+          .where(eq(arts.isVisible, true));
 
-      const uniqueDownloadersCount = await db
-        .select({ count: sql<number>`COUNT(DISTINCT ${downloads.userId})` })
-        .from(downloads)
-        .innerJoin(arts, eq(downloads.artId, arts.id))
-        .where(eq(arts.isVisible, true));
+        const uniqueDownloadersCount = await tx
+          .select({ count: sql<number>`COUNT(DISTINCT ${downloads.userId})` })
+          .from(downloads)
+          .innerJoin(arts, eq(downloads.artId, arts.id))
+          .where(eq(arts.isVisible, true));
 
-      const activeCategoriesCount = await db
-        .select({ count: sql<number>`COUNT(DISTINCT ${arts.categoryId})` })
-        .from(arts)
-        .where(eq(arts.isVisible, true));
-      
-      const response = {
-        period: req.query.period as string || 'all',
-        summary: {
+        const activeCategoriesCount = await tx
+          .select({ count: sql<number>`COUNT(DISTINCT ${arts.categoryId})` })
+          .from(arts)
+          .where(eq(arts.isVisible, true));
+
+        const summary = {
           totalArts: Number(totalArtsCount[0]?.count) || 0,
           totalDownloads: Number(totalDownloadsCount[0]?.count) || 0,
           uniqueDownloaders: Number(uniqueDownloadersCount[0]?.count) || 0,
           activeCategories: Number(activeCategoriesCount[0]?.count) || 0,
           avgDownloadsPerArt: totalArtsCount[0]?.count > 0 ? 
             Math.round(Number(totalDownloadsCount[0]?.count) / Number(totalArtsCount[0]?.count)) : 0
-        },
-        topArts,
-        categoryPerformance,
-        conversionRates,
-        premiumComparison
+        };
+
+        return { topArts, categoryPerformance, conversionRates, premiumComparison, summary };
+      });
+
+      const response = {
+        period: req.query.period as string || 'all',
+        summary: result.summary,
+        topArts: result.topArts,
+        categoryPerformance: result.categoryPerformance,
+        conversionRates: result.conversionRates,
+        premiumComparison: result.premiumComparison
       };
       
       console.log("✅ Performance de conteúdo calculada:", {
         period: req.query.period as string || 'all',
-        topArtsCount: topArts.length,
-        categoriesCount: categoryPerformance.length,
-        conversionRatesCount: conversionRates.length
+        topArtsCount: result.topArts.length,
+        categoriesCount: result.categoryPerformance.length,
+        conversionRatesCount: result.conversionRates.length
       });
       
       res.json(response);
