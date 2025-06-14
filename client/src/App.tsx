@@ -14,6 +14,7 @@ import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
+import { useGA4 } from "@/hooks/useAnalytics";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
