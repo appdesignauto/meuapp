@@ -1598,6 +1598,7 @@ const AdminDashboard = () => {
                 {activeTab === 'users' && <Users className="w-6 h-6 text-blue-600 mr-3" />}
                 {activeTab === 'community' && <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />}
                 {activeTab === 'settings' && <Settings className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'logo' && <Image className="w-6 h-6 text-blue-600 mr-3" />}
                 
                 <h1 className="text-2xl font-bold text-gray-900">
                   {activeTab === 'financeiro' && 'Dashboard Financeiro'}
@@ -1606,6 +1607,7 @@ const AdminDashboard = () => {
                   {activeTab === 'users' && 'Usuários'}
                   {activeTab === 'community' && 'Comunidade'}
                   {activeTab === 'settings' && 'Configurações'}
+                  {activeTab === 'logo' && 'Gerenciar Logo'}
                   {activeTab === 'categories' && 'Categorias'}
                   {activeTab === 'formats' && 'Formatos'}
                   {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
@@ -1621,6 +1623,24 @@ const AdminDashboard = () => {
                   {activeTab === 'logo' && 'Gerenciar Logo'}
 
                 </h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  {activeTab === 'financeiro' && 'Visualize receitas, assinantes e métricas de crescimento.'}
+                  {activeTab === 'stats' && 'Visão geral do sistema e estatísticas principais.'}
+                  {activeTab === 'arts' && 'Gerencie designs, categorias e coleções.'}
+                  {activeTab === 'users' && 'Administre usuários, permissões e assinaturas.'}
+                  {activeTab === 'community' && 'Gerencie posts, comentários e interações da comunidade.'}
+                  {activeTab === 'settings' && 'Configure as opções gerais do sistema.'}
+                  {activeTab === 'logo' && 'Faça upload, visualize e gerencie o logo do site.'}
+                  {activeTab === 'categories' && 'Organize designs por categorias temáticas.'}
+                  {activeTab === 'formats' && 'Gerencie formatos de posts e stories.'}
+                  {activeTab === 'fileTypes' && 'Configure tipos de arquivos suportados.'}
+                  {activeTab === 'collections' && 'Organize designs em coleções especiais.'}
+                  {activeTab === 'coursesList' && 'Gerencie cursos e conteúdo educativo.'}
+                  {activeTab === 'coursesConfig' && 'Configure aparência e funcionalidades dos cursos.'}
+                  {activeTab === 'courseStats' && 'Análise de desempenho e métricas dos cursos.'}
+                  {activeTab === 'comments' && 'Visualize, modere e gerencie os comentários dos usuários nas aulas.'}
+                  {activeTab === 'popups' && 'Configure popups promocionais e informativos.'}
+                </p>
               </div>
             </div>
             
@@ -4050,13 +4070,6 @@ const AdminDashboard = () => {
             <TabsContent value="logo" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Gerenciar Logo</h2>
-                    <p className="text-muted-foreground">
-                      Faça upload, visualize e gerencie o logo do site.
-                    </p>
-                  </div>
-                  
                   <div className="flex justify-center">
                     <SimpleLogo />
                   </div>

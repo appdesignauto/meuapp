@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Integrated logo management directly into admin dashboard
+  - Removed separate logo page and integrated SimpleLogo component into admin panel
+  - Added "Gerenciar Logo" section with proper header title and subtitle
+  - Centralized logo upload interface with usage instructions
+  - Fixed authorization check from user.role to user.nivelacesso for proper access control
 - June 14, 2025: Removed Analytics configuration panel from admin dashboard due to persistent navigation conflicts
   - Completely removed Analytics section from dashboard UI to eliminate tab switching bugs
   - Deleted AnalyticsSettings component that was causing state management issues
