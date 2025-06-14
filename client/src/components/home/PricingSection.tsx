@@ -67,7 +67,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Semestral - Destacado */}
-          <div className="bg-blue-800 rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105">
+          <div className="bg-white rounded-xl border-2 border-blue-800 p-6 relative hover:shadow-xl transition-all duration-300 transform md:scale-105">
             {/* Popular Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-blue-900 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -76,45 +76,45 @@ const PricingSection = () => {
             </div>
             
             <div className="text-center mb-6 pt-2">
-              <h3 className="text-lg font-semibold mb-3">Semestral</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Semestral</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold">R$36,70</span>
-                <span className="text-sm opacity-90">/mês</span>
+                <span className="text-4xl font-bold text-blue-800">R$36,70</span>
+                <span className="text-sm text-gray-600">/mês</span>
               </div>
-              <p className="text-sm opacity-90 mb-3">R$197,00 à vista</p>
-              <div className="text-sm font-medium bg-white/20 rounded-full px-3 py-1 inline-block">
+              <p className="text-sm text-gray-600 mb-3">R$197,00 à vista</p>
+              <div className="text-sm font-medium text-green-500">
                 +R$85 de DESCONTO
               </div>
             </div>
             
             <ul className="space-y-3 mb-8 text-sm">
               <li className="flex items-center">
-                <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Acesso a todas as artes</span>
+                <Check className="h-4 w-4 text-blue-800 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Acesso a todas as artes</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Edições ilimitadas</span>
+                <Check className="h-4 w-4 text-blue-800 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Edições ilimitadas</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Atualizações semanais</span>
+                <Check className="h-4 w-4 text-blue-800 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Atualizações semanais</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Aplicativo exclusivo</span>
+                <Check className="h-4 w-4 text-blue-800 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Aplicativo exclusivo</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Suporte prioritário</span>
+                <Check className="h-4 w-4 text-blue-800 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Suporte prioritário</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                <span>Sem compromisso</span>
+                <Check className="h-4 w-4 text-blue-800 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Sem compromisso</span>
               </li>
             </ul>
             
-            <Button className="w-full bg-white text-blue-800 hover:bg-gray-50 py-3 rounded-full font-medium">
+            <Button className="w-full bg-blue-800 text-white hover:bg-blue-900 py-3 rounded-full font-medium">
               Começar Agora
             </Button>
           </div>
