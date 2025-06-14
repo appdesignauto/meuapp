@@ -237,6 +237,156 @@ const PopupAnalytics: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Lista Detalhada de Popups Individuais */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <PieChart className="h-5 w-5 text-purple-500" />
+              <CardTitle className="text-lg">Performance Individual dos Popups</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-sm">
+              Últimos 30 dias
+            </Badge>
+          </div>
+          <CardDescription>
+            Métricas detalhadas de cada popup com comparação de performance
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingIndividual ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg animate-pulse">
+                  <div className="h-4 w-4 bg-gray-200 rounded"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                  <div className="flex space-x-4">
+                    <div className="h-6 bg-gray-200 rounded w-16"></div>
+                    <div className="h-6 bg-gray-200 rounded w-16"></div>
+                    <div className="h-6 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {individualPopupStats.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <PieChart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>Nenhum popup encontrado</p>
+                  <p className="text-sm">Crie seu primeiro popup para começar a acompanhar as métricas</p>
+                </div>
+              ) : (
+                <>
+                  {/* Header da tabela */}
+                  <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-600">
+                    <div className="col-span-4">Popup</div>
+                    <div className="col-span-2 text-center">Visualizações</div>
+                    <div className="col-span-2 text-center">Cliques</div>
+                    <div className="col-span-2 text-center">Taxa Conversão</div>
+                    <div className="col-span-2 text-center">Status</div>
+                  </div>
+
+                  {/* Lista de popups */}
+                  {individualPopupStats.map((popup, index) => (
+                    <div key={popup.id} className="grid grid-cols-12 gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                      {/* Informações do popup */}
+                      <div className="col-span-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${popup.isActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                          <div>
+                            <p className="font-medium text-gray-900">{popup.title}</p>
+                            <div className="flex items-center space-x-2 text-xs text-gray-500">
+                              <span>#{popup.id}</span>
+                              <span>•</span>
+                              <span>{popup.position}</span>
+                              <span>•</span>
+                              <span>{popup.size}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Visualizações */}
+                      <div className="col-span-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-lg font-semibold text-gray-900">{popup.views.toLocaleString()}</span>
+                          <div className="flex items-center space-x-1">
+                            <Eye className="h-3 w-3 text-gray-400" />
+                            <span className="text-xs text-gray-500">views</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cliques */}
+                      <div className="col-span-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-lg font-semibold text-gray-900">{popup.clicks.toLocaleString()}</span>
+                          <div className="flex items-center space-x-1">
+                            <MousePointer className="h-3 w-3 text-gray-400" />
+                            <span className="text-xs text-gray-500">clicks</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Taxa de Conversão */}
+                      <div className="col-span-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-lg font-semibold text-gray-900">{popup.conversionRate}%</span>
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div 
+                              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
+                              style={{width: `${Math.min(popup.conversionRate, 100)}%`}}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div className="col-span-2 text-center">
+                        <Badge 
+                          variant={popup.isActive ? "default" : "secondary"}
+                          className={popup.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
+                        >
+                          {popup.isActive ? "Ativo" : "Inativo"}
+                        </Badge>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(popup.createdAt).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Rodapé com resumo */}
+                  {individualPopupStats.length > 0 && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-2">
+                          <Activity className="h-4 w-4 text-blue-600" />
+                          <span className="font-medium text-blue-900">Resumo Geral</span>
+                        </div>
+                        <div className="flex items-center space-x-6 text-blue-700">
+                          <span>{individualPopupStats.length} popup{individualPopupStats.length !== 1 ? 's' : ''}</span>
+                          <span>•</span>
+                          <span>{individualPopupStats.filter(p => p.isActive).length} ativo{individualPopupStats.filter(p => p.isActive).length !== 1 ? 's' : ''}</span>
+                          <span>•</span>
+                          <span>
+                            {individualPopupStats.reduce((acc, popup) => acc + popup.views, 0).toLocaleString()} visualizações totais
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
