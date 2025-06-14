@@ -3137,6 +3137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name, 
           profileimageurl, 
           bio, 
+          phone,
           nivelacesso,
           tipoplano,
           origemassinatura,
@@ -3165,6 +3166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             profileimageurl: user.profileimageurl, // Mantido o nome original
             profileImageUrl: user.profileimageurl, // Adicionado formato camelCase
             bio: user.bio,
+            phone: user.phone, // Incluindo campo telefone
             role: user.nivelacesso,
             nivelacesso: user.nivelacesso,
             tipoplano: user.tipoplano,
