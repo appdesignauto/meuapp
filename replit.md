@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Optimized Google Analytics 4 configuration following official best practices
+  - Implemented GA4 script loading with proper timing and error handling
+  - Added SPA navigation tracking for single-page application routing
+  - Enhanced LGPD compliance with anonymize_ip and ad personalization controls
+  - Integrated Microsoft Clarity with Project ID "rz84poylxv" for heatmap analytics
+  - Created comprehensive event tracking API following GA4 documentation standards
+  - All analytics platforms (GA4, Meta Pixel, Microsoft Clarity) now working seamlessly together
 - June 14, 2025: Completely resolved analytics configuration persistence with timestamp validation fix
   - Fixed critical timestamp error preventing analytics settings saves by removing manual updatedAt handling
   - Corrected API route conflicts between main analytics router and settings endpoint

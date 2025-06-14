@@ -1,0 +1,295 @@
+# Configuração Google Analytics 4 no Replit
+
+## 1. Instalação das Dependências
+
+### Para projetos React/Next.js:
+```bash
+npm install gtag
+```
+
+### Para projetos vanilla HTML/JS:
+Não é necessário instalar dependências adicionais.
+
+## 2. Configuração do GA4
+
+### Opção A: React/Next.js
+
+#### 1. Criar arquivo de configuração do GA4:
+```javascript
+// utils/gtag.js
+export const GA_TRACKING_ID = 'G-9CB2MZX0YY'; // Seu Measurement ID
+
+// https://developers.google.com/analytics/devguides/collection/gtagjs/pages
+export const pageview = (url) => {
+  window.gtag('config', GA_TRACKING_ID, {
+    page_path: url,
+  });
+};
+
+// https://developers.google.com/analytics/devguides/collection/gtagjs/events
+export const event = ({ action, category, label, value }) => {
+  window.gtag('event', action, {
+    event_category: category,
+    event_label: label,
+    value: value,
+  });
+};
+```
+
+#### 2. Configurar no _app.js (Next.js) ou App.js (React):
+```javascript
+// pages/_app.js (Next.js) ou App.js (React)
+import { useEffect } from 'react';
+import { useRouter } from 'next/router'; // Apenas para Next.js
+import Script from 'next/script'; // Apenas para Next.js
+import * as gtag from '../utils/gtag';
+
+function MyApp({ Component, pageProps }) {
+  const router = useRouter(); // Apenas para Next.js
+
+  useEffect(() => {
+    // Para Next.js
+    const handleRouteChange = (url) => {
+      gtag.pageview(url);
+    };
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+
+    // Para React com React Router
+    // gtag.pageview(window.location.pathname);
+  }, [router.events]);
+
+  return (
+    <>
+      {/* Next.js */}
+      <Script
+        strategy="afterInteractive"
+        src={`https://www.googletagmanager.com/gtag/js?id=${gtag.GA_TRACKING_ID}`}
+      />
+      <Script
+        id="gtag-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${gtag.GA_TRACKING_ID}', {
+              page_path: window.location.pathname,
+            });
+          `,
+        }}
+      />
+      
+      {/* Para React puro, use: */}
+      {/*
+      <Helmet>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gtag.GA_TRACKING_ID}`}></script>
+        <script>
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${gtag.GA_TRACKING_ID}');
+          `}
+        </script>
+      </Helmet>
+      */}
+      
+      <Component {...pageProps} />
+    </>
+  );
+}
+
+export default MyApp;
+```
+
+### Opção B: HTML Vanilla
+
+#### Adicionar no `<head>` do seu HTML:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9CB2MZX0YY"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-9CB2MZX0YY');
+  </script>
+</head>
+<body>
+  <!-- Seu conteúdo aqui -->
+</body>
+</html>
+```
+
+## 3. Configuração de Eventos Personalizados
+
+### Exemplo de rastreamento de eventos:
+```javascript
+// utils/analytics.js
+import * as gtag from './gtag';
+
+// Botão clicado
+export const trackButtonClick = (buttonName) => {
+  gtag.event({
+    action: 'click',
+    category: 'engagement',
+    label: buttonName,
+  });
+};
+
+// Formulário enviado
+export const trackFormSubmit = (formName) => {
+  gtag.event({
+    action: 'submit',
+    category: 'form',
+    label: formName,
+  });
+};
+
+// Download de arquivo
+export const trackDownload = (fileName) => {
+  gtag.event({
+    action: 'download',
+    category: 'file',
+    label: fileName,
+  });
+};
+
+// Tempo na página
+export const trackTimeOnPage = (seconds) => {
+  gtag.event({
+    action: 'time_on_page',
+    category: 'engagement',
+    value: seconds,
+  });
+};
+```
+
+### Uso nos componentes:
+```javascript
+import { trackButtonClick, trackFormSubmit } from '../utils/analytics';
+
+function MyComponent() {
+  const handleClick = () => {
+    trackButtonClick('header-cta-button');
+    // Sua lógica aqui
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    trackFormSubmit('contact-form');
+    // Sua lógica de envio aqui
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>
+        Clique aqui
+      </button>
+      
+      <form onSubmit={handleSubmit}>
+        <input type="email" placeholder="Email" />
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+  );
+}
+```
+
+## 4. Configuração no Replit
+
+### 1. Variáveis de Ambiente (Recomendado):
+```bash
+# No arquivo .env
+NEXT_PUBLIC_GA_ID=G-9CB2MZX0YY
+# ou
+REACT_APP_GA_ID=G-9CB2MZX0YY
+```
+
+### 2. Usar variáveis de ambiente no código:
+```javascript
+// utils/gtag.js
+export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || process.env.REACT_APP_GA_ID;
+```
+
+### 3. Configurar no Replit:
+1. Vá em **Secrets** no painel lateral
+2. Adicione uma nova secret:
+   - Key: `NEXT_PUBLIC_GA_ID` (ou `REACT_APP_GA_ID`)
+   - Value: `G-9CB2MZX0YY`
+
+## 5. Verificação da Instalação
+
+### 1. Console do navegador:
+```javascript
+// No console do navegador, digite:
+gtag('event', 'test_event', {
+  'custom_parameter': 'test_value'
+});
+```
+
+### 2. Google Analytics Real-Time:
+- Acesse Google Analytics
+- Vá em **Relatórios** > **Tempo real**
+- Navegue pelo seu site para ver os dados em tempo real
+
+### 3. Google Tag Assistant (Extensão):
+- Instale a extensão Google Tag Assistant
+- Visite seu site e verifique se o GA4 está sendo detectado
+
+## 6. Configurações Avançadas
+
+### GDPR/LGPD Compliance:
+```javascript
+// Implementar consentimento de cookies
+const askForConsent = () => {
+  if (localStorage.getItem('ga-consent') === 'granted') {
+    initGA();
+  } else {
+    showConsentBanner();
+  }
+};
+
+const grantConsent = () => {
+  localStorage.setItem('ga-consent', 'granted');
+  gtag('consent', 'update', {
+    'analytics_storage': 'granted'
+  });
+  initGA();
+};
+```
+
+### Debug Mode:
+```javascript
+gtag('config', 'G-9CB2MZX0YY', {
+  debug_mode: true // Apenas para desenvolvimento
+});
+```
+
+## 7. Troubleshooting
+
+### Problemas Comuns:
+1. **ID não encontrado**: Verifique se o Measurement ID está correto
+2. **Scripts não carregando**: Verifique bloqueadores de anúncio
+3. **Dados não aparecendo**: GA4 pode levar até 24h para processar dados
+4. **CORS errors**: Normal em desenvolvimento local
+
+### Teste em Produção:
+- O GA4 funciona melhor em produção
+- Use a URL de produção do Replit para testes finais
+- Configure o domínio correto no Google Analytics
+
+## 8. Próximos Passos
+
+1. Configure **Enhanced Ecommerce** se necessário
+2. Implemente **Custom Dimensions**
+3. Configure **Goals** e **Conversions**
+4. Integre com **Google Tag Manager** para gerenciamento avançado
