@@ -23,7 +23,7 @@ const PricingSection = () => {
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
-                <span className="text-4xl font-bold text-orange-500">R$47</span>
+                <span className="text-4xl font-bold text-blue-700">R$47</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">Pagamento mensal</p>
               <div className="text-green-500 text-sm font-medium">
@@ -131,7 +131,7 @@ const PricingSection = () => {
             <div className="text-center mb-6 pt-2">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Semestral</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-orange-500">R$36,70</span>
+                <span className="text-4xl font-bold text-blue-700">R$36,70</span>
                 <span className="text-sm text-gray-600">/mês</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">R$197,00 à vista</p>
