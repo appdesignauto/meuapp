@@ -274,7 +274,7 @@ const PopupAnalytics: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {individualPopupStats.length === 0 ? (
+              {(individualStats || []).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <PieChart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p>Nenhum popup encontrado</p>
@@ -292,7 +292,7 @@ const PopupAnalytics: React.FC = () => {
                   </div>
 
                   {/* Lista de popups */}
-                  {individualPopupStats.map((popup, index) => (
+                  {(individualStats || []).map((popup: IndividualPopupStats, index: number) => (
                     <div key={popup.id} className="grid grid-cols-12 gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                       {/* Informações do popup */}
                       <div className="col-span-4">
