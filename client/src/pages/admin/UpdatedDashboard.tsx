@@ -4032,7 +4032,17 @@ const AdminDashboard = () => {
             
             {/* Analytics e Rastreamento */}
             <TabsContent value="analytics" className="mt-0">
-              <AnalyticsSettings />
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
+                    <p className="text-muted-foreground">
+                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+                    </p>
+                  </div>
+                  <AnalyticsSettings />
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="ferramentas" className="mt-0">
