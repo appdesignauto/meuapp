@@ -1014,7 +1014,6 @@ const AdminDashboard = () => {
           aria-hidden="true"
         />
       )}
-
       {/* Botão flutuante para abrir sidebar quando fechado */}
       {!sidebarOpen && (
         <button
@@ -1025,7 +1024,6 @@ const AdminDashboard = () => {
           <PanelRight className="w-5 h-5 text-gray-600 hover:text-blue-600" />
         </button>
       )}
-      
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
       <div 
         className={`
@@ -1450,7 +1448,7 @@ const AdminDashboard = () => {
                   <Wrench className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'ferramentas' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
+                  {sidebarOpen && <span>Gerenciar </span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1594,7 +1592,6 @@ const AdminDashboard = () => {
           </button>
         </div>
       </div>
-
       {/* Main Content */}
       <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
         <header className="bg-white relative border-b border-r border-gray-200 shadow-sm">
@@ -4080,7 +4077,6 @@ const AdminDashboard = () => {
           </Tabs>
         </main>
       </div>
-      
       {/* Diálogo de criação de arte multi-formato */}
       <SimpleFormMultiDialog open={isMultiFormOpen} onOpenChange={setIsMultiFormOpen} />
     </div>
