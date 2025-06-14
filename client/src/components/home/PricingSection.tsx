@@ -1,173 +1,166 @@
-import { Check } from 'lucide-react';
+import { Check, ArrowRight, Shield, Award, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const PricingSection = () => {
   return (
-    <section className="relative py-24 bg-gradient-to-r from-gray-800 via-gray-900 to-black overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
-        }}></div>
-      </div>
-      
-      <div className="relative container mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+    <section className="relative py-20 bg-slate-50">
+      <div className="container mx-auto px-6">
+        {/* Header */}
+        <div className="text-center max-w-4xl mx-auto mb-16">
+          <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
+            <Award className="h-4 w-4 mr-2" />
+            Planos Empresariais
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+            Escolha o plano ideal para seu negócio
+          </h2>
+          <p className="text-xl text-slate-600 leading-relaxed">
+            Ferramentas profissionais para elevar suas vendas no setor automotivo
+          </p>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
           
-          {/* Left Content - Call to Action */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-                Pronto para revolucionar suas vendas?
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Junte-se a milhares de vendedores que já melhoraram seus resultados com o DesignAuto App.
-              </p>
+          {/* Plano Mensal */}
+          <div className="relative bg-white rounded-3xl border border-slate-200 p-8 hover:shadow-xl transition-all duration-300 group">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Starter</h3>
+              <p className="text-slate-600 mb-6">Ideal para começar</p>
+              <div className="mb-6">
+                <span className="text-5xl font-bold text-slate-900">R$ 47</span>
+                <span className="text-slate-600 ml-2">/mês</span>
+              </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                size="lg" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
-              >
-                Cadastre-se
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-2 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300"
-              >
-                Ver demonstração
-              </Button>
-            </div>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Milhares de artes exclusivas</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Atualizações semanais</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Edição personalizada</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Suporte por email</span>
+              </li>
+            </ul>
+            
+            <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 text-lg font-semibold rounded-xl transition-all duration-300 group-hover:bg-slate-700">
+              Começar agora
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
           </div>
 
-          {/* Right Content - Pricing Plans */}
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* Plano Semestral - Destacado */}
+          <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 text-white transform lg:scale-105 shadow-2xl">
+            {/* Popular Badge */}
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <div className="bg-orange-500 text-white text-sm font-bold px-6 py-2 rounded-full shadow-lg">
+                MAIS POPULAR
+              </div>
+            </div>
             
-            {/* Plano Mensal */}
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 group hover:shadow-2xl hover:shadow-blue-500/10">
-              <div className="text-center space-y-4">
-                <h3 className="text-lg font-semibold text-white">Mensal</h3>
-                <div className="space-y-1">
-                  <div className="text-3xl font-bold text-white">R$ 47</div>
-                  <div className="text-sm text-gray-400">/mês</div>
-                </div>
+            <div className="text-center mb-8 pt-4">
+              <h3 className="text-2xl font-bold mb-2">Professional</h3>
+              <p className="text-blue-100 mb-6">Para crescer rapidamente</p>
+              <div className="mb-2">
+                <span className="text-5xl font-bold">R$ 97</span>
+                <span className="text-blue-100 ml-2">/semestre</span>
               </div>
-              
-              <ul className="space-y-3 mt-6">
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Acesso a todo o catálogo
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Atualizações semanais
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Edição personalizada
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Suporte exclusivo
-                </li>
-              </ul>
-              
-              <Button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all duration-300 group-hover:bg-blue-500">
-                Assinar Premium
-              </Button>
+              <div className="inline-flex items-center px-3 py-1 bg-green-500/20 text-green-100 rounded-full text-sm">
+                Economize R$ 185
+              </div>
             </div>
+            
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-300 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-blue-100">Tudo do plano Starter</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-300 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-blue-100">Conteúdo premium exclusivo</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-300 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-blue-100">Suporte prioritário</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-300 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-blue-100">Análises de performance</span>
+              </li>
+            </ul>
+            
+            <Button className="w-full bg-white text-blue-600 hover:bg-blue-50 py-4 text-lg font-semibold rounded-xl transition-all duration-300">
+              Escolher Professional
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+          </div>
 
-            {/* Plano Semestral */}
-            <div className="relative bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm border-2 border-orange-500/60 rounded-2xl p-6 transform hover:scale-105 transition-all duration-300 shadow-2xl shadow-orange-500/20">
-              {/* Popular Badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  MAIS POPULAR
-                </div>
+          {/* Plano Anual */}
+          <div className="relative bg-white rounded-3xl border border-slate-200 p-8 hover:shadow-xl transition-all duration-300 group">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Enterprise</h3>
+              <p className="text-slate-600 mb-6">Máximo desempenho</p>
+              <div className="mb-2">
+                <span className="text-5xl font-bold text-slate-900">R$ 147</span>
+                <span className="text-slate-600 ml-2">/ano</span>
               </div>
-              
-              <div className="text-center space-y-4 pt-3">
-                <h3 className="text-lg font-semibold text-white">Semestral</h3>
-                <div className="space-y-1">
-                  <div className="text-3xl font-bold text-orange-400">R$ 97</div>
-                  <div className="text-sm text-gray-400">/6 meses</div>
-                  <div className="text-xs text-green-400 font-medium">
-                    Economize R$ 185
-                  </div>
-                </div>
+              <div className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                Economize R$ 417
               </div>
-              
-              <ul className="space-y-3 mt-6">
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Acesso a todo o catálogo
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Atualizações semanais
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Edição personalizada
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Suporte exclusivo
-                </li>
-              </ul>
-              
-              <Button className="w-full mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-lg font-medium transition-all duration-300">
-                Assinar Premium
-              </Button>
             </div>
-
-            {/* Plano Anual */}
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-purple-500/40 rounded-2xl p-6 hover:border-purple-500/80 transition-all duration-300 group hover:shadow-2xl hover:shadow-purple-500/10">
-              <div className="text-center space-y-4">
-                <h3 className="text-lg font-semibold text-white">Anual</h3>
-                <div className="space-y-1">
-                  <div className="text-3xl font-bold text-purple-400">R$ 147</div>
-                  <div className="text-sm text-gray-400">/ano</div>
-                  <div className="text-xs text-green-400 font-medium">
-                    Economize R$ 417
-                  </div>
-                </div>
-              </div>
-              
-              <ul className="space-y-3 mt-6">
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Acesso a todo o catálogo
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Atualizações semanais
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Edição personalizada
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                  Suporte exclusivo
-                </li>
-              </ul>
-              
-              <Button className="w-full mt-6 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all duration-300 group-hover:from-purple-400 group-hover:to-purple-500">
-                Assinar Premium
-              </Button>
-            </div>
+            
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Tudo do plano Professional</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Consultoria personalizada</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">API integração</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <span className="text-slate-700">Suporte 24/7 dedicado</span>
+              </li>
+            </ul>
+            
+            <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 text-lg font-semibold rounded-xl transition-all duration-300 group-hover:bg-slate-700">
+              Escolher Enterprise
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
           </div>
         </div>
 
         {/* Trust Indicators */}
-        <div className="text-center mt-16">
-          <p className="text-sm text-gray-400">
-            Pagamento 100% seguro • Cancele quando quiser • Garantia de 7 dias
-          </p>
+        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="text-center">
+            <Shield className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <h4 className="font-semibold text-slate-900 mb-2">Pagamento Seguro</h4>
+            <p className="text-slate-600 text-sm">Certificação SSL e criptografia de dados</p>
+          </div>
+          <div className="text-center">
+            <Users className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <h4 className="font-semibold text-slate-900 mb-2">+5.000 Clientes</h4>
+            <p className="text-slate-600 text-sm">Empresas confiam em nossa plataforma</p>
+          </div>
+          <div className="text-center">
+            <Award className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <h4 className="font-semibold text-slate-900 mb-2">Garantia 7 dias</h4>
+            <p className="text-slate-600 text-sm">Devolução completa se não ficar satisfeito</p>
+          </div>
         </div>
       </div>
     </section>
