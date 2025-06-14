@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Save, AlertCircle, Facebook, Chrome, BarChart3, Zap, Settings } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Save, AlertCircle, Facebook, Chrome, BarChart3, Zap, Settings, Check, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AnalyticsSettings {
@@ -51,10 +52,91 @@ interface AnalyticsSettings {
   updatedBy?: number;
 }
 
+// Component para salvar configurações individuais
+const ConfigurationCard: React.FC<{
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  onSave: () => void;
+  isLoading: boolean;
+  isSaved: boolean;
+  children: React.ReactNode;
+}> = ({ title, description, icon, enabled, onToggle, onSave, isLoading, isSaved, children }) => {
+  return (
+    <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600">
+              {icon}
+            </div>
+            <div>
+              <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+              <CardDescription className="text-sm text-gray-600">{description}</CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={enabled}
+              onCheckedChange={onToggle}
+              className="data-[state=checked]:bg-green-500"
+            />
+            {enabled && (
+              <Badge variant={isSaved ? "default" : "secondary"} className={isSaved ? "bg-green-100 text-green-700" : ""}>
+                {isSaved ? "Configurado" : "Pendente"}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      {enabled && (
+        <>
+          <Separator />
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              {children}
+              <div className="flex justify-end pt-4">
+                <Button 
+                  onClick={onSave}
+                  disabled={isLoading}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : isSaved ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Salvo
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Salvar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </>
+      )}
+    </Card>
+  );
+};
+
 const AnalyticsSettings: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [analytics, setAnalytics] = useState<AnalyticsSettings | null>(null);
+  const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
+  const [savedStates, setSavedStates] = useState<Record<string, boolean>>({});
 
   // Query para buscar configurações
   const { data: analyticsData, isLoading: isLoadingData } = useQuery({
@@ -68,15 +150,54 @@ const AnalyticsSettings: React.FC = () => {
     }
   });
 
-  // Mutation para salvar configurações
-  const saveAnalyticsMutation = useMutation({
-    mutationFn: async (data: AnalyticsSettings) => {
+  useEffect(() => {
+    if (analyticsData) {
+      setAnalytics(analyticsData);
+      // Marcar como salvos os campos que já tem dados
+      const initialSavedStates: Record<string, boolean> = {};
+      if (analyticsData.metaPixelId) initialSavedStates.metaPixel = true;
+      if (analyticsData.metaAdsAccessToken) initialSavedStates.metaAds = true;
+      if (analyticsData.ga4MeasurementId) initialSavedStates.ga4 = true;
+      if (analyticsData.gtmContainerId) initialSavedStates.gtm = true;
+      if (analyticsData.googleAdsConversionId) initialSavedStates.googleAds = true;
+      if (analyticsData.tiktokPixelId) initialSavedStates.tiktok = true;
+      if (analyticsData.clarityProjectId) initialSavedStates.clarity = true;
+      if (analyticsData.hotjarSiteId) initialSavedStates.hotjar = true;
+      setSavedStates(initialSavedStates);
+    }
+  }, [analyticsData]);
+
+  const handleInputChange = (field: keyof AnalyticsSettings, value: any) => {
+    setAnalytics(prev => prev ? { ...prev, [field]: value } : null);
+    // Marcar como não salvo quando há mudança
+    const configKey = getConfigKey(field);
+    if (configKey) {
+      setSavedStates(prev => ({ ...prev, [configKey]: false }));
+    }
+  };
+
+  const getConfigKey = (field: keyof AnalyticsSettings): string | null => {
+    if (field.includes('metaPixel')) return 'metaPixel';
+    if (field.includes('metaAds')) return 'metaAds';
+    if (field.includes('ga4')) return 'ga4';
+    if (field.includes('gtm')) return 'gtm';
+    if (field.includes('googleAds')) return 'googleAds';
+    if (field.includes('tiktok')) return 'tiktok';
+    if (field.includes('clarity')) return 'clarity';
+    if (field.includes('hotjar')) return 'hotjar';
+    return null;
+  };
+
+  const saveIndividualConfig = async (configType: string, data: Partial<AnalyticsSettings>) => {
+    setSavingStates(prev => ({ ...prev, [configType]: true }));
+    
+    try {
       const response = await fetch('/api/analytics/admin/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...analytics, ...data }),
       });
       
       if (!response.ok) {
@@ -84,41 +205,23 @@ const AnalyticsSettings: React.FC = () => {
         throw new Error(errorData.message || 'Erro ao salvar configurações');
       }
       
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics/settings'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/analytics/settings'] });
+      setSavedStates(prev => ({ ...prev, [configType]: true }));
+      
       toast({
-        title: 'Configurações salvas',
-        description: 'As configurações de analytics foram atualizadas com sucesso.',
+        title: 'Configuração salva',
+        description: `Configurações de ${configType} foram atualizadas com sucesso.`,
       });
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
       toast({
         title: 'Erro ao salvar',
         description: error.message,
         variant: 'destructive',
       });
-    }
-  });
-
-  useEffect(() => {
-    if (analyticsData) {
-      setAnalytics(analyticsData);
-    }
-  }, [analyticsData]);
-
-  const handleInputChange = (field: keyof AnalyticsSettings, value: any) => {
-    setAnalytics(prev => prev ? { ...prev, [field]: value } : null);
-  };
-
-  const handleSave = () => {
-    if (analytics) {
-      saveAnalyticsMutation.mutate(analytics);
+    } finally {
+      setSavingStates(prev => ({ ...prev, [configType]: false }));
     }
   };
-
-  const isLoading = saveAnalyticsMutation.isPending;
 
   if (isLoadingData) {
     return (
@@ -143,34 +246,15 @@ const AnalyticsSettings: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-8 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configurações de Analytics</h1>
-          <p className="text-gray-600 mt-1">Configure suas plataformas de rastreamento e análise</p>
-        </div>
-        <Button 
-          onClick={handleSave} 
-          disabled={isLoading}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {isLoading ? (
-            <>
-              <Save className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Salvar Todas
-            </>
-          )}
-        </Button>
+      <div className="text-center max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações de Analytics</h1>
+        <p className="text-gray-600">Configure suas plataformas de rastreamento individualmente com salvamento automático</p>
       </div>
 
       {/* Aviso de Conformidade */}
-      <Alert className="border-amber-200 bg-amber-50">
+      <Alert className="border-amber-200 bg-amber-50 max-w-4xl mx-auto">
         <AlertCircle className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800">
           <strong>Importante:</strong> Certifique-se de que seu site esteja em conformidade com LGPD e GDPR 
@@ -178,343 +262,327 @@ const AnalyticsSettings: React.FC = () => {
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="meta" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-12">
-          <TabsTrigger value="meta" className="flex items-center gap-2 text-sm">
-            <Facebook className="h-4 w-4" />
-            Meta & Facebook
-          </TabsTrigger>
-          <TabsTrigger value="google" className="flex items-center gap-2 text-sm">
-            <Chrome className="h-4 w-4" />
-            Google
-          </TabsTrigger>
-          <TabsTrigger value="others" className="flex items-center gap-2 text-sm">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="advanced" className="flex items-center gap-2 text-sm">
-            <Settings className="h-4 w-4" />
-            Avançado
-          </TabsTrigger>
-        </TabsList>
+      {/* Meta & Facebook Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Facebook className="h-6 w-6 text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-900">Meta & Facebook</h2>
+        </div>
+        
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ConfigurationCard
+            title="Meta Pixel"
+            description="Rastreamento básico de eventos no Facebook"
+            icon={<Facebook className="h-5 w-5" />}
+            enabled={analytics?.metaPixelEnabled || false}
+            onToggle={(enabled) => handleInputChange('metaPixelEnabled', enabled)}
+            onSave={() => saveIndividualConfig('metaPixel', {
+              metaPixelEnabled: analytics?.metaPixelEnabled,
+              metaPixelId: analytics?.metaPixelId
+            })}
+            isLoading={savingStates.metaPixel || false}
+            isSaved={savedStates.metaPixel || false}
+          >
+            <div>
+              <Label htmlFor="metaPixelId" className="text-sm font-medium">Pixel ID</Label>
+              <Input
+                id="metaPixelId"
+                value={analytics?.metaPixelId || ''}
+                onChange={(e) => handleInputChange('metaPixelId', e.target.value)}
+                placeholder="123456789012345"
+                className="mt-1"
+              />
+            </div>
+          </ConfigurationCard>
 
-        {/* Meta & Facebook */}
-        <TabsContent value="meta" className="space-y-6 mt-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Meta Pixel */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Facebook className="h-5 w-5 text-blue-600" />
-                    <CardTitle className="text-lg">Meta Pixel</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.metaPixelEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('metaPixelEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>Rastreamento básico de eventos no Facebook</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="metaPixelId" className="text-sm font-medium">Pixel ID</Label>
-                  <Input
-                    id="metaPixelId"
-                    value={analytics?.metaPixelId || ''}
-                    onChange={(e) => handleInputChange('metaPixelId', e.target.value)}
-                    placeholder="123456789012345"
-                    className="mt-1"
-                  />
-                </div>
-                {analytics?.metaPixelEnabled && (
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                    Ativo
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
+          <ConfigurationCard
+            title="Conversions API"
+            description="API para melhor rastreamento de conversões"
+            icon={<Zap className="h-5 w-5" />}
+            enabled={analytics?.metaAdsEnabled || false}
+            onToggle={(enabled) => handleInputChange('metaAdsEnabled', enabled)}
+            onSave={() => saveIndividualConfig('metaAds', {
+              metaAdsEnabled: analytics?.metaAdsEnabled,
+              metaAdsAccessToken: analytics?.metaAdsAccessToken,
+              metaAdAccountId: analytics?.metaAdAccountId
+            })}
+            isLoading={savingStates.metaAds || false}
+            isSaved={savedStates.metaAds || false}
+          >
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="metaAccessToken" className="text-sm font-medium">Access Token</Label>
+                <Input
+                  id="metaAccessToken"
+                  type="password"
+                  value={analytics?.metaAdsAccessToken || ''}
+                  onChange={(e) => handleInputChange('metaAdsAccessToken', e.target.value)}
+                  placeholder="Digite o token de acesso"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="metaAdAccountId" className="text-sm font-medium">Ad Account ID</Label>
+                <Input
+                  id="metaAdAccountId"
+                  value={analytics?.metaAdAccountId || ''}
+                  onChange={(e) => handleInputChange('metaAdAccountId', e.target.value)}
+                  placeholder="act_123456789"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </ConfigurationCard>
+        </div>
+      </div>
 
-            {/* Meta Ads API */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-blue-600" />
-                    <CardTitle className="text-lg">Conversions API</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.metaAdsEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('metaAdsEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>API para melhor rastreamento de conversões</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="metaAccessToken" className="text-sm font-medium">Access Token</Label>
-                  <Input
-                    id="metaAccessToken"
-                    type="password"
-                    value={analytics?.metaAdsAccessToken || ''}
-                    onChange={(e) => handleInputChange('metaAdsAccessToken', e.target.value)}
-                    placeholder="Digite o token de acesso"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="metaAdAccountId" className="text-sm font-medium">Ad Account ID</Label>
-                  <Input
-                    id="metaAdAccountId"
-                    value={analytics?.metaAdAccountId || ''}
-                    onChange={(e) => handleInputChange('metaAdAccountId', e.target.value)}
-                    placeholder="act_123456789"
-                    className="mt-1"
-                  />
-                </div>
-                {analytics?.metaAdsEnabled && (
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                    Ativo
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
+      <Separator />
+
+      {/* Google Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Chrome className="h-6 w-6 text-blue-500" />
+          <h2 className="text-xl font-semibold text-gray-900">Google</h2>
+        </div>
+        
+        <div className="grid gap-6 lg:grid-cols-3">
+          <ConfigurationCard
+            title="Google Analytics 4"
+            description="Análise completa do site"
+            icon={<BarChart3 className="h-5 w-5" />}
+            enabled={analytics?.ga4Enabled || false}
+            onToggle={(enabled) => handleInputChange('ga4Enabled', enabled)}
+            onSave={() => saveIndividualConfig('ga4', {
+              ga4Enabled: analytics?.ga4Enabled,
+              ga4MeasurementId: analytics?.ga4MeasurementId
+            })}
+            isLoading={savingStates.ga4 || false}
+            isSaved={savedStates.ga4 || false}
+          >
+            <div>
+              <Label htmlFor="ga4MeasurementId" className="text-sm font-medium">Measurement ID</Label>
+              <Input
+                id="ga4MeasurementId"
+                value={analytics?.ga4MeasurementId || ''}
+                onChange={(e) => handleInputChange('ga4MeasurementId', e.target.value)}
+                placeholder="G-XXXXXXXXXX"
+                className="mt-1"
+              />
+            </div>
+          </ConfigurationCard>
+
+          <ConfigurationCard
+            title="Tag Manager"
+            description="Gerenciamento de tags"
+            icon={<Settings className="h-5 w-5" />}
+            enabled={analytics?.gtmEnabled || false}
+            onToggle={(enabled) => handleInputChange('gtmEnabled', enabled)}
+            onSave={() => saveIndividualConfig('gtm', {
+              gtmEnabled: analytics?.gtmEnabled,
+              gtmContainerId: analytics?.gtmContainerId
+            })}
+            isLoading={savingStates.gtm || false}
+            isSaved={savedStates.gtm || false}
+          >
+            <div>
+              <Label htmlFor="gtmContainerId" className="text-sm font-medium">Container ID</Label>
+              <Input
+                id="gtmContainerId"
+                value={analytics?.gtmContainerId || ''}
+                onChange={(e) => handleInputChange('gtmContainerId', e.target.value)}
+                placeholder="GTM-XXXXXXX"
+                className="mt-1"
+              />
+            </div>
+          </ConfigurationCard>
+
+          <ConfigurationCard
+            title="Google Ads"
+            description="Rastreamento de conversões"
+            icon={<Zap className="h-5 w-5" />}
+            enabled={analytics?.googleAdsEnabled || false}
+            onToggle={(enabled) => handleInputChange('googleAdsEnabled', enabled)}
+            onSave={() => saveIndividualConfig('googleAds', {
+              googleAdsEnabled: analytics?.googleAdsEnabled,
+              googleAdsConversionId: analytics?.googleAdsConversionId,
+              googleAdsConversionLabel: analytics?.googleAdsConversionLabel
+            })}
+            isLoading={savingStates.googleAds || false}
+            isSaved={savedStates.googleAds || false}
+          >
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="googleAdsConversionId" className="text-sm font-medium">Conversion ID</Label>
+                <Input
+                  id="googleAdsConversionId"
+                  value={analytics?.googleAdsConversionId || ''}
+                  onChange={(e) => handleInputChange('googleAdsConversionId', e.target.value)}
+                  placeholder="AW-123456789"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="googleAdsConversionLabel" className="text-sm font-medium">Conversion Label</Label>
+                <Input
+                  id="googleAdsConversionLabel"
+                  value={analytics?.googleAdsConversionLabel || ''}
+                  onChange={(e) => handleInputChange('googleAdsConversionLabel', e.target.value)}
+                  placeholder="conversion_label"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </ConfigurationCard>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Other Analytics Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="h-6 w-6 text-purple-600" />
+          <h2 className="text-xl font-semibold text-gray-900">Outras Plataformas</h2>
+        </div>
+        
+        <div className="grid gap-6 lg:grid-cols-3">
+          <ConfigurationCard
+            title="TikTok Pixel"
+            description="Rastreamento TikTok Ads"
+            icon={<div className="h-5 w-5 bg-black rounded"></div>}
+            enabled={analytics?.tiktokEnabled || false}
+            onToggle={(enabled) => handleInputChange('tiktokEnabled', enabled)}
+            onSave={() => saveIndividualConfig('tiktok', {
+              tiktokEnabled: analytics?.tiktokEnabled,
+              tiktokPixelId: analytics?.tiktokPixelId
+            })}
+            isLoading={savingStates.tiktok || false}
+            isSaved={savedStates.tiktok || false}
+          >
+            <div>
+              <Label htmlFor="tiktokPixelId" className="text-sm font-medium">Pixel ID</Label>
+              <Input
+                id="tiktokPixelId"
+                value={analytics?.tiktokPixelId || ''}
+                onChange={(e) => handleInputChange('tiktokPixelId', e.target.value)}
+                placeholder="C4A7C8B8F6..."
+                className="mt-1"
+              />
+            </div>
+          </ConfigurationCard>
+
+          <ConfigurationCard
+            title="Microsoft Clarity"
+            description="Heatmaps e sessões"
+            icon={<Chrome className="h-5 w-5" />}
+            enabled={analytics?.clarityEnabled || false}
+            onToggle={(enabled) => handleInputChange('clarityEnabled', enabled)}
+            onSave={() => saveIndividualConfig('clarity', {
+              clarityEnabled: analytics?.clarityEnabled,
+              clarityProjectId: analytics?.clarityProjectId
+            })}
+            isLoading={savingStates.clarity || false}
+            isSaved={savedStates.clarity || false}
+          >
+            <div>
+              <Label htmlFor="clarityProjectId" className="text-sm font-medium">Project ID</Label>
+              <Input
+                id="clarityProjectId"
+                value={analytics?.clarityProjectId || ''}
+                onChange={(e) => handleInputChange('clarityProjectId', e.target.value)}
+                placeholder="abcdefghij"
+                className="mt-1"
+              />
+            </div>
+          </ConfigurationCard>
+
+          <ConfigurationCard
+            title="Hotjar"
+            description="Gravações de sessão"
+            icon={<BarChart3 className="h-5 w-5" />}
+            enabled={analytics?.hotjarEnabled || false}
+            onToggle={(enabled) => handleInputChange('hotjarEnabled', enabled)}
+            onSave={() => saveIndividualConfig('hotjar', {
+              hotjarEnabled: analytics?.hotjarEnabled,
+              hotjarSiteId: analytics?.hotjarSiteId
+            })}
+            isLoading={savingStates.hotjar || false}
+            isSaved={savedStates.hotjar || false}
+          >
+            <div>
+              <Label htmlFor="hotjarSiteId" className="text-sm font-medium">Site ID</Label>
+              <Input
+                id="hotjarSiteId"
+                value={analytics?.hotjarSiteId || ''}
+                onChange={(e) => handleInputChange('hotjarSiteId', e.target.value)}
+                placeholder="1234567"
+                className="mt-1"
+              />
+            </div>
+          </ConfigurationCard>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Advanced Settings */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Settings className="h-6 w-6 text-gray-600" />
+          <h2 className="text-xl font-semibold text-gray-900">Configurações Avançadas</h2>
+        </div>
+        
+        <ConfigurationCard
+          title="Rastreamento de Eventos"
+          description="Configure quais eventos devem ser rastreados automaticamente"
+          icon={<Settings className="h-5 w-5" />}
+          enabled={true}
+          onToggle={() => {}}
+          onSave={() => saveIndividualConfig('tracking', {
+            trackPageviews: analytics?.trackPageviews,
+            trackClicks: analytics?.trackClicks,
+            trackArtsViewed: analytics?.trackArtsViewed,
+            trackArtsDownloaded: analytics?.trackArtsDownloaded
+          })}
+          isLoading={savingStates.tracking || false}
+          isSaved={savedStates.tracking || false}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="trackPageviews" className="text-sm font-medium">Visualizações de Página</Label>
+              <Switch
+                id="trackPageviews"
+                checked={analytics?.trackPageviews || false}
+                onCheckedChange={(checked) => handleInputChange('trackPageviews', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="trackClicks" className="text-sm font-medium">Cliques em Elementos</Label>
+              <Switch
+                id="trackClicks"
+                checked={analytics?.trackClicks || false}
+                onCheckedChange={(checked) => handleInputChange('trackClicks', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="trackArtsViewed" className="text-sm font-medium">Visualização de Artes</Label>
+              <Switch
+                id="trackArtsViewed"
+                checked={analytics?.trackArtsViewed || false}
+                onCheckedChange={(checked) => handleInputChange('trackArtsViewed', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="trackArtsDownloaded" className="text-sm font-medium">Download de Artes</Label>
+              <Switch
+                id="trackArtsDownloaded"
+                checked={analytics?.trackArtsDownloaded || false}
+                onCheckedChange={(checked) => handleInputChange('trackArtsDownloaded', checked)}
+              />
+            </div>
           </div>
-        </TabsContent>
-
-        {/* Google */}
-        <TabsContent value="google" className="space-y-6 mt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Google Analytics 4 */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-orange-500" />
-                    <CardTitle className="text-lg">Analytics 4</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.ga4Enabled || false}
-                    onCheckedChange={(checked) => handleInputChange('ga4Enabled', checked)}
-                  />
-                </div>
-                <CardDescription>Análise completa do site</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="ga4MeasurementId" className="text-sm font-medium">Measurement ID</Label>
-                  <Input
-                    id="ga4MeasurementId"
-                    value={analytics?.ga4MeasurementId || ''}
-                    onChange={(e) => handleInputChange('ga4MeasurementId', e.target.value)}
-                    placeholder="G-XXXXXXXXXX"
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Google Tag Manager */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-blue-500" />
-                    <CardTitle className="text-lg">Tag Manager</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.gtmEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('gtmEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>Gerenciamento de tags</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="gtmContainerId" className="text-sm font-medium">Container ID</Label>
-                  <Input
-                    id="gtmContainerId"
-                    value={analytics?.gtmContainerId || ''}
-                    onChange={(e) => handleInputChange('gtmContainerId', e.target.value)}
-                    placeholder="GTM-XXXXXXX"
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Google Ads */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-green-600" />
-                    <CardTitle className="text-lg">Google Ads</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.googleAdsEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('googleAdsEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>Rastreamento de conversões</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="googleAdsConversionId" className="text-sm font-medium">Conversion ID</Label>
-                  <Input
-                    id="googleAdsConversionId"
-                    value={analytics?.googleAdsConversionId || ''}
-                    onChange={(e) => handleInputChange('googleAdsConversionId', e.target.value)}
-                    placeholder="AW-123456789"
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Analytics */}
-        <TabsContent value="others" className="space-y-6 mt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* TikTok */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-5 w-5 bg-black rounded"></div>
-                    <CardTitle className="text-lg">TikTok Pixel</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.tiktokEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('tiktokEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>Rastreamento TikTok Ads</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="tiktokPixelId" className="text-sm font-medium">Pixel ID</Label>
-                  <Input
-                    id="tiktokPixelId"
-                    value={analytics?.tiktokPixelId || ''}
-                    onChange={(e) => handleInputChange('tiktokPixelId', e.target.value)}
-                    placeholder="C4A7C8B8F6..."
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Microsoft Clarity */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Chrome className="h-5 w-5 text-blue-400" />
-                    <CardTitle className="text-lg">MS Clarity</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.clarityEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('clarityEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>Heatmaps e sessões</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="clarityProjectId" className="text-sm font-medium">Project ID</Label>
-                  <Input
-                    id="clarityProjectId"
-                    value={analytics?.clarityProjectId || ''}
-                    onChange={(e) => handleInputChange('clarityProjectId', e.target.value)}
-                    placeholder="abcdefghij"
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Hotjar */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-red-500" />
-                    <CardTitle className="text-lg">Hotjar</CardTitle>
-                  </div>
-                  <Switch
-                    checked={analytics?.hotjarEnabled || false}
-                    onCheckedChange={(checked) => handleInputChange('hotjarEnabled', checked)}
-                  />
-                </div>
-                <CardDescription>Gravações de sessão</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="hotjarSiteId" className="text-sm font-medium">Site ID</Label>
-                  <Input
-                    id="hotjarSiteId"
-                    value={analytics?.hotjarSiteId || ''}
-                    onChange={(e) => handleInputChange('hotjarSiteId', e.target.value)}
-                    placeholder="1234567"
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Avançado */}
-        <TabsContent value="advanced" className="space-y-6 mt-6">
-          <div className="grid gap-6">
-            {/* Configurações de Rastreamento */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações de Rastreamento</CardTitle>
-                <CardDescription>Configure quais eventos devem ser rastreados automaticamente</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="trackPageviews">Visualizações de Página</Label>
-                    <Switch
-                      id="trackPageviews"
-                      checked={analytics?.trackPageviews || false}
-                      onCheckedChange={(checked) => handleInputChange('trackPageviews', checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="trackClicks">Cliques em Elementos</Label>
-                    <Switch
-                      id="trackClicks"
-                      checked={analytics?.trackClicks || false}
-                      onCheckedChange={(checked) => handleInputChange('trackClicks', checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="trackArtsViewed">Visualização de Artes</Label>
-                    <Switch
-                      id="trackArtsViewed"
-                      checked={analytics?.trackArtsViewed || false}
-                      onCheckedChange={(checked) => handleInputChange('trackArtsViewed', checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="trackArtsDownloaded">Download de Artes</Label>
-                    <Switch
-                      id="trackArtsDownloaded"
-                      checked={analytics?.trackArtsDownloaded || false}
-                      onCheckedChange={(checked) => handleInputChange('trackArtsDownloaded', checked)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </ConfigurationCard>
+      </div>
     </div>
   );
 };
