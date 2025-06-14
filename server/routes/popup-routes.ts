@@ -136,42 +136,39 @@ router.get('/analytics', async (req, res) => {
       .from(popups)
       .where(eq(popups.isActive, true));
 
-    // Buscar total de visualizações dos últimos 30 dias
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const totalViews = await db
-      .select({ count: count() })
-      .from(popupViews)
-      .where(gte(popupViews.viewedAt, thirtyDaysAgo));
+    // Buscar total de visualizações e cliques reais das colunas da tabela popups
+    const totalsResult = await db
+      .select({
+        totalViews: sql`SUM(${popups.views})`,
+        totalClicks: sql`SUM(${popups.clicks})`
+      })
+      .from(popups);
 
-    // Simular cliques (baseado em uma taxa de conversão padrão)
-    const totalClicks = Math.floor((totalViews[0]?.count || 0) * 0.125); // 12.5% taxa de conversão
+    const totalViews = totalsResult[0]?.totalViews || 0;
+    const totalClicks = totalsResult[0]?.totalClicks || 0;
 
-    // Buscar contagem de usuários por tipo
-    const freeUsers = await db
+    // Buscar contagem de usuários por tipo (apenas premium e free users reais)
+    const freeUsersResult = await db
       .select({ count: count() })
       .from(users)
-      .where(eq(users.nivelacesso, 'free'));
+      .where(inArray(users.nivelacesso, ['visitante', 'usuario']));
 
-    const premiumUsers = await db
+    const premiumUsersResult = await db
       .select({ count: count() })
       .from(users)
       .where(inArray(users.nivelacesso, ['premium']));
 
-    // Calcular taxa de clique média
-    const averageClickRate = totalViews[0]?.count > 0 
-      ? ((totalClicks / totalViews[0].count) * 100) 
-      : 8.3;
+    // Calcular taxa de conversão real
+    const conversionRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
 
     const analytics = {
       activePopups: activePopupsCount[0]?.count || 0,
-      conversionRate: 12.5,
-      totalViews: totalViews[0]?.count || 0,
-      totalClicks,
-      averageClickRate: Math.round(averageClickRate * 10) / 10,
-      freeUsers: freeUsers[0]?.count || 0,
-      premiumUsers: premiumUsers[0]?.count || 0
+      conversionRate: Math.round(conversionRate * 10) / 10,
+      totalViews: Number(totalViews),
+      totalClicks: Number(totalClicks),
+      averageClickRate: Math.round(conversionRate * 10) / 10,
+      freeUsers: freeUsersResult[0]?.count || 0,
+      premiumUsers: premiumUsersResult[0]?.count || 0
     };
 
     res.json(analytics);
@@ -184,44 +181,39 @@ router.get('/analytics', async (req, res) => {
 // Obter estatísticas individuais por popup
 router.get('/individual-stats', async (req, res) => {
   try {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    // Buscar todos os popups com suas estatísticas
-    const popupsList = await db.query.popups.findMany({
-      orderBy: [desc(popups.createdAt)],
-    });
-
-    // Para cada popup, buscar suas visualizações
-    const individualStats = await Promise.all(
-      popupsList.map(async (popup) => {
-        const views = await db
-          .select({ count: count() })
-          .from(popupViews)
-          .where(
-            and(
-              eq(popupViews.popupId, popup.id),
-              gte(popupViews.viewedAt, thirtyDaysAgo)
-            )
-          );
-
-        const viewCount = views[0]?.count || 0;
-        const clickCount = Math.floor(viewCount * 0.125); // Simular cliques baseado em taxa de conversão
-        const conversionRate = viewCount > 0 ? (clickCount / viewCount) * 100 : 0;
-
-        return {
-          id: popup.id,
-          title: popup.title || `Popup #${popup.id}`,
-          views: viewCount,
-          clicks: clickCount,
-          conversionRate: Math.round(conversionRate * 10) / 10,
-          isActive: popup.isActive,
-          createdAt: popup.createdAt.toISOString(),
-          position: popup.position,
-          size: popup.size
-        };
+    // Buscar todos os popups com suas estatísticas reais do banco
+    const popupsList = await db
+      .select({
+        id: popups.id,
+        title: popups.title,
+        views: popups.views,
+        clicks: popups.clicks,
+        isActive: popups.isActive,
+        createdAt: popups.createdAt,
+        position: popups.position,
+        size: popups.size
       })
-    );
+      .from(popups)
+      .orderBy(desc(popups.createdAt));
+
+    // Calcular estatísticas com dados reais
+    const individualStats = popupsList.map((popup) => {
+      const viewCount = popup.views || 0;
+      const clickCount = popup.clicks || 0;
+      const conversionRate = viewCount > 0 ? (clickCount / viewCount) * 100 : 0;
+
+      return {
+        id: popup.id,
+        title: popup.title || `Popup #${popup.id}`,
+        views: viewCount,
+        clicks: clickCount,
+        conversionRate: Math.round(conversionRate * 10) / 10,
+        isActive: popup.isActive,
+        createdAt: popup.createdAt.toISOString(),
+        position: popup.position,
+        size: popup.size
+      };
+    });
 
     res.json(individualStats);
   } catch (error) {
