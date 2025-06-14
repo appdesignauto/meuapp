@@ -101,6 +101,7 @@ interface User {
   ultimologin?: string | null;
   profileimageurl: string | null;
   bio: string | null;
+  phone?: string | null;
   followersCount?: number;
   followingCount?: number;
   totalDownloads?: number;
@@ -517,13 +518,43 @@ const ModernUserManagement = () => {
   // Função para abrir WhatsApp
   const handleWhatsAppContact = (user: User) => {
     const userName = user.name || user.username;
+    
+    // Verificar se o usuário tem telefone cadastrado
+    if (!user.phone) {
+      toast({
+        title: "Telefone não cadastrado",
+        description: `O usuário ${userName} não possui número de telefone cadastrado no sistema`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Limpar e formatar o número de telefone (remover caracteres especiais)
+    const cleanPhone = user.phone.replace(/\D/g, '');
+    
+    // Verificar se o número tem pelo menos 10 dígitos
+    if (cleanPhone.length < 10) {
+      toast({
+        title: "Número inválido",
+        description: `O número de telefone ${user.phone} não parece ser válido`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Adicionar código do país se necessário (assumindo Brasil)
+    let formattedPhone = cleanPhone;
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+      formattedPhone = '55' + cleanPhone; // Código do Brasil
+    }
+    
     const message = `Olá ${userName}! Sou do suporte da DesignAuto e estou entrando em contato para ajudá-lo. Como posso ajudá-lo hoje?`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
     
     toast({
       title: "WhatsApp aberto",
-      description: `Mensagem personalizada para ${userName} criada com sucesso`,
+      description: `Conversa iniciada com ${userName} (${user.phone})`,
     });
   };
 
