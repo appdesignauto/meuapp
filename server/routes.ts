@@ -8661,5 +8661,209 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // ENDPOINT: Performance de Conteúdo
+  app.get("/api/content/performance", isAdmin, async (req, res) => {
+    try {
+      console.log("📊 Calculando performance de conteúdo...");
+      
+      const period = req.query.period as string || 'all';
+      let dateFilter = '';
+      
+      // Configurar filtro de data baseado no período
+      if (period === '7d') {
+        dateFilter = `AND d."createdAt" >= NOW() - INTERVAL '7 days'`;
+      } else if (period === '30d') {
+        dateFilter = `AND d."createdAt" >= NOW() - INTERVAL '30 days'`;
+      } else if (period === '90d') {
+        dateFilter = `AND d."createdAt" >= NOW() - INTERVAL '90 days'`;
+      } else if (period === '1y') {
+        dateFilter = `AND d."createdAt" >= NOW() - INTERVAL '1 year'`;
+      }
+      
+      // Top 10 Artes Mais Baixadas
+      const topArtsQuery = `
+        SELECT 
+          a.id,
+          a.title,
+          a."isPremium",
+          c.name as category,
+          COUNT(d.id) as downloads,
+          COUNT(DISTINCT d."userId") as unique_users
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId"
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE a."isVisible" = true ${dateFilter}
+        GROUP BY a.id, a.title, a."isPremium", c.name
+        ORDER BY downloads DESC
+        LIMIT 10
+      `;
+      
+      const topArtsResult = await db.execute(sql.raw(topArtsQuery));
+      const topArts = topArtsResult.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        isPremium: row.isPremium,
+        category: row.category || 'Sem categoria',
+        downloads: parseInt(row.downloads) || 0,
+        uniqueUsers: parseInt(row.unique_users) || 0
+      }));
+
+      // Performance por Categoria
+      const categoryPerformanceQuery = `
+        SELECT 
+          c.name as category,
+          COUNT(DISTINCT a.id) as total_arts,
+          COUNT(d.id) as total_downloads,
+          COUNT(DISTINCT d."userId") as unique_users,
+          ROUND(AVG(CASE WHEN a."isPremium" THEN 1 ELSE 0 END) * 100, 1) as premium_percentage
+        FROM categories c
+        LEFT JOIN arts a ON c.id = a."categoryId" AND a."isVisible" = true
+        LEFT JOIN downloads d ON a.id = d."artId" ${dateFilter.replace('AND', 'WHERE').replace('d."createdAt"', 'd."createdAt"')}
+        WHERE c."isActive" = true
+        GROUP BY c.id, c.name
+        HAVING COUNT(DISTINCT a.id) > 0
+        ORDER BY total_downloads DESC
+        LIMIT 8
+      `;
+      
+      const categoryResult = await db.execute(sql.raw(categoryPerformanceQuery));
+      const categoryPerformance = categoryResult.rows.map((row: any) => ({
+        category: row.category,
+        totalArts: parseInt(row.total_arts) || 0,
+        totalDownloads: parseInt(row.total_downloads) || 0,
+        uniqueUsers: parseInt(row.unique_users) || 0,
+        premiumPercentage: parseFloat(row.premium_percentage) || 0
+      }));
+
+      // Taxa de Conversão (Visualizações vs Downloads)
+      const conversionQuery = `
+        WITH art_stats AS (
+          SELECT 
+            a.id,
+            a.title,
+            COUNT(DISTINCT CASE WHEN i.type = 'view' THEN i."userId" END) as views,
+            COUNT(DISTINCT d."userId") as downloads
+          FROM arts a
+          LEFT JOIN interactions i ON a.id = i."artId" ${dateFilter.replace('d."createdAt"', 'i."createdAt"')}
+          LEFT JOIN downloads d ON a.id = d."artId" ${dateFilter}
+          WHERE a."isVisible" = true
+          GROUP BY a.id, a.title
+        )
+        SELECT 
+          title,
+          views,
+          downloads,
+          CASE 
+            WHEN views > 0 THEN ROUND((downloads::float / views::float) * 100, 2)
+            ELSE 0 
+          END as conversion_rate
+        FROM art_stats
+        WHERE views > 0 OR downloads > 0
+        ORDER BY conversion_rate DESC
+        LIMIT 10
+      `;
+      
+      const conversionResult = await db.execute(sql.raw(conversionQuery));
+      const conversionRates = conversionResult.rows.map((row: any) => ({
+        title: row.title,
+        views: parseInt(row.views) || 0,
+        downloads: parseInt(row.downloads) || 0,
+        conversionRate: parseFloat(row.conversion_rate) || 0
+      }));
+
+      // Comparação Premium vs Gratuito
+      const premiumComparisonQuery = `
+        SELECT 
+          a."isPremium",
+          COUNT(DISTINCT a.id) as total_arts,
+          COUNT(d.id) as total_downloads,
+          COUNT(DISTINCT d."userId") as unique_users,
+          ROUND(AVG(sub_downloads.downloads_per_art), 2) as avg_downloads_per_art
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId" ${dateFilter}
+        LEFT JOIN (
+          SELECT 
+            a2.id,
+            COUNT(d2.id) as downloads_per_art
+          FROM arts a2
+          LEFT JOIN downloads d2 ON a2.id = d2."artId" ${dateFilter.replace('d."', 'd2."')}
+          WHERE a2."isVisible" = true
+          GROUP BY a2.id
+        ) sub_downloads ON a.id = sub_downloads.id
+        WHERE a."isVisible" = true
+        GROUP BY a."isPremium"
+        ORDER BY a."isPremium" DESC
+      `;
+      
+      const premiumResult = await db.execute(sql.raw(premiumComparisonQuery));
+      const premiumComparison = {
+        premium: { totalArts: 0, totalDownloads: 0, uniqueUsers: 0, avgDownloadsPerArt: 0 },
+        free: { totalArts: 0, totalDownloads: 0, uniqueUsers: 0, avgDownloadsPerArt: 0 }
+      };
+      
+      premiumResult.rows.forEach((row: any) => {
+        const data = {
+          totalArts: parseInt(row.total_arts) || 0,
+          totalDownloads: parseInt(row.total_downloads) || 0,
+          uniqueUsers: parseInt(row.unique_users) || 0,
+          avgDownloadsPerArt: parseFloat(row.avg_downloads_per_art) || 0
+        };
+        
+        if (row.isPremium) {
+          premiumComparison.premium = data;
+        } else {
+          premiumComparison.free = data;
+        }
+      });
+
+      // Estatísticas Gerais
+      const totalStatsQuery = `
+        SELECT 
+          COUNT(DISTINCT a.id) as total_arts,
+          COUNT(d.id) as total_downloads,
+          COUNT(DISTINCT d."userId") as unique_downloaders,
+          COUNT(DISTINCT a."categoryId") as active_categories
+        FROM arts a
+        LEFT JOIN downloads d ON a.id = d."artId" ${dateFilter}
+        WHERE a."isVisible" = true
+      `;
+      
+      const totalStatsResult = await db.execute(sql.raw(totalStatsQuery));
+      const totalStats = totalStatsResult.rows[0] || {};
+      
+      const response = {
+        period,
+        summary: {
+          totalArts: parseInt(totalStats.total_arts) || 0,
+          totalDownloads: parseInt(totalStats.total_downloads) || 0,
+          uniqueDownloaders: parseInt(totalStats.unique_downloaders) || 0,
+          activeCategories: parseInt(totalStats.active_categories) || 0,
+          avgDownloadsPerArt: totalStats.total_arts > 0 ? 
+            Math.round(totalStats.total_downloads / totalStats.total_arts) : 0
+        },
+        topArts,
+        categoryPerformance,
+        conversionRates,
+        premiumComparison
+      };
+      
+      console.log("✅ Performance de conteúdo calculada:", {
+        period,
+        topArtsCount: topArts.length,
+        categoriesCount: categoryPerformance.length,
+        conversionRatesCount: conversionRates.length
+      });
+      
+      res.json(response);
+      
+    } catch (error) {
+      console.error("❌ Erro ao calcular performance de conteúdo:", error);
+      res.status(500).json({ 
+        message: "Erro ao calcular performance de conteúdo",
+        error: error.message 
+      });
+    }
+  });
+
   return httpServer;
 }

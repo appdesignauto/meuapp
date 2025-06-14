@@ -48,8 +48,14 @@ import {
   AlertTriangle,
   Loader2,
   XCircle,
-  CheckCircle2,
+  Download,
+  TrendingUp,
+  Trophy,
+  Target,
+  Zap,
   Crown,
+  Gift,
+  CheckCircle2,
   Sparkles,
   Upload,
   Zap,
@@ -1817,6 +1823,16 @@ const AdminDashboard = () => {
                       >
                         Financeiro
                       </button>
+                      <button
+                        onClick={() => setDashboardActiveTab('content')}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                          dashboardActiveTab === 'content'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        Conteúdo
+                      </button>
                     </nav>
                   </div>
 
@@ -1827,6 +1843,10 @@ const AdminDashboard = () => {
                     
                     {dashboardActiveTab === 'financial' && (
                       <FinancialDashboard period={selectedPeriod} />
+                    )}
+                    
+                    {dashboardActiveTab === 'content' && (
+                      <ContentPerformanceDashboard period={selectedPeriod} />
                     )}
                   </div>
                 </div>
@@ -4048,6 +4068,263 @@ const AdminDashboard = () => {
       </div>
       {/* Diálogo de criação de arte multi-formato */}
       <SimpleFormMultiDialog open={isMultiFormOpen} onOpenChange={setIsMultiFormOpen} />
+    </div>
+  );
+};
+
+// Componente de Performance de Conteúdo
+const ContentPerformanceDashboard = ({ period }: { period: string }) => {
+  const { data: contentData, isLoading } = useQuery({
+    queryKey: [`/api/content/performance`, period],
+    queryFn: async () => {
+      const response = await fetch(`/api/content/performance?period=${period}`);
+      if (!response.ok) throw new Error('Erro ao carregar dados de conteúdo');
+      return response.json();
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-100 rounded-lg h-24"></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-100 rounded-lg h-64"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!contentData) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Erro ao carregar dados de performance de conteúdo</p>
+      </div>
+    );
+  }
+
+  const { summary, topArts, categoryPerformance, conversionRates, premiumComparison } = contentData;
+
+  return (
+    <div className="space-y-6">
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total de Artes</p>
+              <p className="text-2xl font-bold text-gray-900">{summary.totalArts}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Download className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Downloads</p>
+              <p className="text-2xl font-bold text-gray-900">{summary.totalDownloads}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Users className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Usuários Únicos</p>
+              <p className="text-2xl font-bold text-gray-900">{summary.uniqueDownloaders}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Média por Arte</p>
+              <p className="text-2xl font-bold text-gray-900">{summary.avgDownloadsPerArt}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid Principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Artes Mais Baixadas */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <Trophy className="h-5 w-5 mr-2 text-yellow-600" />
+            Top 10 Artes Mais Baixadas
+          </h3>
+          <div className="space-y-3">
+            {topArts.slice(0, 10).map((art: any, index: number) => (
+              <div key={art.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <span className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-sm font-medium mr-3">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="font-medium text-sm truncate max-w-[200px]" title={art.title}>
+                      {art.title}
+                    </p>
+                    <p className="text-xs text-gray-500 flex items-center">
+                      {art.category} 
+                      {art.isPremium && (
+                        <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">
+                          Premium
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-blue-600">{art.downloads}</p>
+                  <p className="text-xs text-gray-500">{art.uniqueUsers} usuários</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Performance por Categoria */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2 text-green-600" />
+            Performance por Categoria
+          </h3>
+          <div className="space-y-3">
+            {categoryPerformance.map((category: any) => (
+              <div key={category.category} className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">{category.category}</h4>
+                  <span className="text-sm text-gray-500">{category.totalArts} artes</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-green-600 font-medium">{category.totalDownloads} downloads</span>
+                  <span className="text-purple-600">{category.uniqueUsers} usuários</span>
+                </div>
+                <div className="mt-2">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Premium: {category.premiumPercentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                    <div 
+                      className="bg-yellow-400 h-1.5 rounded-full" 
+                      style={{ width: `${category.premiumPercentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Taxa de Conversão */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <Target className="h-5 w-5 mr-2 text-red-600" />
+            Taxa de Conversão (Visualização → Download)
+          </h3>
+          <div className="space-y-3">
+            {conversionRates.slice(0, 8).map((item: any, index: number) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-medium text-sm truncate max-w-[200px]" title={item.title}>
+                    {item.title}
+                  </p>
+                  <span className="text-lg font-bold text-red-600">{item.conversionRate}%</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>{item.views} visualizações</span>
+                  <span>{item.downloads} downloads</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                  <div 
+                    className="bg-red-500 h-1.5 rounded-full" 
+                    style={{ width: `${Math.min(item.conversionRate, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Comparação Premium vs Gratuito */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <Zap className="h-5 w-5 mr-2 text-yellow-600" />
+            Premium vs Gratuito
+          </h3>
+          <div className="space-y-4">
+            {/* Premium */}
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center mb-3">
+                <Crown className="h-5 w-5 text-yellow-600 mr-2" />
+                <h4 className="font-semibold text-yellow-800">Conteúdo Premium</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Total de Artes</p>
+                  <p className="font-bold text-yellow-700">{premiumComparison.premium.totalArts}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Downloads</p>
+                  <p className="font-bold text-yellow-700">{premiumComparison.premium.totalDownloads}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Usuários Únicos</p>
+                  <p className="font-bold text-yellow-700">{premiumComparison.premium.uniqueUsers}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Média por Arte</p>
+                  <p className="font-bold text-yellow-700">{premiumComparison.premium.avgDownloadsPerArt}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Gratuito */}
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center mb-3">
+                <Gift className="h-5 w-5 text-green-600 mr-2" />
+                <h4 className="font-semibold text-green-800">Conteúdo Gratuito</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Total de Artes</p>
+                  <p className="font-bold text-green-700">{premiumComparison.free.totalArts}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Downloads</p>
+                  <p className="font-bold text-green-700">{premiumComparison.free.totalDownloads}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Usuários Únicos</p>
+                  <p className="font-bold text-green-700">{premiumComparison.free.uniqueUsers}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Média por Arte</p>
+                  <p className="font-bold text-green-700">{premiumComparison.free.avgDownloadsPerArt}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
