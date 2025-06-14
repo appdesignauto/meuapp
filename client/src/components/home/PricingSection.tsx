@@ -70,7 +70,7 @@ const PricingSection = () => {
           <div className="rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105 bg-blue-600">
             {/* Best Value Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-blue-800 text-white text-xs font-bold px-4 py-1 rounded-full">
+              <div className="bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-full">
                 Melhor Valor
               </div>
             </div>
