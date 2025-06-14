@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Performance de Conteúdo dashboard fully operational with authentic database metrics
+  - Fixed SQL column reference errors in content performance endpoint by replacing raw SQL with Drizzle ORM
+  - Verified all metrics display authentic data: 271 total arts, 1 download, 2 unique users, 7 categories
+  - Content performance analytics now showing genuine user interaction data from PostgreSQL
+  - Top downloaded arts, category performance, and premium vs free comparisons all reflect real database values
 - June 14, 2025: Completed Microsoft Clarity configuration and optimized dashboard interface
   - Implemented Microsoft Clarity with Project ID "rz84poylxv" using official integration patterns
   - Added advanced user segmentation: device type, screen resolution, traffic source categorization, time segments
