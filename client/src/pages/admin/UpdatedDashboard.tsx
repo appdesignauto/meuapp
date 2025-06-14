@@ -1,8 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import SimpleLogo from '@/components/admin/SimpleLogo';
-
+import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import CollaborationRequestsManagement from '@/components/admin/CollaborationRequestsManagement';
 import AffiliateRequestsManagement from '@/components/admin/AffiliateRequestsManagement';
@@ -1492,17 +1491,33 @@ const AdminDashboard = () => {
 
                 {user?.nivelacesso === 'admin' && (
                   <>
-                    <button
-                      onClick={() => setActiveTab('logo')}
-                      className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                        activeTab === 'logo' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } ${!sidebarOpen ? 'justify-center' : ''}`}
+                    <Link 
+                      href="/admin/logo-upload"
                       title="Gerenciar Logo"
+                      className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
-                      <Image className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
-                        activeTab === 'logo' ? 'text-blue-600' : 'text-gray-500'
+                      <Image className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
+                      {sidebarOpen && <span>Gerenciar Logo</span>}
+                    </Link>
+                    <Link 
+                      href="/admin/storage-test"
+                      title="Testar Armazenamento"
+                      className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
+                    >
+                      <HardDrive className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
+                      {sidebarOpen && <span>Armazenamento</span>}
+                    </Link>
+                    <button
+                      onClick={() => setActiveTab('analytics')}
+                      className={`flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                        activeTab === 'analytics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      } ${!sidebarOpen ? 'justify-center' : ''}`}
+                      title="Analytics"
+                    >
+                      <BarChart3 className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
+                        activeTab === 'analytics' ? 'text-blue-600' : 'text-gray-500'
                       }`} />
-                      {sidebarOpen && <span className="font-medium">Gerenciar Logo</span>}
+                      {sidebarOpen && <span className="font-medium">Analytics</span>}
                     </button>
                   </>
                 )}
@@ -1592,22 +1607,20 @@ const AdminDashboard = () => {
               </button>
               
               <div className="flex items-center">
-                {activeTab === 'financeiro' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
-                {activeTab === 'stats' && <BarChart3 className="w-5 h-5 text-blue-600 mr-3" />}
-                {activeTab === 'arts' && <Palette className="w-5 h-5 text-blue-600 mr-3" />}
-                {activeTab === 'users' && <Users className="w-5 h-5 text-blue-600 mr-3" />}
-                {activeTab === 'community' && <MessageSquare className="w-5 h-5 text-blue-600 mr-3" />}
-                {activeTab === 'settings' && <Settings className="w-5 h-5 text-blue-600 mr-3" />}
-                {activeTab === 'logo' && <Image className="w-5 h-5 text-blue-600 mr-3" />}
+                {activeTab === 'financeiro' && <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'stats' && <BarChart3 className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'arts' && <Palette className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'users' && <Users className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'community' && <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />}
+                {activeTab === 'settings' && <Settings className="w-6 h-6 text-blue-600 mr-3" />}
                 
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {activeTab === 'financeiro' && 'Dashboard Financeiro'}
                   {activeTab === 'stats' && 'Dashboard'}
                   {activeTab === 'arts' && 'Artes e Designs'}
                   {activeTab === 'users' && 'Usuários'}
                   {activeTab === 'community' && 'Comunidade'}
                   {activeTab === 'settings' && 'Configurações'}
-                  {activeTab === 'logo' && 'Gerenciar Logo'}
                   {activeTab === 'categories' && 'Categorias'}
                   {activeTab === 'formats' && 'Formatos'}
                   {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
@@ -1620,6 +1633,7 @@ const AdminDashboard = () => {
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
+                  {activeTab === 'analytics' && 'Analytics'}
                 </h1>
               </div>
             </div>
@@ -4016,7 +4030,22 @@ const AdminDashboard = () => {
               </TabsContent>
             )}
             
-
+            {/* Analytics e Rastreamento */}
+            <TabsContent value="analytics" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics</h2>
+                    <p className="text-muted-foreground">
+                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+                    </p>
+                  </div>
+                  <div key={`analytics-${Date.now()}`}>
+                    <AnalyticsSettings />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
             
             <TabsContent value="ferramentas" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -4042,29 +4071,6 @@ const AdminDashboard = () => {
                       <GerenciarCategorias />
                     </TabsContent>
                   </Tabs>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* Gerenciar Logo */}
-            <TabsContent value="logo" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div className="flex justify-center">
-                    <SimpleLogo />
-                  </div>
-                  
-                  <div className="mt-8 bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4">Instruções</h3>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                      <li>Selecione uma imagem para usar como logo do site.</li>
-                      <li>Formatos recomendados: PNG, SVG ou WebP com fundo transparente.</li>
-                      <li>Tamanho ideal: altura de 40-60px, largura proporcional.</li>
-                      <li>Tamanho máximo do arquivo: 2MB.</li>
-                      <li>Após o upload, a página será recarregada para aplicar as mudanças.</li>
-                      <li>Se o logo não aparecer imediatamente no cabeçalho, tente limpar o cache do navegador.</li>
-                    </ul>
-                  </div>
                 </div>
               </div>
             </TabsContent>

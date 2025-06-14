@@ -118,31 +118,6 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 14, 2025: Fixed deployment errors by completely removing orphaned analytics references
-  - Removed all references to AnalyticsSettings component that was causing build failures
-  - Deleted orphaned analytics directory and cleaned up App.tsx routing conflicts
-  - Eliminated duplicate `/admin/webhooks` routes that were causing navigation issues
-  - System now deploys successfully without analytics UI conflicts
-- June 14, 2025: Integrated logo management directly into admin dashboard
-  - Removed separate logo page and integrated SimpleLogo component into admin panel
-  - Added "Gerenciar Logo" section with proper header title and subtitle
-  - Centralized logo upload interface with usage instructions
-  - Fixed authorization check from user.role to user.nivelacesso for proper access control
-- June 14, 2025: Removed Analytics configuration panel from admin dashboard due to persistent navigation conflicts
-  - Completely removed Analytics section from dashboard UI to eliminate tab switching bugs
-  - Deleted AnalyticsSettings component that was causing state management issues
-  - GTM integration system remains functional in background with database configuration
-  - Meta Pixel and tracking systems continue operating through existing infrastructure
-  - Focus maintained on dashboard core functionality without UI conflicts
-- June 14, 2025: Implemented complete Google Tag Manager integration with database configuration
-  - Created comprehensive GTM configuration system in `/public/js/gtm/gtm-config.js`
-  - Integrated GTM with existing analytics settings database for dynamic configuration
-  - Updated React hook `useGoogleTagManager` with enhanced tracking capabilities
-  - Added comprehensive test suite with browser console integration (`window.testGTMIntegration()`)
-  - Created dedicated test page `/gtm-test.html` for debugging and validation
-  - Implemented advanced event tracking: form submissions, art downloads, conversions, page views
-  - GTM now loads dynamically based on database settings with fallback mechanisms
-  - Full integration with existing Meta Pixel and GA4 systems for unified analytics
 - June 13, 2025: Fixed Analytics dashboard UI redundancy and improved user experience
   - Resolved duplicate title issue in Analytics settings panel by restructuring component hierarchy
   - Moved title and description to parent container for clean single-header layout
