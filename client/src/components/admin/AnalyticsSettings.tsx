@@ -152,17 +152,53 @@ const AnalyticsSettings: React.FC = () => {
 
   useEffect(() => {
     if (analyticsData) {
+      console.log('Dados carregados do analytics:', analyticsData);
       setAnalytics(analyticsData);
-      // Marcar como salvos os campos que já tem dados
+      
+      // Marcar como salvos os campos que já tem dados válidos
       const initialSavedStates: Record<string, boolean> = {};
-      if (analyticsData.metaPixelId) initialSavedStates.metaPixel = true;
-      if (analyticsData.metaAdsAccessToken) initialSavedStates.metaAds = true;
-      if (analyticsData.ga4MeasurementId) initialSavedStates.ga4 = true;
-      if (analyticsData.gtmContainerId) initialSavedStates.gtm = true;
-      if (analyticsData.googleAdsConversionId) initialSavedStates.googleAds = true;
-      if (analyticsData.tiktokPixelId) initialSavedStates.tiktok = true;
-      if (analyticsData.clarityProjectId) initialSavedStates.clarity = true;
-      if (analyticsData.hotjarSiteId) initialSavedStates.hotjar = true;
+      
+      // Meta Pixel
+      if (analyticsData.metaPixelId && analyticsData.metaPixelId.trim() !== '') {
+        initialSavedStates.metaPixel = true;
+      }
+      
+      // Meta Ads
+      if (analyticsData.metaAdsAccessToken && analyticsData.metaAdsAccessToken.trim() !== '') {
+        initialSavedStates.metaAds = true;
+      }
+      
+      // GA4
+      if (analyticsData.ga4MeasurementId && analyticsData.ga4MeasurementId.trim() !== '') {
+        initialSavedStates.ga4 = true;
+      }
+      
+      // GTM
+      if (analyticsData.gtmContainerId && analyticsData.gtmContainerId.trim() !== '') {
+        initialSavedStates.gtm = true;
+      }
+      
+      // Google Ads
+      if (analyticsData.googleAdsConversionId && analyticsData.googleAdsConversionId.trim() !== '') {
+        initialSavedStates.googleAds = true;
+      }
+      
+      // TikTok
+      if (analyticsData.tiktokPixelId && analyticsData.tiktokPixelId.trim() !== '') {
+        initialSavedStates.tiktok = true;
+      }
+      
+      // Clarity
+      if (analyticsData.clarityProjectId && analyticsData.clarityProjectId.trim() !== '') {
+        initialSavedStates.clarity = true;
+      }
+      
+      // Hotjar
+      if (analyticsData.hotjarSiteId && analyticsData.hotjarSiteId.trim() !== '') {
+        initialSavedStates.hotjar = true;
+      }
+      
+      console.log('Estados salvos detectados:', initialSavedStates);
       setSavedStates(initialSavedStates);
     }
   }, [analyticsData]);
@@ -192,6 +228,8 @@ const AnalyticsSettings: React.FC = () => {
     setSavingStates(prev => ({ ...prev, [configType]: true }));
     
     try {
+      console.log('Salvando configuração:', configType, data);
+      
       const response = await fetch('/api/analytics/admin/settings', {
         method: 'PUT',
         headers: {
@@ -205,7 +243,13 @@ const AnalyticsSettings: React.FC = () => {
         throw new Error(errorData.message || 'Erro ao salvar configurações');
       }
       
+      const result = await response.json();
+      console.log('Resultado do salvamento:', result);
+      
+      // Forçar reload dos dados após salvamento
       await queryClient.invalidateQueries({ queryKey: ['/api/analytics/settings'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/analytics/settings'] });
+      
       setSavedStates(prev => ({ ...prev, [configType]: true }));
       
       toast({
@@ -213,6 +257,7 @@ const AnalyticsSettings: React.FC = () => {
         description: `Configurações de ${configType} foram atualizadas com sucesso.`,
       });
     } catch (error: any) {
+      console.error('Erro ao salvar configuração:', error);
       toast({
         title: 'Erro ao salvar',
         description: error.message,
