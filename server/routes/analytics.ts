@@ -54,14 +54,10 @@ router.get('/settings', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
     }
     
-    // Retorna configurações completas para todos os scripts
+    // Retorna configurações completas do Meta Pixel para o script
     const pixelSettings = {
       metaPixelId: settings.metaPixelId,
       metaPixelEnabled: settings.metaPixelEnabled,
-      gtmContainerId: settings.gtmContainerId,
-      gtmEnabled: settings.gtmEnabled,
-      ga4MeasurementId: settings.ga4MeasurementId,
-      ga4Enabled: settings.ga4Enabled,
       trackPageviews: settings.trackPageviews,
       trackClicks: settings.trackClicks,
       trackFormSubmissions: settings.trackFormSubmissions,

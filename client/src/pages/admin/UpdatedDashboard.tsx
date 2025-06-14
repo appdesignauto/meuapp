@@ -1014,6 +1014,7 @@ const AdminDashboard = () => {
           aria-hidden="true"
         />
       )}
+
       {/* Botão flutuante para abrir sidebar quando fechado */}
       {!sidebarOpen && (
         <button
@@ -1024,6 +1025,7 @@ const AdminDashboard = () => {
           <PanelRight className="w-5 h-5 text-gray-600 hover:text-blue-600" />
         </button>
       )}
+      
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
       <div 
         className={`
@@ -1400,7 +1402,7 @@ const AdminDashboard = () => {
                   <Users className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'collaboration-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span>Colaboração</span>}
+                  {sidebarOpen && <span>Gerenciar Colaboração</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('affiliate-requests')}
@@ -1412,7 +1414,7 @@ const AdminDashboard = () => {
                   <Award className={`w-4 h-4 ${!sidebarOpen ? 'mx-auto' : 'mr-3'} ${
                     activeTab === 'affiliate-requests' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span className="font-medium">Afiliação</span>}
+                  {sidebarOpen && <span className="font-medium">Gerenciar Afiliação</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1448,7 +1450,7 @@ const AdminDashboard = () => {
                   <Wrench className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                     activeTab === 'ferramentas' ? 'text-blue-600' : 'text-gray-500'
                   }`} />
-                  {sidebarOpen && <span>Gerenciar </span>}
+                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1485,7 +1487,7 @@ const AdminDashboard = () => {
                     <Settings className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
                       activeTab === 'settings' ? 'text-blue-600' : 'text-gray-500'
                     }`} />
-                    {sidebarOpen && <span>Config do Site</span>}
+                    {sidebarOpen && <span>Configurações do Site</span>}
                   </button>
                 )}
 
@@ -1505,7 +1507,7 @@ const AdminDashboard = () => {
                       className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${!sidebarOpen ? 'justify-center' : ''}`}
                     >
                       <HardDrive className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} text-gray-500`} />
-                      {sidebarOpen && <span>Armazenamento</span>}
+                      {sidebarOpen && <span>Testar Armazenamento</span>}
                     </Link>
                     <button
                       onClick={() => setActiveTab('analytics')}
@@ -1592,6 +1594,7 @@ const AdminDashboard = () => {
           </button>
         </div>
       </div>
+
       {/* Main Content */}
       <div className={`flex-1 overflow-auto transition-all duration-300 bg-gray-50 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
         <header className="bg-white relative border-b border-r border-gray-200 shadow-sm">
@@ -1633,7 +1636,7 @@ const AdminDashboard = () => {
                   {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
-                  {activeTab === 'analytics' && 'Analytics'}
+                  {activeTab === 'analytics' && 'Analytics e Rastreamento'}
                 </h1>
               </div>
             </div>
@@ -4030,17 +4033,17 @@ const AdminDashboard = () => {
               </TabsContent>
             )}
             
-            {/* Analytics e Rastreamento */}
+            {/* Gerenciamento de Ferramentas */}
             <TabsContent value="analytics" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics</h2>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
                     <p className="text-muted-foreground">
                       Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
                     </p>
                   </div>
-                  <div key={`analytics-${Date.now()}`}>
+                  <div className="grid gap-6">
                     <AnalyticsSettings />
                   </div>
                 </div>
@@ -4077,11 +4080,9 @@ const AdminDashboard = () => {
           </Tabs>
         </main>
       </div>
+      
       {/* Diálogo de criação de arte multi-formato */}
-      <SimpleFormMultiDialog 
-        isOpen={isMultiFormOpen} 
-        onClose={() => setIsMultiFormOpen(false)} 
-      />
+      <SimpleFormMultiDialog open={isMultiFormOpen} onOpenChange={setIsMultiFormOpen} />
     </div>
   );
 };
