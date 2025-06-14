@@ -23,7 +23,7 @@ const PricingSection = () => {
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
-                <span className="text-4xl font-bold text-orange-500">R$47</span>
+                <span className="text-4xl font-bold text-blue-800">R$47</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">Pagamento mensal</p>
               <div className="text-green-500 text-sm font-medium">
@@ -60,17 +60,17 @@ const PricingSection = () => {
             
             <Button 
               variant="outline" 
-              className="w-full border-orange-500 text-orange-500 hover:bg-orange-50 py-3 rounded-full font-medium"
+              className="w-full border-blue-800 text-blue-800 hover:bg-blue-50 py-3 rounded-full font-medium"
             >
               Começar Agora
             </Button>
           </div>
 
           {/* Plano Semestral - Destacado */}
-          <div className="bg-orange-500 rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105">
+          <div className="bg-blue-800 rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105">
             {/* Popular Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-orange-600 text-white text-xs font-bold px-4 py-1 rounded-full">
+              <div className="bg-blue-900 text-white text-xs font-bold px-4 py-1 rounded-full">
                 Mais Popular
               </div>
             </div>
@@ -114,7 +114,7 @@ const PricingSection = () => {
               </li>
             </ul>
             
-            <Button className="w-full bg-white text-orange-500 hover:bg-gray-50 py-3 rounded-full font-medium">
+            <Button className="w-full bg-white text-blue-800 hover:bg-gray-50 py-3 rounded-full font-medium">
               Começar Agora
             </Button>
           </div>
@@ -131,7 +131,7 @@ const PricingSection = () => {
             <div className="text-center mb-6 pt-2">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Anual</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-orange-500">R$29,70</span>
+                <span className="text-4xl font-bold text-blue-800">R$29,70</span>
                 <span className="text-sm text-gray-600">/mês</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">R$297 à vista</p>
@@ -169,7 +169,7 @@ const PricingSection = () => {
             
             <Button 
               variant="outline" 
-              className="w-full border-orange-500 text-orange-500 hover:bg-orange-50 py-3 rounded-full font-medium"
+              className="w-full border-blue-800 text-blue-800 hover:bg-blue-50 py-3 rounded-full font-medium"
             >
               Começar Agora
             </Button>
