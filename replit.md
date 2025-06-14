@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Fixed deployment errors by completely removing orphaned analytics references
+  - Removed all references to AnalyticsSettings component that was causing build failures
+  - Deleted orphaned analytics directory and cleaned up App.tsx routing conflicts
+  - Eliminated duplicate `/admin/webhooks` routes that were causing navigation issues
+  - System now deploys successfully without analytics UI conflicts
 - June 14, 2025: Integrated logo management directly into admin dashboard
   - Removed separate logo page and integrated SimpleLogo component into admin panel
   - Added "Gerenciar Logo" section with proper header title and subtitle
