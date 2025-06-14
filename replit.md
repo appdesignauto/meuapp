@@ -207,3 +207,4 @@ The system uses PostgreSQL with the following key entities:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+WhatsApp message template: Uses informal, direct format - "Olá [nome] sou do suporte da design auto. esta ai?"
