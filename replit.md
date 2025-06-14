@@ -118,6 +118,10 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Updated pricing section with specific feature list and layout reorganization
+  - Applied user's exact feature specifications: "Acesso a todas as artes", "Edições ilimitadas", "Atualizações semanais", "Aplicativo exclusivo", "Suporte prioritário", "Sem compromisso"
+  - Reorganized plan layout: Mensal → Anual (highlighted center) → Semestral
+  - Enhanced visual hierarchy with Anual plan prominently displayed in center with green highlight and "Melhor Valor" badge
 - June 14, 2025: Implemented clean pricing section following user's exact design specifications
   - Created simplified layout with "Escolha seu plano" title and clear value proposition
   - Implemented orange-highlighted pricing: Mensal (R$47), Semestral (R$36,70/mês), Anual (R$29,70/mês)
