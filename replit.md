@@ -118,11 +118,18 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 14, 2025: Completed advanced Microsoft Clarity configuration with comprehensive tracking features
+  - Implemented Microsoft Clarity with Project ID "rz84poylxv" using official integration patterns
+  - Added advanced user segmentation: device type, screen resolution, traffic source categorization, time segments
+  - Created automatic element masking for sensitive data (passwords, emails, personal fields) for LGPD compliance
+  - Implemented scroll depth tracking (25%, 50%, 75%, 100% milestones) and time-on-page analytics
+  - Built comprehensive event tracking API for art views, downloads, searches, subscriptions, and errors
+  - Added A/B testing support and conversion tracking capabilities for marketing optimization
+  - Integrated LGPD consent management with automatic initialization in development environment
 - June 14, 2025: Optimized Google Analytics 4 configuration following official best practices
   - Implemented GA4 script loading with proper timing and error handling
   - Added SPA navigation tracking for single-page application routing
   - Enhanced LGPD compliance with anonymize_ip and ad personalization controls
-  - Integrated Microsoft Clarity with Project ID "rz84poylxv" for heatmap analytics
   - Created comprehensive event tracking API following GA4 documentation standards
   - All analytics platforms (GA4, Meta Pixel, Microsoft Clarity) now working seamlessly together
 - June 14, 2025: Completely resolved analytics configuration persistence with timestamp validation fix
