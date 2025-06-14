@@ -67,13 +67,11 @@ export function Popup({
     return 'balanced';
   };
 
-  // Registrar visualização
+  // Registrar visualização sempre que o popup aparecer
   useEffect(() => {
-    // Registrar visualização em segundo plano sem bloquear o carregamento do popup
-    apiRequest('POST', '/api/popups/view', {
-      popupId: id,
-      sessionId,
-      action: 'view'
+    // Registrar visualização usando o endpoint correto
+    apiRequest('POST', `/api/popups/track-view/${id}`, {
+      sessionId
     }).catch(error => {
       console.error('Erro ao registrar visualização:', error);
     });

@@ -61,24 +61,7 @@ router.post('/track-view/:id', async (req, res) => {
       return res.status(404).json({ error: 'Popup não encontrado ou inativo' });
     }
 
-    // Verificar se já foi registrada uma visualização para esta sessão nos últimos 30 minutos
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-    const recentView = await db
-      .select()
-      .from(popupViews)
-      .where(
-        and(
-          eq(popupViews.popupId, popupId),
-          eq(popupViews.sessionId, sessionId),
-          gte(popupViews.viewedAt, thirtyMinutesAgo)
-        )
-      )
-      .limit(1);
-
-    if (recentView.length > 0) {
-      console.log(`[POPUP VIEW] Visualização duplicada detectada para sessão ${sessionId} - ignorando`);
-      return res.json({ success: true, message: 'Visualização já registrada recentemente' });
-    }
+    // Sistema de deduplicação removido - todas as visualizações são contabilizadas
 
     // Buscar views atual antes do update
     const currentViews = popup[0].views || 0;
