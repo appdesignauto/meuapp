@@ -2,7 +2,8 @@
  * Script para adicionar colunas de rastreamento (views e clicks) na tabela popups
  */
 
-const { Pool } = require('pg');
+import pkg from 'pg';
+const { Pool } = pkg;
 
 async function addPopupTrackingColumns() {
   const pool = new Pool({
