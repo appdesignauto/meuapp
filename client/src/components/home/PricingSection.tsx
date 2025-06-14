@@ -23,7 +23,7 @@ const PricingSection = () => {
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
-                <span className="text-4xl font-bold" style={{color: '#103560'}}>R$47</span>
+                <span className="text-4xl font-bold text-blue-600">R$47</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">Pagamento mensal</p>
               <div className="text-green-500 text-sm font-medium border border-green-500 rounded-full px-3 py-1 inline-block">
@@ -60,8 +60,7 @@ const PricingSection = () => {
             
             <Button 
               variant="outline" 
-              className="w-full py-3 rounded-full font-medium hover:bg-blue-50"
-              style={{borderColor: '#103560', color: '#103560'}}
+              className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 rounded-full font-medium"
             >
               Começar Agora
             </Button>
@@ -132,7 +131,7 @@ const PricingSection = () => {
             <div className="text-center mb-6 pt-2">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Semestral</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold" style={{color: '#103560'}}>R$36,70</span>
+                <span className="text-4xl font-bold text-blue-600">R$36,70</span>
                 <span className="text-sm text-gray-600">/mês</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">R$197,00 à vista</p>
@@ -170,8 +169,7 @@ const PricingSection = () => {
             
             <Button 
               variant="outline" 
-              className="w-full py-3 rounded-full font-medium hover:bg-blue-50"
-              style={{borderColor: '#103560', color: '#103560'}}
+              className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 rounded-full font-medium"
             >
               Começar Agora
             </Button>
