@@ -8972,6 +8972,174 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // PUT /api/social-growth/profiles/:id - Editar perfil social
+  app.put('/api/social-growth/profiles/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const profileId = parseInt(req.params.id);
+      const profileData = insertSocialProfileSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const [updatedProfile] = await db.update(socialProfiles)
+        .set(profileData)
+        .where(and(
+          eq(socialProfiles.id, profileId),
+          eq(socialProfiles.userId, userId)
+        ))
+        .returning();
+      
+      if (!updatedProfile) {
+        return res.status(404).json({ error: 'Perfil não encontrado' });
+      }
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+      }
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // PUT /api/social-growth/goals/:id - Editar meta
+  app.put('/api/social-growth/goals/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const goalId = parseInt(req.params.id);
+      const goalData = insertSocialGoalSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const [updatedGoal] = await db.update(socialGoals)
+        .set(goalData)
+        .where(and(
+          eq(socialGoals.id, goalId),
+          eq(socialGoals.userId, userId)
+        ))
+        .returning();
+      
+      if (!updatedGoal) {
+        return res.status(404).json({ error: 'Meta não encontrada' });
+      }
+      
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error('Erro ao atualizar meta:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+      }
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // PUT /api/social-growth/progress/:id - Editar progresso
+  app.put('/api/social-growth/progress/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const progressId = parseInt(req.params.id);
+      const progressData = insertSocialProgressSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const [updatedProgress] = await db.update(socialProgress)
+        .set(progressData)
+        .where(and(
+          eq(socialProgress.id, progressId),
+          eq(socialProgress.userId, userId)
+        ))
+        .returning();
+      
+      if (!updatedProgress) {
+        return res.status(404).json({ error: 'Progresso não encontrado' });
+      }
+      
+      res.json(updatedProgress);
+    } catch (error) {
+      console.error('Erro ao atualizar progresso:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+      }
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // DELETE /api/social-growth/profiles/:id - Excluir perfil social
+  app.delete('/api/social-growth/profiles/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const profileId = parseInt(req.params.id);
+      
+      const [deletedProfile] = await db.delete(socialProfiles)
+        .where(and(
+          eq(socialProfiles.id, profileId),
+          eq(socialProfiles.userId, userId)
+        ))
+        .returning();
+      
+      if (!deletedProfile) {
+        return res.status(404).json({ error: 'Perfil não encontrado' });
+      }
+      
+      res.json({ message: 'Perfil excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir perfil:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // DELETE /api/social-growth/goals/:id - Excluir meta
+  app.delete('/api/social-growth/goals/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const goalId = parseInt(req.params.id);
+      
+      const [deletedGoal] = await db.delete(socialGoals)
+        .where(and(
+          eq(socialGoals.id, goalId),
+          eq(socialGoals.userId, userId)
+        ))
+        .returning();
+      
+      if (!deletedGoal) {
+        return res.status(404).json({ error: 'Meta não encontrada' });
+      }
+      
+      res.json({ message: 'Meta excluída com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir meta:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // DELETE /api/social-growth/progress/:id - Excluir progresso
+  app.delete('/api/social-growth/progress/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const progressId = parseInt(req.params.id);
+      
+      const [deletedProgress] = await db.delete(socialProgress)
+        .where(and(
+          eq(socialProgress.id, progressId),
+          eq(socialProgress.userId, userId)
+        ))
+        .returning();
+      
+      if (!deletedProgress) {
+        return res.status(404).json({ error: 'Progresso não encontrado' });
+      }
+      
+      res.json({ message: 'Progresso excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir progresso:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   // GET /api/social-growth/overview - Buscar dados de visão geral
   app.get('/api/social-growth/overview', isAuthenticated, async (req, res) => {
     try {
