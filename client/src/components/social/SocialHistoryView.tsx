@@ -15,6 +15,7 @@ interface SocialGrowthData {
   socialNetworkId: number;
   recordDate: string;
   followers: number;
+  growthFromPrevious?: number;
   averageLikes: number;
   averageComments: number;
   salesFromPlatform: number;
@@ -311,6 +312,9 @@ export default function SocialHistoryView() {
                         {platform.toUpperCase()}<br/>SEGUIDORES
                       </th>
                       <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
+                        {platform.toUpperCase()}<br/>CRESCIMENTO
+                      </th>
+                      <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
                         {platform.toUpperCase()}<br/>VENDAS
                       </th>
                     </React.Fragment>
@@ -326,10 +330,21 @@ export default function SocialHistoryView() {
                       <td className="py-3 px-4 font-medium text-slate-900">{month}</td>
                       {platforms.map(platform => {
                         const data = monthData[platform];
+                        const growth = data?.growthFromPrevious || 0;
+                        const isPositive = growth > 0;
+                        const isNegative = growth < 0;
+                        
                         return (
                           <React.Fragment key={platform}>
                             <td className="text-center py-3 px-2 text-slate-700">
                               {data ? data.followers.toLocaleString() : '-'}
+                            </td>
+                            <td className="text-center py-3 px-2">
+                              {data ? (
+                                <span className={`font-medium ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-slate-500'}`}>
+                                  {growth === 0 ? '-' : `${growth > 0 ? '+' : ''}${growth.toLocaleString()}`}
+                                </span>
+                              ) : '-'}
                             </td>
                             <td className="text-center py-3 px-2 text-slate-700">
                               {data ? data.salesFromPlatform : '-'}
