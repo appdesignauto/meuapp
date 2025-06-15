@@ -18,14 +18,18 @@ const CallToAction = () => {
                   Cadastre-se
                 </Button>
               </Link>
-              <Link href="/demo">
-                <Button 
-                  variant="outline" 
-                  className="bg-transparent border border-white hover:bg-white hover:text-neutral-900 text-white px-6 py-3"
-                >
-                  Ver demonstração
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="bg-transparent border border-white hover:bg-white hover:text-neutral-900 text-white px-6 py-3"
+                onClick={() => {
+                  const artsSection = document.getElementById('arts-showcase');
+                  if (artsSection) {
+                    artsSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                Ver demonstração
+              </Button>
             </div>
           </div>
           
