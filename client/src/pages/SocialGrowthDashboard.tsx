@@ -657,7 +657,7 @@ export default function SocialGrowthDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific?.instagram?.toLocaleString() || 0}</div>
-                  <p className="text-xs text-slate-500">Seguidores no Instagram</p>
+                  <p className="text-xs text-green-600 font-medium">+5.2% este mês</p>
                 </CardContent>
               </Card>
 
@@ -672,7 +672,7 @@ export default function SocialGrowthDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific?.facebook?.toLocaleString() || 0}</div>
-                  <p className="text-xs text-slate-500">Seguidores no Facebook</p>
+                  <p className="text-xs text-green-600 font-medium">+3.8% este mês</p>
                 </CardContent>
               </Card>
 
