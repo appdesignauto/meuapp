@@ -184,7 +184,7 @@ export default function SocialGoalsManagement({ isOpen, onClose }: SocialGoalsMa
   const handleEdit = (goal: SocialGoal) => {
     setEditingGoal(goal);
     setFormData({
-      socialNetworkId: goal.socialNetworkId.toString(),
+      socialNetworkId: goal.network.id.toString(),
       goalType: goal.goalType,
       targetValue: goal.targetValue.toString(),
       deadline: goal.deadline.split('T')[0],
