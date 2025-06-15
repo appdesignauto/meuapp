@@ -1201,6 +1201,140 @@ export type InsertCommunitySettings = z.infer<typeof insertCommunitySettingsSche
 export type FerramentaCategoria = typeof ferramentasCategorias.$inferSelect;
 export type InsertFerramentaCategoria = z.infer<typeof insertFerramentaCategoriaSchema>;
 
+// ========================================
+// SOCIAL GROWTH TABLES - Following PRD
+// ========================================
+
+// Social Profiles - Perfis das redes sociais do usuário
+export const socialProfiles = pgTable("socialProfiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook'
+  profileName: text("profileName").notNull(),
+  profileUrl: text("profileUrl").notNull(),
+  profileHandle: text("profileHandle"),
+  isVerified: boolean("isVerified").default(false),
+  isActive: boolean("isActive").default(true),
+  followersCount: integer("followersCount").default(0),
+  lastSyncAt: timestamp("lastSyncAt"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertSocialProfileSchema = createInsertSchema(socialProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Social Goals - Metas do usuário para crescimento social
+export const socialGoals = pgTable("socialGoals", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook'
+  goalType: text("goalType").notNull(), // 'followers', 'sales', 'engagement'
+  targetValue: integer("targetValue").notNull(),
+  currentValue: integer("currentValue").default(0),
+  startDate: date("startDate").notNull(),
+  deadline: date("deadline").notNull(),
+  isActive: boolean("isActive").default(true),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertSocialGoalSchema = createInsertSchema(socialGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Social Progress - Registro de progresso mensal
+export const socialProgress = pgTable("socialProgress", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook'
+  metricType: text("metricType").notNull(), // 'followers', 'sales', 'engagement'
+  monthYear: varchar("monthYear", { length: 7 }).notNull(), // Format: 2025-06
+  value: integer("value").notNull(),
+  growthRate: integer("growthRate"), // Percentual de crescimento (multiplicado por 100)
+  dataSource: text("dataSource").default("manual"), // 'manual', 'api', 'import'
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertSocialProgressSchema = createInsertSchema(socialProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Social Alerts - Alertas inteligentes do sistema
+export const socialAlerts = pgTable("socialAlerts", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  goalId: integer("goalId").references(() => socialGoals.id, { onDelete: "cascade" }),
+  alertType: text("alertType").notNull(), // 'warning', 'success', 'info', 'danger'
+  title: varchar("title", { length: 100 }).notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("isRead").default(false),
+  isDismissed: boolean("isDismissed").default(false),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertSocialAlertSchema = createInsertSchema(socialAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Relations for Social Growth tables
+export const socialProfilesRelations = relations(socialProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [socialProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+export const socialGoalsRelations = relations(socialGoals, ({ one, many }) => ({
+  user: one(users, {
+    fields: [socialGoals.userId],
+    references: [users.id],
+  }),
+  alerts: many(socialAlerts),
+}));
+
+export const socialProgressRelations = relations(socialProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [socialProgress.userId],
+    references: [users.id],
+  }),
+}));
+
+export const socialAlertsRelations = relations(socialAlerts, ({ one }) => ({
+  user: one(users, {
+    fields: [socialAlerts.userId],
+    references: [users.id],
+  }),
+  goal: one(socialGoals, {
+    fields: [socialAlerts.goalId],
+    references: [socialGoals.id],
+  }),
+}));
+
+// Types for Social Growth
+export type SocialProfile = typeof socialProfiles.$inferSelect;
+export type InsertSocialProfile = z.infer<typeof insertSocialProfileSchema>;
+
+export type SocialGoal = typeof socialGoals.$inferSelect;
+export type InsertSocialGoal = z.infer<typeof insertSocialGoalSchema>;
+
+export type SocialProgress = typeof socialProgress.$inferSelect;
+export type InsertSocialProgress = z.infer<typeof insertSocialProgressSchema>;
+
+export type SocialAlert = typeof socialAlerts.$inferSelect;
+export type InsertSocialAlert = z.infer<typeof insertSocialAlertSchema>;
+
 export type Ferramenta = typeof ferramentas.$inferSelect;
 export type InsertFerramenta = z.infer<typeof insertFerramentaSchema>;
 
