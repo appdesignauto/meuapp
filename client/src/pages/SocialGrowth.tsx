@@ -160,22 +160,92 @@ export function SocialGrowth() {
     },
   });
 
+  // React Query hooks para buscar dados da API
+  const { data: overviewData, isLoading: overviewLoading } = useQuery({
+    queryKey: ['/api/social-growth/overview'],
+    enabled: !!user
+  });
+
+  const { data: profiles = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ['/api/social-growth/profiles'],
+    enabled: !!user
+  });
+
+  const { data: goals = [], isLoading: goalsLoading } = useQuery({
+    queryKey: ['/api/social-growth/goals'],
+    enabled: !!user
+  });
+
+  const { data: progressData = [], isLoading: progressLoading } = useQuery({
+    queryKey: ['/api/social-growth/progress'],
+    enabled: !!user
+  });
+
+  // Mutations para criar/editar dados
+  const createProfileMutation = useMutation({
+    mutationFn: (data: any) => fetch('/api/social-growth/profiles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      setIsProfileModalOpen(false);
+      profileForm.reset();
+      toast({ title: 'Perfil criado com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao criar perfil', variant: 'destructive' });
+    }
+  });
+
+  const createGoalMutation = useMutation({
+    mutationFn: (data: any) => fetch('/api/social-growth/goals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      setIsGoalModalOpen(false);
+      goalForm.reset();
+      toast({ title: 'Meta criada com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao criar meta', variant: 'destructive' });
+    }
+  });
+
+  const createProgressMutation = useMutation({
+    mutationFn: (data: any) => fetch('/api/social-growth/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/progress'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      setIsProgressModalOpen(false);
+      progressForm.reset();
+      toast({ title: 'Progresso atualizado com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao atualizar progresso', variant: 'destructive' });
+    }
+  });
+
   const onProfileSubmit = (data: ProfileFormData) => {
-    console.log('Profile data:', data);
-    setIsProfileModalOpen(false);
-    profileForm.reset();
+    createProfileMutation.mutate(data);
   };
 
   const onGoalSubmit = (data: GoalFormData) => {
-    console.log('Goal data:', data);
-    setIsGoalModalOpen(false);
-    goalForm.reset();
+    createGoalMutation.mutate(data);
   };
 
   const onProgressSubmit = (data: ProgressFormData) => {
-    console.log('Progress data:', data);
-    setIsProgressModalOpen(false);
-    progressForm.reset();
+    createProgressMutation.mutate(data);
   };
 
   const getPlatformIcon = (platform: string) => {
