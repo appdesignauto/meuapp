@@ -123,6 +123,7 @@ The system uses PostgreSQL with the following key entities:
   - Semestral: R$16,17/mês (R$97,00 à vista) with R$185 discount
   - Anual: R$12,25/mês (R$147,00 à vista) with R$417 discount
   - Updated both PricingSection.tsx and PlanosPage.tsx with consistent pricing
+  - Updated guarantee from 7 days to 30 days in trust section
   - Maintained free plan and R$997 lifetime plan in PlanosPage as requested
   - Maintained mobile-only layout optimizations with gap-10 spacing preventing badge overlap
   - Desktop layout preserved at original gap-6 spacing as requested by user

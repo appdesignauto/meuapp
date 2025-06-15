@@ -190,7 +190,7 @@ const PricingSection = () => {
         <div className="mt-12 md:mt-16 pt-8 md:pt-12 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-4xl mx-auto">
             
-            {/* Garantia de 7 dias */}
+            {/* Garantia de 30 dias */}
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <Award className="h-8 w-8 text-green-600" />
