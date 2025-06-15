@@ -80,9 +80,8 @@ const platformConfig = {
 export default function SocialGrowthDashboard() {
   const [selectedNetwork, setSelectedNetwork] = useState<SocialNetwork | null>(null);
   const [isAddingNetwork, setIsAddingNetwork] = useState(false);
-  const [isAddingData, setIsAddingData] = useState(false);
+  const [showSocialData, setShowSocialData] = useState(false);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [goalForm, setGoalForm] = useState({
     networkId: '',
     goalType: 'followers' as 'followers' | 'engagement' | 'sales',
@@ -346,20 +345,23 @@ export default function SocialGrowthDashboard() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={isAddingData} onOpenChange={setIsAddingData}>
+            <Dialog open={showSocialData} onOpenChange={setShowSocialData}>
               <DialogTrigger asChild>
-                <Button variant="outline" disabled={networks.length === 0}>
+                <Button variant="outline" disabled={networks.length === 0} className="bg-green-600 hover:bg-green-700 text-white border-green-600">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Adicionar Dados
+                  Dados Sociais
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
                 <DialogHeader>
-                  <DialogTitle>Registrar Dados do Mês</DialogTitle>
+                  <DialogTitle>Dados Sociais</DialogTitle>
                   <DialogDescription>
-                    Adicione os dados de crescimento para uma das suas redes sociais
+                    Gerencie seus dados de crescimento social - visualize histórico e adicione novos dados
                   </DialogDescription>
                 </DialogHeader>
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                  <SocialHistoryView />
+                </div>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
