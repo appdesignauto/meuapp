@@ -389,6 +389,8 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       .select()
       .from(socialNetworks)
       .where(eq(socialNetworks.userId, userId));
+    
+    console.log('[ANALYTICS DEBUG] User networks found:', userNetworks);
 
     if (userNetworks.length === 0) {
       return res.json({
@@ -451,7 +453,9 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
     }, [] as any[]);
 
     // Calcular totais
+    console.log('[ANALYTICS DEBUG] Platforms data:', platforms);
     const totalFollowers = platforms.reduce((sum, p) => sum + p.followers, 0);
+    console.log('[ANALYTICS DEBUG] Total followers calculated:', totalFollowers);
     const totalSales = platforms.reduce((sum, p) => sum + p.sales, 0);
 
     // Tendência de crescimento - buscar dados mais recentes de cada mês por plataforma
