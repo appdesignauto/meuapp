@@ -10,7 +10,7 @@ const PricingSection = () => {
           <div className="text-green-600 text-sm font-semibold tracking-wide uppercase mb-4">
             PLANOS
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">
             Seu crescimento começa aqui
           </h2>
           <div className="w-16 h-1 bg-green-600 mx-auto mb-6"></div>
