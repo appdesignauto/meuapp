@@ -1328,6 +1328,19 @@ export const socialGrowthData = pgTable("socialGrowthData", {
   };
 });
 
+export const socialGoals = pgTable("socialGoals", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  networkId: integer("networkId").notNull().references(() => socialNetworks.id, { onDelete: "cascade" }),
+  goalType: varchar("goalType", { length: 50 }).notNull(), // 'followers', 'engagement', 'sales'
+  targetValue: integer("targetValue").notNull(),
+  deadline: date("deadline").notNull(),
+  description: text("description"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
 // Schemas para inserção
 export const insertSocialNetworkSchema = createInsertSchema(socialNetworks).omit({
   id: true,
@@ -1341,12 +1354,21 @@ export const insertSocialGrowthDataSchema = createInsertSchema(socialGrowthData)
   updatedAt: true,
 });
 
+export const insertSocialGoalSchema = createInsertSchema(socialGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Tipos derivados
 export type SocialNetwork = typeof socialNetworks.$inferSelect;
 export type InsertSocialNetwork = z.infer<typeof insertSocialNetworkSchema>;
 
 export type SocialGrowthData = typeof socialGrowthData.$inferSelect;
 export type InsertSocialGrowthData = z.infer<typeof insertSocialGrowthDataSchema>;
+
+export type SocialGoal = typeof socialGoals.$inferSelect;
+export type InsertSocialGoal = z.infer<typeof insertSocialGoalSchema>;
 
 // Relações
 export const socialNetworksRelations = relations(socialNetworks, ({ one, many }) => ({
@@ -1365,6 +1387,17 @@ export const socialGrowthDataRelations = relations(socialGrowthData, ({ one }) =
   user: one(users, {
     fields: [socialGrowthData.userId],
     references: [users.id],
+  }),
+}));
+
+export const socialGoalsRelations = relations(socialGoals, ({ one }) => ({
+  user: one(users, {
+    fields: [socialGoals.userId],
+    references: [users.id],
+  }),
+  network: one(socialNetworks, {
+    fields: [socialGoals.networkId],
+    references: [socialNetworks.id],
   }),
 }));
 
