@@ -118,9 +118,9 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Updated pricing section with professionalization-focused messaging
-  - Changed title to "Profissionalize a imagem do seu negócio" for clearer value proposition
-  - Updated subtitle to emphasize trust, competitive advantage, and client acquisition
+- June 15, 2025: Updated pricing section with growth-focused messaging
+  - Changed title to "Seu crescimento começa aqui" for immediate impact
+  - Updated subtitle emphasizing immediate access, exclusive designs, premium support, and consistent results
   - Maintained enhanced typography with impactful sizing and clean layout
 - June 15, 2025: Added trust guarantees section below pricing with 30-day guarantee, premium support, and weekly updates
   - Implemented harmonious design with colored icons and clean layout matching provided reference
