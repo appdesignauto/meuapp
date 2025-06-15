@@ -43,7 +43,16 @@ interface Analytics {
   totalNetworks: number;
   totalFollowers: number;
   totalSales: number;
+  activeGoals: number;
   monthlyGrowth: number;
+  platformSpecific: {
+    instagram: number;
+    facebook: number;
+    tiktok: number;
+    youtube: number;
+    linkedin: number;
+    twitter: number;
+  };
   platforms: Array<{
     platform: string;
     username: string;
