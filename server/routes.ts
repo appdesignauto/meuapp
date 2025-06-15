@@ -8856,7 +8856,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // GET /api/social-growth/profiles - Buscar perfis sociais do usuário
   app.get('/api/social-growth/profiles', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       
       const profiles = await db.select()
         .from(socialProfiles)
@@ -8873,7 +8873,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // POST /api/social-growth/profiles - Criar novo perfil social
   app.post('/api/social-growth/profiles', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       const profileData = insertSocialProfileSchema.parse({
         ...req.body,
         userId
@@ -8896,7 +8896,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // GET /api/social-growth/goals - Buscar metas do usuário
   app.get('/api/social-growth/goals', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       
       const goals = await db.select()
         .from(socialGoals)
@@ -8913,7 +8913,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // POST /api/social-growth/goals - Criar nova meta
   app.post('/api/social-growth/goals', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       const goalData = insertSocialGoalSchema.parse({
         ...req.body,
         userId
@@ -8936,7 +8936,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // GET /api/social-growth/progress - Buscar progresso do usuário
   app.get('/api/social-growth/progress', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       
       const progress = await db.select()
         .from(socialProgress)
@@ -8953,7 +8953,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // POST /api/social-growth/progress - Criar novo registro de progresso
   app.post('/api/social-growth/progress', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       const progressData = insertSocialProgressSchema.parse({
         ...req.body,
         userId
@@ -8976,7 +8976,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   // GET /api/social-growth/overview - Buscar dados de visão geral
   app.get('/api/social-growth/overview', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as User).id;
+      const userId = req.user.id;
       
       // Buscar total de seguidores de todos os perfis
       const profiles = await db.select()
