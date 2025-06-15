@@ -207,11 +207,32 @@ export default function SocialHistoryView() {
     });
   };
 
+  // Função para verificar se um mês já está preenchido para a rede selecionada
+  const isMonthAlreadyFilled = (yearMonth: string, networkId: number) => {
+    if (!data || networkId === 0) return false;
+    
+    return data.some((record: any) => {
+      const recordMonth = record.recordDate.substring(0, 7); // YYYY-MM
+      return recordMonth === yearMonth && record.socialNetworkId === networkId;
+    });
+  };
+
   const handleAddData = () => {
     if (formData.socialNetworkId === 0) {
       toast({
         title: 'Erro',
         description: 'Selecione uma rede social',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Verificar se o mês já está preenchido
+    const selectedMonth = formData.recordDate.substring(0, 7);
+    if (isMonthAlreadyFilled(selectedMonth, formData.socialNetworkId)) {
+      toast({
+        title: 'Mês já preenchido',
+        description: 'Este mês já possui dados. Para alterar, edite através do histórico.',
         variant: 'destructive'
       });
       return;
@@ -478,13 +499,35 @@ export default function SocialHistoryView() {
                   type="month"
                   value={formData.recordDate ? formData.recordDate.substring(0, 7) : ''}
                   onChange={(e) => {
+                    const selectedMonth = e.target.value;
+                    
+                    // Verificar se o mês já está preenchido para a rede selecionada
+                    if (formData.socialNetworkId !== 0 && isMonthAlreadyFilled(selectedMonth, formData.socialNetworkId)) {
+                      toast({
+                        title: 'Mês já preenchido',
+                        description: 'Este mês já possui dados. Para alterar, edite através do histórico.',
+                        variant: 'destructive'
+                      });
+                      return;
+                    }
+                    
                     // Define automaticamente o último dia do mês selecionado
-                    const [year, month] = e.target.value.split('-');
+                    const [year, month] = selectedMonth.split('-');
                     const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
                     const fullDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
                     setFormData({...formData, recordDate: fullDate});
                   }}
+                  className={
+                    formData.socialNetworkId !== 0 && 
+                    formData.recordDate && 
+                    isMonthAlreadyFilled(formData.recordDate.substring(0, 7), formData.socialNetworkId) 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : ''
+                  }
                 />
+                {formData.socialNetworkId !== 0 && formData.recordDate && isMonthAlreadyFilled(formData.recordDate.substring(0, 7), formData.socialNetworkId) && (
+                  <p className="text-sm text-red-600 mt-1">Este mês já possui dados registrados</p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
