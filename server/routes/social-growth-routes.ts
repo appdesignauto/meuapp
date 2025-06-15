@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db';
-import { socialNetworks, socialGrowthData, insertSocialNetworkSchema, insertSocialGrowthDataSchema } from '@shared/schema';
+import { socialNetworks, socialGrowthData, socialGoals, insertSocialNetworkSchema, insertSocialGrowthDataSchema, insertSocialGoalSchema } from '@shared/schema';
 import { eq, and, desc, asc, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -358,6 +358,266 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar analytics:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// ===== ROTAS PARA METAS SOCIAIS =====
+
+// GET /api/social-growth/goals - Listar metas do usuário
+router.get('/goals', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const goals = await db
+      .select({
+        id: socialGoals.id,
+        goalType: socialGoals.goalType,
+        targetValue: socialGoals.targetValue,
+        deadline: socialGoals.deadline,
+        description: socialGoals.description,
+        isActive: socialGoals.isActive,
+        createdAt: socialGoals.createdAt,
+        network: {
+          id: socialNetworks.id,
+          platform: socialNetworks.platform,
+          username: socialNetworks.username
+        }
+      })
+      .from(socialGoals)
+      .innerJoin(socialNetworks, eq(socialGoals.networkId, socialNetworks.id))
+      .where(
+        and(
+          eq(socialGoals.userId, userId),
+          eq(socialGoals.isActive, true)
+        )
+      )
+      .orderBy(asc(socialGoals.deadline));
+
+    // Buscar progresso atual para cada meta
+    const goalsWithProgress = await Promise.all(
+      goals.map(async (goal) => {
+        let currentValue = 0;
+        
+        // Buscar valor atual baseado no tipo de meta
+        if (goal.goalType === 'followers') {
+          const latestData = await db
+            .select({ followers: socialGrowthData.followers })
+            .from(socialGrowthData)
+            .where(eq(socialGrowthData.socialNetworkId, goal.network.id))
+            .orderBy(desc(socialGrowthData.recordDate))
+            .limit(1);
+          
+          currentValue = latestData[0]?.followers || 0;
+        } else if (goal.goalType === 'sales') {
+          const salesData = await db
+            .select({ sales: sql<number>`sum(${socialGrowthData.salesFromPlatform})` })
+            .from(socialGrowthData)
+            .where(
+              and(
+                eq(socialGrowthData.socialNetworkId, goal.network.id),
+                gte(socialGrowthData.recordDate, new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0])
+              )
+            );
+          
+          currentValue = salesData[0]?.sales || 0;
+        } else if (goal.goalType === 'engagement') {
+          const engagementData = await db
+            .select({ 
+              avgLikes: sql<number>`avg(${socialGrowthData.averageLikes})`,
+              avgComments: sql<number>`avg(${socialGrowthData.averageComments})`
+            })
+            .from(socialGrowthData)
+            .where(
+              and(
+                eq(socialGrowthData.socialNetworkId, goal.network.id),
+                gte(socialGrowthData.recordDate, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+              )
+            );
+          
+          currentValue = Math.round((engagementData[0]?.avgLikes || 0) + (engagementData[0]?.avgComments || 0));
+        }
+
+        // Calcular progresso
+        const progress = goal.targetValue > 0 ? Math.min((currentValue / goal.targetValue) * 100, 100) : 0;
+        
+        // Calcular dias restantes
+        const today = new Date();
+        const deadline = new Date(goal.deadline);
+        const daysRemaining = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Determinar se precisa de atenção (meta não atingida e prazo próximo)
+        const needsAttention = progress < 70 && daysRemaining <= 30 && daysRemaining > 0;
+        
+        return {
+          ...goal,
+          currentValue,
+          progress: Math.round(progress * 100) / 100,
+          daysRemaining,
+          needsAttention
+        };
+      })
+    );
+
+    res.json(goalsWithProgress);
+  } catch (error) {
+    console.error('Erro ao buscar metas:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/social-growth/goals - Criar nova meta
+router.post('/goals', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const validatedData = insertSocialGoalSchema.parse({
+      ...req.body,
+      userId
+    });
+
+    // Verificar se a rede social pertence ao usuário
+    const network = await db
+      .select()
+      .from(socialNetworks)
+      .where(
+        and(
+          eq(socialNetworks.id, validatedData.networkId),
+          eq(socialNetworks.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (network.length === 0) {
+      return res.status(404).json({ message: 'Rede social não encontrada' });
+    }
+
+    // Verificar se já existe uma meta ativa do mesmo tipo para a mesma rede
+    const existingGoal = await db
+      .select()
+      .from(socialGoals)
+      .where(
+        and(
+          eq(socialGoals.userId, userId),
+          eq(socialGoals.networkId, validatedData.networkId),
+          eq(socialGoals.goalType, validatedData.goalType),
+          eq(socialGoals.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (existingGoal.length > 0) {
+      return res.status(400).json({ 
+        message: 'Já existe uma meta ativa deste tipo para esta rede social' 
+      });
+    }
+
+    const [newGoal] = await db
+      .insert(socialGoals)
+      .values(validatedData)
+      .returning();
+
+    res.status(201).json(newGoal);
+  } catch (error) {
+    console.error('Erro ao criar meta:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        message: 'Dados inválidos',
+        errors: error.errors 
+      });
+    }
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/social-growth/goals/:id - Atualizar meta
+router.put('/goals/:id', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const goalId = parseInt(req.params.id);
+
+    if (isNaN(goalId)) {
+      return res.status(400).json({ message: 'ID da meta inválido' });
+    }
+
+    // Verificar se a meta pertence ao usuário
+    const existingGoal = await db
+      .select()
+      .from(socialGoals)
+      .where(
+        and(
+          eq(socialGoals.id, goalId),
+          eq(socialGoals.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (existingGoal.length === 0) {
+      return res.status(404).json({ message: 'Meta não encontrada' });
+    }
+
+    const updateData = insertSocialGoalSchema.partial().parse(req.body);
+
+    const [updatedGoal] = await db
+      .update(socialGoals)
+      .set({
+        ...updateData,
+        updatedAt: new Date()
+      })
+      .where(eq(socialGoals.id, goalId))
+      .returning();
+
+    res.json(updatedGoal);
+  } catch (error) {
+    console.error('Erro ao atualizar meta:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        message: 'Dados inválidos',
+        errors: error.errors 
+      });
+    }
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// DELETE /api/social-growth/goals/:id - Desativar meta
+router.delete('/goals/:id', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const goalId = parseInt(req.params.id);
+
+    if (isNaN(goalId)) {
+      return res.status(400).json({ message: 'ID da meta inválido' });
+    }
+
+    // Verificar se a meta pertence ao usuário
+    const existingGoal = await db
+      .select()
+      .from(socialGoals)
+      .where(
+        and(
+          eq(socialGoals.id, goalId),
+          eq(socialGoals.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (existingGoal.length === 0) {
+      return res.status(404).json({ message: 'Meta não encontrada' });
+    }
+
+    // Desativar a meta ao invés de deletar
+    await db
+      .update(socialGoals)
+      .set({
+        isActive: false,
+        updatedAt: new Date()
+      })
+      .where(eq(socialGoals.id, goalId));
+
+    res.json({ message: 'Meta desativada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao desativar meta:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });

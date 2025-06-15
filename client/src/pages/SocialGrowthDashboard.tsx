@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import SocialGoalsSection from '@/components/social/SocialGoalsSection';
 
 // Types
 interface SocialNetwork {
@@ -531,6 +532,9 @@ export default function SocialGrowthDashboard() {
             </Card>
           </>
         )}
+
+        {/* Social Goals Section */}
+        <SocialGoalsSection />
 
         {/* Networks List */}
         <Card className="bg-white shadow-lg">
