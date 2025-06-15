@@ -563,15 +563,17 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
         )
       );
 
-    // Organizar dados por plataforma específica
+    // Organizar dados por plataforma específica (somando todas as contas da mesma plataforma)
     const platformSpecific = {
-      instagram: platforms.find(p => p.platform === 'instagram')?.followers || 0,
-      facebook: platforms.find(p => p.platform === 'facebook')?.followers || 0,
-      tiktok: platforms.find(p => p.platform === 'tiktok')?.followers || 0,
-      youtube: platforms.find(p => p.platform === 'youtube')?.followers || 0,
-      linkedin: platforms.find(p => p.platform === 'linkedin')?.followers || 0,
-      twitter: platforms.find(p => p.platform === 'twitter')?.followers || 0
+      instagram: platforms.filter(p => p.platform === 'instagram').reduce((sum, p) => sum + p.followers, 0),
+      facebook: platforms.filter(p => p.platform === 'facebook').reduce((sum, p) => sum + p.followers, 0),
+      tiktok: platforms.filter(p => p.platform === 'tiktok').reduce((sum, p) => sum + p.followers, 0),
+      youtube: platforms.filter(p => p.platform === 'youtube').reduce((sum, p) => sum + p.followers, 0),
+      linkedin: platforms.filter(p => p.platform === 'linkedin').reduce((sum, p) => sum + p.followers, 0),
+      twitter: platforms.filter(p => p.platform === 'twitter').reduce((sum, p) => sum + p.followers, 0)
     };
+    
+    console.log('[ANALYTICS DEBUG] Platform specific calculated:', platformSpecific);
 
     res.json({
       totalNetworks: userNetworks.length,
