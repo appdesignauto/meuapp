@@ -118,18 +118,6 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Implemented comprehensive Social Growth functionality (Crescimento Social) for DesignAuto platform
-  - Created complete database schema with 4 tables: socialProfiles, socialGoals, socialProgress, socialAlerts
-  - Built comprehensive dashboard with metrics tracking, goal management, and alert system
-  - Added frontend component SocialGrowthPage.tsx with tabbed interface (Dashboard, Profiles, Goals, Alerts)
-  - Integrated professional charts using Recharts for followers and sales trend visualization
-  - Added navigation shortcut in header's "Recursos" dropdown menu with green Users icon
-  - Implemented protected route authentication requiring user login to access features
-  - Created backend API endpoints for all CRUD operations on social growth data
-  - Dashboard includes real-time metrics: total followers, sales generated, active goals, connected platforms
-  - Goal tracking system with progress visualization and status indicators (completed, on_track, at_risk, behind)
-  - Alert system for notifications with read/unread status management
-  - Multi-platform support: Instagram, Facebook, Twitter, LinkedIn, YouTube with custom icons
 - June 15, 2025: Fixed pricing section layout issue preventing cards from separating unexpectedly
   - Resolved CSS conflicts in grid spacing: unified gap-6 across all breakpoints instead of gap-10 md:gap-6
   - Removed conflicting individual card margins (mx-4 md:mx-0) that caused layout shifts on mobile
