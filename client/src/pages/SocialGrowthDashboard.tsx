@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import SocialGoalsView from '@/components/social/SocialGoalsView';
 import SocialHistoryView from '@/components/social/SocialHistoryView';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Target } from 'lucide-react';
 
 // Types
@@ -681,17 +680,11 @@ export default function SocialGrowthDashboard() {
           </>
         )}
 
-        {/* Tabs Navigation */}
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="goals">Metas</TabsTrigger>
-            <TabsTrigger value="history">Histórico</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Networks List */}
-            <Card className="bg-white shadow-lg">
+        {/* Social Goals Section */}
+        <SocialGoalsView />
+
+        {/* Networks List */}
+        <Card className="bg-white shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900">Suas Redes Sociais</CardTitle>
             <CardDescription>Gerencie suas redes sociais cadastradas</CardDescription>
@@ -758,16 +751,6 @@ export default function SocialGrowthDashboard() {
             )}
           </CardContent>
         </Card>
-          </TabsContent>
-          
-          <TabsContent value="goals" className="space-y-6">
-            <SocialGoalsView />
-          </TabsContent>
-          
-          <TabsContent value="history" className="space-y-6">
-            <SocialHistoryView />
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   );

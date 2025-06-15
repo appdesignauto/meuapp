@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Target, Calendar, TrendingUp, AlertTriangle, Instagram, Facebook, MessageCircle, Youtube, Users, Edit3, Trash2 } from 'lucide-react';
+import { Target, Calendar, TrendingUp, AlertTriangle, Instagram, Facebook, MessageCircle, Youtube, Users, Edit3, Trash2, History } from 'lucide-react';
+import SocialHistoryView from './SocialHistoryView';
 
 // Types
 interface SocialGoal {
@@ -42,6 +43,7 @@ const platformConfig = {
 export default function SocialGoalsView() {
   const { toast } = useToast();
   const [editingGoal, setEditingGoal] = useState<SocialGoal | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [editFormData, setEditFormData] = useState({
     goalType: '',
     targetValue: '',
