@@ -20,10 +20,10 @@ const PricingSection = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto px-4 md:px-0">
           
           {/* Plano Mensal */}
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 md:p-6 relative hover:shadow-lg transition-all duration-300 mx-4 md:mx-0 min-h-[520px] flex flex-col">
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 relative hover:shadow-lg transition-all duration-300 min-h-[520px] flex flex-col">
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
@@ -73,7 +73,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Anual - Destacado no meio */}
-          <div className="rounded-xl p-6 md:p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105 bg-blue-600 mx-4 md:mx-0 min-h-[520px] flex flex-col">
+          <div className="rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 bg-blue-600 min-h-[520px] flex flex-col">
             {/* Best Value Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -128,7 +128,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Semestral */}
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 md:p-6 relative hover:shadow-lg transition-all duration-300 mx-4 md:mx-0 min-h-[520px] flex flex-col">
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 relative hover:shadow-lg transition-all duration-300 min-h-[520px] flex flex-col">
             {/* Popular Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-full">
