@@ -248,6 +248,146 @@ export function SocialGrowth() {
     createProgressMutation.mutate(data);
   };
 
+  // Estados para edição
+  const [editingProfile, setEditingProfile] = useState<any>(null);
+  const [editingGoal, setEditingGoal] = useState<any>(null);
+  const [editingProgress, setEditingProgress] = useState<any>(null);
+
+  // Mutations para editar dados
+  const updateProfileMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      fetch(`/api/social-growth/profiles/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      setIsProfileModalOpen(false);
+      setEditingProfile(null);
+      profileForm.reset();
+      toast({ title: 'Perfil atualizado com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao atualizar perfil', variant: 'destructive' });
+    }
+  });
+
+  const updateGoalMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      fetch(`/api/social-growth/goals/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      setIsGoalModalOpen(false);
+      setEditingGoal(null);
+      goalForm.reset();
+      toast({ title: 'Meta atualizada com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao atualizar meta', variant: 'destructive' });
+    }
+  });
+
+  // Mutations para excluir dados
+  const deleteProfileMutation = useMutation({
+    mutationFn: (id: number) => 
+      fetch(`/api/social-growth/profiles/${id}`, {
+        method: 'DELETE',
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      toast({ title: 'Perfil excluído com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao excluir perfil', variant: 'destructive' });
+    }
+  });
+
+  const deleteGoalMutation = useMutation({
+    mutationFn: (id: number) => 
+      fetch(`/api/social-growth/goals/${id}`, {
+        method: 'DELETE',
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      toast({ title: 'Meta excluída com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao excluir meta', variant: 'destructive' });
+    }
+  });
+
+  // Funções auxiliares
+  const handleEditProfile = (profile: any) => {
+    setEditingProfile(profile);
+    profileForm.reset({
+      platform: profile.platform,
+      profileName: profile.profileName,
+      profileUrl: profile.profileUrl,
+      currentFollowers: profile.currentFollowers,
+    });
+    setIsProfileModalOpen(true);
+  };
+
+  const handleEditGoal = (goal: any) => {
+    setEditingGoal(goal);
+    goalForm.reset({
+      platform: goal.platform,
+      goalType: goal.goalType,
+      targetValue: goal.targetValue,
+      deadline: goal.deadline,
+    });
+    setIsGoalModalOpen(true);
+  };
+
+  const handleDeleteProfile = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir este perfil?')) {
+      deleteProfileMutation.mutate(id);
+    }
+  };
+
+  const handleDeleteGoal = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir esta meta?')) {
+      deleteGoalMutation.mutate(id);
+    }
+  };
+
+  const handleProfileSubmit = (data: ProfileFormData) => {
+    if (editingProfile) {
+      updateProfileMutation.mutate({ id: editingProfile.id, data });
+    } else {
+      createProfileMutation.mutate(data);
+    }
+  };
+
+  const handleGoalSubmit = (data: GoalFormData) => {
+    if (editingGoal) {
+      updateGoalMutation.mutate({ id: editingGoal.id, data });
+    } else {
+      createGoalMutation.mutate(data);
+    }
+  };
+
+  const resetProfileModal = () => {
+    setEditingProfile(null);
+    profileForm.reset();
+    setIsProfileModalOpen(false);
+  };
+
+  const resetGoalModal = () => {
+    setEditingGoal(null);
+    goalForm.reset();
+    setIsGoalModalOpen(false);
+  };
+
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'instagram':
@@ -520,10 +660,10 @@ export function SocialGrowth() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Adicionar Nova Rede Social</DialogTitle>
+                    <DialogTitle>{editingProfile ? 'Editar Rede Social' : 'Adicionar Nova Rede Social'}</DialogTitle>
                   </DialogHeader>
                   <Form {...profileForm}>
-                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                    <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
                       <FormField
                         control={profileForm.control}
                         name="platform"
@@ -604,7 +744,7 @@ export function SocialGrowth() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockData.profiles.map((profile) => (
+              {profiles.map((profile) => (
                 <Card key={profile.id}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
@@ -613,10 +753,10 @@ export function SocialGrowth() {
                         <span className="capitalize">{profile.platform}</span>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleEditProfile(profile)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteProfile(profile.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
