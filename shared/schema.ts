@@ -315,7 +315,7 @@ export const communityComments = pgTable("communityComments", {
   userId: integer("userId").notNull().references(() => users.id),
   content: text("content").notNull(),
   isHidden: boolean("isHidden").notNull().default(false),
-  parentId: integer("parentId").references(() => communityComments.id), // Para respostas a comentários
+  parentId: integer("parentId"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
