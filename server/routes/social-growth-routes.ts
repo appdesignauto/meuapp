@@ -435,12 +435,13 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
     const totalFollowers = platforms.reduce((sum, p) => sum + p.followers, 0);
     const totalSales = platforms.reduce((sum, p) => sum + p.sales, 0);
 
-    // Tendência de crescimento (últimos 6 meses)
-    const growthTrend = await db
+    // Tendência de crescimento - buscar dados mais recentes de cada mês por plataforma
+    const allData = await db
       .select({
-        month: sql<string>`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`,
-        totalFollowers: sql<number>`sum(${socialGrowthData.followers})`,
-        totalSales: sql<number>`sum(${socialGrowthData.salesFromPlatform})`
+        recordDate: socialGrowthData.recordDate,
+        socialNetworkId: socialGrowthData.socialNetworkId,
+        followers: socialGrowthData.followers,
+        salesFromPlatform: socialGrowthData.salesFromPlatform
       })
       .from(socialGrowthData)
       .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
@@ -450,8 +451,64 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
           gte(socialGrowthData.recordDate, startDate.toISOString().split('T')[0])
         )
       )
-      .groupBy(sql`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`)
-      .orderBy(sql`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`);
+      .orderBy(desc(socialGrowthData.recordDate));
+
+    // Agrupar por mês e plataforma, pegando apenas o valor mais recente
+    const monthlyDataByPlatform = new Map<string, Map<number, { followers: number; sales: number; date: string }>>();
+    
+    allData.forEach(record => {
+      const month = record.recordDate.substring(0, 7); // YYYY-MM
+      
+      if (!monthlyDataByPlatform.has(month)) {
+        monthlyDataByPlatform.set(month, new Map());
+      }
+      
+      const monthData = monthlyDataByPlatform.get(month)!;
+      const currentRecord = monthData.get(record.socialNetworkId);
+      
+      // Manter apenas o registro mais recente de cada plataforma por mês
+      if (!currentRecord || record.recordDate > currentRecord.date) {
+        monthData.set(record.socialNetworkId, {
+          followers: record.followers,
+          sales: record.salesFromPlatform || 0,
+          date: record.recordDate
+        });
+      }
+    });
+
+    // Converter para formato final somando apenas uma vez por plataforma por mês
+    const monthlyData = new Map<string, { followers: number; sales: number }>();
+    
+    monthlyDataByPlatform.forEach((platformData, month) => {
+      let totalFollowers = 0;
+      let totalSales = 0;
+      
+      platformData.forEach(data => {
+        totalFollowers += data.followers;
+        totalSales += data.sales;
+      });
+      
+      monthlyData.set(month, { followers: totalFollowers, sales: totalSales });
+    });
+
+    // Converter para array e calcular crescimento real
+    const sortedMonths = Array.from(monthlyData.entries())
+      .sort(([a], [b]) => a.localeCompare(b));
+    
+    const growthTrend = sortedMonths.map(([month, data], index) => {
+      let growth = 0;
+      if (index > 0) {
+        const prevData = sortedMonths[index - 1][1];
+        growth = data.followers - prevData.followers;
+      }
+      
+      return {
+        month,
+        totalFollowers: data.followers,
+        totalSales: data.sales,
+        growth // Crescimento real do período
+      };
+    });
 
     // Calcular crescimento mensal
     let monthlyGrowth = 0;
