@@ -1,0 +1,372 @@
+PRD – DesignAuto: Painel de Crescimento Social
+📋 Informações do Projeto
+Projeto: DesignAuto
+Módulo: Painel de Crescimento Social
+Versão: 2.0
+Responsável: Equipe de Produto
+Data: Junho de 2025
+Status: Em Desenvolvimento
+
+🎯 1. Visão Geral
+Objetivo Principal
+Desenvolver um módulo completo dentro do DesignAuto que permita aos usuários monitorar, analisar e otimizar o crescimento de suas redes sociais (Instagram e Facebook), demonstrando o ROI real das artes criadas pela plataforma no crescimento de seguidores e vendas.
+Problema a Resolver
+
+Usuários não conseguem mensurar o impacto das artes do DesignAuto em suas redes sociais
+Falta de visibilidade sobre o crescimento orgânico vs. crescimento impulsionado por conteúdo visual
+Ausência de metas claras e acompanhamento de progresso
+Dificuldade em justificar o investimento na plataforma DesignAuto
+
+Proposta de Valor
+
+Para o Usuário: Demonstração clara do ROI das artes criadas
+Para o DesignAuto: Aumento da retenção e justificativa de valor da plataforma
+Para o Negócio: Dados concretos para tomada de decisões estratégicas
+
+
+🔍 2. Análise de Mercado
+Público-Alvo
+
+Primário: Pequenos e médios empresários do setor automotivo
+Secundário: Agências de marketing digital especializadas em automotive
+Terciário: Freelancers e designers que atendem o setor automotivo
+
+Concorrentes
+
+Diretos: Canva Pro Analytics, Adobe Creative Cloud Analytics
+Indiretos: Hootsuite Analytics, Sprout Social, Buffer Analytics
+Diferencial: Foco específico no setor automotivo + integração nativa com criação de artes
+
+
+🎨 3. Design System & UX
+Theme Profissional
+
+Cor Primária: hsl(212, 72%, 22%) - Azul escuro profissional (#1e3a8a)
+Cor Secundária: Vermelho #ef4444 para alertas e CTAs críticos
+Background: Gradiente from-blue-50 to-white
+Bordas: Radius 0.75rem (12px) para consistência
+Sombras: shadow-md hover:shadow-lg com transições suaves
+
+Padrões de Layout
+
+Responsividade: Mobile-first (2 cols → 4 cols desktop)
+Spacing: Sistema baseado em múltiplos de 8px
+Typography: tracking-tight para títulos, hierarquia clara
+Animações: duration-200/300 para micro-interações
+
+
+🧩 4. Escopo Funcional
+4.1 Funcionalidades Principais
+Dashboard Principal
+
+Cards de métricas-chave com comparação percentual mensal
+Alertas inteligentes baseados em performance e metas
+Gráficos de tendência para seguidores e vendas
+Cards por plataforma com resumo visual atrativo
+
+Gestão de Redes Sociais
+
+Cadastro de perfis (Instagram/Facebook)
+Validação de URLs e verificação de existência
+Edição e remoção de perfis conectados
+Status de conexão (ativo/inativo)
+
+Sistema de Metas
+
+Criação de metas por plataforma e métrica
+Tipos suportados: Seguidores, Vendas, Engajamento
+Configuração de prazos e marcos intermediários
+Cálculo automático de progresso e previsões
+Alertas de performance baseados em desvios
+
+Histórico e Analytics
+
+Registro manual de dados mensais
+Importação via CSV para dados históricos
+Edição inline de registros existentes
+Exportação de relatórios em PDF/Excel
+Comparações período a período
+
+4.2 Funcionalidades Secundárias
+Integrações Futuras
+
+API do Instagram Business (Fase 2)
+Facebook Graph API (Fase 2)
+Google Analytics para correlação com tráfego web
+WhatsApp Business API para expandir canais
+
+Analytics Avançados
+
+Segmentação por tipo de arte (stories, posts, anúncios)
+Correlação arte × crescimento usando IA
+Benchmark com mercado automotivo
+ROI Calculator baseado no investimento em artes
+
+
+🗄️ 5. Arquitetura de Dados
+5.1 Modelo de Banco de Dados
+Tabela: social_profiles
+sqlCREATE TABLE social_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    platform VARCHAR(20) NOT NULL CHECK (platform IN ('instagram', 'facebook')),
+    profile_name VARCHAR(100) NOT NULL,
+    profile_url TEXT NOT NULL,
+    profile_handle VARCHAR(50),
+    is_verified BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    followers_count INTEGER DEFAULT 0,
+    last_sync_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    
+    UNIQUE(user_id, platform, profile_handle)
+);
+Tabela: social_goals
+sqlCREATE TABLE social_goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    platform VARCHAR(20) NOT NULL,
+    goal_type VARCHAR(20) NOT NULL CHECK (goal_type IN ('followers', 'sales', 'engagement')),
+    target_value INTEGER NOT NULL CHECK (target_value > 0),
+    current_value INTEGER DEFAULT 0,
+    start_date DATE NOT NULL,
+    deadline DATE NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    
+    CHECK (deadline > start_date)
+);
+Tabela: social_progress
+sqlCREATE TABLE social_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    platform VARCHAR(20) NOT NULL,
+    metric_type VARCHAR(20) NOT NULL,
+    month_year VARCHAR(7) NOT NULL, -- Format: 2025-06
+    value INTEGER NOT NULL CHECK (value >= 0),
+    growth_rate DECIMAL(5,2), -- Percentual de crescimento
+    data_source VARCHAR(20) DEFAULT 'manual' CHECK (data_source IN ('manual', 'api', 'import')),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    
+    UNIQUE(user_id, platform, metric_type, month_year)
+);
+Tabela: social_alerts
+sqlCREATE TABLE social_alerts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    goal_id UUID REFERENCES social_goals(id),
+    alert_type VARCHAR(20) NOT NULL CHECK (alert_type IN ('warning', 'success', 'info', 'danger')),
+    title VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT false,
+    is_dismissed BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+5.2 Índices para Performance
+sql-- Índices para consultas frequentes
+CREATE INDEX idx_social_profiles_user_platform ON social_profiles(user_id, platform);
+CREATE INDEX idx_social_goals_user_active ON social_goals(user_id, is_active);
+CREATE INDEX idx_social_progress_user_month ON social_progress(user_id, month_year DESC);
+CREATE INDEX idx_social_alerts_user_unread ON social_alerts(user_id, is_read, created_at DESC);
+
+🔧 6. Especificações Técnicas
+6.1 APIs Backend
+Endpoints Principais
+typescript// Perfis Sociais
+POST   /api/v1/social/profiles              // Criar perfil
+GET    /api/v1/social/profiles              // Listar perfis do usuário
+PUT    /api/v1/social/profiles/:id          // Atualizar perfil
+DELETE /api/v1/social/profiles/:id          // Remover perfil
+
+// Metas
+POST   /api/v1/social/goals                 // Criar meta
+GET    /api/v1/social/goals                 // Listar metas
+PUT    /api/v1/social/goals/:id             // Atualizar meta
+DELETE /api/v1/social/goals/:id             // Remover meta
+
+// Progresso
+POST   /api/v1/social/progress              // Registrar progresso
+GET    /api/v1/social/progress              // Obter histórico
+PUT    /api/v1/social/progress/:id          // Editar registro
+DELETE /api/v1/social/progress/:id          // Remover registro
+
+// Analytics
+GET    /api/v1/social/dashboard             // Dados do dashboard
+GET    /api/v1/social/analytics/growth      // Análise de crescimento
+GET    /api/v1/social/analytics/forecasts   // Previsões baseadas em tendências
+POST   /api/v1/social/analytics/reports     // Gerar relatórios personalizados
+
+// Alertas
+GET    /api/v1/social/alerts                // Listar alertas
+PUT    /api/v1/social/alerts/:id/read       // Marcar como lido
+DELETE /api/v1/social/alerts/:id            // Dismissar alerta
+Estruturas de Response
+typescript// Dashboard Response
+interface DashboardData {
+  metrics: {
+    total_followers: number;
+    total_sales: number;
+    active_goals: number;
+    connected_platforms: number;
+    monthly_growth: {
+      followers: number;
+      sales: number;
+    };
+  };
+  alerts: Alert[];
+  goals_progress: GoalProgress[];
+  charts_data: {
+    followers_trend: ChartDataPoint[];
+    sales_trend: ChartDataPoint[];
+  };
+}
+
+// Goal Progress
+interface GoalProgress {
+  id: string;
+  platform: 'instagram' | 'facebook';
+  type: 'followers' | 'sales' | 'engagement';
+  current: number;
+  target: number;
+  percentage: number;
+  deadline: string;
+  projected_completion: string | null;
+  status: 'on_track' | 'at_risk' | 'behind' | 'completed';
+}
+6.2 Validações e Regras de Negócio
+Validações de Input
+
+URLs de perfil: Regex para validar formato Instagram/Facebook
+Datas: Meta deadline deve ser futura, máximo 2 anos
+Valores: Números inteiros positivos, máximo 10 milhões
+Duplicatas: Não permitir perfis duplicados por usuário
+
+Regras de Cálculo
+typescript// Cálculo de crescimento percentual
+const growthRate = ((currentValue - previousValue) / previousValue) * 100;
+
+// Projeção de meta
+const monthsRemaining = differenceInMonths(deadline, now);
+const requiredMonthlyGrowth = (target - current) / monthsRemaining;
+
+// Status da meta
+const getGoalStatus = (current: number, target: number, deadline: Date) => {
+  const progress = (current / target) * 100;
+  const timeProgress = (Date.now() - startDate) / (deadline - startDate) * 100;
+  
+  if (progress >= 100) return 'completed';
+  if (progress >= timeProgress * 0.8) return 'on_track';
+  if (progress >= timeProgress * 0.6) return 'at_risk';
+  return 'behind';
+};
+
+📱 7. Especificações de Interface
+7.1 Componentes React
+Dashboard Principal
+typescript// DashboardPage.tsx
+interface DashboardProps {
+  user: User;
+  dateRange?: DateRange;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ user, dateRange }) => {
+  // Componentes filhos:
+  // - MetricsCards (4 cards principais)
+  // - AlertsPanel (alertas de performance)
+  // - GoalsProgress (progresso das metas)
+  // - TrendCharts (gráficos de linha)
+  // - PlatformCards (resumo Instagram/Facebook)
+};
+Componentes Reutilizáveis
+typescript// MetricCard.tsx
+interface MetricCardProps {
+  title: string;
+  value: number | string;
+  growth?: number;
+  icon: ReactNode;
+  color: 'blue' | 'green' | 'purple' | 'orange';
+  loading?: boolean;
+}
+
+// ProgressBar.tsx
+interface ProgressBarProps {
+  current: number;
+  target: number;
+  color?: 'green' | 'yellow' | 'red';
+  showPercentage?: boolean;
+  animate?: boolean;
+}
+
+// GoalCard.tsx
+interface GoalCardProps {
+  goal: GoalProgress;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  showActions?: boolean;
+}
+7.2 Estados e Context
+typescript// SocialContext.tsx
+interface SocialContextType {
+  profiles: SocialProfile[];
+  goals: Goal[];
+  progress: ProgressData[];
+  alerts: Alert[];
+  loading: boolean;
+  error: string | null;
+  
+  // Actions
+  addProfile: (profile: CreateProfileData) => Promise<void>;
+  updateProfile: (id: string, data: UpdateProfileData) => Promise<void>;
+  deleteProfile: (id: string) => Promise<void>;
+  
+  addGoal: (goal: CreateGoalData) => Promise<void>;
+  updateGoal: (id: string, data: UpdateGoalData) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+  
+  addProgress: (data: CreateProgressData) => Promise<void>;
+  updateProgress: (id: string, data: UpdateProgressData) => Promise<void>;
+  deleteProgress: (id: string) => Promise<void>;
+  
+  refreshData: () => Promise<void>;
+  dismissAlert: (id: string) => Promise<void>;
+}
+7.3 Responsividade
+css/* Breakpoints seguindo padrão da plataforma */
+.metrics-grid {
+  @apply grid gap-4;
+  grid-template-columns: repeat(2, 1fr); /* Mobile: 2 cols */
+}
+
+@media (min-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr); /* Desktop: 4 cols */
+  }
+}
+
+@media (min-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr); /* Gráficos lado a lado */
+  }
+}
+
+🔒 8. Segurança e Performance
+8.1 Segurança
+
+Autenticação: JWT tokens com refresh automático
+Autorização: Middleware para verificar ownership dos dados
+Sanitização: Validação rigorosa de inputs, especialmente URLs
+Rate Limiting: 100 requests/minuto por usuário
+Logs de Auditoria: Registro de todas as alterações de dados
+
+8.2 Performance
+
+Caching: Redis para dados de dashboard (TTL: 5 minutos)
+Database: Connection pooling e query optimization
+Frontend: React Query para cache de API calls
+Lazy Loading: Componentes e gráficos carregados sob demanda
+Compressão: Gzip para todas as respostas de API
