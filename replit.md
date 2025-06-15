@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Completed automatic growth calculation system with initial follower tracking
+  - Fixed analytics endpoint to display initial followers from social networks when no historical data exists
+  - System now correctly shows total followers including initial counts (e.g., 11,569 from Instagram)
+  - Enhanced backend logic to use initialFollowers field for accurate dashboard metrics
+  - Users can now see their current follower counts immediately after adding social networks
+  - Growth calculations work automatically when adding new data entries
 - June 15, 2025: Successfully unified "Adicionar Dados" and "Histórico" buttons into single professional "Dados Sociais" interface
   - Removed duplicate functionality and obsolete code causing TypeScript errors
   - Created clean unified modal with SocialHistoryView component for complete data management

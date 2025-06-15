@@ -437,11 +437,11 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
           lastUpdate: latestRecord.recordDate
         });
       } else {
-        // Se não há dados, adicionar com 0
+        // Se não há dados históricos, usar os seguidores iniciais da rede
         acc.push({
           platform: network.platform,
           username: network.username,
-          followers: 0,
+          followers: network.initialFollowers || 0,
           sales: 0,
           lastUpdate: null
         });
