@@ -495,8 +495,10 @@ export default function SocialHistoryView() {
                   </SelectTrigger>
                   <SelectContent>
                     {networks.map((network: SocialNetwork) => (
-                      <SelectItem key={network.id} value={network.id.toString()}>
-                        {getPlatformDisplayName(network.platform)} - {network.username}
+                      <SelectItem key={network.id} value={network.id.toString()} className="pl-3 pr-2">
+                        <span className="truncate">
+                          {getPlatformDisplayName(network.platform)} - {network.username}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
