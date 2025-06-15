@@ -384,32 +384,36 @@ export default function SocialHistoryView() {
                               <MoreHorizontal size={16} />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuContent align="end" className="w-48 p-0 shadow-lg border border-gray-200 rounded-lg">
                             {Object.values(monthData).map((data, index) => {
-                              const platformColor = data.networkPlatform === 'instagram' ? 'bg-pink-500' : 'bg-blue-500';
+                              const platformColor = data.networkPlatform === 'instagram' 
+                                ? 'bg-gradient-to-r from-pink-500 to-pink-600' 
+                                : 'bg-gradient-to-r from-blue-500 to-blue-600';
                               const platformName = data.networkPlatform === 'instagram' ? 'Instagram' : 'Facebook';
                               
                               return (
                                 <React.Fragment key={data.id}>
-                                  {index > 0 && <DropdownMenuSeparator />}
-                                  <div className="px-2 py-1">
-                                    <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white ${platformColor} mb-1`}>
+                                  {index > 0 && <DropdownMenuSeparator className="mx-2" />}
+                                  <div className="p-3">
+                                    <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold text-white ${platformColor} mb-2 shadow-sm`}>
                                       {platformName}
                                     </div>
-                                    <DropdownMenuItem
-                                      onClick={() => handleEditData(data)}
-                                      className="flex items-center gap-2 text-gray-700 hover:text-blue-600 cursor-pointer text-sm"
-                                    >
-                                      <Edit3 size={12} />
-                                      Editar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => handleDeleteData(data.id)}
-                                      className="flex items-center gap-2 text-gray-700 hover:text-red-600 cursor-pointer text-sm"
-                                    >
-                                      <Trash2 size={12} />
-                                      Excluir
-                                    </DropdownMenuItem>
+                                    <div className="space-y-1">
+                                      <DropdownMenuItem
+                                        onClick={() => handleEditData(data)}
+                                        className="flex items-center gap-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 cursor-pointer text-sm py-2 px-2 rounded-md transition-colors"
+                                      >
+                                        <Edit3 size={14} />
+                                        Editar
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => handleDeleteData(data.id)}
+                                        className="flex items-center gap-3 text-gray-700 hover:text-red-600 hover:bg-red-50 cursor-pointer text-sm py-2 px-2 rounded-md transition-colors"
+                                      >
+                                        <Trash2 size={14} />
+                                        Excluir
+                                      </DropdownMenuItem>
+                                    </div>
                                   </div>
                                 </React.Fragment>
                               );
