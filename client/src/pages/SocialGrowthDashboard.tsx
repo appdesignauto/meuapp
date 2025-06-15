@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, TrendingUp, Users, DollarSign, BarChart3, Calendar, Trash2, Edit3, Instagram, Facebook, MessageCircle, Youtube, Linkedin, Twitter, History } from 'lucide-react';
+import { Plus, TrendingUp, Users, DollarSign, BarChart3, Calendar, Trash2, Edit3, Instagram, Facebook, MessageCircle, Youtube, Linkedin, Twitter, History, Target } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import SocialGoalsView from '@/components/social/SocialGoalsView';
 import SocialHistoryView from '@/components/social/SocialHistoryView';
-import { Target } from 'lucide-react';
 
 // Types
 interface SocialNetwork {
