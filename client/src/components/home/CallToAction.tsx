@@ -8,9 +8,9 @@ const CallToAction = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="mb-8 md:mb-0 md:w-1/2">
-            <h2 className="text-3xl font-bold mb-4">Pronto para revolucionar suas vendas?</h2>
+            <h2 className="text-3xl font-bold mb-4">Transforme suas vendas com designs profissionais</h2>
             <p className="text-neutral-300 text-lg mb-6">
-              Junte-se a milhares de vendedores que já melhoraram seus resultados com o DesignAuto App.
+              Acesse milhares de artes exclusivas e tenha o diferencial que seus clientes procuram. Comece hoje mesmo!
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/register">

@@ -118,6 +118,9 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Added trust guarantees section below pricing with 7-day guarantee, premium support, and weekly updates
+  - Implemented harmonious design with colored icons and clean layout matching provided reference
+  - Enhanced pricing section credibility with professional trust indicators
 - June 15, 2025: Enhanced user experience by connecting "Ver Demonstração" button to arts showcase section
   - Modified Hero component button to scroll smoothly to arts gallery instead of separate demo page
   - Added arts-showcase ID to ArtGallery component for proper scroll targeting

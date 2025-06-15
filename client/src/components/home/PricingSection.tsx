@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check, Award, Clock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const PricingSection = () => {
@@ -173,6 +173,45 @@ const PricingSection = () => {
             >
               Começar Agora
             </Button>
+          </div>
+        </div>
+
+        {/* Trust/Guarantee Section */}
+        <div className="mt-16 pt-12 border-t border-gray-200">
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            
+            {/* Garantia de 7 dias */}
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <Award className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Garantia de 7 dias</h3>
+              <p className="text-sm text-gray-600">
+                Não ficou satisfeito? Devolvemos 100% do seu dinheiro em até 7 dias.
+              </p>
+            </div>
+
+            {/* Suporte Premium */}
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <Clock className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Suporte Premium</h3>
+              <p className="text-sm text-gray-600">
+                Nossa equipe está pronta para ajudar você a aproveitar ao máximo a plataforma.
+              </p>
+            </div>
+
+            {/* Sempre Atualizado */}
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
+                <Sparkles className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Sempre Atualizado</h3>
+              <p className="text-sm text-gray-600">
+                Novos templates e recursos adicionados semanalmente, sem custo extra.
+              </p>
+            </div>
           </div>
         </div>
       </div>
