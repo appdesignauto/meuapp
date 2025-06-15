@@ -400,6 +400,25 @@ export default function SocialGrowthDashboard() {
           </div>
         </div>
 
+        {/* Growth Highlight Banner */}
+        {analytics && analytics.monthlyGrowth > 0 && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-8 h-8" />
+                <div>
+                  <h3 className="text-lg font-semibold">Crescimento Identificado!</h3>
+                  <p className="text-green-100">Você ganhou +{Math.round(analytics.monthlyGrowth).toLocaleString()} seguidores</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold">+{Math.round(analytics.monthlyGrowth).toLocaleString()}</p>
+                <p className="text-xs text-green-100">novos seguidores</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Analytics Cards */}
         {analytics && (
           <>

@@ -533,12 +533,18 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       };
     });
 
-    // Calcular crescimento mensal
+    // Calcular crescimento baseado nos seguidores iniciais vs atuais
     let monthlyGrowth = 0;
+    const totalInitialFollowers = userNetworks.reduce((sum, network) => sum + (network.initialFollowers || 0), 0);
+    
+    // Se há dados históricos, usar crescimento do período
     if (growthTrend.length >= 2) {
       const current = growthTrend[growthTrend.length - 1]?.totalFollowers || 0;
       const previous = growthTrend[growthTrend.length - 2]?.totalFollowers || 0;
-      monthlyGrowth = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+      monthlyGrowth = current - previous;
+    } else if (totalInitialFollowers > 0 && totalFollowers > totalInitialFollowers) {
+      // Se não há dados históricos suficientes, usar crescimento desde o início
+      monthlyGrowth = totalFollowers - totalInitialFollowers;
     }
 
     // Buscar metas ativas (não expiradas)

@@ -274,9 +274,9 @@ export default function SocialGoalsView() {
           const requiredGrowth = Math.ceil((goal.targetValue - goal.currentValue) / Math.max(daysLeft, 1));
           
           return (
-            <div key={goal.id} className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors">
-              {/* Header compacto */}
-              <div className="flex items-center justify-between mb-3">
+            <div key={goal.id} className="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded">
+              {/* Layout minimalista original */}
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Icon className="w-4 h-4 text-slate-600" />
                   <span className="text-sm font-medium text-slate-900">
