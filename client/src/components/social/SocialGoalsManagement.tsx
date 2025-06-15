@@ -70,10 +70,18 @@ export default function SocialGoalsManagement({ isOpen, onClose }: SocialGoalsMa
 
   // Mutations
   const createGoalMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/social-growth/goals', {
-      method: 'POST',
-      body: data
-    }),
+    mutationFn: async (data: any) => {
+      console.log('[FRONTEND] Enviando dados para API:', data);
+      const result = await apiRequest('/api/social-growth/goals', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('[FRONTEND] Resposta da API:', result);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
       setIsAddingGoal(false);
@@ -83,10 +91,19 @@ export default function SocialGoalsManagement({ isOpen, onClose }: SocialGoalsMa
         description: "Meta adicionada com sucesso!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('[FRONTEND] Erro ao criar meta:', error);
+      let errorMessage = "Erro ao criar meta. Tente novamente.";
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Erro",
-        description: "Erro ao criar meta. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

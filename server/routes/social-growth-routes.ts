@@ -703,11 +703,14 @@ router.get('/goals', requireAuth, async (req: any, res) => {
 router.post('/goals', requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
+    console.log('[GOALS] Dados recebidos:', req.body);
+    console.log('[GOALS] UserId:', userId);
     
     const validatedData = insertSocialGoalSchema.parse({
       ...req.body,
       userId
     });
+    console.log('[GOALS] Dados validados:', validatedData);
 
     // Verificar se a rede social pertence ao usuário
     const network = await db
@@ -721,7 +724,10 @@ router.post('/goals', requireAuth, async (req: any, res) => {
       )
       .limit(1);
 
+    console.log('[GOALS] Rede encontrada:', network);
+
     if (network.length === 0) {
+      console.log('[GOALS] Rede social não encontrada para networkId:', validatedData.networkId, 'userId:', userId);
       return res.status(404).json({ message: 'Rede social não encontrada' });
     }
 
@@ -740,20 +746,24 @@ router.post('/goals', requireAuth, async (req: any, res) => {
       .limit(1);
 
     if (existingGoal.length > 0) {
+      console.log('[GOALS] Meta duplicada encontrada:', existingGoal[0]);
       return res.status(400).json({ 
         message: 'Já existe uma meta ativa deste tipo para esta rede social' 
       });
     }
 
+    console.log('[GOALS] Criando nova meta com dados:', validatedData);
     const [newGoal] = await db
       .insert(socialGoals)
       .values(validatedData)
       .returning();
 
+    console.log('[GOALS] Meta criada com sucesso:', newGoal);
     res.status(201).json(newGoal);
   } catch (error) {
-    console.error('Erro ao criar meta:', error);
+    console.error('[GOALS] Erro ao criar meta:', error);
     if (error instanceof z.ZodError) {
+      console.error('[GOALS] Erro de validação Zod:', error.errors);
       return res.status(400).json({ 
         message: 'Dados inválidos',
         errors: error.errors 
