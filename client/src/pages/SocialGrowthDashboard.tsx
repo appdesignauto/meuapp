@@ -441,7 +441,7 @@ export default function SocialGrowthDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-slate-900">{(analytics?.totalFollowers ?? 0).toLocaleString()}</div>
-                  <p className="text-xs text-green-600">+{analytics?.monthlyGrowth ?? 0}% este mês</p>
+                  <p className="text-xs text-green-600">+{Math.round(analytics?.monthlyGrowth ?? 0).toLocaleString()} este período</p>
                 </CardContent>
               </Card>
 

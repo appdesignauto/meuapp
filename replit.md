@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Enhanced growth display with prominent +4,431 follower increase banner and restored minimalist goals layout
+  - Added green highlight banner showing "Crescimento Identificado!" with clear +4,431 follower growth display
+  - Changed analytics card from "Crescimento Mensal" to "Crescimento Total" displaying absolute numbers instead of percentages
+  - Restored original minimalist "Minhas Metas" layout removing excessive visual elements added without permission
+  - System now prominently displays real Instagram growth from 11,569 to 16,000 followers with professional banner
+  - Maintained clean single-line goal layout: values / progress bar / deadline as originally requested
 - June 15, 2025: Completed automatic growth calculation system with initial follower tracking
   - Fixed analytics endpoint to display initial followers from social networks when no historical data exists
   - System now correctly shows total followers including initial counts (e.g., 11,569 from Instagram)

@@ -302,50 +302,18 @@ export default function SocialGoalsView() {
                 </div>
               </div>
               
-              {/* Valores e progresso em linha compacta */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-slate-900">
-                    {goal.currentValue.toLocaleString()}
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    / {goal.targetValue.toLocaleString()}
-                  </span>
-                </div>
-                <span className="text-sm text-slate-600">
-                  {progress.toFixed(0)}%
+              {/* Layout minimalista original */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-900">
+                  {goal.currentValue.toLocaleString()} / {goal.targetValue.toLocaleString()}
                 </span>
-              </div>
-              
-              {/* Barra de progresso simples */}
-              <div className="w-full bg-slate-100 rounded-full h-2 mb-2">
-                <div 
-                  className={`h-2 rounded-full transition-all ${progressColor}`}
-                  style={{ width: `${Math.min(progress, 100)}%` }}
-                ></div>
-              </div>
-              
-              {/* Info de deadline compacta */}
-              <div className="text-xs text-slate-500">
-                {daysLeft > 0 ? (
-                  `${daysLeft} dias até ${formattedDate}`
-                ) : daysLeft === 0 ? (
-                  'Vence hoje'
-                ) : (
-                  <span className="text-red-600">Vencida em {formattedDate}</span>
-                )}
-              </div>
-              
-              {/* Descrição se houver */}
-              {goal.description && (
-                <div className="mt-3 text-sm text-slate-600 bg-white rounded-lg p-3 border border-slate-100">
-                  {goal.description}
+                <div className="flex-1 bg-slate-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-blue-500 h-1.5 rounded-full transition-all"
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  ></div>
                 </div>
-              )}
-              
-              {/* Badge de status */}
-              <div className="mt-4 flex justify-end">
-                {getStatusBadge(goal)}
+                <span className="text-xs text-slate-500">{formattedDate}</span>
               </div>
             </div>
           );
