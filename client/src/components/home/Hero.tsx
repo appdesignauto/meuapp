@@ -140,7 +140,12 @@ const Hero = () => {
                 <Button 
                   variant="outline" 
                   className="border-blue-400 text-blue-600 hover:bg-blue-50 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center"
-                  onClick={() => setLocation('/demo')}
+                  onClick={() => {
+                    const artsSection = document.getElementById('arts-showcase');
+                    if (artsSection) {
+                      artsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
                   Ver Demonstração
                 </Button>

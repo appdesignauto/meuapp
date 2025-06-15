@@ -118,6 +118,10 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Enhanced user experience by connecting "Ver Demonstração" button to arts showcase section
+  - Modified Hero component button to scroll smoothly to arts gallery instead of separate demo page
+  - Added arts-showcase ID to ArtGallery component for proper scroll targeting
+  - Improved homepage flow by keeping users engaged with immediate content preview
 - June 14, 2025: Finalized pricing section design with optimized color hierarchy and badge sizing
   - Applied unified blue color scheme: blue-600 for prices/buttons, blue-500 for "Mais Popular" badge
   - Implemented green-500 for "Melhor Valor" badge and discount badges creating clear value messaging
