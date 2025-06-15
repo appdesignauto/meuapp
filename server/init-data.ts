@@ -20,21 +20,21 @@ export async function initializeDatabase() {
   try {
     console.log("Inicializando o banco de dados...");
     
-    // Quick database connection test with timeout
+    // Retry logic for database connection
+    let retries = 3;
     let existingCategories;
-    try {
-      // Set a reasonable timeout for the initial check
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database connection timeout')), 5000)
-      );
-      
-      const dbPromise = db.select().from(categories).limit(1);
-      
-      existingCategories = await Promise.race([dbPromise, timeoutPromise]);
-    } catch (error) {
-      console.log("Database connection issue during initialization, will try to continue:", error);
-      // Continue with initialization attempt
-      existingCategories = [];
+    
+    while (retries > 0) {
+      try {
+        // Verifica se já existem categorias
+        existingCategories = await db.select().from(categories);
+        break;
+      } catch (error) {
+        retries--;
+        console.log(`Database connection failed, retrying... (${retries} attempts left)`);
+        if (retries === 0) throw error;
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
     
     if (existingCategories && existingCategories.length > 0) {

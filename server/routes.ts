@@ -76,7 +76,6 @@ import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testa
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (versão completamente funcional)
  // Rotas para estatísticas dos reports
 // Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
-import socialGrowthRouter from './routes/social-growth-routes'; // Rotas para o sistema de crescimento social
 
 import { PrismaClient } from '@prisma/client';
 
@@ -8849,9 +8848,6 @@ app.use('/api/reports-v2', (req, res, next) => {
       });
     }
   });
-
-  // Rotas do sistema de crescimento social
-  app.use("/api/social-growth", socialGrowthRouter);
 
   return httpServer;
 }

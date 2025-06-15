@@ -45,8 +45,6 @@ import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
-import SocialGrowthDashboard from "@/pages/SocialGrowthDashboard";
-import CrescimentoSocial from "@/pages/CrescimentoSocial";
 
 // Páginas do Footer
 import About from "@/pages/About";
@@ -178,7 +176,6 @@ function AppRoutes() {
       <Route path="/videoaulas" component={VideoaulasPage} />
       <Route path="/ferramentas" component={FerramentasPage} />
       <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
-      <Route path="/crescimento-social" component={CrescimentoSocial} />
       
       {/* Páginas do Footer */}
       <Route path="/sobre" component={About} />
@@ -248,7 +245,6 @@ function AppRoutes() {
       <ProtectedPainelRoute path="/painel/downloads" component={PainelDownloads} />
       <ProtectedPainelRoute path="/painel/assinatura" component={PainelAssinatura} />
       <ProtectedPainelRoute path="/painel/perfil" component={PainelPerfil} />
-      <ProtectedPainelRoute path="/painel/crescimento-social" component={SocialGrowthDashboard} />
       
       {/* Redirecionamento da raiz do painel para /painel/inicio */}
       <Route path="/painel">

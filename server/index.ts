@@ -201,13 +201,23 @@ app.use((req, res, next) => {
       console.warn("Environment validation warning:", envError);
     }
     
-    // Minimal database initialization - skip heavy operations for now
-    console.log("Iniciando modo simplificado...");
+    // Aguardar conexão do banco antes de prosseguir
+    console.log("Aguardando conexão com banco de dados...");
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Inicializar o banco de dados com dados
     try {
-      // Basic connectivity test without blocking operations
-      console.log("Testando conexão com banco...");
+      await initializeDatabase();
+      console.log("Banco de dados inicializado com sucesso");
     } catch (dbError) {
-      console.log("Banco não disponível, continuando em modo básico:", dbError);
+      console.error("Erro na inicialização do banco, continuando sem dados iniciais:", dbError);
+    }
+    
+    // Criar usuário administrador
+    try {
+      await createAdminUser();
+    } catch (adminError) {
+      console.error("Erro ao criar usuário admin, continuando:", adminError);
     }
     
     // Registrar rotas de administração
@@ -545,20 +555,10 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  
-  server.on('error', (err: any) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${port} is already in use. Attempting to stop existing processes...`);
-      process.exit(1);
-    } else {
-      console.error('Server error:', err);
-      throw err;
-    }
-  });
-
   server.listen({
     port,
     host: "0.0.0.0",
+    reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
   });
