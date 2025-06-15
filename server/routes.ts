@@ -1,7 +1,7 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes, collaborationRequests, insertCollaborationRequestSchema, affiliateRequests, insertAffiliateRequestSchema, analyticsSettings } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes, collaborationRequests, insertCollaborationRequestSchema, affiliateRequests, insertAffiliateRequestSchema, analyticsSettings, socialProfiles, socialGoals, socialProgress, socialAlerts, insertSocialProfileSchema, insertSocialGoalSchema, insertSocialProgressSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
@@ -10,7 +10,7 @@ import { isAuthenticated } from "./middlewares/auth";
 import imageUploadRoutes from "./routes/image-upload";
 import { setupFollowRoutesSimple } from "./routes/follows-simple";
 import { db } from "./db";
-import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray, isNotNull } from "drizzle-orm";
+import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray, isNotNull, gte } from "drizzle-orm";
 import { randomBytes, scrypt } from "crypto";
 import { promisify } from "util";
 import bcrypt from "bcrypt";
@@ -6426,7 +6426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gerenciar perfis de redes sociais
-  app.get("/api/social/profiles", isAuth, async (req, res) => {
+  app.get("/api/social/profiles", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const profiles = await db
@@ -6442,7 +6442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/social/profiles", isAuth, async (req, res) => {
+  app.post("/api/social/profiles", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const profileData = insertSocialProfileSchema.parse({
@@ -6462,7 +6462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/social/profiles/:id", isAuth, async (req, res) => {
+  app.put("/api/social/profiles/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const profileId = parseInt(req.params.id);
@@ -6495,7 +6495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/social/profiles/:id", isAuth, async (req, res) => {
+  app.delete("/api/social/profiles/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const profileId = parseInt(req.params.id);
@@ -6522,7 +6522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gerenciar metas de crescimento
-  app.get("/api/social/goals", isAuth, async (req, res) => {
+  app.get("/api/social/goals", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const goals = await db
@@ -6538,7 +6538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/social/goals", isAuth, async (req, res) => {
+  app.post("/api/social/goals", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const goalData = insertSocialGoalSchema.parse({
@@ -6558,7 +6558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/social/goals/:id", isAuth, async (req, res) => {
+  app.put("/api/social/goals/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const goalId = parseInt(req.params.id);
@@ -6591,7 +6591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/social/goals/:id", isAuth, async (req, res) => {
+  app.delete("/api/social/goals/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const goalId = parseInt(req.params.id);
@@ -6618,7 +6618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gerenciar progresso mensal
-  app.get("/api/social/progress", isAuth, async (req, res) => {
+  app.get("/api/social/progress", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const { platform, metricType, monthYear } = req.query;
@@ -6647,7 +6647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/social/progress", isAuth, async (req, res) => {
+  app.post("/api/social/progress", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const progressData = insertSocialProgressSchema.parse({
@@ -6696,7 +6696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gerenciar alertas
-  app.get("/api/social/alerts", isAuth, async (req, res) => {
+  app.get("/api/social/alerts", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const alerts = await db
@@ -6712,7 +6712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/social/alerts/:id/read", isAuth, async (req, res) => {
+  app.put("/api/social/alerts/:id/read", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const alertId = parseInt(req.params.id);
@@ -6729,7 +6729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/social/alerts/:id", isAuth, async (req, res) => {
+  app.delete("/api/social/alerts/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const alertId = parseInt(req.params.id);
