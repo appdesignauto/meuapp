@@ -791,10 +791,10 @@ export function SocialGrowth() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Criar Nova Meta</DialogTitle>
+                    <DialogTitle>{editingGoal ? 'Editar Meta' : 'Criar Nova Meta'}</DialogTitle>
                   </DialogHeader>
                   <Form {...goalForm}>
-                    <form onSubmit={goalForm.handleSubmit(onGoalSubmit)} className="space-y-4">
+                    <form onSubmit={goalForm.handleSubmit(handleGoalSubmit)} className="space-y-4">
                       <FormField
                         control={goalForm.control}
                         name="platform"
@@ -884,9 +884,9 @@ export function SocialGrowth() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockData.goals.map((goal) => {
-                const progress = calculateProgress(goal.currentValue, goal.targetValue);
-                const remaining = goal.targetValue - goal.currentValue;
+              {goals.map((goal) => {
+                const progress = calculateProgress(goal.currentValue || 0, goal.targetValue);
+                const remaining = goal.targetValue - (goal.currentValue || 0);
                 const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                 
                 return (
@@ -900,10 +900,10 @@ export function SocialGrowth() {
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleEditGoal(goal)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteGoal(goal.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -916,7 +916,7 @@ export function SocialGrowth() {
                             {goal.goalType === 'followers' ? 'Seguidores' : 'Vendas'}
                           </p>
                           <div className="text-2xl font-bold">
-                            {formatNumber(goal.currentValue)} / {formatNumber(goal.targetValue)}
+                            {formatNumber(goal.currentValue || 0)} / {formatNumber(goal.targetValue)}
                           </div>
                         </div>
                         
@@ -970,7 +970,7 @@ export function SocialGrowth() {
                     <DialogTitle>Atualizar Dados Mensais</DialogTitle>
                   </DialogHeader>
                   <Form {...progressForm}>
-                    <form onSubmit={progressForm.handleSubmit(onProgressSubmit)} className="space-y-4">
+                    <form onSubmit={progressForm.handleSubmit(handleProgressSubmit)} className="space-y-4">
                       <FormField
                         control={progressForm.control}
                         name="platform"
@@ -1104,19 +1104,24 @@ export function SocialGrowth() {
                       </tr>
                     </thead>
                     <tbody>
-                      {mockData.progressData.map((data, index) => {
-                        const previousData = mockData.progressData[index - 1];
-                        const growth = previousData 
-                          ? ((data.total - previousData.total) / previousData.total * 100).toFixed(1)
+                      {progress.map((data, index) => {
+                        const previousData = progress[index - 1];
+                        const totalFollowers = (data.followers || 0);
+                        const previousTotal = previousData ? (previousData.followers || 0) : 0;
+                        const growth = previousTotal > 0 
+                          ? ((totalFollowers - previousTotal) / previousTotal * 100).toFixed(1)
                           : '0.0';
                         
+                        const date = new Date(data.recordedAt);
+                        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                        
                         return (
-                          <tr key={`${data.month}-${data.year}`} className="border-b">
-                            <td className="p-2 font-medium">{data.month} {data.year}</td>
-                            <td className="p-2">{formatNumber(data.instagram)}</td>
-                            <td className="p-2">{formatNumber(data.facebook)}</td>
-                            <td className="p-2 font-medium">{formatNumber(data.total)}</td>
-                            <td className="p-2">{formatNumber(data.sales)}</td>
+                          <tr key={data.id} className="border-b">
+                            <td className="p-2 font-medium">{monthNames[date.getMonth()]} {date.getFullYear()}</td>
+                            <td className="p-2">{data.platform === 'instagram' ? formatNumber(data.followers || 0) : '-'}</td>
+                            <td className="p-2">{data.platform === 'facebook' ? formatNumber(data.followers || 0) : '-'}</td>
+                            <td className="p-2 font-medium">{formatNumber(totalFollowers)}</td>
+                            <td className="p-2">{formatNumber(data.sales || 0)}</td>
                             <td className="p-2">
                               <span className={`font-medium ${Number(growth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {Number(growth) >= 0 ? '+' : ''}{growth}%
