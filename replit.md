@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Enhanced pricing section typography and visual hierarchy for improved readability
+  - Increased main price size from text-4xl to text-5xl across all three pricing cards for better prominence
+  - Upgraded description text from text-sm to text-base for enhanced legibility and professional appearance
+  - Optimized spacing between benefit items from space-y-3 to space-y-4 for better visual breathing room
+  - Adjusted icon+text block padding from px-4 to px-6 creating harmonious centered grouping while maintaining left text alignment
+  - Applied consistent typography improvements across Monthly, Annual, and Semi-annual plans for unified user experience
 - June 15, 2025: Optimized mobile pricing cards layout with professional height standardization
   - Implemented min-h-[520px] to prevent card overlap and ensure uniform height across all plans
   - Enhanced content distribution with flex layout: fixed header, flexible center section, fixed footer button

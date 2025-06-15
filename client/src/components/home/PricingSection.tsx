@@ -27,7 +27,7 @@ const PricingSection = () => {
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
-                <span className="text-4xl font-bold text-blue-600">R$47</span>
+                <span className="text-5xl font-bold text-blue-600">R$47</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">Pagamento mensal</p>
               <div className="text-green-500 text-xs font-medium border border-green-500 rounded-full px-2 py-0.5 inline-block">
@@ -36,7 +36,7 @@ const PricingSection = () => {
             </div>
             
             <div className="flex-1 flex flex-col justify-center">
-              <ul className="space-y-3 mb-8 text-sm px-4">
+              <ul className="space-y-4 mb-8 text-base px-6">
                 <li className="flex items-center">
                   <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                   <span className="text-gray-700">Acesso a todas as artes</span>
@@ -84,7 +84,7 @@ const PricingSection = () => {
             <div className="text-center mb-6 pt-2">
               <h3 className="text-lg font-semibold mb-3">Anual</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold">R$29,70</span>
+                <span className="text-5xl font-bold">R$29,70</span>
                 <span className="text-sm opacity-90">/mês</span>
               </div>
               <p className="text-sm opacity-90 mb-3">R$297 à vista</p>
@@ -94,7 +94,7 @@ const PricingSection = () => {
             </div>
             
             <div className="flex-1 flex flex-col justify-center">
-              <ul className="space-y-3 mb-8 text-sm px-4">
+              <ul className="space-y-4 mb-8 text-base px-6">
                 <li className="flex items-center">
                   <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                   <span>Acesso a todas as artes</span>
@@ -139,7 +139,7 @@ const PricingSection = () => {
             <div className="text-center mb-6 pt-2">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Semestral</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-blue-600">R$36,70</span>
+                <span className="text-5xl font-bold text-blue-600">R$36,70</span>
                 <span className="text-sm text-gray-600">/mês</span>
               </div>
               <p className="text-sm text-gray-600 mb-3">R$197,00 à vista</p>
@@ -149,7 +149,7 @@ const PricingSection = () => {
             </div>
             
             <div className="flex-1 flex flex-col justify-center">
-              <ul className="space-y-3 mb-8 text-sm px-4">
+              <ul className="space-y-4 mb-8 text-base px-6">
                 <li className="flex items-center">
                   <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                   <span className="text-gray-700">Acesso a todas as artes</span>
