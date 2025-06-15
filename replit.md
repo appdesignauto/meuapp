@@ -118,11 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Refined dropdown menu interface for optimal visual cleanliness in social history table
+- June 15, 2025: Completed social history table interface optimization with clean header design and dropdown menus
   - Replaced multiple confusing edit/delete buttons with single elegant dropdown menu per row
-  - Simplified menu labels to "Editar" and "Excluir" removing verbose platform-specific text that caused visual pollution
-  - Enhanced design with compact menu (w-32), smaller icons (12px), and visual separators between platform action groups
-  - Solution scales perfectly regardless of number of platforms with professional, clean aesthetic
+  - Simplified table headers removing verbose "FACEBOOK SEGUIDORES/CRESCIMENTO" repetition with clean colored icons
+  - Implemented visual platform identification using colored dots (Instagram pink, Facebook blue, TikTok red, WhatsApp green)
+  - Enhanced dropdown design with compact menu (w-32), smaller icons (12px), and visual separators between platform action groups
+  - Final result: Professional table with "DATA | ● SEGUIDORES | CRESCIMENTO | VENDAS | AÇÕES" format that scales elegantly
 - June 15, 2025: Fixed platform-specific follower calculations and optimized date input for monthly updates
   - Corrected backend logic to sum all accounts from same platform instead of taking only first account
   - Instagram now correctly shows 16,000 followers (combining both @fernandooliveirapro accounts)

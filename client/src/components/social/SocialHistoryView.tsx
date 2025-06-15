@@ -264,6 +264,18 @@ export default function SocialHistoryView() {
     return platformNames[platform] || platform;
   };
 
+  const getPlatformIcon = (platform: string) => {
+    const iconColors: { [key: string]: string } = {
+      instagram: 'text-pink-500',
+      facebook: 'text-blue-600',
+      tiktok: 'text-red-500',
+      youtube: 'text-red-600',
+      whatsapp_business: 'text-green-500'
+    };
+    const color = iconColors[platform.toLowerCase()] || 'text-gray-500';
+    return <span className={`text-xs ${color}`}>●</span>;
+  };
+
   // Group data by platform and month
   const groupedData = historicalData.reduce((acc, item) => {
     const month = formatDate(item.recordDate);
@@ -331,13 +343,16 @@ export default function SocialHistoryView() {
                   {platforms.map(platform => (
                     <React.Fragment key={platform}>
                       <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
-                        {platform.toUpperCase()}<br/>SEGUIDORES
+                        <div className="flex items-center justify-center gap-1">
+                          {getPlatformIcon(platform)}
+                          <span>SEGUIDORES</span>
+                        </div>
                       </th>
                       <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
-                        {platform.toUpperCase()}<br/>CRESCIMENTO
+                        CRESCIMENTO
                       </th>
                       <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
-                        {platform.toUpperCase()}<br/>VENDAS
+                        VENDAS
                       </th>
                     </React.Fragment>
                   ))}
