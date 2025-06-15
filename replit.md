@@ -118,6 +118,10 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Added Social Growth Dashboard to main navigation "Recursos" menu
+  - Dashboard now accessible through Resources dropdown with TrendingUp icon
+  - Users can easily access social media tracking from main navigation
+  - Maintains consistent UI/UX with other platform features
 - June 15, 2025: Updated pricing structure to new values: R$47 monthly, R$97 semi-annual, R$147 annual
   - Mensal: R$47 (unchanged)
   - Semestral: R$16,17/mês (R$97,00 à vista) with R$185 discount

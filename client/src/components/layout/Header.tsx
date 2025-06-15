@@ -46,7 +46,8 @@ import {
   PackageOpen,
   LifeBuoy,
   Wrench,
-  MoreHorizontal
+  MoreHorizontal,
+  TrendingUp
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -316,6 +317,12 @@ const Header = () => {
                     <Link href="/ferramentas" className="flex items-center cursor-pointer">
                       <Wrench className="mr-2 h-4 w-4 text-blue-500" />
                       <span>Ferramentas</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/social-growth" className="flex items-center cursor-pointer">
+                      <TrendingUp className="mr-2 h-4 w-4 text-blue-500" />
+                      <span>Crescimento Social</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
