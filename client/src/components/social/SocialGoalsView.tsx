@@ -1,8 +1,16 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Target, Calendar, TrendingUp, AlertTriangle, Instagram, Facebook, MessageCircle, Youtube, Users, Edit3, Trash2 } from 'lucide-react';
 
 // Types
@@ -32,6 +40,15 @@ const platformConfig = {
 
 // Component para visualização apenas das metas
 export default function SocialGoalsView() {
+  const { toast } = useToast();
+  const [editingGoal, setEditingGoal] = useState<SocialGoal | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    goalType: '',
+    targetValue: '',
+    deadline: '',
+    description: ''
+  });
+
   // Fetch goals
   const { data: goals = [], isLoading: goalsLoading } = useQuery<SocialGoal[]>({
     queryKey: ['/api/social-growth/goals'],
@@ -41,6 +58,87 @@ export default function SocialGoalsView() {
   const { data: networks = [] } = useQuery({
     queryKey: ['/api/social-growth/networks'],
   });
+
+  // Mutation para editar meta
+  const editGoalMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      return apiRequest(`/api/social-growth/goals/${id}`, {
+        method: 'PUT',
+        body: data
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
+      setEditingGoal(null);
+      toast({
+        title: 'Sucesso',
+        description: 'Meta atualizada com sucesso!'
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao atualizar meta',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Mutation para excluir meta
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/social-growth/goals/${id}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
+      toast({
+        title: 'Sucesso',
+        description: 'Meta excluída com sucesso!'
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao excluir meta',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Função para abrir o modal de edição
+  const handleEditGoal = (goal: SocialGoal) => {
+    setEditingGoal(goal);
+    setEditFormData({
+      goalType: goal.goalType,
+      targetValue: goal.targetValue.toString(),
+      deadline: goal.deadline.split('T')[0], // Formato YYYY-MM-DD
+      description: goal.description || ''
+    });
+  };
+
+  // Função para salvar edição
+  const handleSaveEdit = () => {
+    if (!editingGoal) return;
+    
+    editGoalMutation.mutate({
+      id: editingGoal.id,
+      data: {
+        goalType: editFormData.goalType,
+        targetValue: parseInt(editFormData.targetValue),
+        deadline: editFormData.deadline,
+        description: editFormData.description
+      }
+    });
+  };
+
+  // Função para excluir meta
+  const handleDeleteGoal = (goalId: number) => {
+    if (confirm('Tem certeza que deseja excluir esta meta?')) {
+      deleteGoalMutation.mutate(goalId);
+    }
+  };
 
   const getGoalTypeLabel = (type: string) => {
     const labels = {
@@ -189,10 +287,18 @@ export default function SocialGoalsView() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <button 
+                    onClick={() => handleEditGoal(goal)}
+                    className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                    title="Editar meta"
+                  >
                     <Edit3 className="w-4 h-4" />
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-red-600 transition-colors">
+                  <button 
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    className="p-2 text-slate-400 hover:text-red-600 transition-colors"
+                    title="Excluir meta"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -257,6 +363,82 @@ export default function SocialGoalsView() {
           );
         })}
       </CardContent>
+
+      {/* Modal de Edição */}
+      <Dialog open={!!editingGoal} onOpenChange={() => setEditingGoal(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Meta</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="goalType" className="text-right">
+                Tipo
+              </Label>
+              <Select 
+                value={editFormData.goalType} 
+                onValueChange={(value) => setEditFormData({...editFormData, goalType: value})}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="followers">Seguidores</SelectItem>
+                  <SelectItem value="engagement">Engajamento</SelectItem>
+                  <SelectItem value="sales">Vendas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="targetValue" className="text-right">
+                Meta
+              </Label>
+              <Input
+                id="targetValue"
+                type="number"
+                value={editFormData.targetValue}
+                onChange={(e) => setEditFormData({...editFormData, targetValue: e.target.value})}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="deadline" className="text-right">
+                Prazo
+              </Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={editFormData.deadline}
+                onChange={(e) => setEditFormData({...editFormData, deadline: e.target.value})}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Descrição
+              </Label>
+              <Textarea
+                id="description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                className="col-span-3"
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setEditingGoal(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSaveEdit}
+              disabled={editGoalMutation.isPending}
+            >
+              {editGoalMutation.isPending ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
