@@ -293,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Setup authentication middleware and routes
-  const { isAuthenticated: authMiddleware, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
+  const { isAuthenticated: isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
   // Rota específica para testar solução de emergência para o usuário problemático (simulação)
   app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => {
@@ -2327,7 +2327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User stats API - optimized single query
-  app.get("/api/users/stats", authMiddleware, async (req, res) => {
+  app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       
