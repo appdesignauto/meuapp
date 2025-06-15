@@ -91,4 +91,4 @@ if (require.main === module) {
     });
 }
 
-export { createSocialGrowthTables };
+module.exports = { createSocialGrowthTables };
