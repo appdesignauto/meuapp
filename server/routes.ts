@@ -6272,7 +6272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard de Crescimento Social - Dados principais
   app.get("/api/social/dashboard", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any)?.id;
       
       // Buscar perfis do usuário
       const profiles = await db

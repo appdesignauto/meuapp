@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Users, Target, Bell, Instagram, Facebook, Twitter, Linkedin, Youtube, Plus, Edit, Trash2, Calendar, Activity } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface SocialProfile {
   id: number;
@@ -89,27 +90,70 @@ export default function SocialGrowthPage() {
   const [isAddingProfile, setIsAddingProfile] = useState(false);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   
+  const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
-  // Dashboard data query
-  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery<DashboardData>({
+  // Redirect to login if not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <Users className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900">Crescimento Social</h1>
+            <p className="text-gray-600 mt-2">
+              Faça login para acessar suas métricas de crescimento social
+            </p>
+          </div>
+          <Button 
+            onClick={() => window.location.href = '/auth'} 
+            className="w-full"
+          >
+            Fazer Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard data query with error handling
+  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useQuery<DashboardData>({
     queryKey: ['/api/social/dashboard'],
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchInterval: 30000,
+    enabled: !!user,
+    retry: 2,
   });
 
   // Profiles query
-  const { data: profiles = [] } = useQuery<SocialProfile[]>({
+  const { data: profiles = [], error: profilesError } = useQuery<SocialProfile[]>({
     queryKey: ['/api/social/profiles'],
+    enabled: !!user,
+    retry: 2,
   });
 
   // Goals query
-  const { data: goals = [] } = useQuery<SocialGoal[]>({
+  const { data: goals = [], error: goalsError } = useQuery<SocialGoal[]>({
     queryKey: ['/api/social/goals'],
+    enabled: !!user,
+    retry: 2,
   });
 
   // Alerts query
-  const { data: alerts = [] } = useQuery<SocialAlert[]>({
+  const { data: alerts = [], error: alertsError } = useQuery<SocialAlert[]>({
     queryKey: ['/api/social/alerts'],
+    enabled: !!user,
+    retry: 2,
   });
 
   // Add profile mutation
