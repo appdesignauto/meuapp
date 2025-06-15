@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Successfully unified "Adicionar Dados" and "Histórico" buttons into single professional "Dados Sociais" interface
+  - Removed duplicate functionality and obsolete code causing TypeScript errors
+  - Created clean unified modal with SocialHistoryView component for complete data management
+  - Simplified dashboard layout with single green "Dados Sociais" button featuring BarChart3 icon
+  - Enhanced user experience with professional single-page interface for all social data operations
+  - Eliminated technical debt by removing unused variables and handlers from previous separate systems
 - June 15, 2025: Enhanced social growth data system to support flexible update frequency (not just monthly)
   - Updated all labels and text from "Dados Mensais" to "Dados de Crescimento" to reflect flexible update schedule
   - Changed table header from "MÊS" to "DATA" for better data representation flexibility
