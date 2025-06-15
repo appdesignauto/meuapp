@@ -8851,7 +8851,7 @@ app.use('/api/reports-v2', (req, res, next) => {
   });
 
   // Social Growth API Routes
-  app.get("/api/social/dashboard", requireAuth, async (req: Request, res: Response) => {
+  app.get("/api/social/dashboard", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const dashboard = await storage.getSocialDashboard(userId);
@@ -8862,7 +8862,7 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  app.post("/api/social/add-profile", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/social/add-profile", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { platform, profileName, profileUrl } = req.body;
@@ -8889,7 +8889,7 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  app.post("/api/social/add-goal", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/social/add-goal", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { platform, goalType, targetValue, deadline } = req.body;
@@ -8921,7 +8921,7 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  app.post("/api/social/add-progress", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/social/add-progress", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { platform, month, followers, sales } = req.body;
@@ -8949,7 +8949,7 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  app.put("/api/social/update-goal/:id", requireAuth, async (req: Request, res: Response) => {
+  app.put("/api/social/update-goal/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const goalId = parseInt(req.params.id);
       const updates = req.body;
@@ -8975,7 +8975,7 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  app.delete("/api/social/delete-goal/:id", requireAuth, async (req: Request, res: Response) => {
+  app.delete("/api/social/delete-goal/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const goalId = parseInt(req.params.id);
       const success = await storage.deleteSocialGoal(goalId);
@@ -8991,7 +8991,7 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  app.delete("/api/social/delete-profile/:id", requireAuth, async (req: Request, res: Response) => {
+  app.delete("/api/social/delete-profile/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const profileId = parseInt(req.params.id);
       const success = await storage.deleteSocialProfile(profileId);
