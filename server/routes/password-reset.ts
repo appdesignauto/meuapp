@@ -97,40 +97,4 @@ router.post('/reset', async (req, res) => {
   }
 });
 
-/**
- * Rota para confirmar a redefinição de senha utilizando um token
- * POST /api/password-reset/confirm
- * (Alias para /reset para compatibilidade com frontend)
- */
-router.post('/confirm', async (req, res) => {
-  try {
-    // Valida os dados enviados
-    const validationResult = resetPasswordSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos', 
-        errors: validationResult.error.errors 
-      });
-    }
-
-    const { token, password } = validationResult.data;
-    const result = await passwordResetService.resetPassword(token, password);
-
-    if (!result.success) {
-      return res.status(400).json({ message: result.message });
-    }
-
-    // Redefinição bem-sucedida
-    return res.status(200).json({ 
-      message: result.message || 'Senha redefinida com sucesso',
-      success: true
-    });
-  } catch (error) {
-    console.error('Erro na confirmação de redefinição de senha:', error);
-    return res.status(500).json({ 
-      message: 'Erro interno do servidor ao processar a redefinição de senha' 
-    });
-  }
-});
-
 export default router;
