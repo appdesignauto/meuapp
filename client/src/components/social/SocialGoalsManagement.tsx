@@ -150,7 +150,7 @@ export default function SocialGoalsManagement({ isOpen, onClose }: SocialGoalsMa
     e.preventDefault();
     
     const goalData = {
-      socialNetworkId: parseInt(formData.socialNetworkId),
+      networkId: parseInt(formData.socialNetworkId),
       goalType: formData.goalType as 'followers' | 'sales' | 'engagement',
       targetValue: parseInt(formData.targetValue),
       deadline: formData.deadline,
