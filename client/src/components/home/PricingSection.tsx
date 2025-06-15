@@ -23,7 +23,7 @@ const PricingSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 max-w-4xl mx-auto">
           
           {/* Plano Mensal */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 relative hover:shadow-lg transition-all duration-300">
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 md:p-6 relative hover:shadow-lg transition-all duration-300 mx-4 md:mx-0">
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
@@ -35,28 +35,28 @@ const PricingSection = () => {
               </div>
             </div>
             
-            <ul className="space-y-3 mb-8 text-sm">
-              <li className="flex items-center">
+            <ul className="space-y-3 mb-8 text-sm text-center md:text-left">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Acesso a todas as artes</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Edições ilimitadas</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Atualizações semanais</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Aplicativo exclusivo</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Suporte prioritário</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Sem compromisso</span>
               </li>
@@ -71,7 +71,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Anual - Destacado no meio */}
-          <div className="rounded-xl p-4 md:p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105 bg-blue-600">
+          <div className="rounded-xl p-6 md:p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105 bg-blue-600 mx-4 md:mx-0">
             {/* Best Value Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -91,28 +91,28 @@ const PricingSection = () => {
               </div>
             </div>
             
-            <ul className="space-y-3 mb-8 text-sm">
-              <li className="flex items-center">
+            <ul className="space-y-3 mb-8 text-sm text-center md:text-left">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                 <span>Acesso a todas as artes</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                 <span>Edições ilimitadas</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                 <span>Atualizações semanais</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                 <span>Aplicativo exclusivo</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                 <span>Suporte prioritário</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
                 <span>Sem compromisso</span>
               </li>
@@ -124,7 +124,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Semestral */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 relative hover:shadow-lg transition-all duration-300">
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 md:p-6 relative hover:shadow-lg transition-all duration-300 mx-4 md:mx-0">
             {/* Popular Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -144,28 +144,28 @@ const PricingSection = () => {
               </div>
             </div>
             
-            <ul className="space-y-3 mb-8 text-sm">
-              <li className="flex items-center">
+            <ul className="space-y-3 mb-8 text-sm text-center md:text-left">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Acesso a todas as artes</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Edições ilimitadas</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Atualizações semanais</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Aplicativo exclusivo</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Suporte prioritário</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                 <span className="text-gray-700">Sem compromisso</span>
               </li>
