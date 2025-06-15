@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Completed platform-specific analytics integration with minimalistic design optimization
+  - Updated TypeScript interfaces to include platformSpecific data (instagram, facebook, tiktok, youtube) and activeGoals
+  - Enhanced analytics display with color-coded platform icons: Instagram (pink), Facebook (blue), TikTok+YouTube (red), Active Goals (orange)
+  - Maintained minimalistic "Minhas Metas" section design while preserving all functionality and information
+  - Integrated authentic database data for all social growth metrics and platform-specific follower counts
+  - Fixed import conflicts and TypeScript errors for cleaner code structure and better performance
 - June 15, 2025: Enhanced social goals system with professional visual design matching user reference
   - Moved "Adicionar Meta" button to header action area alongside "Adicionar Rede" and "Adicionar Dados"
   - Created SocialGoalsView component for visualization-only display in dashboard body

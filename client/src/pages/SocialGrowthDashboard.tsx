@@ -713,18 +713,52 @@ export default function SocialGrowthDashboard() {
                 <CardContent>
                   <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={analytics.growthTrend}>
+                      <LineChart 
+                        data={analytics.growthTrend}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
+                        <XAxis 
+                          dataKey="month" 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          domain={['dataMin - 100', 'dataMax + 100']}
+                          padding={{ top: 20, bottom: 20 }}
+                        />
                         <Tooltip 
                           formatter={(value, name) => [
                             name === 'followers' ? `${value} seguidores` : `${value} vendas`,
                             name === 'followers' ? 'Seguidores' : 'Vendas'
                           ]}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
                         />
-                        <Line type="monotone" dataKey="followers" stroke="#3b82f6" strokeWidth={3} />
-                        <Line type="monotone" dataKey="sales" stroke="#f59e0b" strokeWidth={2} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="followers" 
+                          stroke="#3b82f6" 
+                          strokeWidth={3}
+                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="sales" 
+                          stroke="#f59e0b" 
+                          strokeWidth={2}
+                          dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
+                          activeDot={{ r: 5, stroke: '#f59e0b', strokeWidth: 2 }}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
