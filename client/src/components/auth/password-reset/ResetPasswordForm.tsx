@@ -206,45 +206,44 @@ export default function ResetPasswordForm() {
   // Se houve erro com o token
   if (tokenError) {
     return (
-      <Card className="w-full border border-red-200">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-2">
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader className="pb-6">
+          <div className="flex justify-center mb-4">
             <AlertCircle className="h-16 w-16 text-red-500" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Link inválido</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900">Link inválido</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             O link de redefinição de senha parece ser inválido ou expirado.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-center">
-          <Alert variant="destructive">
-            <AlertTitle>O que pode ter acontecido:</AlertTitle>
-            <AlertDescription className="text-sm pt-2">
-              • O link que você recebeu já foi utilizado<br />
-              • O link expirou após 24 horas<br />
-              • A URL foi digitada incorretamente
-            </AlertDescription>
-          </Alert>
+        <CardContent className="space-y-6">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <h4 className="font-semibold text-red-800 mb-2">O que pode ter acontecido:</h4>
+            <ul className="text-sm text-red-700 space-y-1">
+              <li>• O link que você recebeu já foi utilizado</li>
+              <li>• O link expirou após 24 horas</li>
+              <li>• A URL foi digitada incorretamente</li>
+            </ul>
+          </div>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-4 pt-6">
           <Button 
-            variant="default"
             onClick={() => {
               sessionStorage.clear();
               window.location.replace('/password/forgot');
             }}
-            className="w-full"
+            className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
-            <Key className="mr-2 h-4 w-4" />
+            <Key className="mr-2 h-5 w-5" />
             Solicitar novo link
           </Button>
-          <div className="text-center text-sm">
+          <div className="text-center">
             <button 
               onClick={() => {
                 sessionStorage.clear();
                 window.location.replace('/login');
               }}
-              className="text-primary hover:underline inline-flex items-center bg-transparent border-none cursor-pointer text-sm"
+              className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200 inline-flex items-center"
             >
               <ArrowLeft className="mr-1 h-3 w-3" />
               Voltar para o login
@@ -258,32 +257,32 @@ export default function ResetPasswordForm() {
   // Se a senha foi redefinida com sucesso
   if (resetSuccess) {
     return (
-      <Card className="w-full border border-green-200">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-2">
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader className="pb-6">
+          <div className="flex justify-center mb-4">
             <CheckCircle className="h-16 w-16 text-green-500" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Senha redefinida</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900">Senha redefinida</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Sua senha foi alterada com sucesso!
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-center">
-          <Alert className="bg-green-50 border-green-200">
-            <AlertTitle className="text-green-700">Tudo certo!</AlertTitle>
-            <AlertDescription className="text-sm text-green-600 pt-2">
+        <CardContent className="space-y-6">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+            <h4 className="font-semibold text-green-800 mb-2">Tudo certo!</h4>
+            <p className="text-sm text-green-700">
               Você será redirecionado para a página de login em instantes para acessar sua conta com a nova senha.
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-4 pt-6">
           <Button 
             onClick={() => {
               sessionStorage.clear();
               localStorage.setItem('just_reset_password', 'true');
               window.location.replace('/login');
             }}
-            className="w-full"
+            className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
             Ir para o login agora
           </Button>
@@ -293,57 +292,56 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <Card className="w-full border border-primary/20">
-      <CardHeader className="space-y-1">
-        <div className="flex justify-center mb-2">
-          <Lock className="h-12 w-12 text-primary opacity-80" />
+    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+      <CardHeader className="pb-6">
+        <div className="flex justify-center mb-4">
+          <Lock className="h-16 w-16 text-blue-600" />
         </div>
-        <CardTitle className="text-2xl font-bold text-center">Criar nova senha</CardTitle>
-        <CardDescription className="text-center">
+        <CardTitle className="text-2xl font-bold text-center text-gray-900">Criar nova senha</CardTitle>
+        <CardDescription className="text-center text-gray-600">
           Defina uma nova senha segura para sua conta
         </CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Nova senha</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">Nova senha</FormLabel>
                   <FormControl>
                     <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Digite sua nova senha"
-                        className="h-10 px-3 pr-10"
+                        className="pl-10 pr-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                         {...field}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-10 w-10 px-0"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? 
-                          <EyeOff className="h-4 w-4 text-muted-foreground" /> : 
-                          <Eye className="h-4 w-4 text-muted-foreground" />
+                          <EyeOff className="h-4 w-4" /> : 
+                          <Eye className="h-4 w-4" />
                         }
                       </Button>
                     </div>
                   </FormControl>
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between items-center text-xs">
-                      <span>Força da senha:</span>
+                      <span className="text-gray-600">Força da senha:</span>
                       <span className={getStrengthText(passwordStrength).color}>
                         {getStrengthText(passwordStrength).text}
                       </span>
                     </div>
-                    <Progress value={passwordStrength} className={`h-1.5 ${getStrengthColor(passwordStrength)}`} 
-                      style={{backgroundColor: "var(--primary-100)"}}
-                    />
+                    <Progress value={passwordStrength} className={`h-1.5 ${getStrengthColor(passwordStrength)}`} />
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -355,25 +353,26 @@ export default function ResetPasswordForm() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Confirme a nova senha</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">Confirme a nova senha</FormLabel>
                   <FormControl>
                     <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="Digite a senha novamente"
-                        className="h-10 px-3 pr-10"
+                        className="pl-10 pr-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                         {...field}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-10 w-10 px-0"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? 
-                          <EyeOff className="h-4 w-4 text-muted-foreground" /> : 
-                          <Eye className="h-4 w-4 text-muted-foreground" />
+                          <EyeOff className="h-4 w-4" /> : 
+                          <Eye className="h-4 w-4" />
                         }
                       </Button>
                     </div>
@@ -383,34 +382,34 @@ export default function ResetPasswordForm() {
               )}
             />
 
-            <Alert className="bg-muted/50 border-muted">
-              <AlertDescription className="text-xs text-muted-foreground">
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-600">
                 Crie uma senha forte usando letras, números e símbolos. Nunca use a mesma senha em diferentes sites.
-              </AlertDescription>
-            </Alert>
+              </p>
+            </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 pt-6">
             <Button 
               type="submit" 
-              className="w-full transition-all" 
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" 
               disabled={isPending || !token}
             >
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Redefinindo...
                 </>
               ) : (
                 'Redefinir senha'
               )}
             </Button>
-            <div className="text-center text-sm">
+            <div className="text-center">
               <button 
                 onClick={() => {
                   sessionStorage.clear();
                   window.location.replace('/login');
                 }}
-                className="text-primary hover:underline inline-flex items-center bg-transparent border-none cursor-pointer text-sm"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200 inline-flex items-center"
               >
                 <ArrowLeft className="mr-1 h-3 w-3" />
                 Voltar para o login

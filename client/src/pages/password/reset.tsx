@@ -1,8 +1,8 @@
 import ResetPasswordForm from '@/components/auth/password-reset/ResetPasswordForm';
-import { AuthLayout } from '@/components/layouts/auth-layout';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
+import designAutoLogo from "@assets/LOGO DESIGNAUTO.png";
 
 /**
  * Página de redefinição de senha com token
@@ -28,10 +28,33 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout>
-      <div className="mx-auto w-full max-w-md p-4">
-        <ResetPasswordForm />
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+      {/* Background decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2"></div>
       </div>
-    </AuthLayout>
+
+      <div className="relative flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-8">
+          {/* Header com logo e título */}
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <img 
+                src={designAutoLogo} 
+                alt="DesignAuto" 
+                className="h-16 w-auto object-contain transform hover:scale-105 transition-transform duration-200"
+              />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 whitespace-nowrap">Redefinir Senha</h2>
+              <p className="text-gray-600">Crie uma nova senha segura para sua conta</p>
+            </div>
+          </div>
+
+          <ResetPasswordForm />
+        </div>
+      </div>
+    </div>
   );
 }
