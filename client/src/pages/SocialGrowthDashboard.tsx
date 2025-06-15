@@ -101,7 +101,7 @@ export default function SocialGrowthDashboard() {
     queryKey: ['/api/social-growth/networks'],
   });
 
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<Analytics>({
     queryKey: ['/api/social-growth/analytics'],
   });
 
@@ -410,7 +410,7 @@ export default function SocialGrowthDashboard() {
                   <Users className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">{analytics.totalNetworks}</div>
+                  <div className="text-2xl font-bold text-slate-900">{analytics?.totalNetworks ?? 0}</div>
                   <p className="text-xs text-slate-500">Plataformas ativas</p>
                 </CardContent>
               </Card>
@@ -421,8 +421,8 @@ export default function SocialGrowthDashboard() {
                   <TrendingUp className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">{analytics.totalFollowers.toLocaleString()}</div>
-                  <p className="text-xs text-green-600">+{analytics.monthlyGrowth}% este mês</p>
+                  <div className="text-2xl font-bold text-slate-900">{(analytics?.totalFollowers ?? 0).toLocaleString()}</div>
+                  <p className="text-xs text-green-600">+{analytics?.monthlyGrowth ?? 0}% este mês</p>
                 </CardContent>
               </Card>
 
@@ -432,7 +432,7 @@ export default function SocialGrowthDashboard() {
                   <DollarSign className="h-4 w-4 text-yellow-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">R$ {analytics.totalSales.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-slate-900">R$ {(analytics?.totalSales ?? 0).toLocaleString()}</div>
                   <p className="text-xs text-slate-500">Das redes sociais</p>
                 </CardContent>
               </Card>
@@ -443,7 +443,7 @@ export default function SocialGrowthDashboard() {
                   <Target className="h-4 w-4 text-orange-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">{analytics.activeGoals}</div>
+                  <div className="text-2xl font-bold text-slate-900">{analytics?.activeGoals ?? 0}</div>
                   <p className="text-xs text-slate-500">Em andamento</p>
                 </CardContent>
               </Card>
@@ -458,32 +458,32 @@ export default function SocialGrowthDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div className="text-center p-4 bg-pink-50 rounded-lg">
                     <Instagram className="w-8 h-8 text-pink-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific.instagram.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-slate-900">{(analytics?.platformSpecific?.instagram ?? 0).toLocaleString()}</div>
                     <p className="text-xs text-slate-500">Instagram</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Facebook className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific.facebook.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-slate-900">{(analytics?.platformSpecific?.facebook ?? 0).toLocaleString()}</div>
                     <p className="text-xs text-slate-500">Facebook</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <Youtube className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific.youtube.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-slate-900">{(analytics?.platformSpecific?.youtube ?? 0).toLocaleString()}</div>
                     <p className="text-xs text-slate-500">YouTube</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Linkedin className="w-8 h-8 text-blue-700 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific.linkedin.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-slate-900">{(analytics?.platformSpecific?.linkedin ?? 0).toLocaleString()}</div>
                     <p className="text-xs text-slate-500">LinkedIn</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Twitter className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific.twitter.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-slate-900">{(analytics?.platformSpecific?.twitter ?? 0).toLocaleString()}</div>
                     <p className="text-xs text-slate-500">Twitter</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <Users className="w-8 h-8 text-black mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{analytics.platformSpecific.tiktok.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-slate-900">{(analytics?.platformSpecific?.tiktok ?? 0).toLocaleString()}</div>
                     <p className="text-xs text-slate-500">TikTok</p>
                   </div>
                 </div>
