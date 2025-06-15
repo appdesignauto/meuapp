@@ -25,6 +25,7 @@ import {
 
 import SocialHistoryView from '@/components/social/SocialHistoryView';
 import SocialGoalsView from '@/components/social/SocialGoalsView';
+import SocialGoalsManagement from '@/components/social/SocialGoalsManagement';
 
 interface SocialNetwork {
   id: number;
@@ -78,7 +79,7 @@ export default function SocialGrowthDashboard() {
   
   // State management
   const [isAddingNetwork, setIsAddingNetwork] = useState(false);
-  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   
   const [networkForm, setNetworkForm] = useState({
@@ -88,13 +89,7 @@ export default function SocialGrowthDashboard() {
     initialFollowers: 0
   });
   
-  const [goalForm, setGoalForm] = useState({
-    networkId: '',
-    goalType: '',
-    targetValue: 0,
-    deadline: '',
-    description: ''
-  });
+
 
   // Data fetching
   const { data: networks, isLoading: networksLoading } = useQuery({
@@ -303,100 +298,14 @@ export default function SocialGrowthDashboard() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={isAddingGoal} onOpenChange={setIsAddingGoal}>
-              <DialogTrigger asChild>
-                <Button variant="outline" disabled={!networks || networks.length === 0}>
-                  <Target className="w-4 h-4 mr-2" />
-                  Adicionar Meta
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Criar Nova Meta</DialogTitle>
-                  <DialogDescription>
-                    Defina uma meta de crescimento para uma das suas redes sociais
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="goalNetwork">Rede Social</Label>
-                    <Select onValueChange={(value) => setGoalForm(prev => ({ ...prev, networkId: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a rede" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {networks && Array.isArray(networks) && networks.map((network: SocialNetwork) => {
-                          const config = platformConfig[network.platform as keyof typeof platformConfig];
-                          const Icon = config?.icon || Users;
-                          return (
-                            <SelectItem key={network.id} value={network.id.toString()}>
-                              <div className="flex items-center gap-2">
-                                <Icon className="w-4 h-4" />
-                                {config?.name} - {network.username}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="goalType">Tipo de Meta</Label>
-                    <Select onValueChange={(value) => setGoalForm(prev => ({ ...prev, goalType: value as any }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="followers">Seguidores</SelectItem>
-                        <SelectItem value="engagement">Engajamento</SelectItem>
-                        <SelectItem value="sales">Vendas</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="targetValue">Valor Alvo</Label>
-                    <Input
-                      id="targetValue"
-                      type="number"
-                      value={goalForm.targetValue}
-                      onChange={(e) => setGoalForm(prev => ({ ...prev, targetValue: parseInt(e.target.value) || 0 }))}
-                      placeholder="Ex: 1000"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="deadline">Prazo Final</Label>
-                    <Input
-                      id="deadline"
-                      type="date"
-                      value={goalForm.deadline}
-                      onChange={(e) => setGoalForm(prev => ({ ...prev, deadline: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Descrição (opcional)</Label>
-                    <Textarea
-                      id="description"
-                      value={goalForm.description}
-                      onChange={(e) => setGoalForm(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Descreva sua meta..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddingGoal(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleAddGoal} disabled={addGoalMutation.isPending}>
-                    {addGoalMutation.isPending ? 'Criando...' : 'Criar Meta'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              onClick={() => setIsGoalsModalOpen(true)}
+              variant="outline" 
+              disabled={!networks || networks.length === 0}
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Metas
+            </Button>
           </div>
         </div>
 
