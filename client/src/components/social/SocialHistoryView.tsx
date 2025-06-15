@@ -209,9 +209,9 @@ export default function SocialHistoryView() {
 
   // Função para verificar se um mês já está preenchido para a rede selecionada
   const isMonthAlreadyFilled = (yearMonth: string, networkId: number) => {
-    if (!data || networkId === 0) return false;
+    if (!historicalData || networkId === 0) return false;
     
-    return data.some((record: any) => {
+    return historicalData.some((record: any) => {
       const recordMonth = record.recordDate.substring(0, 7); // YYYY-MM
       return recordMonth === yearMonth && record.socialNetworkId === networkId;
     });
