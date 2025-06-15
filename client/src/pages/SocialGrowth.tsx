@@ -376,6 +376,10 @@ export function SocialGrowth() {
     }
   };
 
+  const handleProgressSubmit = (data: ProgressFormData) => {
+    createProgressMutation.mutate(data);
+  };
+
   const resetProfileModal = () => {
     setEditingProfile(null);
     profileForm.reset();
