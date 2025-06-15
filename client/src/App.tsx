@@ -238,6 +238,9 @@ function AppRoutes() {
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
       
+      {/* Dashboard de Crescimento Social */}
+      <ProtectedRoute path="/social-growth" component={SocialGrowthDashboard} />
+      
       {/* Rotas do Painel do Usuário */}
       <ProtectedPainelRoute path="/painel/inicio" component={PainelInicio} />
       <ProtectedPainelRoute path="/painel/artes" component={PainelArtes} />

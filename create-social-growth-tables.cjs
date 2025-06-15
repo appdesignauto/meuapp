@@ -2,7 +2,7 @@
  * Script para criar as tabelas do sistema de crescimento social
  */
 
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 
 async function getDatabase() {
   const pool = new Pool({
