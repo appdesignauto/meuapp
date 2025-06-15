@@ -46,7 +46,7 @@ export default function PlanosPage() {
 
   // Constantes de preços
   const precoMensal = 47;
-  const precoAnual = 197;
+  const precoAnual = 147;
   const precoVitalicio = 997;
 
   // Lista de planos
