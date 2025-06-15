@@ -46,6 +46,7 @@ import FerramentasPage from "@/pages/ferramentas";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
 import SocialGrowthDashboard from "@/pages/SocialGrowthDashboard";
+import CrescimentoSocial from "@/pages/CrescimentoSocial";
 
 // Páginas do Footer
 import About from "@/pages/About";
@@ -177,6 +178,7 @@ function AppRoutes() {
       <Route path="/videoaulas" component={VideoaulasPage} />
       <Route path="/ferramentas" component={FerramentasPage} />
       <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
+      <Route path="/crescimento-social" component={CrescimentoSocial} />
       
       {/* Páginas do Footer */}
       <Route path="/sobre" component={About} />

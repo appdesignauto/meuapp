@@ -118,6 +118,16 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Implemented complete Social Growth dashboard feature
+  - Created database schema with social_profiles, social_goals, and social_progress tables
+  - Built comprehensive API with TypeScript routes for social growth tracking  
+  - Developed responsive React dashboard with Instagram/Facebook analytics
+  - Added interactive goal management with progress tracking and charts
+  - Integrated standalone page at /crescimento-social accessible via Resources menu
+  - Added navigation link in user panel at /painel/crescimento-social
+  - Implemented real-time data visualization with Recharts for follower growth
+  - Created professional UI with platform-specific icons and metrics
+  - System ready for social media API integration and authentic tracking
 - June 15, 2025: Updated pricing structure to new values: R$47 monthly, R$97 semi-annual, R$147 annual
   - Mensal: R$47 (unchanged)
   - Semestral: R$16,17/mês (R$97,00 à vista) with R$185 discount
