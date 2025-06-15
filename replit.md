@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Implemented clean dropdown menu interface for edit/delete actions in social history table
+  - Replaced multiple confusing edit/delete buttons with single elegant dropdown menu per row
+  - Added contextual action labels showing specific platform names (e.g., "Editar Instagram", "Excluir Facebook")
+  - Enhanced user experience with clean three-dot menu trigger and organized dropdown options
+  - Solution scales perfectly regardless of number of platforms, eliminating visual clutter
 - June 15, 2025: Fixed platform-specific follower calculations and optimized date input for monthly updates
   - Corrected backend logic to sum all accounts from same platform instead of taking only first account
   - Instagram now correctly shows 16,000 followers (combining both @fernandooliveirapro accounts)

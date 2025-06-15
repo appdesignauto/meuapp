@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Edit3, Trash2, Plus, Calendar } from 'lucide-react';
+import { Edit3, Trash2, Plus, Calendar, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface SocialGrowthData {
   id: number;
@@ -374,28 +375,37 @@ export default function SocialHistoryView() {
                         );
                       })}
                       <td className="text-center py-3 px-4">
-                        <div className="flex gap-1 justify-center">
-                          {Object.values(monthData).map(data => (
-                            <React.Fragment key={data.id}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditData(data)}
-                                className="text-slate-400 hover:text-slate-600"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteData(data.id)}
-                                className="text-slate-400 hover:text-red-600"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </React.Fragment>
-                          ))}
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600"
+                            >
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            {Object.values(monthData).map(data => (
+                              <React.Fragment key={data.id}>
+                                <DropdownMenuItem
+                                  onClick={() => handleEditData(data)}
+                                  className="flex items-center gap-2 text-slate-700 hover:text-blue-600 cursor-pointer"
+                                >
+                                  <Edit3 size={14} />
+                                  Editar {getPlatformDisplayName(data.networkPlatform || '')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteData(data.id)}
+                                  className="flex items-center gap-2 text-slate-700 hover:text-red-600 cursor-pointer"
+                                >
+                                  <Trash2 size={14} />
+                                  Excluir {getPlatformDisplayName(data.networkPlatform || '')}
+                                </DropdownMenuItem>
+                              </React.Fragment>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   );
