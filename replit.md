@@ -118,12 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Enhanced pricing section with professional branding and design elements
+- June 15, 2025: Enhanced pricing section with professional branding and optimized mobile responsiveness
   - Added "PLANOS" green label above main title for clear section identification  
   - Included decorative green line below title for visual appeal and brand consistency
   - Maintained "Seu crescimento começa aqui" messaging with harmonized typography
   - Created sophisticated visual hierarchy: label → title → decorative line → description
   - Applied green color scheme (green-600) that reinforces growth messaging and creates strong visual identity
+  - Optimized mobile layout: increased card spacing (gap-8), responsive padding (p-4 md:p-6), single-column grid
+  - Enhanced trust section with mobile-first spacing and improved visual flow
 - June 15, 2025: Added trust guarantees section below pricing with 30-day guarantee, premium support, and weekly updates
   - Implemented harmonious design with colored icons and clean layout matching provided reference
   - Enhanced pricing section credibility with professional trust indicators

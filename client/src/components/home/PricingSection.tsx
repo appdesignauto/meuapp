@@ -20,10 +20,10 @@ const PricingSection = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 max-w-4xl mx-auto">
           
           {/* Plano Mensal */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 relative hover:shadow-lg transition-all duration-300">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 relative hover:shadow-lg transition-all duration-300">
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Mensal</h3>
               <div className="mb-3">
@@ -71,7 +71,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Anual - Destacado no meio */}
-          <div className="rounded-xl p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105 bg-blue-600">
+          <div className="rounded-xl p-4 md:p-6 relative text-white hover:shadow-xl transition-all duration-300 transform md:scale-105 bg-blue-600">
             {/* Best Value Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -124,7 +124,7 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Semestral */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 relative hover:shadow-lg transition-all duration-300">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 relative hover:shadow-lg transition-all duration-300">
             {/* Popular Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -181,8 +181,8 @@ const PricingSection = () => {
         </div>
 
         {/* Trust/Guarantee Section */}
-        <div className="mt-16 pt-12 border-t border-gray-200">
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="mt-12 md:mt-16 pt-8 md:pt-12 border-t border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-4xl mx-auto">
             
             {/* Garantia de 7 dias */}
             <div className="text-center space-y-4">
