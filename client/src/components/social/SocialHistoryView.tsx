@@ -58,10 +58,20 @@ export default function SocialHistoryView() {
   // Update data mutation
   const updateDataMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      return apiRequest(`/api/social-growth/data/${id}`, {
+      const response = await fetch(`/api/social-growth/data/${id}`, {
         method: 'PUT',
-        body: data
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao atualizar dados');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/history'] });
@@ -84,9 +94,19 @@ export default function SocialHistoryView() {
   // Delete data mutation
   const deleteDataMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/social-growth/data/${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`/api/social-growth/data/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao excluir dados');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/history'] });
@@ -108,10 +128,20 @@ export default function SocialHistoryView() {
   // Add data mutation
   const addDataMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('/api/social-growth/data', {
+      const response = await fetch('/api/social-growth/data', {
         method: 'POST',
-        body: data
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao adicionar dados');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/history'] });
@@ -143,9 +173,10 @@ export default function SocialHistoryView() {
 
   const handleEditData = (data: SocialGrowthData) => {
     setEditingData(data);
+    const dateStr = data.recordDate instanceof Date ? data.recordDate.toISOString() : data.recordDate;
     setFormData({
       socialNetworkId: data.socialNetworkId,
-      recordDate: data.recordDate.split('T')[0],
+      recordDate: dateStr.split('T')[0],
       followers: data.followers,
       averageLikes: data.averageLikes,
       averageComments: data.averageComments,
