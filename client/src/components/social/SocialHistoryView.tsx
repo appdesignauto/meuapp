@@ -128,6 +128,7 @@ export default function SocialHistoryView() {
   // Add data mutation
   const addDataMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('Enviando dados para o servidor:', data);
       const response = await fetch('/api/social-growth/data', {
         method: 'POST',
         headers: {
@@ -141,11 +142,20 @@ export default function SocialHistoryView() {
         throw new Error(error.message || 'Erro ao adicionar dados');
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log('Dados adicionados com sucesso:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('Invalidando cache após adicionar dados...');
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/history'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/networks'] });
+      
+      // Force refetch
+      queryClient.refetchQueries({ queryKey: ['/api/social-growth/history'] });
+      
       setIsAddingData(false);
       setFormData({
         socialNetworkId: 0,
@@ -163,6 +173,7 @@ export default function SocialHistoryView() {
       });
     },
     onError: (error: any) => {
+      console.error('Erro ao adicionar dados:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao adicionar dados',

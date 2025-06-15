@@ -140,6 +140,7 @@ router.delete('/networks/:id', requireAuth, async (req: any, res) => {
 router.get('/history', requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
+    console.log(`[HISTORY] Buscando histórico para usuário ${userId}`);
 
     const data = await db
       .select({
@@ -160,6 +161,7 @@ router.get('/history', requireAuth, async (req: any, res) => {
       .where(eq(socialNetworks.userId, userId))
       .orderBy(desc(socialGrowthData.recordDate));
 
+    console.log(`[HISTORY] Encontrados ${data.length} registros:`, data);
     res.json(data);
   } catch (error) {
     console.error('Erro ao buscar histórico:', error);
@@ -214,10 +216,14 @@ router.get('/data/:networkId', requireAuth, async (req: any, res) => {
 router.post('/data', requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
+    console.log(`[ADD DATA] Usuário ${userId} adicionando dados:`, req.body);
+    
     const validatedData = insertSocialGrowthDataSchema.parse({
       ...req.body,
       userId
     });
+    
+    console.log('[ADD DATA] Dados validados:', validatedData);
 
     // Verificar se a rede pertence ao usuário
     const network = await db
@@ -264,11 +270,13 @@ router.post('/data', requireAuth, async (req: any, res) => {
       return res.json(updated);
     } else {
       // Criar novos dados
+      console.log('[ADD DATA] Criando novos dados:', validatedData);
       const [created] = await db
         .insert(socialGrowthData)
         .values(validatedData)
         .returning();
 
+      console.log('[ADD DATA] Dados criados com sucesso:', created);
       return res.status(201).json(created);
     }
   } catch (error) {
