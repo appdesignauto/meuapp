@@ -118,7 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Applied professional layout to password reset page (/password/reset) for visual consistency
+- June 15, 2025: Fixed password reset functionality with consistent professional layout across all authentication pages
+  - Applied professional layout to password reset page (/password/reset) for visual consistency
+  - Added missing `/api/password-reset/confirm` endpoint to resolve JSON parsing errors
+  - Resolved frontend-backend API mismatch causing "Unexpected token DOCTYPE" errors
+  - All password reset flows now working correctly with unified professional design
   - Updated create new password page with gradient background, DesignAuto logo, and card layout
   - Added password strength indicator with real-time validation and progress bar
   - Implemented show/hide password toggles with eye icons
