@@ -2,91 +2,142 @@
  * Script para criar as tabelas do sistema de crescimento social
  */
 
-import { Pool } from 'pg';
+import { neon } from '@neondatabase/serverless';
 
 async function getDatabase() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
-  return pool;
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL não encontrada nas variáveis de ambiente');
+  }
+  return neon(databaseUrl);
 }
 
 async function createSocialGrowthTables() {
   const db = await getDatabase();
   
   try {
-    console.log('🚀 Criando tabelas do sistema de crescimento social...');
-
-    // Criar tabela socialNetworks
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS "socialNetworks" (
-        "id" SERIAL PRIMARY KEY,
-        "userId" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
-        "platform" TEXT NOT NULL,
-        "username" TEXT NOT NULL,
-        "profileUrl" TEXT,
-        "isActive" BOOLEAN DEFAULT true NOT NULL,
-        "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-        "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL
+    console.log('🔨 Criando tabelas do sistema de crescimento social...');
+    
+    // Tabela de perfis de redes sociais
+    await db`
+      CREATE TABLE IF NOT EXISTS social_profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        platform VARCHAR(50) NOT NULL,
+        username VARCHAR(255) NOT NULL,
+        profile_url TEXT,
+        followers_count INTEGER DEFAULT 0,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
+    console.log('✅ Tabela social_profiles criada');
 
-    console.log('✅ Tabela socialNetworks criada');
-
-    // Criar tabela socialGrowthData  
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS "socialGrowthData" (
-        "id" SERIAL PRIMARY KEY,
-        "socialNetworkId" INTEGER NOT NULL REFERENCES "socialNetworks"("id") ON DELETE CASCADE,
-        "userId" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
-        "recordDate" DATE NOT NULL,
-        "followers" INTEGER NOT NULL,
-        "averageLikes" INTEGER DEFAULT 0,
-        "averageComments" INTEGER DEFAULT 0,
-        "salesFromPlatform" INTEGER DEFAULT 0,
-        "usedDesignAutoArts" BOOLEAN DEFAULT false,
-        "notes" TEXT,
-        "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-        "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-        UNIQUE("socialNetworkId", "recordDate")
+    // Tabela de metas
+    await db`
+      CREATE TABLE IF NOT EXISTS social_goals (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        platform VARCHAR(50) NOT NULL,
+        goal_type VARCHAR(50) NOT NULL, -- 'followers' ou 'sales'
+        current_value INTEGER DEFAULT 0,
+        target_value INTEGER NOT NULL,
+        deadline DATE NOT NULL,
+        status VARCHAR(20) DEFAULT 'active', -- 'active', 'completed', 'paused'
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
+    `;
+    console.log('✅ Tabela social_goals criada');
 
-    console.log('✅ Tabela socialGrowthData criada');
+    // Tabela de dados históricos de performance
+    await db`
+      CREATE TABLE IF NOT EXISTS social_progress (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        platform VARCHAR(50) NOT NULL,
+        month_year VARCHAR(7) NOT NULL, -- formato: '2024-06'
+        followers_count INTEGER DEFAULT 0,
+        sales_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, platform, month_year)
+      )
+    `;
+    console.log('✅ Tabela social_progress criada');
 
-    // Criar índices para melhor performance
-    await db.query(`
-      CREATE INDEX IF NOT EXISTS "idx_social_networks_user_id" ON "socialNetworks"("userId");
-    `);
+    // Inserir dados de exemplo para demonstração
+    console.log('📊 Inserindo dados de exemplo...');
+    
+    // Primeiro, vamos verificar se existe um usuário admin
+    const adminUser = await db`SELECT id FROM users WHERE "nivelacesso" = 'admin' LIMIT 1`;
+    let userId;
+    
+    if (adminUser.length > 0) {
+      userId = adminUser[0].id;
+    } else {
+      // Criar um usuário de exemplo se não existir admin
+      const newUser = await db`
+        INSERT INTO users (name, email, password, "nivelacesso") 
+        VALUES ('Demo User', 'demo@designauto.com', 'demo123', 'admin')
+        RETURNING id
+      `;
+      userId = newUser[0].id;
+    }
 
-    await db.query(`
-      CREATE INDEX IF NOT EXISTS "idx_social_growth_data_user_id" ON "socialGrowthData"("userId");
-    `);
+    // Inserir perfis de exemplo
+    await db`
+      INSERT INTO social_profiles (user_id, platform, username, profile_url, followers_count)
+      VALUES 
+        (${userId}, 'instagram', '@designauto_oficial', 'https://instagram.com/designauto_oficial', 8500),
+        (${userId}, 'facebook', 'DesignAuto', 'https://facebook.com/designauto', 4200)
+      ON CONFLICT DO NOTHING
+    `;
 
-    await db.query(`
-      CREATE INDEX IF NOT EXISTS "idx_social_growth_data_date" ON "socialGrowthData"("recordDate");
-    `);
+    // Inserir metas de exemplo
+    await db`
+      INSERT INTO social_goals (user_id, platform, goal_type, current_value, target_value, deadline)
+      VALUES 
+        (${userId}, 'instagram', 'followers', 8500, 10000, '2024-12-31'),
+        (${userId}, 'facebook', 'followers', 4200, 5000, '2024-11-30'),
+        (${userId}, 'general', 'sales', 125, 150, '2024-10-31')
+      ON CONFLICT DO NOTHING
+    `;
 
-    console.log('✅ Índices criados');
-    console.log('🎉 Sistema de crescimento social configurado com sucesso!');
+    // Inserir dados históricos de exemplo
+    const months = ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'];
+    const instagramData = [7200, 7500, 7800, 8100, 8300, 8500];
+    const facebookData = [3800, 3900, 4000, 4100, 4150, 4200];
+    const salesData = [45, 52, 58, 65, 70, 75];
 
+    for (let i = 0; i < months.length; i++) {
+      await db`
+        INSERT INTO social_progress (user_id, platform, month_year, followers_count, sales_count)
+        VALUES 
+          (${userId}, 'instagram', ${months[i]}, ${instagramData[i]}, ${salesData[i]}),
+          (${userId}, 'facebook', ${months[i]}, ${facebookData[i]}, ${Math.floor(salesData[i] * 0.6)})
+        ON CONFLICT (user_id, platform, month_year) DO NOTHING
+      `;
+    }
+
+    console.log('✅ Sistema de crescimento social configurado com sucesso!');
+    console.log('📊 Dados de exemplo inseridos para demonstração');
+    
   } catch (error) {
     console.error('❌ Erro ao criar tabelas:', error);
     throw error;
-  } finally {
-    await db.end();
   }
 }
 
 // Executar se chamado diretamente
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   createSocialGrowthTables()
     .then(() => {
-      console.log('✅ Script executado com sucesso');
+      console.log('🎉 Setup completo!');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('❌ Erro na execução:', error);
+      console.error('💥 Falha no setup:', error);
       process.exit(1);
     });
 }
