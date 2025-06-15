@@ -195,14 +195,30 @@ app.use((req, res, next) => {
 (async () => {
   try {
     // Verificar configuração de ambiente (migrado para Supabase Storage)
-    validateR2Environment();
+    try {
+      validateR2Environment();
+    } catch (envError) {
+      console.warn("Environment validation warning:", envError);
+    }
+    
+    // Aguardar conexão do banco antes de prosseguir
+    console.log("Aguardando conexão com banco de dados...");
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     // Inicializar o banco de dados com dados
-    await initializeDatabase();
-    console.log("Banco de dados inicializado com sucesso");
+    try {
+      await initializeDatabase();
+      console.log("Banco de dados inicializado com sucesso");
+    } catch (dbError) {
+      console.error("Erro na inicialização do banco, continuando sem dados iniciais:", dbError);
+    }
     
     // Criar usuário administrador
-    await createAdminUser();
+    try {
+      await createAdminUser();
+    } catch (adminError) {
+      console.error("Erro ao criar usuário admin, continuando:", adminError);
+    }
     
     // Registrar rotas de administração
     app.use('/api', adminRoutes);

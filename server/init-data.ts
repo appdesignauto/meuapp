@@ -20,10 +20,24 @@ export async function initializeDatabase() {
   try {
     console.log("Inicializando o banco de dados...");
     
-    // Verifica se já existem categorias
-    const existingCategories = await db.select().from(categories);
+    // Retry logic for database connection
+    let retries = 3;
+    let existingCategories;
     
-    if (existingCategories.length > 0) {
+    while (retries > 0) {
+      try {
+        // Verifica se já existem categorias
+        existingCategories = await db.select().from(categories);
+        break;
+      } catch (error) {
+        retries--;
+        console.log(`Database connection failed, retrying... (${retries} attempts left)`);
+        if (retries === 0) throw error;
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    if (existingCategories && existingCategories.length > 0) {
       console.log("Banco de dados já inicializado.");
       return;
     }
@@ -270,7 +284,8 @@ export async function initializeDatabase() {
     const userData: InsertUser = {
       username: "admin",
       password: "admin123",
-      role: "premium"
+      email: "admin@designauto.com.br",
+      nivelacesso: "admin"
     };
     
     const insertedUser = await db.insert(users).values(userData).returning();
