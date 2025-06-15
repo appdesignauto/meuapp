@@ -1,0 +1,115 @@
+Plano para Dashboard de Crescimento Social - DesignAuto
+Estrutura Principal do Dashboard
+1. Header e Navegação
+
+Header fixo com logo/ícone do DesignAuto e título "Crescimento Social"
+Sistema de tabs para navegação entre 4 seções principais:
+
+Visão Geral
+Redes Sociais
+Metas
+Histórico
+
+
+
+2. Seção "Visão Geral" (Tab Principal)
+2.1 Métricas Principais (Grid de 4 Cards)
+
+Total de Seguidores: 12.700 (+8.3% este mês)
+Total de Vendas: 125 (+15.2% este mês)
+Metas Ativas: Quantidade total e quantas estão próximas ao objetivo
+Redes Conectadas: Número de plataformas conectadas
+
+2.2 Evolução do Crescimento de Seguidores (Grid de 3 Cards)
+
+Card Instagram: 8.500 seguidores com métricas de crescimento mensal, semanal e média diária
+Card Facebook: 4.200 seguidores com as mesmas métricas
+Card Total Geral: 12.700 seguidores consolidados
+
+2.3 Progresso das Metas
+
+Barra de progresso visual para cada meta ativa
+Percentual de conclusão
+Indicadores de status por plataforma
+
+2.4 Gráficos de Performance
+
+Gráfico de Linha - Crescimento de Seguidores: Evolução mensal Instagram vs Facebook
+Gráfico de Linha - Performance de Vendas: Evolução mensal de vendas por plataforma
+
+2.5 Comparativo Mensal
+
+Cards mensais mostrando crescimento específico por mês
+Breakdown por plataforma (Instagram/Facebook)
+Total consolidado para cada período
+
+2.6 Cards Resumo por Plataforma
+
+Card Instagram: Dados consolidados com design roxo/rosa
+Card Facebook: Dados consolidados com design azul
+
+3. Seção "Redes Sociais"
+
+Lista de perfis conectados (Instagram, Facebook)
+Funcionalidade para adicionar novas redes sociais
+Links para os perfis externos
+
+4. Seção "Metas"
+
+Cards individuais para cada meta com:
+
+Valor atual vs valor objetivo
+Barra de progresso visual
+Data limite
+Alertas de performance
+
+
+Funcionalidade para criar novas metas
+Opções de edição/exclusão
+
+5. Seção "Histórico"
+
+Tabela com dados mensais organizados
+Colunas para cada métrica por plataforma
+Funcionalidade para adicionar/atualizar dados mensais
+
+Funcionalidades Interativas
+Modais de Criação
+
+Adicionar Rede Social: Formulário com plataforma, nome do perfil e URL
+Criar Meta: Formulário com plataforma, tipo (seguidores/vendas), valor objetivo e prazo
+Atualizar Dados: Formulário para inserir dados mensais de performance
+
+Sistema de Alertas
+
+Alertas automáticos baseados no progresso das metas
+Notificações de sucesso quando metas são atingidas
+Avisos quando o ritmo está abaixo do esperado
+
+Dados e Estados Gerenciados
+Estrutura de Dados
+
+Profiles: Array com redes sociais conectadas
+Goals: Array com metas ativas (plataforma, tipo, valor atual, valor objetivo, prazo)
+Progress: Array com dados históricos mensais por plataforma
+Estados de UI: Controle de modais, tab ativa, formulários
+
+Cálculos Automáticos
+
+Crescimento percentual mensal e semanal
+Médias diárias de crescimento
+Progresso em relação às metas
+Comparativos mês a mês
+Alertas baseados em performance vs objetivos
+
+Responsividade
+
+Layout adaptativo para desktop, tablet e mobile
+Grids que se ajustam conforme o tamanho da tela
+Componentes otimizados para diferentes resoluções
+
+Biblioteca de Gráficos
+
+Utilização do Recharts para gráficos de linha
+Configuração de tooltips, legendas e estilos personalizados
+Gráficos responsivos que se adaptam ao container
