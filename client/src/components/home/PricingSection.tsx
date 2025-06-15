@@ -6,12 +6,12 @@ const PricingSection = () => {
     <section className="relative py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Escolha seu plano
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+            Seu crescimento começa aqui
           </h2>
-          <p className="text-gray-600 text-lg">
-            Escolha apenas a forma de pagamento que melhor se adapta a você.
+          <p className="text-gray-600 text-xl leading-relaxed">
+            Escolha um plano e tenha acesso imediato a designs exclusivos, suporte premium e resultados consistentes.
           </p>
         </div>
 
@@ -185,9 +185,9 @@ const PricingSection = () => {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <Award className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Garantia de 7 dias</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Garantia de 30 dias</h3>
               <p className="text-sm text-gray-600">
-                Não ficou satisfeito? Devolvemos 100% do seu dinheiro em até 7 dias.
+                Não ficou satisfeito? Devolvemos 100% do seu dinheiro em até 30 dias.
               </p>
             </div>
 
