@@ -118,6 +118,17 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Fixed pricing section layout issue preventing cards from separating unexpectedly
+  - Resolved CSS conflicts in grid spacing: unified gap-6 across all breakpoints instead of gap-10 md:gap-6
+  - Removed conflicting individual card margins (mx-4 md:mx-0) that caused layout shifts on mobile
+  - Eliminated transform md:scale-105 on annual plan that could cause alignment issues
+  - Applied proper container padding (px-4 md:px-0) for consistent mobile spacing
+  - Cards now maintain proper alignment and spacing across all device sizes
+- June 15, 2025: Applied professional login layout styling to password reset page for visual consistency
+  - Updated password creation page with same gradient background and glass card effects as login
+  - Added consistent Lock icons positioned at left, matching field heights and styling
+  - Preserved all existing form validation and functionality while updating visual design
+  - Enhanced error and success states to match professional design system
 - June 15, 2025: Updated pricing structure to new values: R$47 monthly, R$97 semi-annual, R$147 annual
   - Mensal: R$47 (unchanged)
   - Semestral: R$16,17/mês (R$97,00 à vista) with R$185 discount
