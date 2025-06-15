@@ -573,7 +573,7 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       twitter: platforms.filter(p => p.platform === 'twitter').reduce((sum, p) => sum + p.followers, 0)
     };
     
-    console.log('[ANALYTICS DEBUG] Platform specific calculated:', platformSpecific);
+
 
     res.json({
       totalNetworks: userNetworks.length,

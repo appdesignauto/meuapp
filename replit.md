@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Fixed platform-specific follower calculations and optimized date input for monthly updates
+  - Corrected backend logic to sum all accounts from same platform instead of taking only first account
+  - Instagram now correctly shows 16,000 followers (combining both @fernandooliveirapro accounts)
+  - Modified date selector in "Adicionar Dados" to use month/year picker (type="month") instead of full date
+  - System automatically sets last day of selected month for consistent monthly tracking
+  - Enhanced user experience for monthly data entry workflow as intended by user
 - June 15, 2025: Enhanced growth display with prominent +4,431 follower increase banner and restored minimalist goals layout
   - Added green highlight banner showing "Crescimento Identificado!" with clear +4,431 follower growth display
   - Changed analytics card from "Crescimento Mensal" to "Crescimento Total" displaying absolute numbers instead of percentages

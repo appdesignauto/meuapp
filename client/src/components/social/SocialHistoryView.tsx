@@ -475,9 +475,15 @@ export default function SocialHistoryView() {
                 <Label htmlFor="add-date">Data</Label>
                 <Input
                   id="add-date"
-                  type="date"
-                  value={formData.recordDate}
-                  onChange={(e) => setFormData({...formData, recordDate: e.target.value})}
+                  type="month"
+                  value={formData.recordDate ? formData.recordDate.substring(0, 7) : ''}
+                  onChange={(e) => {
+                    // Define automaticamente o último dia do mês selecionado
+                    const [year, month] = e.target.value.split('-');
+                    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+                    const fullDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+                    setFormData({...formData, recordDate: fullDate});
+                  }}
                 />
               </div>
             </div>
