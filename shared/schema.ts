@@ -1297,6 +1297,120 @@ export const insertAnalyticsSettingsSchema = createInsertSchema(analyticsSetting
 export type AnalyticsSettings = typeof analyticsSettings.$inferSelect;
 export type InsertAnalyticsSettings = z.infer<typeof insertAnalyticsSettingsSchema>;
 
+// ================================
+// SISTEMA DE CRESCIMENTO SOCIAL
+// ================================
+
+// Perfis de redes sociais
+export const socialProfiles = pgTable("social_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook', 'tiktok', 'youtube', etc.
+  username: text("username").notNull(),
+  profileUrl: text("profile_url"),
+  followersCount: integer("followers_count").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Metas de crescimento
+export const socialGoals = pgTable("social_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook', 'general'
+  goalType: text("goal_type").notNull(), // 'followers', 'sales'
+  currentValue: integer("current_value").default(0),
+  targetValue: integer("target_value").notNull(),
+  deadline: date("deadline").notNull(),
+  status: text("status").default("active"), // 'active', 'completed', 'paused'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Dados históricos de performance
+export const socialProgress = pgTable("social_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook'
+  monthYear: varchar("month_year", { length: 7 }).notNull(), // formato: '2024-06'
+  followersCount: integer("followers_count").default(0),
+  salesCount: integer("sales_count").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    uniqueUserPlatformMonth: primaryKey({ columns: [table.userId, table.platform, table.monthYear] }),
+  };
+});
+
+// Schemas de inserção para crescimento social
+export const insertSocialProfileSchema = createInsertSchema(socialProfiles, {
+  platform: z.enum(['instagram', 'facebook', 'tiktok', 'youtube', 'twitter']),
+  username: z.string().min(1, "Nome de usuário é obrigatório"),
+  profileUrl: z.string().url("URL inválida").optional(),
+  followersCount: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialGoalSchema = createInsertSchema(socialGoals, {
+  platform: z.enum(['instagram', 'facebook', 'general']),
+  goalType: z.enum(['followers', 'sales']),
+  currentValue: z.number().int().min(0).optional(),
+  targetValue: z.number().int().min(1, "Valor meta deve ser maior que 0"),
+  deadline: z.string().min(1, "Data limite é obrigatória"),
+  status: z.enum(['active', 'completed', 'paused']).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialProgressSchema = createInsertSchema(socialProgress, {
+  platform: z.enum(['instagram', 'facebook']),
+  monthYear: z.string().regex(/^\d{4}-\d{2}$/, "Formato deve ser YYYY-MM"),
+  followersCount: z.number().int().min(0).optional(),
+  salesCount: z.number().int().min(0).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Relações do sistema de crescimento social
+export const socialProfilesRelations = relations(socialProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [socialProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+export const socialGoalsRelations = relations(socialGoals, ({ one }) => ({
+  user: one(users, {
+    fields: [socialGoals.userId],
+    references: [users.id],
+  }),
+}));
+
+export const socialProgressRelations = relations(socialProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [socialProgress.userId],
+    references: [users.id],
+  }),
+}));
+
+// Tipos TypeScript para crescimento social
+export type SocialProfile = typeof socialProfiles.$inferSelect;
+export type InsertSocialProfile = z.infer<typeof insertSocialProfileSchema>;
+
+export type SocialGoal = typeof socialGoals.$inferSelect;
+export type InsertSocialGoal = z.infer<typeof insertSocialGoalSchema>;
+
+export type SocialProgress = typeof socialProgress.$inferSelect;
+export type InsertSocialProgress = z.infer<typeof insertSocialProgressSchema>;
+
 // Social Growth Tracking Tables
 export const socialNetworks = pgTable("socialNetworks", {
   id: serial("id").primaryKey(),
