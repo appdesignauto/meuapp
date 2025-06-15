@@ -90,16 +90,7 @@ export default function SocialGrowthDashboard() {
     description: ''
   });
   const [networkForm, setNetworkForm] = useState({ platform: '', username: '', profileUrl: '' });
-  const [dataForm, setDataForm] = useState({
-    socialNetworkId: 0,
-    recordDate: '',
-    followers: 0,
-    averageLikes: 0,
-    averageComments: 0,
-    salesFromPlatform: 0,
-    usedDesignAutoArts: false,
-    notes: ''
-  });
+
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -245,15 +236,7 @@ export default function SocialGrowthDashboard() {
     addGoalMutation.mutate(goalForm);
   };
 
-  // Set current month as default date
-  useEffect(() => {
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    setDataForm(prev => ({ 
-      ...prev, 
-      recordDate: firstDayOfMonth.toISOString().split('T')[0] 
-    }));
-  }, []);
+
 
   if (networksLoading || analyticsLoading) {
     return (
@@ -571,25 +554,7 @@ export default function SocialGrowthDashboard() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={showHistory} onOpenChange={setShowHistory}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
-                  <History className="w-4 h-4 mr-2" />
-                  Ver Histórico
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-                <DialogHeader>
-                  <DialogTitle>Histórico de Dados Sociais</DialogTitle>
-                  <DialogDescription>
-                    Visualize e gerencie todo o histórico de dados das suas redes sociais
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
-                  <SocialHistoryView />
-                </div>
-              </DialogContent>
-            </Dialog>
+
           </div>
         </div>
 
