@@ -118,11 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Completed pricing section mobile-only layout optimization with perfect badge spacing
-  - Fixed mobile badge overlap by increasing card spacing to gap-10 on mobile, preventing "Mais Popular" badge from touching adjacent cards
-  - Desktop layout preserved at original gap-8 spacing as requested by user
-  - Typography reverted to original text-4xl for all pricing amounts maintaining established design
-  - Mobile-first approach: enhanced spacing only where needed without affecting desktop experience
+- June 15, 2025: Updated pricing structure to new values: R$47 monthly, R$97 semi-annual, R$147 annual
+  - Mensal: R$47 (unchanged)
+  - Semestral: R$16,17/mês (R$97,00 à vista) with R$185 discount
+  - Anual: R$12,25/mês (R$147,00 à vista) with R$417 discount
+  - Maintained mobile-only layout optimizations with gap-10 spacing preventing badge overlap
+  - Desktop layout preserved at original gap-6 spacing as requested by user
 - June 15, 2025: Enhanced pricing section typography and visual hierarchy for improved readability
   - Increased main price size from text-4xl to text-5xl across all three pricing cards for better prominence
   - Upgraded description text from text-sm to text-base for enhanced legibility and professional appearance

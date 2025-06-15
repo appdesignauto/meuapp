@@ -84,12 +84,12 @@ const PricingSection = () => {
             <div className="text-center mb-6 pt-2">
               <h3 className="text-lg font-semibold mb-3">Anual</h3>
               <div className="mb-1">
-                <span className="text-4xl font-bold">R$29,70</span>
+                <span className="text-4xl font-bold">R$12,25</span>
                 <span className="text-sm opacity-90">/mês</span>
               </div>
-              <p className="text-sm opacity-90 mb-3">R$297 à vista</p>
+              <p className="text-sm opacity-90 mb-3">R$147,00 à vista</p>
               <div className="text-xs font-medium bg-white/20 rounded-full px-2 py-0.5 inline-block">
-                +R$267 de DESCONTO!
+                +R$417 de DESCONTO!
               </div>
             </div>
             
@@ -144,7 +144,7 @@ const PricingSection = () => {
               </div>
               <p className="text-sm text-gray-600 mb-3">R$97,00 à vista</p>
               <div className="text-green-500 text-xs font-medium border border-green-500 rounded-full px-2 py-0.5 inline-block">
-                +R$85 de DESCONTO
+                +R$185 de DESCONTO
               </div>
             </div>
             
