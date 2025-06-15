@@ -36,7 +36,7 @@ const CallToAction = () => {
           <div className="md:w-1/3">
             <div className="bg-neutral-800 p-6 rounded-lg">
               <h3 className="text-xl font-semibold mb-3">Assine e economize</h3>
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-3">
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-secondary-500 mr-2" />
                   <span>Acesso a todo o catálogo</span>
@@ -53,16 +53,15 @@ const CallToAction = () => {
                   <CheckCircle className="h-5 w-5 text-secondary-500 mr-2" />
                   <span>Suporte exclusivo</span>
                 </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-secondary-500 mr-2" />
+                  <span>Garantia de 30 dias</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-secondary-500 mr-2" />
+                  <span>Acesso imediato</span>
+                </li>
               </ul>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">R$47</span>
-                <span className="text-neutral-400">/mês</span>
-              </div>
-              <Link href="/planos">
-                <Button className="bg-secondary-500 hover:bg-secondary-500/90 text-white w-full px-6 py-3">
-                  Assinar Premium
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
