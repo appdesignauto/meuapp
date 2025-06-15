@@ -84,7 +84,8 @@ export default function SocialGrowthDashboard() {
   const [networkForm, setNetworkForm] = useState({
     platform: '',
     username: '',
-    profileUrl: ''
+    profileUrl: '',
+    initialFollowers: 0
   });
   
   const [goalForm, setGoalForm] = useState({
@@ -119,7 +120,7 @@ export default function SocialGrowthDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/networks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/analytics'] });
       setIsAddingNetwork(false);
-      setNetworkForm({ platform: '', username: '', profileUrl: '' });
+      setNetworkForm({ platform: '', username: '', profileUrl: '', initialFollowers: 0 });
       toast({ title: 'Rede social adicionada com sucesso!' });
     },
     onError: (error: any) => {
@@ -251,6 +252,21 @@ export default function SocialGrowthDashboard() {
                       onChange={(e) => setNetworkForm(prev => ({ ...prev, profileUrl: e.target.value }))}
                       placeholder="https://..."
                     />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="initialFollowers">Seguidores atuais</Label>
+                    <Input
+                      id="initialFollowers"
+                      type="number"
+                      value={networkForm.initialFollowers}
+                      onChange={(e) => setNetworkForm(prev => ({ ...prev, initialFollowers: parseInt(e.target.value) || 0 }))}
+                      placeholder="0"
+                      min="0"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Informe a quantidade atual de seguidores para calcular o crescimento automaticamente
+                    </p>
                   </div>
                 </div>
                 <DialogFooter>

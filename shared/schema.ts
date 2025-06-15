@@ -1304,6 +1304,7 @@ export const socialNetworks = pgTable("socialNetworks", {
   platform: text("platform").notNull(), // instagram, facebook, tiktok, whatsapp_business, youtube, linkedin, twitter
   username: text("username").notNull(),
   profileUrl: text("profileUrl"),
+  initialFollowers: integer("initialFollowers").notNull().default(0), // Seguidores iniciais no momento do cadastro
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
@@ -1313,8 +1314,9 @@ export const socialGrowthData = pgTable("socialGrowthData", {
   id: serial("id").primaryKey(),
   socialNetworkId: integer("socialNetworkId").notNull().references(() => socialNetworks.id, { onDelete: "cascade" }),
   userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  recordDate: date("recordDate").notNull(), // Data do registro (primeiro dia do mês)
-  followers: integer("followers").notNull(),
+  recordDate: date("recordDate").notNull(), // Data do registro (flexível - não apenas primeiro dia do mês)
+  followers: integer("followers").notNull(), // Valor absoluto atual de seguidores
+  growthFromPrevious: integer("growthFromPrevious").default(0), // Crescimento/queda calculado automaticamente
   averageLikes: integer("averageLikes").default(0),
   averageComments: integer("averageComments").default(0),
   salesFromPlatform: integer("salesFromPlatform").default(0),

@@ -240,11 +240,52 @@ router.post('/data', requireAuth, async (req: any, res) => {
       return res.status(404).json({ message: 'Rede social não encontrada' });
     }
 
-    // Sempre criar novos dados (permitir múltiplas entradas por data)
-    console.log('[ADD DATA] Criando novos dados (sem restrição de data):', validatedData);
+    // Calcular crescimento baseado no registro anterior ou seguidores iniciais
+    console.log('[ADD DATA] Calculando crescimento automático...');
+    
+    // Buscar o último registro desta rede social
+    const lastRecord = await db
+      .select()
+      .from(socialGrowthData)
+      .where(eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId))
+      .orderBy(desc(socialGrowthData.recordDate), desc(socialGrowthData.createdAt))
+      .limit(1);
+
+    let growthFromPrevious = 0;
+    let previousFollowers = 0;
+
+    if (lastRecord.length > 0) {
+      // Há registros anteriores - calcular crescimento baseado no último registro
+      previousFollowers = lastRecord[0].followers;
+      growthFromPrevious = validatedData.followers - previousFollowers;
+      console.log(`[ADD DATA] Último registro: ${previousFollowers} seguidores`);
+    } else {
+      // Primeiro registro - calcular crescimento baseado nos seguidores iniciais da rede
+      const networkInfo = await db
+        .select({ initialFollowers: socialNetworks.initialFollowers })
+        .from(socialNetworks)
+        .where(eq(socialNetworks.id, validatedData.socialNetworkId))
+        .limit(1);
+      
+      if (networkInfo.length > 0) {
+        previousFollowers = networkInfo[0].initialFollowers;
+        growthFromPrevious = validatedData.followers - previousFollowers;
+        console.log(`[ADD DATA] Primeiro registro - seguidores iniciais: ${previousFollowers}`);
+      }
+    }
+
+    console.log(`[ADD DATA] Crescimento calculado: ${growthFromPrevious} (${validatedData.followers} - ${previousFollowers})`);
+
+    // Criar dados com crescimento calculado
+    const dataToInsert = {
+      ...validatedData,
+      growthFromPrevious
+    };
+
+    console.log('[ADD DATA] Criando dados com crescimento calculado:', dataToInsert);
     const [created] = await db
       .insert(socialGrowthData)
-      .values(validatedData)
+      .values(dataToInsert)
       .returning();
 
     console.log('[ADD DATA] Dados criados com sucesso:', created);
