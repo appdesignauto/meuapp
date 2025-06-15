@@ -136,6 +136,37 @@ router.delete('/networks/:id', requireAuth, async (req: any, res) => {
   }
 });
 
+// GET /api/social-growth/history - Obter todo o histórico do usuário
+router.get('/history', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+
+    const data = await db
+      .select({
+        id: socialGrowthData.id,
+        socialNetworkId: socialGrowthData.socialNetworkId,
+        recordDate: socialGrowthData.recordDate,
+        followers: socialGrowthData.followers,
+        averageLikes: socialGrowthData.averageLikes,
+        averageComments: socialGrowthData.averageComments,
+        salesFromPlatform: socialGrowthData.salesFromPlatform,
+        usedDesignAutoArts: socialGrowthData.usedDesignAutoArts,
+        notes: socialGrowthData.notes,
+        networkPlatform: socialNetworks.platform,
+        networkUsername: socialNetworks.username
+      })
+      .from(socialGrowthData)
+      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
+      .where(eq(socialNetworks.userId, userId))
+      .orderBy(desc(socialGrowthData.recordDate));
+
+    res.json(data);
+  } catch (error) {
+    console.error('Erro ao buscar histórico:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
 // GET /api/social-growth/data/:networkId - Obter dados de crescimento
 router.get('/data/:networkId', requireAuth, async (req: any, res) => {
   try {
@@ -245,6 +276,81 @@ router.post('/data', requireAuth, async (req: any, res) => {
       return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
     }
     console.error('Erro ao salvar dados de crescimento:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/social-growth/data/:id - Atualizar dados de crescimento
+router.put('/data/:id', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const dataId = parseInt(req.params.id);
+    const validatedData = insertSocialGrowthDataSchema.parse({
+      ...req.body,
+      userId
+    });
+
+    // Verificar se os dados pertencem ao usuário
+    const existingData = await db
+      .select()
+      .from(socialGrowthData)
+      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
+      .where(
+        and(
+          eq(socialGrowthData.id, dataId),
+          eq(socialNetworks.userId, userId)
+        )
+      );
+
+    if (existingData.length === 0) {
+      return res.status(404).json({ message: 'Dados não encontrados' });
+    }
+
+    const [updated] = await db
+      .update(socialGrowthData)
+      .set({
+        ...validatedData,
+        updatedAt: new Date()
+      })
+      .where(eq(socialGrowthData.id, dataId))
+      .returning();
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Erro ao atualizar dados:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// DELETE /api/social-growth/data/:id - Excluir dados de crescimento
+router.delete('/data/:id', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const dataId = parseInt(req.params.id);
+
+    // Verificar se os dados pertencem ao usuário
+    const existingData = await db
+      .select()
+      .from(socialGrowthData)
+      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
+      .where(
+        and(
+          eq(socialGrowthData.id, dataId),
+          eq(socialNetworks.userId, userId)
+        )
+      );
+
+    if (existingData.length === 0) {
+      return res.status(404).json({ message: 'Dados não encontrados' });
+    }
+
+    await db
+      .delete(socialGrowthData)
+      .where(eq(socialGrowthData.id, dataId));
+
+    res.json({ message: 'Dados excluídos com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir dados:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
