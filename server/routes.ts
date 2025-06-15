@@ -8940,8 +8940,7 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       const progress = await db.select()
         .from(socialProgress)
-        .where(eq(socialProgress.userId, userId))
-        .orderBy(desc(socialProgress.date));
+        .where(eq(socialProgress.userId, userId));
       
       res.json(progress);
     } catch (error) {
@@ -8983,33 +8982,29 @@ app.use('/api/reports-v2', (req, res, next) => {
         .from(socialProfiles)
         .where(eq(socialProfiles.userId, userId));
       
-      const totalFollowers = profiles.reduce((sum, profile) => sum + (profile.followers || 0), 0);
+      const totalFollowers = profiles.reduce((sum, profile) => sum + (profile.currentFollowers || 0), 0);
       
       // Buscar metas ativas
-      const activeGoals = await db.select({ count: sql<number>`count(*)` })
+      const goals = await db.select()
         .from(socialGoals)
         .where(and(
           eq(socialGoals.userId, userId),
-          eq(socialGoals.status, 'active')
+          eq(socialGoals.isActive, true)
         ));
       
-      // Buscar progresso recente para calcular crescimento
+      // Buscar progresso recente
       const recentProgress = await db.select()
         .from(socialProgress)
-        .where(eq(socialProgress.userId, userId))
-        .orderBy(desc(socialProgress.date))
-        .limit(30);
+        .where(eq(socialProgress.userId, userId));
       
       // Calcular crescimento mensal (dados reais baseados no progresso)
-      const thisMonth = new Date();
-      thisMonth.setDate(1);
-      const lastMonth = new Date(thisMonth);
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
       
-      const thisMonthProgress = recentProgress.filter(p => new Date(p.date) >= thisMonth);
-      const lastMonthProgress = recentProgress.filter(p => 
-        new Date(p.date) >= lastMonth && new Date(p.date) < thisMonth
-      );
+      const thisMonthProgress = recentProgress.filter(p => p.month === currentMonth && p.year === currentYear);
+      const lastMonthProgress = recentProgress.filter(p => p.month === lastMonth && p.year === lastMonthYear);
       
       const thisMonthFollowers = thisMonthProgress.reduce((sum, p) => sum + (p.followers || 0), 0);
       const lastMonthFollowers = lastMonthProgress.reduce((sum, p) => sum + (p.followers || 0), 0);
@@ -9032,7 +9027,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         monthlyGrowth,
         totalSales,
         salesGrowth,
-        activeGoals: activeGoals[0]?.count || 0
+        activeGoals: goals.length
       });
     } catch (error) {
       console.error('Erro ao buscar visão geral:', error);
