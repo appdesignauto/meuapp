@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, TrendingUp, Users, DollarSign, BarChart3, Calendar, Trash2, Edit3, Instagram, Facebook, MessageCircle, Youtube, Linkedin, Twitter } from 'lucide-react';
+import { Plus, TrendingUp, Users, DollarSign, BarChart3, Calendar, Trash2, Edit3, Instagram, Facebook, MessageCircle, Youtube, Linkedin, Twitter, History } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,6 +74,7 @@ export default function SocialGrowthDashboard() {
   const [isAddingNetwork, setIsAddingNetwork] = useState(false);
   const [isAddingData, setIsAddingData] = useState(false);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [goalForm, setGoalForm] = useState({
     networkId: '',
     goalType: 'followers' as 'followers' | 'engagement' | 'sales',
@@ -557,6 +558,26 @@ export default function SocialGrowthDashboard() {
                     {addGoalMutation.isPending ? 'Criando...' : 'Criar Meta'}
                   </Button>
                 </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showHistory} onOpenChange={setShowHistory}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
+                  <History className="w-4 h-4 mr-2" />
+                  Ver Histórico
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+                <DialogHeader>
+                  <DialogTitle>Histórico de Dados Sociais</DialogTitle>
+                  <DialogDescription>
+                    Visualize e gerencie todo o histórico de dados das suas redes sociais
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                  <SocialHistoryView />
+                </div>
               </DialogContent>
             </Dialog>
           </div>
