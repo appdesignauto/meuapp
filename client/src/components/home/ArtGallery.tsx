@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ArrowDown, Star, CheckCircle, Shield, Zap } from 'lucide-react';
+import { ArrowRight, ArrowDown, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
@@ -175,97 +175,22 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               </AnimatePresence>
             </div>
             
-            {/* Premium Subscription Section */}
+            {/* Ver mais artes link */}
             {data?.arts && data.arts.length > 0 && (
-              <>
-                <motion.div 
-                  className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 mt-12 mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+              <motion.div 
+                className="flex justify-center mt-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Link 
+                  href="/artes"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
                 >
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                      Acesso Premium
-                    </h3>
-                    <p className="text-gray-600 text-sm md:text-base">
-                      Milhares de artes exclusivas para seu negócio
-                    </p>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
-                    {/* Features List */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">Acesso a todas as artes</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">Edições ilimitadas</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">Atualizações semanais</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Shield className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">Garantia de 30 dias</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Zap className="h-5 w-5 text-orange-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">Acesso imediato</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm md:text-base">Sem compromisso</span>
-                      </div>
-                    </div>
-
-                    {/* Pricing and CTA */}
-                    <div className="text-center space-y-4">
-                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6">
-                        <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-1">
-                          R$ 29,70
-                        </div>
-                        <div className="text-gray-600 text-sm">
-                          por mês no plano anual
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Economia de 37%
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                        onClick={() => setLocation('/cadastro')}
-                      >
-                        Assinar Premium
-                      </Button>
-                      
-                      <p className="text-xs text-gray-500">
-                        Cancele a qualquer momento
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Ver mais artes link */}
-                <motion.div 
-                  className="flex justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Link 
-                    href="/artes"
-                    className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
-                  >
-                    Ver todas as artes
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </motion.div>
-              </>
+                  Ver todas as artes
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </motion.div>
             )}
           </>
         )}
