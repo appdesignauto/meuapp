@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Applied professional layout to password reset page (/password/reset) for visual consistency
+  - Updated create new password page with gradient background, DesignAuto logo, and card layout
+  - Added password strength indicator with real-time validation and progress bar
+  - Implemented show/hide password toggles with eye icons
+  - Created consistent visual states for form, token error, and success scenarios
+  - All authentication pages now use unified professional design language
 - June 15, 2025: Updated pricing structure to new values: R$47 monthly, R$97 semi-annual, R$147 annual
   - Mensal: R$47 (unchanged)
   - Semestral: R$16,17/mês (R$97,00 à vista) with R$185 discount
