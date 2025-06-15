@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Target, Calendar, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Target, Calendar, TrendingUp, AlertTriangle, Instagram, Facebook, MessageCircle, Youtube, Users, Edit3, Trash2 } from 'lucide-react';
 
 // Types
 interface SocialGoal {
@@ -21,11 +21,25 @@ interface SocialGoal {
   networkPlatform?: string;
 }
 
+// Platform configurations
+const platformConfig = {
+  instagram: { name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+  facebook: { name: 'Facebook', icon: Facebook, color: 'bg-blue-600' },
+  whatsapp: { name: 'WhatsApp Business', icon: MessageCircle, color: 'bg-green-600' },
+  youtube: { name: 'YouTube', icon: Youtube, color: 'bg-red-600' },
+  tiktok: { name: 'TikTok', icon: Users, color: 'bg-black' },
+};
+
 // Component para visualização apenas das metas
 export default function SocialGoalsView() {
   // Fetch goals
   const { data: goals = [], isLoading: goalsLoading } = useQuery<SocialGoal[]>({
     queryKey: ['/api/social-growth/goals'],
+  });
+
+  // Fetch networks para mapear os nomes
+  const { data: networks = [] } = useQuery({
+    queryKey: ['/api/social-growth/networks'],
   });
 
   const getGoalTypeLabel = (type: string) => {
@@ -126,57 +140,119 @@ export default function SocialGoalsView() {
           Minhas Metas ({goals.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {goals.map((goal) => {
           const progress = calculateProgress(goal.currentValue, goal.targetValue);
           const daysLeft = getDaysUntilDeadline(goal.deadline);
-          const GoalIcon = getGoalTypeIcon(goal.goalType);
+          
+          // Encontrar a rede associada
+          const network = networks.find((n: any) => n.id === goal.networkId);
+          const platform = network?.platform || 'instagram';
+          const config = platformConfig[platform as keyof typeof platformConfig] || platformConfig.instagram;
+          const Icon = config.icon;
+          
+          // Formatação da data
+          const deadlineDate = new Date(goal.deadline);
+          const formattedDate = deadlineDate.toLocaleDateString('pt-BR');
+          
+          // Cor da barra de progresso baseada no desempenho
+          let progressColor = 'bg-blue-600';
+          if (goal.isCompleted) {
+            progressColor = 'bg-green-600';
+          } else if (progress >= 75) {
+            progressColor = 'bg-blue-600';
+          } else if (progress >= 50) {
+            progressColor = 'bg-yellow-500';
+          } else if (progress >= 25) {
+            progressColor = 'bg-orange-500';
+          } else {
+            progressColor = 'bg-red-500';
+          }
+          
+          // Determinar se precisa de alerta
+          const needsAlert = !goal.isCompleted && daysLeft > 0 && progress < 50 && daysLeft <= 30;
+          const requiredGrowth = Math.ceil((goal.targetValue - goal.currentValue) / Math.max(daysLeft, 1));
           
           return (
-            <div key={goal.id} className="p-4 border border-slate-200 rounded-lg">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <GoalIcon className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <h4 className="font-medium text-slate-900">
-                      {getGoalTypeLabel(goal.goalType)} - {goal.networkName || `Rede ${goal.networkId}`}
-                    </h4>
-                    {goal.description && (
-                      <p className="text-sm text-slate-600 mt-1">{goal.description}</p>
-                    )}
-                  </div>
+            <div key={goal.id} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+              {/* Header com ícone e título */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`p-3 rounded-xl ${config.color} text-white`}>
+                  <Icon className="w-6 h-6" />
                 </div>
-                {getStatusBadge(goal)}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900 text-lg">
+                    {getGoalTypeLabel(goal.goalType)} - {config.name}
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Meta até {formattedDate}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 text-slate-400 hover:text-red-600 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Progresso</span>
-                  <span className="font-medium">
-                    {goal.currentValue.toLocaleString()} / {goal.targetValue.toLocaleString()}
-                  </span>
+              {/* Valores grandes */}
+              <div className="flex items-end gap-3 mb-3">
+                <div className="text-4xl font-bold text-slate-900">
+                  {goal.currentValue.toLocaleString()}
                 </div>
-                <Progress value={progress} className="h-2" />
-                <div className="flex justify-between text-xs text-slate-500">
+                <div className="text-lg text-slate-500 mb-1">
+                  / {goal.targetValue.toLocaleString()}
+                </div>
+              </div>
+              
+              {/* Barra de progresso personalizada */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-slate-600 mb-2">
                   <span>{progress.toFixed(1)}% concluído</span>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
+                  <span>
                     {daysLeft > 0 ? (
-                      <span>{daysLeft} dias restantes</span>
+                      `${daysLeft} dias restantes`
+                    ) : daysLeft === 0 ? (
+                      'Vence hoje'
                     ) : (
                       <span className="text-red-600">Vencida há {Math.abs(daysLeft)} dias</span>
                     )}
-                  </div>
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full transition-all duration-500 ${progressColor}`}
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  ></div>
                 </div>
               </div>
               
               {/* Alerta de performance */}
-              {!goal.isCompleted && daysLeft > 0 && progress < 50 && daysLeft <= 14 && (
-                <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded flex items-center gap-2 text-sm text-orange-800">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Acelere o ritmo para atingir sua meta no prazo!</span>
+              {needsAlert && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-yellow-800 font-medium">
+                      Você precisa ganhar {requiredGrowth.toLocaleString()} {getGoalTypeLabel(goal.goalType).toLowerCase()} por {daysLeft === 1 ? 'dia' : 'mês'} para manter o ritmo.
+                    </p>
+                  </div>
                 </div>
               )}
+              
+              {/* Descrição se houver */}
+              {goal.description && (
+                <div className="mt-3 text-sm text-slate-600 bg-white rounded-lg p-3 border border-slate-100">
+                  {goal.description}
+                </div>
+              )}
+              
+              {/* Badge de status */}
+              <div className="mt-4 flex justify-end">
+                {getStatusBadge(goal)}
+              </div>
             </div>
           );
         })}

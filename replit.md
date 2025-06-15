@@ -118,6 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Enhanced social goals system with professional visual design matching user reference
+  - Moved "Adicionar Meta" button to header action area alongside "Adicionar Rede" and "Adicionar Dados"
+  - Created SocialGoalsView component for visualization-only display in dashboard body
+  - Implemented card-based layout with platform-specific icons and gradient colors
+  - Added large progress indicators, completion percentages, and deadline countdowns
+  - Integrated intelligent performance alerts with specific growth recommendations
+  - Applied visual hierarchy: large current values, colored progress bars, status badges
+  - Dashboard now has clean separation between action buttons (header) and content visualization (body)
 - June 15, 2025: Added Social Growth Dashboard to main navigation "Recursos" menu
   - Dashboard now accessible through Resources dropdown with TrendingUp icon
   - Users can easily access social media tracking from main navigation
