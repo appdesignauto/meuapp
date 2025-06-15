@@ -45,7 +45,6 @@ import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
-import SocialGrowthDashboard from "@/pages/SocialGrowthDashboard";
 
 // Páginas do Footer
 import About from "@/pages/About";
@@ -237,9 +236,6 @@ function AppRoutes() {
       
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
-      
-      {/* Dashboard de Crescimento Social */}
-      <ProtectedRoute path="/social-growth" component={SocialGrowthDashboard} />
       
       {/* Rotas do Painel do Usuário */}
       <ProtectedPainelRoute path="/painel/inicio" component={PainelInicio} />

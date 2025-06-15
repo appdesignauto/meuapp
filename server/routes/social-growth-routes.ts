@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db';
-import { socialNetworks, socialGrowthData, socialGoals, insertSocialNetworkSchema, insertSocialGrowthDataSchema, insertSocialGoalSchema } from '@shared/schema';
+import { socialNetworks, socialGrowthData, insertSocialNetworkSchema, insertSocialGrowthDataSchema } from '@shared/schema';
 import { eq, and, desc, asc, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -136,39 +136,6 @@ router.delete('/networks/:id', requireAuth, async (req: any, res) => {
   }
 });
 
-// GET /api/social-growth/history - Obter todo o histórico do usuário
-router.get('/history', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    console.log(`[HISTORY] Buscando histórico para usuário ${userId}`);
-
-    const data = await db
-      .select({
-        id: socialGrowthData.id,
-        socialNetworkId: socialGrowthData.socialNetworkId,
-        recordDate: socialGrowthData.recordDate,
-        followers: socialGrowthData.followers,
-        averageLikes: socialGrowthData.averageLikes,
-        averageComments: socialGrowthData.averageComments,
-        salesFromPlatform: socialGrowthData.salesFromPlatform,
-        usedDesignAutoArts: socialGrowthData.usedDesignAutoArts,
-        notes: socialGrowthData.notes,
-        networkPlatform: socialNetworks.platform,
-        networkUsername: socialNetworks.username
-      })
-      .from(socialGrowthData)
-      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
-      .where(eq(socialNetworks.userId, userId))
-      .orderBy(desc(socialGrowthData.recordDate));
-
-    console.log(`[HISTORY] Encontrados ${data.length} registros:`, data);
-    res.json(data);
-  } catch (error) {
-    console.error('Erro ao buscar histórico:', error);
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
 // GET /api/social-growth/data/:networkId - Obter dados de crescimento
 router.get('/data/:networkId', requireAuth, async (req: any, res) => {
   try {
@@ -216,14 +183,10 @@ router.get('/data/:networkId', requireAuth, async (req: any, res) => {
 router.post('/data', requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
-    console.log(`[ADD DATA] Usuário ${userId} adicionando dados:`, req.body);
-    
     const validatedData = insertSocialGrowthDataSchema.parse({
       ...req.body,
       userId
     });
-    
-    console.log('[ADD DATA] Dados validados:', validatedData);
 
     // Verificar se a rede pertence ao usuário
     const network = await db
@@ -240,136 +203,48 @@ router.post('/data', requireAuth, async (req: any, res) => {
       return res.status(404).json({ message: 'Rede social não encontrada' });
     }
 
-    // Calcular crescimento baseado no registro anterior ou seguidores iniciais
-    console.log('[ADD DATA] Calculando crescimento automático...');
-    
-    // Buscar o último registro desta rede social
-    const lastRecord = await db
+    // Verificar se já existe dados para esta data
+    const existing = await db
       .select()
       .from(socialGrowthData)
-      .where(eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId))
-      .orderBy(desc(socialGrowthData.recordDate), desc(socialGrowthData.createdAt))
-      .limit(1);
+      .where(
+        and(
+          eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId),
+          eq(socialGrowthData.recordDate, validatedData.recordDate)
+        )
+      );
 
-    let growthFromPrevious = 0;
-    let previousFollowers = 0;
+    if (existing.length > 0) {
+      // Atualizar dados existentes
+      const [updated] = await db
+        .update(socialGrowthData)
+        .set({
+          ...validatedData,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId),
+            eq(socialGrowthData.recordDate, validatedData.recordDate)
+          )
+        )
+        .returning();
 
-    if (lastRecord.length > 0) {
-      // Há registros anteriores - calcular crescimento baseado no último registro
-      previousFollowers = lastRecord[0].followers;
-      growthFromPrevious = validatedData.followers - previousFollowers;
-      console.log(`[ADD DATA] Último registro: ${previousFollowers} seguidores`);
+      return res.json(updated);
     } else {
-      // Primeiro registro - calcular crescimento baseado nos seguidores iniciais da rede
-      const networkInfo = await db
-        .select({ initialFollowers: socialNetworks.initialFollowers })
-        .from(socialNetworks)
-        .where(eq(socialNetworks.id, validatedData.socialNetworkId))
-        .limit(1);
-      
-      if (networkInfo.length > 0) {
-        previousFollowers = networkInfo[0].initialFollowers;
-        growthFromPrevious = validatedData.followers - previousFollowers;
-        console.log(`[ADD DATA] Primeiro registro - seguidores iniciais: ${previousFollowers}`);
-      }
+      // Criar novos dados
+      const [created] = await db
+        .insert(socialGrowthData)
+        .values(validatedData)
+        .returning();
+
+      return res.status(201).json(created);
     }
-
-    console.log(`[ADD DATA] Crescimento calculado: ${growthFromPrevious} (${validatedData.followers} - ${previousFollowers})`);
-
-    // Criar dados com crescimento calculado
-    const dataToInsert = {
-      ...validatedData,
-      growthFromPrevious
-    };
-
-    console.log('[ADD DATA] Criando dados com crescimento calculado:', dataToInsert);
-    const [created] = await db
-      .insert(socialGrowthData)
-      .values(dataToInsert)
-      .returning();
-
-    console.log('[ADD DATA] Dados criados com sucesso:', created);
-    return res.status(201).json(created);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
     }
     console.error('Erro ao salvar dados de crescimento:', error);
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
-// PUT /api/social-growth/data/:id - Atualizar dados de crescimento
-router.put('/data/:id', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    const dataId = parseInt(req.params.id);
-    const validatedData = insertSocialGrowthDataSchema.parse({
-      ...req.body,
-      userId
-    });
-
-    // Verificar se os dados pertencem ao usuário
-    const existingData = await db
-      .select()
-      .from(socialGrowthData)
-      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
-      .where(
-        and(
-          eq(socialGrowthData.id, dataId),
-          eq(socialNetworks.userId, userId)
-        )
-      );
-
-    if (existingData.length === 0) {
-      return res.status(404).json({ message: 'Dados não encontrados' });
-    }
-
-    const [updated] = await db
-      .update(socialGrowthData)
-      .set({
-        ...validatedData,
-        updatedAt: new Date()
-      })
-      .where(eq(socialGrowthData.id, dataId))
-      .returning();
-
-    res.json(updated);
-  } catch (error) {
-    console.error('Erro ao atualizar dados:', error);
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
-// DELETE /api/social-growth/data/:id - Excluir dados de crescimento
-router.delete('/data/:id', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    const dataId = parseInt(req.params.id);
-
-    // Verificar se os dados pertencem ao usuário
-    const existingData = await db
-      .select()
-      .from(socialGrowthData)
-      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
-      .where(
-        and(
-          eq(socialGrowthData.id, dataId),
-          eq(socialNetworks.userId, userId)
-        )
-      );
-
-    if (existingData.length === 0) {
-      return res.status(404).json({ message: 'Dados não encontrados' });
-    }
-
-    await db
-      .delete(socialGrowthData)
-      .where(eq(socialGrowthData.id, dataId));
-
-    res.json({ message: 'Dados excluídos com sucesso' });
-  } catch (error) {
-    console.error('Erro ao excluir dados:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
@@ -389,8 +264,6 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       .select()
       .from(socialNetworks)
       .where(eq(socialNetworks.userId, userId));
-    
-    console.log('[ANALYTICS DEBUG] User networks found:', userNetworks);
 
     if (userNetworks.length === 0) {
       return res.json({
@@ -424,47 +297,33 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       )
       .orderBy(desc(socialGrowthData.recordDate));
 
-    // Agrupar por plataforma (pegar apenas o valor mais recente)
+    // Agrupar por plataforma
     const platforms = userNetworks.reduce((acc, network) => {
       const networkData = latestData.filter(d => d.socialNetworkId === network.id);
-      // Pegar apenas o registro mais recente (primeiro do array já ordenado por data desc)
-      const latestRecord = networkData[0];
-      
-      if (latestRecord) {
-        acc.push({
-          platform: network.platform,
-          username: network.username,
-          followers: latestRecord.followers,
-          sales: latestRecord.salesFromPlatform || 0,
-          lastUpdate: latestRecord.recordDate
-        });
-      } else {
-        // Se não há dados históricos, usar os seguidores iniciais da rede
-        acc.push({
-          platform: network.platform,
-          username: network.username,
-          followers: network.initialFollowers || 0,
-          sales: 0,
-          lastUpdate: null
-        });
-      }
+      const totalFollowers = networkData.reduce((sum, d) => sum + d.followers, 0);
+      const totalSales = networkData.reduce((sum, d) => sum + (d.salesFromPlatform || 0), 0);
+
+      acc.push({
+        platform: network.platform,
+        username: network.username,
+        followers: totalFollowers,
+        sales: totalSales,
+        lastUpdate: networkData[0]?.recordDate || null
+      });
 
       return acc;
     }, [] as any[]);
 
     // Calcular totais
-    console.log('[ANALYTICS DEBUG] Platforms data:', platforms);
     const totalFollowers = platforms.reduce((sum, p) => sum + p.followers, 0);
-    console.log('[ANALYTICS DEBUG] Total followers calculated:', totalFollowers);
     const totalSales = platforms.reduce((sum, p) => sum + p.sales, 0);
 
-    // Tendência de crescimento - buscar dados mais recentes de cada mês por plataforma
-    const allData = await db
+    // Tendência de crescimento (últimos 6 meses)
+    const growthTrend = await db
       .select({
-        recordDate: socialGrowthData.recordDate,
-        socialNetworkId: socialGrowthData.socialNetworkId,
-        followers: socialGrowthData.followers,
-        salesFromPlatform: socialGrowthData.salesFromPlatform
+        month: sql<string>`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`,
+        totalFollowers: sql<number>`sum(${socialGrowthData.followers})`,
+        totalSales: sql<number>`sum(${socialGrowthData.salesFromPlatform})`
       })
       .from(socialGrowthData)
       .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
@@ -474,115 +333,23 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
           gte(socialGrowthData.recordDate, startDate.toISOString().split('T')[0])
         )
       )
-      .orderBy(desc(socialGrowthData.recordDate));
+      .groupBy(sql`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`);
 
-    // Agrupar por mês e plataforma, pegando apenas o valor mais recente
-    const monthlyDataByPlatform = new Map<string, Map<number, { followers: number; sales: number; date: string }>>();
-    
-    allData.forEach(record => {
-      const month = record.recordDate.substring(0, 7); // YYYY-MM
-      
-      if (!monthlyDataByPlatform.has(month)) {
-        monthlyDataByPlatform.set(month, new Map());
-      }
-      
-      const monthData = monthlyDataByPlatform.get(month)!;
-      const currentRecord = monthData.get(record.socialNetworkId);
-      
-      // Manter apenas o registro mais recente de cada plataforma por mês
-      if (!currentRecord || record.recordDate > currentRecord.date) {
-        monthData.set(record.socialNetworkId, {
-          followers: record.followers,
-          sales: record.salesFromPlatform || 0,
-          date: record.recordDate
-        });
-      }
-    });
-
-    // Converter para formato final somando apenas uma vez por plataforma por mês
-    const monthlyData = new Map<string, { followers: number; sales: number }>();
-    
-    monthlyDataByPlatform.forEach((platformData, month) => {
-      let totalFollowers = 0;
-      let totalSales = 0;
-      
-      platformData.forEach(data => {
-        totalFollowers += data.followers;
-        totalSales += data.sales;
-      });
-      
-      monthlyData.set(month, { followers: totalFollowers, sales: totalSales });
-    });
-
-    // Converter para array e calcular crescimento real
-    const sortedMonths = Array.from(monthlyData.entries())
-      .sort(([a], [b]) => a.localeCompare(b));
-    
-    const growthTrend = sortedMonths.map(([month, data], index) => {
-      let growth = 0;
-      if (index > 0) {
-        const prevData = sortedMonths[index - 1][1];
-        growth = data.followers - prevData.followers;
-      }
-      
-      return {
-        month,
-        totalFollowers: data.followers,
-        totalSales: data.sales,
-        growth // Crescimento real do período
-      };
-    });
-
-    // Calcular crescimento baseado nos seguidores iniciais vs atuais
+    // Calcular crescimento mensal
     let monthlyGrowth = 0;
-    const totalInitialFollowers = userNetworks.reduce((sum, network) => sum + (network.initialFollowers || 0), 0);
-    
-    // Se há dados históricos, usar crescimento do período
     if (growthTrend.length >= 2) {
       const current = growthTrend[growthTrend.length - 1]?.totalFollowers || 0;
       const previous = growthTrend[growthTrend.length - 2]?.totalFollowers || 0;
-      monthlyGrowth = current - previous;
-    } else if (totalInitialFollowers > 0 && totalFollowers > totalInitialFollowers) {
-      // Se não há dados históricos suficientes, usar crescimento desde o início
-      monthlyGrowth = totalFollowers - totalInitialFollowers;
+      monthlyGrowth = previous > 0 ? ((current - previous) / previous) * 100 : 0;
     }
-
-    // Buscar metas ativas (não expiradas)
-    const activeGoals = await db
-      .select({
-        id: socialGoals.id,
-        goalType: socialGoals.goalType,
-        deadline: socialGoals.deadline
-      })
-      .from(socialGoals)
-      .innerJoin(socialNetworks, eq(socialGoals.networkId, socialNetworks.id))
-      .where(
-        and(
-          eq(socialNetworks.userId, userId),
-          gte(socialGoals.deadline, new Date().toISOString().split('T')[0])
-        )
-      );
-
-    // Organizar dados por plataforma específica (somando todas as contas da mesma plataforma)
-    const platformSpecific = {
-      instagram: platforms.filter(p => p.platform === 'instagram').reduce((sum, p) => sum + p.followers, 0),
-      facebook: platforms.filter(p => p.platform === 'facebook').reduce((sum, p) => sum + p.followers, 0),
-      tiktok: platforms.filter(p => p.platform === 'tiktok').reduce((sum, p) => sum + p.followers, 0),
-      youtube: platforms.filter(p => p.platform === 'youtube').reduce((sum, p) => sum + p.followers, 0),
-      linkedin: platforms.filter(p => p.platform === 'linkedin').reduce((sum, p) => sum + p.followers, 0),
-      twitter: platforms.filter(p => p.platform === 'twitter').reduce((sum, p) => sum + p.followers, 0)
-    };
-    
-
 
     res.json({
       totalNetworks: userNetworks.length,
       totalFollowers,
       totalSales,
-      activeGoals: activeGoals.length,
       monthlyGrowth: Math.round(monthlyGrowth * 100) / 100,
       platforms: platforms.sort((a, b) => b.followers - a.followers),
-      platformSpecific,
       growthTrend: growthTrend.map(item => ({
         month: item.month,
         followers: item.totalFollowers || 0,
@@ -591,288 +358,6 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar analytics:', error);
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
-// ===== ROTAS PARA METAS SOCIAIS =====
-
-// GET /api/social-growth/goals - Listar metas do usuário
-router.get('/goals', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    
-    const goals = await db
-      .select({
-        id: socialGoals.id,
-        goalType: socialGoals.goalType,
-        targetValue: socialGoals.targetValue,
-        deadline: socialGoals.deadline,
-        description: socialGoals.description,
-        isActive: socialGoals.isActive,
-        createdAt: socialGoals.createdAt,
-        network: {
-          id: socialNetworks.id,
-          platform: socialNetworks.platform,
-          username: socialNetworks.username
-        }
-      })
-      .from(socialGoals)
-      .innerJoin(socialNetworks, eq(socialGoals.networkId, socialNetworks.id))
-      .where(
-        and(
-          eq(socialGoals.userId, userId),
-          eq(socialGoals.isActive, true)
-        )
-      )
-      .orderBy(asc(socialGoals.deadline));
-
-    // Buscar progresso atual para cada meta
-    const goalsWithProgress = await Promise.all(
-      goals.map(async (goal) => {
-        let currentValue = 0;
-        
-        // Buscar valor atual baseado no tipo de meta
-        if (goal.goalType === 'followers') {
-          const latestData = await db
-            .select({ followers: socialGrowthData.followers })
-            .from(socialGrowthData)
-            .where(eq(socialGrowthData.socialNetworkId, goal.network.id))
-            .orderBy(desc(socialGrowthData.recordDate))
-            .limit(1);
-          
-          currentValue = latestData[0]?.followers || 0;
-        } else if (goal.goalType === 'sales') {
-          const salesData = await db
-            .select({ sales: sql<number>`sum(${socialGrowthData.salesFromPlatform})` })
-            .from(socialGrowthData)
-            .where(
-              and(
-                eq(socialGrowthData.socialNetworkId, goal.network.id),
-                gte(socialGrowthData.recordDate, new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0])
-              )
-            );
-          
-          currentValue = salesData[0]?.sales || 0;
-        } else if (goal.goalType === 'engagement') {
-          const engagementData = await db
-            .select({ 
-              avgLikes: sql<number>`avg(${socialGrowthData.averageLikes})`,
-              avgComments: sql<number>`avg(${socialGrowthData.averageComments})`
-            })
-            .from(socialGrowthData)
-            .where(
-              and(
-                eq(socialGrowthData.socialNetworkId, goal.network.id),
-                gte(socialGrowthData.recordDate, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-              )
-            );
-          
-          currentValue = Math.round((engagementData[0]?.avgLikes || 0) + (engagementData[0]?.avgComments || 0));
-        }
-
-        // Calcular progresso
-        const progress = goal.targetValue > 0 ? Math.min((currentValue / goal.targetValue) * 100, 100) : 0;
-        
-        // Calcular dias restantes
-        const today = new Date();
-        const deadline = new Date(goal.deadline);
-        const daysRemaining = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Determinar se precisa de atenção (meta não atingida e prazo próximo)
-        const needsAttention = progress < 70 && daysRemaining <= 30 && daysRemaining > 0;
-        
-        return {
-          ...goal,
-          currentValue,
-          progress: Math.round(progress * 100) / 100,
-          daysRemaining,
-          needsAttention
-        };
-      })
-    );
-
-    res.json(goalsWithProgress);
-  } catch (error) {
-    console.error('Erro ao buscar metas:', error);
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
-// POST /api/social-growth/goals - Criar nova meta
-router.post('/goals', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    console.log('[GOALS] Dados recebidos:', req.body);
-    console.log('[GOALS] UserId:', userId);
-    
-    const validatedData = insertSocialGoalSchema.parse({
-      ...req.body,
-      userId
-    });
-    console.log('[GOALS] Dados validados:', validatedData);
-
-    // Verificar se a rede social pertence ao usuário
-    const network = await db
-      .select()
-      .from(socialNetworks)
-      .where(
-        and(
-          eq(socialNetworks.id, validatedData.networkId),
-          eq(socialNetworks.userId, userId)
-        )
-      )
-      .limit(1);
-
-    console.log('[GOALS] Rede encontrada:', network);
-
-    if (network.length === 0) {
-      console.log('[GOALS] Rede social não encontrada para networkId:', validatedData.networkId, 'userId:', userId);
-      return res.status(404).json({ message: 'Rede social não encontrada' });
-    }
-
-    // Verificar se já existe uma meta ativa do mesmo tipo para a mesma rede
-    const existingGoal = await db
-      .select()
-      .from(socialGoals)
-      .where(
-        and(
-          eq(socialGoals.userId, userId),
-          eq(socialGoals.networkId, validatedData.networkId),
-          eq(socialGoals.goalType, validatedData.goalType),
-          eq(socialGoals.isActive, true)
-        )
-      )
-      .limit(1);
-
-    if (existingGoal.length > 0) {
-      console.log('[GOALS] Meta duplicada encontrada:', existingGoal[0]);
-      return res.status(400).json({ 
-        message: 'Já existe uma meta ativa deste tipo para esta rede social' 
-      });
-    }
-
-    console.log('[GOALS] Criando nova meta com dados:', validatedData);
-    const [newGoal] = await db
-      .insert(socialGoals)
-      .values(validatedData)
-      .returning();
-
-    console.log('[GOALS] Meta criada com sucesso:', newGoal);
-    res.status(201).json(newGoal);
-  } catch (error) {
-    console.error('[GOALS] Erro ao criar meta:', error);
-    if (error instanceof z.ZodError) {
-      console.error('[GOALS] Erro de validação Zod:', error.errors);
-      return res.status(400).json({ 
-        message: 'Dados inválidos',
-        errors: error.errors 
-      });
-    }
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
-// PUT /api/social-growth/goals/:id - Atualizar meta
-router.put('/goals/:id', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    const goalId = parseInt(req.params.id);
-
-    console.log('[UPDATE GOAL] Iniciando atualização de meta');
-    console.log('[UPDATE GOAL] UserID:', userId, 'GoalID:', goalId);
-    console.log('[UPDATE GOAL] Dados recebidos:', req.body);
-
-    if (isNaN(goalId)) {
-      console.log('[UPDATE GOAL] ID da meta inválido:', req.params.id);
-      return res.status(400).json({ message: 'ID da meta inválido' });
-    }
-
-    // Verificar se a meta pertence ao usuário
-    const existingGoal = await db
-      .select()
-      .from(socialGoals)
-      .where(
-        and(
-          eq(socialGoals.id, goalId),
-          eq(socialGoals.userId, userId)
-        )
-      )
-      .limit(1);
-
-    console.log('[UPDATE GOAL] Meta existente encontrada:', existingGoal);
-
-    if (existingGoal.length === 0) {
-      console.log('[UPDATE GOAL] Meta não encontrada para goalId:', goalId, 'userId:', userId);
-      return res.status(404).json({ message: 'Meta não encontrada' });
-    }
-
-    console.log('[UPDATE GOAL] Validando dados com schema...');
-    const updateData = insertSocialGoalSchema.partial().parse(req.body);
-    console.log('[UPDATE GOAL] Dados validados:', updateData);
-
-    console.log('[UPDATE GOAL] Executando atualização no banco...');
-    const [updatedGoal] = await db
-      .update(socialGoals)
-      .set({
-        ...updateData,
-        updatedAt: new Date()
-      })
-      .where(eq(socialGoals.id, goalId))
-      .returning();
-
-    console.log('[UPDATE GOAL] Meta atualizada com sucesso:', updatedGoal);
-    res.json(updatedGoal);
-  } catch (error) {
-    console.error('Erro ao atualizar meta:', error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos',
-        errors: error.errors 
-      });
-    }
-    res.status(500).json({ message: 'Erro interno do servidor' });
-  }
-});
-
-// DELETE /api/social-growth/goals/:id - Desativar meta
-router.delete('/goals/:id', requireAuth, async (req: any, res) => {
-  try {
-    const userId = req.user.id;
-    const goalId = parseInt(req.params.id);
-
-    if (isNaN(goalId)) {
-      return res.status(400).json({ message: 'ID da meta inválido' });
-    }
-
-    // Verificar se a meta pertence ao usuário
-    const existingGoal = await db
-      .select()
-      .from(socialGoals)
-      .where(
-        and(
-          eq(socialGoals.id, goalId),
-          eq(socialGoals.userId, userId)
-        )
-      )
-      .limit(1);
-
-    if (existingGoal.length === 0) {
-      return res.status(404).json({ message: 'Meta não encontrada' });
-    }
-
-    // Desativar a meta ao invés de deletar
-    await db
-      .update(socialGoals)
-      .set({
-        isActive: false,
-        updatedAt: new Date()
-      })
-      .where(eq(socialGoals.id, goalId));
-
-    res.json({ message: 'Meta desativada com sucesso' });
-  } catch (error) {
-    console.error('Erro ao desativar meta:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });

@@ -74,7 +74,6 @@ import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (versão completamente funcional)
-import socialGrowthRouter from './routes/social-growth-routes'; // Rotas para o dashboard de crescimento social
  // Rotas para estatísticas dos reports
 // Arquivo reports-v2 removido por questões de segurança // Rotas para o sistema de denúncias (reescrito)
 
@@ -6545,9 +6544,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para redefinição de senha
   app.use('/api/password-reset', passwordResetRouter);
-
-  // Registrar rotas para dashboard de crescimento social
-  app.use('/api/social-growth', socialGrowthRouter);
 
   // Registrar rotas para artes multi-formato
   app.use(multiArtRouter);

@@ -1304,7 +1304,6 @@ export const socialNetworks = pgTable("socialNetworks", {
   platform: text("platform").notNull(), // instagram, facebook, tiktok, whatsapp_business, youtube, linkedin, twitter
   username: text("username").notNull(),
   profileUrl: text("profileUrl"),
-  initialFollowers: integer("initialFollowers").notNull().default(0), // Seguidores iniciais no momento do cadastro
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
@@ -1314,9 +1313,8 @@ export const socialGrowthData = pgTable("socialGrowthData", {
   id: serial("id").primaryKey(),
   socialNetworkId: integer("socialNetworkId").notNull().references(() => socialNetworks.id, { onDelete: "cascade" }),
   userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  recordDate: date("recordDate").notNull(), // Data do registro (flexível - não apenas primeiro dia do mês)
-  followers: integer("followers").notNull(), // Valor absoluto atual de seguidores
-  growthFromPrevious: integer("growthFromPrevious").default(0), // Crescimento/queda calculado automaticamente
+  recordDate: date("recordDate").notNull(), // Data do registro (primeiro dia do mês)
+  followers: integer("followers").notNull(),
   averageLikes: integer("averageLikes").default(0),
   averageComments: integer("averageComments").default(0),
   salesFromPlatform: integer("salesFromPlatform").default(0),
@@ -1328,19 +1326,6 @@ export const socialGrowthData = pgTable("socialGrowthData", {
   return {
     networkDateUnique: primaryKey({ columns: [table.socialNetworkId, table.recordDate] }),
   };
-});
-
-export const socialGoals = pgTable("socialGoals", {
-  id: serial("id").primaryKey(),
-  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  networkId: integer("networkId").notNull().references(() => socialNetworks.id, { onDelete: "cascade" }),
-  goalType: varchar("goalType", { length: 50 }).notNull(), // 'followers', 'engagement', 'sales'
-  targetValue: integer("targetValue").notNull(),
-  deadline: date("deadline").notNull(),
-  description: text("description"),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
 // Schemas para inserção
@@ -1356,21 +1341,12 @@ export const insertSocialGrowthDataSchema = createInsertSchema(socialGrowthData)
   updatedAt: true,
 });
 
-export const insertSocialGoalSchema = createInsertSchema(socialGoals).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 // Tipos derivados
 export type SocialNetwork = typeof socialNetworks.$inferSelect;
 export type InsertSocialNetwork = z.infer<typeof insertSocialNetworkSchema>;
 
 export type SocialGrowthData = typeof socialGrowthData.$inferSelect;
 export type InsertSocialGrowthData = z.infer<typeof insertSocialGrowthDataSchema>;
-
-export type SocialGoal = typeof socialGoals.$inferSelect;
-export type InsertSocialGoal = z.infer<typeof insertSocialGoalSchema>;
 
 // Relações
 export const socialNetworksRelations = relations(socialNetworks, ({ one, many }) => ({
@@ -1389,17 +1365,6 @@ export const socialGrowthDataRelations = relations(socialGrowthData, ({ one }) =
   user: one(users, {
     fields: [socialGrowthData.userId],
     references: [users.id],
-  }),
-}));
-
-export const socialGoalsRelations = relations(socialGoals, ({ one }) => ({
-  user: one(users, {
-    fields: [socialGoals.userId],
-    references: [users.id],
-  }),
-  network: one(socialNetworks, {
-    fields: [socialGoals.networkId],
-    references: [socialNetworks.id],
   }),
 }));
 
