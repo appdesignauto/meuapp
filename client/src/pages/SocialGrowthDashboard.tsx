@@ -123,51 +123,12 @@ export default function SocialGrowthDashboard() {
     },
   });
 
-  // Add goal mutation
-  const addGoalMutation = useMutation({
-    mutationFn: async (data: typeof goalForm) => {
-      const response = await fetch('/api/social-growth/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          networkId: parseInt(data.networkId),
-        }),
-      });
-      if (!response.ok) throw new Error('Erro ao criar meta');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
-      setIsAddingGoal(false);
-      setGoalForm({
-        networkId: '',
-        goalType: '',
-        targetValue: 0,
-        deadline: '',
-        description: ''
-      });
-      toast({ title: 'Meta criada com sucesso!' });
-    },
-    onError: (error: any) => {
-      toast({ title: 'Erro ao criar meta', description: error.message, variant: 'destructive' });
-    },
-  });
-
   const handleAddNetwork = () => {
     if (!networkForm.platform || !networkForm.username) {
       toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' });
       return;
     }
     addNetworkMutation.mutate(networkForm);
-  };
-
-  const handleAddGoal = () => {
-    if (!goalForm.networkId || !goalForm.targetValue || !goalForm.deadline) {
-      toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' });
-      return;
-    }
-    addGoalMutation.mutate(goalForm);
   };
 
   if (networksLoading || analyticsLoading) {
@@ -422,6 +383,12 @@ export default function SocialGrowthDashboard() {
 
         {/* Goals Section */}
         <SocialGoalsView />
+
+        {/* Goals Management Modal */}
+        <SocialGoalsManagement
+          isOpen={isGoalsModalOpen}
+          onClose={() => setIsGoalsModalOpen(false)}
+        />
       </div>
     </div>
   );
