@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Optimized mobile pricing cards layout with professional height standardization
+  - Implemented min-h-[520px] to prevent card overlap and ensure uniform height across all plans
+  - Enhanced content distribution with flex layout: fixed header, flexible center section, fixed footer button
+  - Improved description layout with px-4 spacing creating harmonious left-aligned but visually centered grouping
+  - Added consistent vertical centering of benefits list using flex-1 flex flex-col justify-center
+  - All three cards now maintain professional spacing and prevent content overlap on mobile devices
 - June 15, 2025: Implemented authentication restriction for "Top 6 - Artes em Alta" section
   - Added useAuth verification in TrendingPopular component to match "Seus designs" behavior
   - Section now visible only for logged-in users, encouraging visitor registration
