@@ -1,7 +1,7 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes, collaborationRequests, insertCollaborationRequestSchema, affiliateRequests, insertAffiliateRequestSchema, analyticsSettings } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes, collaborationRequests, insertCollaborationRequestSchema, affiliateRequests, insertAffiliateRequestSchema, analyticsSettings, socialProfiles, socialGoals, socialProgress, insertSocialProfileSchema, insertSocialGoalSchema, insertSocialProgressSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
@@ -8846,6 +8846,197 @@ app.use('/api/reports-v2', (req, res, next) => {
         message: "Erro ao calcular performance de conteúdo",
         error: error.message 
       });
+    }
+  });
+
+  // =============================================
+  // ROTAS DE CRESCIMENTO SOCIAL
+  // =============================================
+
+  // GET /api/social-growth/profiles - Buscar perfis sociais do usuário
+  app.get('/api/social-growth/profiles', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      
+      const profiles = await db.select()
+        .from(socialProfiles)
+        .where(eq(socialProfiles.userId, userId))
+        .orderBy(socialProfiles.createdAt);
+      
+      res.json(profiles);
+    } catch (error) {
+      console.error('Erro ao buscar perfis sociais:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/social-growth/profiles - Criar novo perfil social
+  app.post('/api/social-growth/profiles', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      const profileData = insertSocialProfileSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const [newProfile] = await db.insert(socialProfiles)
+        .values(profileData)
+        .returning();
+      
+      res.json(newProfile);
+    } catch (error) {
+      console.error('Erro ao criar perfil social:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+      }
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // GET /api/social-growth/goals - Buscar metas do usuário
+  app.get('/api/social-growth/goals', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      
+      const goals = await db.select()
+        .from(socialGoals)
+        .where(eq(socialGoals.userId, userId))
+        .orderBy(desc(socialGoals.createdAt));
+      
+      res.json(goals);
+    } catch (error) {
+      console.error('Erro ao buscar metas:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/social-growth/goals - Criar nova meta
+  app.post('/api/social-growth/goals', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      const goalData = insertSocialGoalSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const [newGoal] = await db.insert(socialGoals)
+        .values(goalData)
+        .returning();
+      
+      res.json(newGoal);
+    } catch (error) {
+      console.error('Erro ao criar meta:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+      }
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // GET /api/social-growth/progress - Buscar progresso do usuário
+  app.get('/api/social-growth/progress', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      
+      const progress = await db.select()
+        .from(socialProgress)
+        .where(eq(socialProgress.userId, userId))
+        .orderBy(desc(socialProgress.date));
+      
+      res.json(progress);
+    } catch (error) {
+      console.error('Erro ao buscar progresso:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/social-growth/progress - Criar novo registro de progresso
+  app.post('/api/social-growth/progress', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      const progressData = insertSocialProgressSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const [newProgress] = await db.insert(socialProgress)
+        .values(progressData)
+        .returning();
+      
+      res.json(newProgress);
+    } catch (error) {
+      console.error('Erro ao criar progresso:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+      }
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // GET /api/social-growth/overview - Buscar dados de visão geral
+  app.get('/api/social-growth/overview', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      
+      // Buscar total de seguidores de todos os perfis
+      const profiles = await db.select()
+        .from(socialProfiles)
+        .where(eq(socialProfiles.userId, userId));
+      
+      const totalFollowers = profiles.reduce((sum, profile) => sum + (profile.followers || 0), 0);
+      
+      // Buscar metas ativas
+      const activeGoals = await db.select({ count: sql<number>`count(*)` })
+        .from(socialGoals)
+        .where(and(
+          eq(socialGoals.userId, userId),
+          eq(socialGoals.status, 'active')
+        ));
+      
+      // Buscar progresso recente para calcular crescimento
+      const recentProgress = await db.select()
+        .from(socialProgress)
+        .where(eq(socialProgress.userId, userId))
+        .orderBy(desc(socialProgress.date))
+        .limit(30);
+      
+      // Calcular crescimento mensal (dados reais baseados no progresso)
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
+      const lastMonth = new Date(thisMonth);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      
+      const thisMonthProgress = recentProgress.filter(p => new Date(p.date) >= thisMonth);
+      const lastMonthProgress = recentProgress.filter(p => 
+        new Date(p.date) >= lastMonth && new Date(p.date) < thisMonth
+      );
+      
+      const thisMonthFollowers = thisMonthProgress.reduce((sum, p) => sum + (p.followers || 0), 0);
+      const lastMonthFollowers = lastMonthProgress.reduce((sum, p) => sum + (p.followers || 0), 0);
+      
+      const monthlyGrowth = lastMonthFollowers > 0 
+        ? Math.round(((thisMonthFollowers - lastMonthFollowers) / lastMonthFollowers) * 100)
+        : 0;
+      
+      // Calcular vendas (dados reais baseados no progresso)
+      const totalSales = recentProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
+      const thisMonthSales = thisMonthProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
+      const lastMonthSales = lastMonthProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
+      
+      const salesGrowth = lastMonthSales > 0 
+        ? Math.round(((thisMonthSales - lastMonthSales) / lastMonthSales) * 100)
+        : 0;
+      
+      res.json({
+        totalFollowers,
+        monthlyGrowth,
+        totalSales,
+        salesGrowth,
+        activeGoals: activeGoals[0]?.count || 0
+      });
+    } catch (error) {
+      console.error('Erro ao buscar visão geral:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   });
 

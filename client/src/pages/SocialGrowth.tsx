@@ -320,9 +320,11 @@ export function SocialGrowth() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatNumber(mockData.totalFollowers)}</div>
+                  <div className="text-2xl font-bold">
+                    {overviewLoading ? '...' : formatNumber(overviewData?.totalFollowers || 0)}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    <span className="text-green-600">+{mockData.monthlyGrowth}%</span> este mês
+                    <span className="text-green-600">+{overviewData?.monthlyGrowth || 0}%</span> este mês
                   </p>
                 </CardContent>
               </Card>
@@ -333,9 +335,11 @@ export function SocialGrowth() {
                   <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatNumber(mockData.totalSales)}</div>
+                  <div className="text-2xl font-bold">
+                    {overviewLoading ? '...' : formatNumber(overviewData?.totalSales || 0)}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    <span className="text-green-600">+{mockData.salesGrowth}%</span> este mês
+                    <span className="text-green-600">+{overviewData?.salesGrowth || 0}%</span> este mês
                   </p>
                 </CardContent>
               </Card>
@@ -346,7 +350,9 @@ export function SocialGrowth() {
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{mockData.activeGoals}</div>
+                  <div className="text-2xl font-bold">
+                    {overviewLoading ? '...' : overviewData?.activeGoals || 0}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     2 próximas do objetivo
                   </p>
