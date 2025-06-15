@@ -7,10 +7,14 @@ const PricingSection = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+          <div className="text-orange-500 text-sm font-semibold tracking-wide uppercase mb-4">
+            PLANOS
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Seu crescimento começa aqui
           </h2>
-          <p className="text-gray-600 text-xl leading-relaxed">
+          <div className="w-16 h-1 bg-orange-500 mx-auto mb-6"></div>
+          <p className="text-gray-600">
             Escolha um plano e tenha acesso imediato a designs exclusivos, suporte premium e resultados consistentes.
           </p>
         </div>

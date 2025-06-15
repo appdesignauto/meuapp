@@ -118,10 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Updated pricing section with growth-focused messaging
-  - Changed title to "Seu crescimento começa aqui" for immediate impact
-  - Updated subtitle emphasizing immediate access, exclusive designs, premium support, and consistent results
-  - Maintained enhanced typography with impactful sizing and clean layout
+- June 15, 2025: Enhanced pricing section with professional branding and design elements
+  - Added "PLANOS" orange label above main title for clear section identification
+  - Included decorative orange line below title for visual appeal and brand consistency
+  - Maintained "Seu crescimento começa aqui" messaging with harmonized typography
+  - Created sophisticated visual hierarchy: label → title → decorative line → description
 - June 15, 2025: Added trust guarantees section below pricing with 30-day guarantee, premium support, and weekly updates
   - Implemented harmonious design with colored icons and clean layout matching provided reference
   - Enhanced pricing section credibility with professional trust indicators
