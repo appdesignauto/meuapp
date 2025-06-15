@@ -1,0 +1,94 @@
+PRD – Funcionalidade “Crescimento Social”
+Projeto: DesignAuto
+Módulo: Painel de Crescimento Social
+Versão: 1.0 Responsável: Fernando Oliveira Data: Junho de 2025
+🧭 1. Visão Geral
+🎯 Objetivo
+Permitir que o usuário acompanhe e visualize o crescimento de seguidores e vendas nas redes sociais Instagram e Facebook, com gráficos de progresso e metas personalizadas. O objetivo é reforçar o impacto real das artes do DesignAuto nas redes sociais dos usuários.
+🧩 2. Escopo Funcional
+2.1 Redes Suportadas
+* Instagram
+* Facebook
+2.2 Métricas Coletadas
+* Seguidores atuais (manual ou futuramente via API)
+* Vendas originadas da rede (manual)
+2.3 Funcionalidades Incluídas
+* Cadastro de redes sociais
+* Cadastro de metas por rede (seguidores e vendas)
+* Inserção manual dos dados mensais (seguidores e vendas)
+* Visualização de progresso por rede
+* Gráficos de evolução por métrica
+* Alertas automáticos com base no desempenho
+🧱 3. Funcionalidades Detalhadas
+3.1 Aba: Redes Sociais Conectadas
+* Exibição dos perfis conectados (nome e link)
+* Botão: “Adicionar Rede”
+* Campo: Nome do perfil e URL
+3.2 Aba: Minhas Metas
+* Definição de metas por rede:
+   * Meta de Seguidores (ex: 10.000 até 31/12/2025)
+   * Meta de Vendas (ex: 100 vendas até 31/12/2025)
+* Campos:
+   * Plataforma (Instagram / Facebook)
+   * Tipo da meta (Seguidores / Vendas)
+   * Valor da meta
+   * Data limite
+* Exibição:
+   * Card com meta, valor atual, % atingido e prazo
+   * Barra de progresso
+3.3 Aba: Histórico Mensal
+* Tabela de progresso mês a mês:
+   * Exemplo:
+MêsSeguidoresVendasJan/255.00012Fev/255.70018
+* Botão: “Atualizar dados do mês”
+3.4 Gráficos
+* Gráfico de linha por métrica:
+   * Evolução de seguidores mês a mês
+   * Evolução de vendas mês a mês
+* Linha da meta como referência
+* Cores indicativas:
+   * Verde (acima da meta do mês)
+   * Amarelo (em progresso)
+   * Vermelho (abaixo do esperado)
+3.5 Alertas e Feedback Inteligente
+* Se meta estiver em risco:
+⚠️ “Você precisa ganhar 1.200 seguidores até o fim do mês para manter o ritmo.”
+* Se meta for alcançada:
+🎉 “Parabéns! Você bateu sua meta de vendas em Junho!”
+🧮 4. Banco de Dados
+4.1 Tabela: social_profiles
+CampoTipoDescriçãoidUUIDID único do perfil socialuser_idUUIDID do usuárioplatformstringinstagram ou facebookprofile_namestringNome do perfilprofile_urlstringLink do perfilcreated_attimestampData de criação
+4.2 Tabela: social_goals
+CampoTipoDescriçãoidUUIDID único da metauser_idUUIDID do usuárioplatformstringinstagram ou facebookgoal_typestringfollowers ou salestarget_valueintegerValor da metadeadlinedateData limitecreated_attimestampData de criação
+4.3 Tabela: social_progress
+CampoTipoDescriçãoidUUIDID do registrouser_idUUIDID do usuárioplatformstringinstagram ou facebookmonthstringEx: 2025-06followersintegerValor inserido manualmentesalesintegerValor inserido manualmentecreated_attimestampData de inserção
+🔁 5. Rotas Backend (API)
+POST /api/social/add-profile
+* Adiciona novo perfil social
+POST /api/social/add-goal
+* Cria nova meta de seguidores ou vendas
+POST /api/social/add-progress
+* Registra dados do mês (seguidores e vendas)
+GET /api/social/dashboard
+* Retorna dados agregados + metas + progresso
+PUT /api/social/update-goal/:id
+* Edita metas existentes
+DELETE /api/social/delete-goal/:id
+* Remove meta
+🖼️ 6. UI/UX
+Páginas
+1. Painel de Crescimento
+   * Tabs: “Minhas Redes” | “Minhas Metas” | “Histórico”
+2. Gráficos e Cards
+   * Cards por rede com meta, progresso e data limite
+   * Gráficos de evolução por rede
+3. Design
+   * Layout limpo, com ícones de rede
+   * Cores para status de progresso
+   * Responsivo (desktop e mobile)
+✅ 7. Critérios de Aceitação
+* Usuário pode cadastrar perfil de rede social
+* Usuário pode definir metas de seguidores ou vendas
+* Usuário pode registrar progresso manual mensal
+* Sistema exibe progresso com barra e gráfico
+* Alertas de desempenho são gerados corretamente
