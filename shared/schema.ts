@@ -970,6 +970,103 @@ export const insertAffiliateRequestSchema = createInsertSchema(affiliateRequests
 export type AffiliateRequest = typeof affiliateRequests.$inferSelect;
 export type InsertAffiliateRequest = z.infer<typeof insertAffiliateRequestSchema>;
 
+// Social Growth Tables
+export const socialProfiles = pgTable("socialProfiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook', 'tiktok', 'youtube'
+  profileName: text("profileName").notNull(),
+  profileUrl: text("profileUrl").notNull(),
+  currentFollowers: integer("currentFollowers").notNull().default(0),
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const socialGoals = pgTable("socialGoals", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  profileId: integer("profileId").references(() => socialProfiles.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook', 'all'
+  goalType: text("goalType").notNull(), // 'followers', 'sales'
+  currentValue: integer("currentValue").notNull().default(0),
+  targetValue: integer("targetValue").notNull(),
+  deadline: timestamp("deadline").notNull(),
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const socialProgress = pgTable("socialProgress", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'instagram', 'facebook'
+  month: integer("month").notNull(), // 1-12
+  year: integer("year").notNull(),
+  followers: integer("followers").notNull().default(0),
+  sales: integer("sales").notNull().default(0),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    userPlatformMonthUnique: primaryKey({ columns: [table.userId, table.platform, table.month, table.year] }),
+  };
+});
+
+export const insertSocialProfileSchema = createInsertSchema(socialProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialGoalSchema = createInsertSchema(socialGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialProgressSchema = createInsertSchema(socialProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SocialProfile = typeof socialProfiles.$inferSelect;
+export type InsertSocialProfile = z.infer<typeof insertSocialProfileSchema>;
+
+export type SocialGoal = typeof socialGoals.$inferSelect;
+export type InsertSocialGoal = z.infer<typeof insertSocialGoalSchema>;
+
+export type SocialProgress = typeof socialProgress.$inferSelect;
+export type InsertSocialProgress = z.infer<typeof insertSocialProgressSchema>;
+
+// Social Growth Relations
+export const socialProfilesRelations = relations(socialProfiles, ({ one, many }) => ({
+  user: one(users, {
+    fields: [socialProfiles.userId],
+    references: [users.id],
+  }),
+  goals: many(socialGoals),
+}));
+
+export const socialGoalsRelations = relations(socialGoals, ({ one }) => ({
+  user: one(users, {
+    fields: [socialGoals.userId],
+    references: [users.id],
+  }),
+  profile: one(socialProfiles, {
+    fields: [socialGoals.profileId],
+    references: [socialProfiles.id],
+  }),
+}));
+
+export const socialProgressRelations = relations(socialProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [socialProgress.userId],
+    references: [users.id],
+  }),
+}));
+
 // Community Likes (Curtidas em posts da comunidade)
 export const communityLikes = pgTable("communityLikes", {
   id: serial("id").primaryKey(),
