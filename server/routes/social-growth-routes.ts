@@ -96,7 +96,7 @@ router.get("/overview", requireAuth, async (req: any, res) => {
       },
       goals: goals.map(goal => ({
         ...goal,
-        progress: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0
+        progress: goal.targetValue > 0 ? Math.round(((goal.currentValue || 0) / goal.targetValue) * 100) : 0
       })),
       chartData: {
         followers: generateChartData(instagramData, facebookData, 'followers'),
@@ -223,8 +223,8 @@ router.get("/goals", requireAuth, async (req: any, res) => {
 
     const goalsWithProgress = goals.map(goal => ({
       ...goal,
-      progress: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
-      remaining: goal.targetValue - goal.currentValue
+      progress: goal.targetValue > 0 ? Math.round(((goal.currentValue || 0) / goal.targetValue) * 100) : 0,
+      remaining: goal.targetValue - (goal.currentValue || 0)
     }));
 
     res.json(goalsWithProgress);

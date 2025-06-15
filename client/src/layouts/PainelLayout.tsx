@@ -133,6 +133,12 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       icon: <CreditCard className="h-5 w-5" />,
       access: "all",
     },
+    {
+      label: "Crescimento Social",
+      path: "/painel/crescimento-social",
+      icon: <TrendingUp className="h-5 w-5" />,
+      access: "all",
+    },
   ];
 
   return (
