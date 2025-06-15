@@ -40,12 +40,6 @@ import {
   InsertUserPermission,
   UserFollow,
   InsertUserFollow,
-  SocialProfile,
-  InsertSocialProfile,
-  SocialGoal,
-  InsertSocialGoal,
-  SocialProgress,
-  InsertSocialProgress,
   users,
   categories,
   formats,
@@ -63,10 +57,7 @@ import {
   userStats,
   designerStats,
   userPermissions,
-  userFollows,
-  socialProfiles,
-  socialGoals,
-  socialProgress
+  userFollows
 } from "@shared/schema";
 
 import { db } from "./db";
@@ -236,29 +227,6 @@ export interface IStorage {
   getReportById(id: number): Promise<Report | undefined>;
   createReport(report: InsertReport): Promise<Report>;
   updateReport(id: number, updates: Partial<Report>): Promise<Report | undefined>;
-
-  // Social Growth methods
-  getSocialProfiles(userId: number): Promise<SocialProfile[]>;
-  createSocialProfile(profile: InsertSocialProfile): Promise<SocialProfile>;
-  updateSocialProfile(id: number, updates: Partial<InsertSocialProfile>): Promise<SocialProfile | undefined>;
-  deleteSocialProfile(id: number): Promise<boolean>;
-  
-  getSocialGoals(userId: number): Promise<SocialGoal[]>;
-  createSocialGoal(goal: InsertSocialGoal): Promise<SocialGoal>;
-  updateSocialGoal(id: number, updates: Partial<InsertSocialGoal>): Promise<SocialGoal | undefined>;
-  deleteSocialGoal(id: number): Promise<boolean>;
-  
-  getSocialProgress(userId: number): Promise<SocialProgress[]>;
-  getSocialProgressByPlatform(userId: number, platform: string): Promise<SocialProgress[]>;
-  createSocialProgress(progress: InsertSocialProgress): Promise<SocialProgress>;
-  updateSocialProgress(id: number, updates: Partial<InsertSocialProgress>): Promise<SocialProgress | undefined>;
-  deleteSocialProgress(id: number): Promise<boolean>;
-  
-  getSocialDashboard(userId: number): Promise<{
-    profiles: SocialProfile[];
-    goals: SocialGoal[];
-    progress: SocialProgress[];
-  }>;
 
   // Webhook logs methods
   getWebhookLogs(page: number, limit: number, filters?: {
@@ -4124,233 +4092,6 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Erro ao buscar tendências de assinaturas:", error);
       return [];
-    }
-  }
-
-  // Social Growth methods implementation
-  async getSocialProfiles(userId: number): Promise<SocialProfile[]> {
-    try {
-      const profiles = await db
-        .select()
-        .from(socialProfiles)
-        .where(eq(socialProfiles.userId, userId))
-        .orderBy(desc(socialProfiles.createdAt));
-      
-      return profiles;
-    } catch (error) {
-      console.error("Erro ao buscar perfis sociais:", error);
-      return [];
-    }
-  }
-
-  async createSocialProfile(profile: InsertSocialProfile): Promise<SocialProfile> {
-    const [newProfile] = await db
-      .insert(socialProfiles)
-      .values(profile)
-      .returning();
-    
-    return newProfile;
-  }
-
-  async updateSocialProfile(id: number, updates: Partial<InsertSocialProfile>): Promise<SocialProfile | undefined> {
-    try {
-      const [updated] = await db
-        .update(socialProfiles)
-        .set(updates)
-        .where(eq(socialProfiles.id, id))
-        .returning();
-      
-      return updated;
-    } catch (error) {
-      console.error("Erro ao atualizar perfil social:", error);
-      return undefined;
-    }
-  }
-
-  async deleteSocialProfile(id: number): Promise<boolean> {
-    try {
-      const result = await db
-        .delete(socialProfiles)
-        .where(eq(socialProfiles.id, id));
-      
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Erro ao deletar perfil social:", error);
-      return false;
-    }
-  }
-
-  async getSocialGoals(userId: number): Promise<SocialGoal[]> {
-    try {
-      const goals = await db
-        .select()
-        .from(socialGoals)
-        .where(eq(socialGoals.userId, userId))
-        .orderBy(desc(socialGoals.createdAt));
-      
-      return goals;
-    } catch (error) {
-      console.error("Erro ao buscar metas sociais:", error);
-      return [];
-    }
-  }
-
-  async createSocialGoal(goal: InsertSocialGoal): Promise<SocialGoal> {
-    const [newGoal] = await db
-      .insert(socialGoals)
-      .values(goal)
-      .returning();
-    
-    return newGoal;
-  }
-
-  async updateSocialGoal(id: number, updates: Partial<InsertSocialGoal>): Promise<SocialGoal | undefined> {
-    try {
-      const [updated] = await db
-        .update(socialGoals)
-        .set(updates)
-        .where(eq(socialGoals.id, id))
-        .returning();
-      
-      return updated;
-    } catch (error) {
-      console.error("Erro ao atualizar meta social:", error);
-      return undefined;
-    }
-  }
-
-  async deleteSocialGoal(id: number): Promise<boolean> {
-    try {
-      const result = await db
-        .delete(socialGoals)
-        .where(eq(socialGoals.id, id));
-      
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Erro ao deletar meta social:", error);
-      return false;
-    }
-  }
-
-  async getSocialProgress(userId: number): Promise<SocialProgress[]> {
-    try {
-      const progress = await db
-        .select()
-        .from(socialProgress)
-        .where(eq(socialProgress.userId, userId))
-        .orderBy(desc(socialProgress.month));
-      
-      return progress;
-    } catch (error) {
-      console.error("Erro ao buscar progresso social:", error);
-      return [];
-    }
-  }
-
-  async getSocialProgressByPlatform(userId: number, platform: string): Promise<SocialProgress[]> {
-    try {
-      const progress = await db
-        .select()
-        .from(socialProgress)
-        .where(and(
-          eq(socialProgress.userId, userId),
-          eq(socialProgress.platform, platform)
-        ))
-        .orderBy(desc(socialProgress.month));
-      
-      return progress;
-    } catch (error) {
-      console.error("Erro ao buscar progresso social por plataforma:", error);
-      return [];
-    }
-  }
-
-  async createSocialProgress(progress: InsertSocialProgress): Promise<SocialProgress> {
-    // Check if progress for this user, platform, and month already exists
-    const [existing] = await db
-      .select()
-      .from(socialProgress)
-      .where(and(
-        eq(socialProgress.userId, progress.userId),
-        eq(socialProgress.platform, progress.platform),
-        eq(socialProgress.month, progress.month)
-      ));
-
-    if (existing) {
-      // Update existing record
-      const [updated] = await db
-        .update(socialProgress)
-        .set({
-          followers: progress.followers,
-          sales: progress.sales
-        })
-        .where(eq(socialProgress.id, existing.id))
-        .returning();
-      
-      return updated;
-    } else {
-      // Create new record
-      const [newProgress] = await db
-        .insert(socialProgress)
-        .values(progress)
-        .returning();
-      
-      return newProgress;
-    }
-  }
-
-  async updateSocialProgress(id: number, updates: Partial<InsertSocialProgress>): Promise<SocialProgress | undefined> {
-    try {
-      const [updated] = await db
-        .update(socialProgress)
-        .set(updates)
-        .where(eq(socialProgress.id, id))
-        .returning();
-      
-      return updated;
-    } catch (error) {
-      console.error("Erro ao atualizar progresso social:", error);
-      return undefined;
-    }
-  }
-
-  async deleteSocialProgress(id: number): Promise<boolean> {
-    try {
-      const result = await db
-        .delete(socialProgress)
-        .where(eq(socialProgress.id, id));
-      
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Erro ao deletar progresso social:", error);
-      return false;
-    }
-  }
-
-  async getSocialDashboard(userId: number): Promise<{
-    profiles: SocialProfile[];
-    goals: SocialGoal[];
-    progress: SocialProgress[];
-  }> {
-    try {
-      const [profiles, goals, progress] = await Promise.all([
-        this.getSocialProfiles(userId),
-        this.getSocialGoals(userId),
-        this.getSocialProgress(userId)
-      ]);
-
-      return {
-        profiles,
-        goals,
-        progress
-      };
-    } catch (error) {
-      console.error("Erro ao buscar dashboard social:", error);
-      return {
-        profiles: [],
-        goals: [],
-        progress: []
-      };
     }
   }
 }
