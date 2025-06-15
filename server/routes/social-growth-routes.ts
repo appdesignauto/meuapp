@@ -779,7 +779,12 @@ router.put('/goals/:id', requireAuth, async (req: any, res) => {
     const userId = req.user.id;
     const goalId = parseInt(req.params.id);
 
+    console.log('[UPDATE GOAL] Iniciando atualização de meta');
+    console.log('[UPDATE GOAL] UserID:', userId, 'GoalID:', goalId);
+    console.log('[UPDATE GOAL] Dados recebidos:', req.body);
+
     if (isNaN(goalId)) {
+      console.log('[UPDATE GOAL] ID da meta inválido:', req.params.id);
       return res.status(400).json({ message: 'ID da meta inválido' });
     }
 
@@ -795,12 +800,18 @@ router.put('/goals/:id', requireAuth, async (req: any, res) => {
       )
       .limit(1);
 
+    console.log('[UPDATE GOAL] Meta existente encontrada:', existingGoal);
+
     if (existingGoal.length === 0) {
+      console.log('[UPDATE GOAL] Meta não encontrada para goalId:', goalId, 'userId:', userId);
       return res.status(404).json({ message: 'Meta não encontrada' });
     }
 
+    console.log('[UPDATE GOAL] Validando dados com schema...');
     const updateData = insertSocialGoalSchema.partial().parse(req.body);
+    console.log('[UPDATE GOAL] Dados validados:', updateData);
 
+    console.log('[UPDATE GOAL] Executando atualização no banco...');
     const [updatedGoal] = await db
       .update(socialGoals)
       .set({
@@ -810,6 +821,7 @@ router.put('/goals/:id', requireAuth, async (req: any, res) => {
       .where(eq(socialGoals.id, goalId))
       .returning();
 
+    console.log('[UPDATE GOAL] Meta atualizada com sucesso:', updatedGoal);
     res.json(updatedGoal);
   } catch (error) {
     console.error('Erro ao atualizar meta:', error);

@@ -110,11 +110,18 @@ export default function SocialGoalsManagement({ isOpen, onClose }: SocialGoalsMa
   });
 
   const updateGoalMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiRequest(`/api/social-growth/goals/${id}`, {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      console.log('[FRONTEND] Atualizando meta ID:', id, 'com dados:', data);
+      const result = await apiRequest(`/api/social-growth/goals/${id}`, {
         method: 'PUT',
-        body: data
-      }),
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('[FRONTEND] Resposta da atualização:', result);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
       setEditingGoal(null);
@@ -124,10 +131,19 @@ export default function SocialGoalsManagement({ isOpen, onClose }: SocialGoalsMa
         description: "Meta editada com sucesso!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('[FRONTEND] Erro ao atualizar meta:', error);
+      let errorMessage = "Erro ao atualizar meta. Tente novamente.";
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Erro",
-        description: "Erro ao atualizar meta. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
