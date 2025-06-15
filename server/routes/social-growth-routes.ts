@@ -450,12 +450,40 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       monthlyGrowth = previous > 0 ? ((current - previous) / previous) * 100 : 0;
     }
 
+    // Buscar metas ativas (não expiradas)
+    const activeGoals = await db
+      .select({
+        id: socialGoals.id,
+        goalType: socialGoals.goalType,
+        deadline: socialGoals.deadline
+      })
+      .from(socialGoals)
+      .innerJoin(socialNetworks, eq(socialGoals.networkId, socialNetworks.id))
+      .where(
+        and(
+          eq(socialNetworks.userId, userId),
+          gte(socialGoals.deadline, new Date().toISOString().split('T')[0])
+        )
+      );
+
+    // Organizar dados por plataforma específica
+    const platformSpecific = {
+      instagram: platforms.find(p => p.platform === 'instagram')?.followers || 0,
+      facebook: platforms.find(p => p.platform === 'facebook')?.followers || 0,
+      tiktok: platforms.find(p => p.platform === 'tiktok')?.followers || 0,
+      youtube: platforms.find(p => p.platform === 'youtube')?.followers || 0,
+      linkedin: platforms.find(p => p.platform === 'linkedin')?.followers || 0,
+      twitter: platforms.find(p => p.platform === 'twitter')?.followers || 0
+    };
+
     res.json({
       totalNetworks: userNetworks.length,
       totalFollowers,
       totalSales,
+      activeGoals: activeGoals.length,
       monthlyGrowth: Math.round(monthlyGrowth * 100) / 100,
       platforms: platforms.sort((a, b) => b.followers - a.followers),
+      platformSpecific,
       growthTrend: growthTrend.map(item => ({
         month: item.month,
         followers: item.totalFollowers || 0,
