@@ -403,19 +403,30 @@ router.get('/analytics', requireAuth, async (req: any, res) => {
       )
       .orderBy(desc(socialGrowthData.recordDate));
 
-    // Agrupar por plataforma
+    // Agrupar por plataforma (pegar apenas o valor mais recente)
     const platforms = userNetworks.reduce((acc, network) => {
       const networkData = latestData.filter(d => d.socialNetworkId === network.id);
-      const totalFollowers = networkData.reduce((sum, d) => sum + d.followers, 0);
-      const totalSales = networkData.reduce((sum, d) => sum + (d.salesFromPlatform || 0), 0);
-
-      acc.push({
-        platform: network.platform,
-        username: network.username,
-        followers: totalFollowers,
-        sales: totalSales,
-        lastUpdate: networkData[0]?.recordDate || null
-      });
+      // Pegar apenas o registro mais recente (primeiro do array já ordenado por data desc)
+      const latestRecord = networkData[0];
+      
+      if (latestRecord) {
+        acc.push({
+          platform: network.platform,
+          username: network.username,
+          followers: latestRecord.followers,
+          sales: latestRecord.salesFromPlatform || 0,
+          lastUpdate: latestRecord.recordDate
+        });
+      } else {
+        // Se não há dados, adicionar com 0
+        acc.push({
+          platform: network.platform,
+          username: network.username,
+          followers: 0,
+          sales: 0,
+          lastUpdate: null
+        });
+      }
 
       return acc;
     }, [] as any[]);
