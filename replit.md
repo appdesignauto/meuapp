@@ -118,11 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 15, 2025: Completed pricing section layout optimization with perfect spacing and badge positioning
-  - Fixed badge overlap by increasing card spacing from gap-6 to gap-8 on desktop, preventing "Mais Popular" badge from touching adjacent cards
-  - Adjusted semestral card padding-top to pt-6 for proper badge clearance within the card
-  - Optimized grid layout ensuring professional spacing between all three pricing plans
-  - Achieved clean visual hierarchy with no overlapping elements across mobile and desktop views
+- June 15, 2025: Completed pricing section mobile-only layout optimization with perfect badge spacing
+  - Fixed mobile badge overlap by increasing card spacing to gap-10 on mobile, preventing "Mais Popular" badge from touching adjacent cards
+  - Desktop layout preserved at original gap-8 spacing as requested by user
+  - Typography reverted to original text-4xl for all pricing amounts maintaining established design
+  - Mobile-first approach: enhanced spacing only where needed without affecting desktop experience
 - June 15, 2025: Enhanced pricing section typography and visual hierarchy for improved readability
   - Increased main price size from text-4xl to text-5xl across all three pricing cards for better prominence
   - Upgraded description text from text-sm to text-base for enhanced legibility and professional appearance
