@@ -1,0 +1,365 @@
+import express from 'express';
+import { db } from '../db';
+import { socialNetworks, socialGrowthData, insertSocialNetworkSchema, insertSocialGrowthDataSchema } from '@shared/schema';
+import { eq, and, desc, asc, gte, lte, sql } from 'drizzle-orm';
+import { z } from 'zod';
+
+const router = express.Router();
+
+// Middleware para verificar autenticação
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Não autenticado' });
+  }
+  next();
+};
+
+// GET /api/social-growth/networks - Listar redes sociais do usuário
+router.get('/networks', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const networks = await db
+      .select()
+      .from(socialNetworks)
+      .where(eq(socialNetworks.userId, userId))
+      .orderBy(asc(socialNetworks.platform));
+
+    res.json(networks);
+  } catch (error) {
+    console.error('Erro ao buscar redes sociais:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/social-growth/networks - Adicionar nova rede social
+router.post('/networks', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const validatedData = insertSocialNetworkSchema.parse({
+      ...req.body,
+      userId
+    });
+
+    // Verificar se já existe uma rede com a mesma plataforma e username
+    const existing = await db
+      .select()
+      .from(socialNetworks)
+      .where(
+        and(
+          eq(socialNetworks.userId, userId),
+          eq(socialNetworks.platform, validatedData.platform),
+          eq(socialNetworks.username, validatedData.username)
+        )
+      );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ message: 'Rede social já cadastrada' });
+    }
+
+    const [network] = await db
+      .insert(socialNetworks)
+      .values(validatedData)
+      .returning();
+
+    res.status(201).json(network);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+    }
+    console.error('Erro ao criar rede social:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/social-growth/networks/:id - Atualizar rede social
+router.put('/networks/:id', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const networkId = parseInt(req.params.id);
+    
+    const updateSchema = insertSocialNetworkSchema.partial().omit({ userId: true });
+    const validatedData = updateSchema.parse(req.body);
+
+    const [updated] = await db
+      .update(socialNetworks)
+      .set({
+        ...validatedData,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(socialNetworks.id, networkId),
+          eq(socialNetworks.userId, userId)
+        )
+      )
+      .returning();
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Rede social não encontrada' });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+    }
+    console.error('Erro ao atualizar rede social:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// DELETE /api/social-growth/networks/:id - Remover rede social
+router.delete('/networks/:id', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const networkId = parseInt(req.params.id);
+
+    const [deleted] = await db
+      .delete(socialNetworks)
+      .where(
+        and(
+          eq(socialNetworks.id, networkId),
+          eq(socialNetworks.userId, userId)
+        )
+      )
+      .returning();
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Rede social não encontrada' });
+    }
+
+    res.json({ message: 'Rede social removida com sucesso' });
+  } catch (error) {
+    console.error('Erro ao remover rede social:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/social-growth/data/:networkId - Obter dados de crescimento
+router.get('/data/:networkId', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const networkId = parseInt(req.params.networkId);
+    const { startDate, endDate } = req.query;
+
+    // Verificar se a rede pertence ao usuário
+    const network = await db
+      .select()
+      .from(socialNetworks)
+      .where(
+        and(
+          eq(socialNetworks.id, networkId),
+          eq(socialNetworks.userId, userId)
+        )
+      );
+
+    if (network.length === 0) {
+      return res.status(404).json({ message: 'Rede social não encontrada' });
+    }
+
+    let query = db
+      .select()
+      .from(socialGrowthData)
+      .where(eq(socialGrowthData.socialNetworkId, networkId));
+
+    if (startDate) {
+      query = query.where(gte(socialGrowthData.recordDate, startDate));
+    }
+    if (endDate) {
+      query = query.where(lte(socialGrowthData.recordDate, endDate));
+    }
+
+    const data = await query.orderBy(asc(socialGrowthData.recordDate));
+
+    res.json(data);
+  } catch (error) {
+    console.error('Erro ao buscar dados de crescimento:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/social-growth/data - Adicionar dados de crescimento
+router.post('/data', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const validatedData = insertSocialGrowthDataSchema.parse({
+      ...req.body,
+      userId
+    });
+
+    // Verificar se a rede pertence ao usuário
+    const network = await db
+      .select()
+      .from(socialNetworks)
+      .where(
+        and(
+          eq(socialNetworks.id, validatedData.socialNetworkId),
+          eq(socialNetworks.userId, userId)
+        )
+      );
+
+    if (network.length === 0) {
+      return res.status(404).json({ message: 'Rede social não encontrada' });
+    }
+
+    // Verificar se já existe dados para esta data
+    const existing = await db
+      .select()
+      .from(socialGrowthData)
+      .where(
+        and(
+          eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId),
+          eq(socialGrowthData.recordDate, validatedData.recordDate)
+        )
+      );
+
+    if (existing.length > 0) {
+      // Atualizar dados existentes
+      const [updated] = await db
+        .update(socialGrowthData)
+        .set({
+          ...validatedData,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId),
+            eq(socialGrowthData.recordDate, validatedData.recordDate)
+          )
+        )
+        .returning();
+
+      return res.json(updated);
+    } else {
+      // Criar novos dados
+      const [created] = await db
+        .insert(socialGrowthData)
+        .values(validatedData)
+        .returning();
+
+      return res.status(201).json(created);
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+    }
+    console.error('Erro ao salvar dados de crescimento:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/social-growth/analytics - Obter análises de crescimento
+router.get('/analytics', requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const { period = '6' } = req.query; // Período em meses
+
+    const monthsAgo = parseInt(period as string);
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - monthsAgo);
+    
+    // Buscar todas as redes do usuário
+    const userNetworks = await db
+      .select()
+      .from(socialNetworks)
+      .where(eq(socialNetworks.userId, userId));
+
+    if (userNetworks.length === 0) {
+      return res.json({
+        totalNetworks: 0,
+        totalFollowers: 0,
+        monthlyGrowth: 0,
+        platforms: [],
+        growthTrend: []
+      });
+    }
+
+    const networkIds = userNetworks.map(n => n.id);
+
+    // Dados mais recentes por rede
+    const latestData = await db
+      .select({
+        socialNetworkId: socialGrowthData.socialNetworkId,
+        platform: socialNetworks.platform,
+        username: socialNetworks.username,
+        followers: socialGrowthData.followers,
+        recordDate: socialGrowthData.recordDate,
+        salesFromPlatform: socialGrowthData.salesFromPlatform
+      })
+      .from(socialGrowthData)
+      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
+      .where(
+        and(
+          eq(socialNetworks.userId, userId),
+          gte(socialGrowthData.recordDate, startDate.toISOString().split('T')[0])
+        )
+      )
+      .orderBy(desc(socialGrowthData.recordDate));
+
+    // Agrupar por plataforma
+    const platforms = userNetworks.reduce((acc, network) => {
+      const networkData = latestData.filter(d => d.socialNetworkId === network.id);
+      const totalFollowers = networkData.reduce((sum, d) => sum + d.followers, 0);
+      const totalSales = networkData.reduce((sum, d) => sum + (d.salesFromPlatform || 0), 0);
+
+      acc.push({
+        platform: network.platform,
+        username: network.username,
+        followers: totalFollowers,
+        sales: totalSales,
+        lastUpdate: networkData[0]?.recordDate || null
+      });
+
+      return acc;
+    }, [] as any[]);
+
+    // Calcular totais
+    const totalFollowers = platforms.reduce((sum, p) => sum + p.followers, 0);
+    const totalSales = platforms.reduce((sum, p) => sum + p.sales, 0);
+
+    // Tendência de crescimento (últimos 6 meses)
+    const growthTrend = await db
+      .select({
+        month: sql<string>`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`,
+        totalFollowers: sql<number>`sum(${socialGrowthData.followers})`,
+        totalSales: sql<number>`sum(${socialGrowthData.salesFromPlatform})`
+      })
+      .from(socialGrowthData)
+      .innerJoin(socialNetworks, eq(socialGrowthData.socialNetworkId, socialNetworks.id))
+      .where(
+        and(
+          eq(socialNetworks.userId, userId),
+          gte(socialGrowthData.recordDate, startDate.toISOString().split('T')[0])
+        )
+      )
+      .groupBy(sql`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${socialGrowthData.recordDate}, 'YYYY-MM')`);
+
+    // Calcular crescimento mensal
+    let monthlyGrowth = 0;
+    if (growthTrend.length >= 2) {
+      const current = growthTrend[growthTrend.length - 1]?.totalFollowers || 0;
+      const previous = growthTrend[growthTrend.length - 2]?.totalFollowers || 0;
+      monthlyGrowth = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+    }
+
+    res.json({
+      totalNetworks: userNetworks.length,
+      totalFollowers,
+      totalSales,
+      monthlyGrowth: Math.round(monthlyGrowth * 100) / 100,
+      platforms: platforms.sort((a, b) => b.followers - a.followers),
+      growthTrend: growthTrend.map(item => ({
+        month: item.month,
+        followers: item.totalFollowers || 0,
+        sales: item.totalSales || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Erro ao buscar analytics:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+export default router;

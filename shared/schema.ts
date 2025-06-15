@@ -1297,6 +1297,77 @@ export const insertAnalyticsSettingsSchema = createInsertSchema(analyticsSetting
 export type AnalyticsSettings = typeof analyticsSettings.$inferSelect;
 export type InsertAnalyticsSettings = z.infer<typeof insertAnalyticsSettingsSchema>;
 
+// Social Growth Tracking Tables
+export const socialNetworks = pgTable("socialNetworks", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // instagram, facebook, tiktok, whatsapp_business, youtube, linkedin, twitter
+  username: text("username").notNull(),
+  profileUrl: text("profileUrl"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const socialGrowthData = pgTable("socialGrowthData", {
+  id: serial("id").primaryKey(),
+  socialNetworkId: integer("socialNetworkId").notNull().references(() => socialNetworks.id, { onDelete: "cascade" }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  recordDate: date("recordDate").notNull(), // Data do registro (primeiro dia do mês)
+  followers: integer("followers").notNull(),
+  averageLikes: integer("averageLikes").default(0),
+  averageComments: integer("averageComments").default(0),
+  salesFromPlatform: integer("salesFromPlatform").default(0),
+  usedDesignAutoArts: boolean("usedDesignAutoArts").default(false),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    networkDateUnique: primaryKey({ columns: [table.socialNetworkId, table.recordDate] }),
+  };
+});
+
+// Schemas para inserção
+export const insertSocialNetworkSchema = createInsertSchema(socialNetworks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialGrowthDataSchema = createInsertSchema(socialGrowthData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Tipos derivados
+export type SocialNetwork = typeof socialNetworks.$inferSelect;
+export type InsertSocialNetwork = z.infer<typeof insertSocialNetworkSchema>;
+
+export type SocialGrowthData = typeof socialGrowthData.$inferSelect;
+export type InsertSocialGrowthData = z.infer<typeof insertSocialGrowthDataSchema>;
+
+// Relações
+export const socialNetworksRelations = relations(socialNetworks, ({ one, many }) => ({
+  user: one(users, {
+    fields: [socialNetworks.userId],
+    references: [users.id],
+  }),
+  growthData: many(socialGrowthData),
+}));
+
+export const socialGrowthDataRelations = relations(socialGrowthData, ({ one }) => ({
+  socialNetwork: one(socialNetworks, {
+    fields: [socialGrowthData.socialNetworkId],
+    references: [socialNetworks.id],
+  }),
+  user: one(users, {
+    fields: [socialGrowthData.userId],
+    references: [users.id],
+  }),
+}));
+
 // Sistema de denúncias
 export const reportTypes = pgTable("reportTypes", {
   id: serial("id").primaryKey(),
