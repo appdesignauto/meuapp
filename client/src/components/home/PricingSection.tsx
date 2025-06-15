@@ -20,7 +20,7 @@ const PricingSection = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 max-w-4xl mx-auto">
           
           {/* Plano Mensal */}
           <div className="bg-white rounded-xl border-2 border-gray-200 p-6 md:p-6 relative hover:shadow-lg transition-all duration-300 mx-4 md:mx-0 min-h-[520px] flex flex-col">
