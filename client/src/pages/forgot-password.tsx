@@ -108,6 +108,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Professional layout matching login page */}
       <div className="max-w-md w-full space-y-8">
         {/* Logo */}
         <div className="text-center">
