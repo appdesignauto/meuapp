@@ -45,6 +45,7 @@ import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
+import SocialGrowthDashboard from "@/pages/SocialGrowthDashboard";
 
 // Páginas do Footer
 import About from "@/pages/About";
