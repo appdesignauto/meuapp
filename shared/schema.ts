@@ -280,6 +280,53 @@ export const communityPosts = pgTable("communityPosts", {
   isPinned: boolean("isPinned").default(false).notNull(), // Indica se o post está fixado no topo
 });
 
+// Social Profiles schema
+export const socialProfiles = pgTable("socialProfiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  platform: text("platform").notNull(), // "instagram" ou "facebook"
+  profileName: text("profileName").notNull(),
+  profileUrl: text("profileUrl").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertSocialProfileSchema = createInsertSchema(socialProfiles).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Social Goals schema
+export const socialGoals = pgTable("socialGoals", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  platform: text("platform").notNull(), // "instagram" ou "facebook"
+  goalType: text("goalType").notNull(), // "followers" ou "sales"
+  targetValue: integer("targetValue").notNull(),
+  deadline: date("deadline").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertSocialGoalSchema = createInsertSchema(socialGoals).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Social Progress schema
+export const socialProgress = pgTable("socialProgress", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  platform: text("platform").notNull(), // "instagram" ou "facebook"
+  month: text("month").notNull(), // formato "2025-06"
+  followers: integer("followers").notNull(),
+  sales: integer("sales").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertSocialProgressSchema = createInsertSchema(socialProgress).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
   id: true,
   createdAt: true,
@@ -307,6 +354,15 @@ export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
 export type CommunityPost = typeof communityPosts.$inferSelect;
 export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+
+export type SocialProfile = typeof socialProfiles.$inferSelect;
+export type InsertSocialProfile = z.infer<typeof insertSocialProfileSchema>;
+
+export type SocialGoal = typeof socialGoals.$inferSelect;
+export type InsertSocialGoal = z.infer<typeof insertSocialGoalSchema>;
+
+export type SocialProgress = typeof socialProgress.$inferSelect;
+export type InsertSocialProgress = z.infer<typeof insertSocialProgressSchema>;
 
 // Comentários da comunidade
 export const communityComments = pgTable("communityComments", {
