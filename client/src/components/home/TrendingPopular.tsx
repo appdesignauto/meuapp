@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Download, TrendingUp } from 'lucide-react';
 import { Link } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Art {
   id: number;
@@ -19,11 +20,17 @@ interface ApiResponse {
 }
 
 const TrendingPopular = () => {
+  const { user } = useAuth();
   const { data: popularData, isLoading } = useQuery<ApiResponse>({
     queryKey: ['/api/arts/popular']
   });
 
   const currentArts = popularData?.arts || [];
+
+  // Só exibe para usuários autenticados
+  if (!user) {
+    return null;
+  }
 
   if (isLoading) {
     return (

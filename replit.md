@@ -118,6 +118,10 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Implemented authentication restriction for "Top 6 - Artes em Alta" section
+  - Added useAuth verification in TrendingPopular component to match "Seus designs" behavior
+  - Section now visible only for logged-in users, encouraging visitor registration
+  - Enhanced user experience differentiation between authenticated and guest users
 - June 15, 2025: Enhanced pricing section with professional branding and optimized mobile responsiveness
   - Added "PLANOS" green label above main title for clear section identification  
   - Included decorative green line below title for visual appeal and brand consistency
