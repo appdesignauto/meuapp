@@ -16,7 +16,8 @@ import {
   ChevronDown,
   Infinity,
   Users,
-  CreditCard
+  CreditCard,
+  TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -131,6 +132,12 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       label: "Assinatura",
       path: "/painel/assinatura",
       icon: <CreditCard className="h-5 w-5" />,
+      access: "all",
+    },
+    {
+      label: "Crescimento Social",
+      path: "/painel/crescimento-social",
+      icon: <TrendingUp className="h-5 w-5" />,
       access: "all",
     },
   ];

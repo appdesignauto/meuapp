@@ -124,7 +124,7 @@ The system uses PostgreSQL with the following key entities:
   - Developed responsive React dashboard with Instagram/Facebook analytics
   - Added interactive goal management with progress tracking and charts
   - Integrated standalone page at /crescimento-social accessible via Resources menu
-  - Accessible via Resources menu dropdown in main navigation
+  - Added navigation link in user panel at /painel/crescimento-social
   - Implemented real-time data visualization with Recharts for follower growth
   - Created professional UI with platform-specific icons and metrics
   - System ready for social media API integration and authentic tracking
