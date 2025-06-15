@@ -118,6 +118,15 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Enhanced admin dashboard with professional social growth analytics design
+  - Redesigned DashboardOverview component following professional social media dashboard reference
+  - Added blue gradient header with BarChart3 icon and "Dashboard de Crescimento Social" branding
+  - Implemented modern navigation tabs: Visão Geral, Redes Sociais, Metas, Histórico
+  - Created social metrics cards with colored icons and growth badges: Total de Seguidores, Total de Vendas, Metas Ativas, Redes Conectadas
+  - Added "Evolução do Crescimento de Seguidores" section with Instagram, Facebook, and Total Geral breakdown
+  - Applied professional color gradients (blue, green, orange, purple) with proper contrast and spacing
+  - Enhanced visual hierarchy with larger fonts, proper card spacing, and modern badge styling
+  - Maintained existing functionality while improving user experience with modern interface design
 - June 15, 2025: Fixed pricing section layout issue preventing cards from separating unexpectedly
   - Resolved CSS conflicts in grid spacing: unified gap-6 across all breakpoints instead of gap-10 md:gap-6
   - Removed conflicting individual card margins (mx-4 md:mx-0) that caused layout shifts on mobile
