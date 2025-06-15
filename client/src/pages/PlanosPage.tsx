@@ -430,9 +430,9 @@ export default function PlanosPage() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <Award className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Garantia de 7 dias</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Garantia de 30 dias</h3>
               <p className="text-sm text-gray-600">
-                Não ficou satisfeito? Devolvemos 100% do seu dinheiro em até 7 dias.
+                Não ficou satisfeito? Devolvemos 100% do seu dinheiro em até 30 dias.
               </p>
             </div>
 
