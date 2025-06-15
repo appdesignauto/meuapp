@@ -43,6 +43,7 @@ import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 import VideoaulasPage from "@/pages/videoaulas";
 import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
+import CrescimentoSocial from "@/pages/CrescimentoSocial";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 import WebhookLogsPage from "@/pages/admin/WebhookLogs";
 
@@ -176,6 +177,7 @@ function AppRoutes() {
       <Route path="/videoaulas" component={VideoaulasPage} />
       <Route path="/ferramentas" component={FerramentasPage} />
       <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
+      <ProtectedRoute path="/crescimento-social" component={CrescimentoSocial} />
       
       {/* Páginas do Footer */}
       <Route path="/sobre" component={About} />

@@ -6,6 +6,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import { flexibleAuth } from "./auth-flexible";
+import { isAuthenticated } from "./middleware";
 import imageUploadRoutes from "./routes/image-upload";
 import { setupFollowRoutesSimple } from "./routes/follows-simple";
 import { db } from "./db";
@@ -8846,6 +8847,163 @@ app.use('/api/reports-v2', (req, res, next) => {
         message: "Erro ao calcular performance de conteúdo",
         error: error.message 
       });
+    }
+  });
+
+  // Social Growth API Routes
+  app.get("/api/social/dashboard", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const dashboard = await storage.getSocialDashboard(userId);
+      res.json(dashboard);
+    } catch (error) {
+      console.error("Erro ao buscar dashboard social:", error);
+      res.status(500).json({ message: "Erro ao buscar dashboard social" });
+    }
+  });
+
+  app.post("/api/social/add-profile", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { platform, profileName, profileUrl } = req.body;
+
+      if (!platform || !profileName || !profileUrl) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      if (!['instagram', 'facebook'].includes(platform)) {
+        return res.status(400).json({ message: "Plataforma deve ser 'instagram' ou 'facebook'" });
+      }
+
+      const profile = await storage.createSocialProfile({
+        userId,
+        platform,
+        profileName,
+        profileUrl
+      });
+
+      res.json(profile);
+    } catch (error) {
+      console.error("Erro ao criar perfil social:", error);
+      res.status(500).json({ message: "Erro ao criar perfil social" });
+    }
+  });
+
+  app.post("/api/social/add-goal", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { platform, goalType, targetValue, deadline } = req.body;
+
+      if (!platform || !goalType || !targetValue || !deadline) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      if (!['instagram', 'facebook'].includes(platform)) {
+        return res.status(400).json({ message: "Plataforma deve ser 'instagram' ou 'facebook'" });
+      }
+
+      if (!['followers', 'sales'].includes(goalType)) {
+        return res.status(400).json({ message: "Tipo de meta deve ser 'followers' ou 'sales'" });
+      }
+
+      const goal = await storage.createSocialGoal({
+        userId,
+        platform,
+        goalType,
+        targetValue: parseInt(targetValue),
+        deadline: new Date(deadline)
+      });
+
+      res.json(goal);
+    } catch (error) {
+      console.error("Erro ao criar meta social:", error);
+      res.status(500).json({ message: "Erro ao criar meta social" });
+    }
+  });
+
+  app.post("/api/social/add-progress", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { platform, month, followers, sales } = req.body;
+
+      if (!platform || !month || followers === undefined || sales === undefined) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      if (!['instagram', 'facebook'].includes(platform)) {
+        return res.status(400).json({ message: "Plataforma deve ser 'instagram' ou 'facebook'" });
+      }
+
+      const progress = await storage.createSocialProgress({
+        userId,
+        platform,
+        month,
+        followers: parseInt(followers),
+        sales: parseInt(sales)
+      });
+
+      res.json(progress);
+    } catch (error) {
+      console.error("Erro ao adicionar progresso social:", error);
+      res.status(500).json({ message: "Erro ao adicionar progresso social" });
+    }
+  });
+
+  app.put("/api/social/update-goal/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      const updates = req.body;
+
+      if (updates.targetValue) {
+        updates.targetValue = parseInt(updates.targetValue);
+      }
+
+      if (updates.deadline) {
+        updates.deadline = new Date(updates.deadline);
+      }
+
+      const goal = await storage.updateSocialGoal(goalId, updates);
+      
+      if (!goal) {
+        return res.status(404).json({ message: "Meta não encontrada" });
+      }
+
+      res.json(goal);
+    } catch (error) {
+      console.error("Erro ao atualizar meta social:", error);
+      res.status(500).json({ message: "Erro ao atualizar meta social" });
+    }
+  });
+
+  app.delete("/api/social/delete-goal/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      const success = await storage.deleteSocialGoal(goalId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Meta não encontrada" });
+      }
+
+      res.json({ message: "Meta deletada com sucesso" });
+    } catch (error) {
+      console.error("Erro ao deletar meta social:", error);
+      res.status(500).json({ message: "Erro ao deletar meta social" });
+    }
+  });
+
+  app.delete("/api/social/delete-profile/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const profileId = parseInt(req.params.id);
+      const success = await storage.deleteSocialProfile(profileId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Perfil não encontrado" });
+      }
+
+      res.json({ message: "Perfil deletado com sucesso" });
+    } catch (error) {
+      console.error("Erro ao deletar perfil social:", error);
+      res.status(500).json({ message: "Erro ao deletar perfil social" });
     }
   });
 
