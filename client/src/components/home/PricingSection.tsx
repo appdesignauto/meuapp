@@ -136,7 +136,7 @@ const PricingSection = () => {
               </div>
             </div>
             
-            <div className="text-center mb-6 pt-2">
+            <div className="text-center mb-6 pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Semestral</h3>
               <div className="mb-1">
                 <span className="text-5xl font-bold text-blue-600">R$36,70</span>
