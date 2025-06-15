@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import SocialGoalsSection from '@/components/social/SocialGoalsSection';
+import { Target } from 'lucide-react';
 
 // Types
 interface SocialNetwork {
@@ -71,6 +72,14 @@ export default function SocialGrowthDashboard() {
   const [selectedNetwork, setSelectedNetwork] = useState<SocialNetwork | null>(null);
   const [isAddingNetwork, setIsAddingNetwork] = useState(false);
   const [isAddingData, setIsAddingData] = useState(false);
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [goalForm, setGoalForm] = useState({
+    networkId: '',
+    goalType: 'followers' as 'followers' | 'engagement' | 'sales',
+    targetValue: 0,
+    deadline: '',
+    description: ''
+  });
   const [networkForm, setNetworkForm] = useState({ platform: '', username: '', profileUrl: '' });
   const [dataForm, setDataForm] = useState({
     socialNetworkId: 0,
@@ -147,6 +156,40 @@ export default function SocialGrowthDashboard() {
     },
     onError: (error: any) => {
       toast({ title: 'Erro ao salvar dados', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Add goal mutation
+  const addGoalMutation = useMutation({
+    mutationFn: async (data: typeof goalForm) => {
+      const response = await fetch('/api/social-growth/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          networkId: parseInt(data.networkId),
+          goalType: data.goalType,
+          targetValue: data.targetValue,
+          deadline: data.deadline,
+          description: data.description
+        }),
+      });
+      if (!response.ok) throw new Error('Erro ao criar meta');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
+      setIsAddingGoal(false);
+      setGoalForm({
+        networkId: '',
+        goalType: 'followers',
+        targetValue: 0,
+        deadline: '',
+        description: ''
+      });
+      toast({ title: 'Meta criada com sucesso!' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Erro ao criar meta', description: error.message, variant: 'destructive' });
     },
   });
 
