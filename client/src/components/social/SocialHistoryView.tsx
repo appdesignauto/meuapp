@@ -261,7 +261,7 @@ export default function SocialHistoryView() {
     <Card className="bg-white shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-lg font-semibold text-slate-900">Histórico Mensal</CardTitle>
+          <CardTitle className="text-lg font-semibold text-slate-900">Histórico de Crescimento</CardTitle>
         </div>
         <Button 
           onClick={() => setIsAddingData(true)}
@@ -269,7 +269,7 @@ export default function SocialHistoryView() {
           disabled={networks.length === 0}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Atualizar Dados
+          Adicionar Dados
         </Button>
       </CardHeader>
       
@@ -278,7 +278,7 @@ export default function SocialHistoryView() {
           <div className="text-center py-8">
             <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum dado histórico</h3>
-            <p className="text-slate-600 mb-4">Comece adicionando dados mensais das suas redes sociais</p>
+            <p className="text-slate-600 mb-4">Comece adicionando dados de crescimento das suas redes sociais</p>
             <Button 
               onClick={() => setIsAddingData(true)} 
               className="bg-purple-600 hover:bg-purple-700"
@@ -293,7 +293,7 @@ export default function SocialHistoryView() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">MÊS</th>
+                  <th className="text-left py-3 px-4 font-medium text-slate-700">DATA</th>
                   {platforms.map(platform => (
                     <React.Fragment key={platform}>
                       <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
@@ -426,7 +426,7 @@ export default function SocialHistoryView() {
       <Dialog open={isAddingData} onOpenChange={setIsAddingData}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Adicionar Dados Mensais</DialogTitle>
+            <DialogTitle>Adicionar Dados de Crescimento</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -446,7 +446,7 @@ export default function SocialHistoryView() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="add-date">Data (Início do Mês)</Label>
+                <Label htmlFor="add-date">Data</Label>
                 <Input
                   id="add-date"
                   type="date"

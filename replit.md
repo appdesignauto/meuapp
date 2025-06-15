@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Enhanced social growth data system to support flexible update frequency (not just monthly)
+  - Updated all labels and text from "Dados Mensais" to "Dados de Crescimento" to reflect flexible update schedule
+  - Changed table header from "MÊS" to "DATA" for better data representation flexibility
+  - Modified form labels to remove "monthly" restrictions - users can now update weekly, bi-weekly, or as needed
+  - Maintained existing analytics functionality while improving user experience terminology
+  - System now clearly communicates that data updates can happen at any frequency preferred by the user
 - June 15, 2025: Completed platform-specific analytics integration with minimalistic design optimization
   - Updated TypeScript interfaces to include platformSpecific data (instagram, facebook, tiktok, youtube) and activeGoals
   - Enhanced analytics display with color-coded platform icons: Instagram (pink), Facebook (blue), TikTok+YouTube (red), Active Goals (orange)
