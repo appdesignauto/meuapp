@@ -336,66 +336,50 @@ export default function SocialHistoryView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full bg-white">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">DATA</th>
+                <tr className="bg-gray-50">
+                  <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm uppercase tracking-wider">MÊS</th>
                   {platforms.map(platform => (
                     <React.Fragment key={platform}>
-                      <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
-                        <div className="flex items-center justify-center gap-1">
-                          {getPlatformIcon(platform)}
-                          <span>SEGUIDORES</span>
-                        </div>
+                      <th className="text-center py-4 px-4 font-medium text-gray-600 text-sm uppercase tracking-wider">
+                        {platform.toUpperCase()} SEGUIDORES
                       </th>
-                      <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
-                        CRESCIMENTO
-                      </th>
-                      <th className="text-center py-3 px-2 font-medium text-slate-700 text-sm">
-                        VENDAS
+                      <th className="text-center py-4 px-4 font-medium text-gray-600 text-sm uppercase tracking-wider">
+                        {platform.toUpperCase()} VENDAS
                       </th>
                     </React.Fragment>
                   ))}
-                  <th className="text-center py-3 px-4 font-medium text-slate-700">AÇÕES</th>
+                  <th className="text-center py-4 px-4 font-medium text-gray-600 text-sm uppercase tracking-wider">AÇÕES</th>
                 </tr>
               </thead>
               <tbody>
                 {months.map(month => {
                   const monthData = groupedData[month];
                   return (
-                    <tr key={month} className="border-b hover:bg-slate-50">
-                      <td className="py-3 px-4 font-medium text-slate-900">{month}</td>
+                    <tr key={month} className={`${months.indexOf(month) % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                      <td className="py-4 px-6 font-medium text-gray-900">{month}</td>
                       {platforms.map(platform => {
                         const data = monthData[platform];
-                        const growth = data?.growthFromPrevious || 0;
-                        const isPositive = growth > 0;
-                        const isNegative = growth < 0;
                         
                         return (
                           <React.Fragment key={platform}>
-                            <td className="text-center py-3 px-2 text-slate-700">
+                            <td className="text-center py-4 px-4 text-gray-700">
                               {data ? data.followers.toLocaleString() : '-'}
                             </td>
-                            <td className="text-center py-3 px-2">
-                              {data ? (
-                                <span className={`font-medium ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-slate-500'}`}>
-                                  {growth === 0 ? '-' : `${growth > 0 ? '+' : ''}${growth.toLocaleString()}`}
-                                </span>
-                              ) : '-'}
-                            </td>
-                            <td className="text-center py-3 px-2 text-slate-700">
+                            <td className="text-center py-4 px-4 text-gray-700">
                               {data ? data.salesFromPlatform : '-'}
                             </td>
                           </React.Fragment>
                         );
                       })}
-                      <td className="text-center py-3 px-4">
+                      <td className="text-center py-4 px-4">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600"
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
                             >
                               <MoreHorizontal size={16} />
                             </Button>
@@ -406,14 +390,14 @@ export default function SocialHistoryView() {
                                 {index > 0 && <DropdownMenuSeparator />}
                                 <DropdownMenuItem
                                   onClick={() => handleEditData(data)}
-                                  className="flex items-center gap-2 text-slate-700 hover:text-blue-600 cursor-pointer text-sm"
+                                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 cursor-pointer text-sm"
                                 >
                                   <Edit3 size={12} />
                                   Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteData(data.id)}
-                                  className="flex items-center gap-2 text-slate-700 hover:text-red-600 cursor-pointer text-sm"
+                                  className="flex items-center gap-2 text-gray-700 hover:text-red-600 cursor-pointer text-sm"
                                 >
                                   <Trash2 size={12} />
                                   Excluir
