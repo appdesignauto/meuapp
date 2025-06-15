@@ -118,6 +118,15 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 15, 2025: Created comprehensive social growth dashboard ("Crescimento Social") with 4 main sections
+  - Built complete dashboard with Overview, Social Networks, Goals, and History tabs
+  - Added interactive charts for follower growth and sales performance using Recharts library
+  - Implemented modal forms for adding social profiles, creating goals, and updating progress data
+  - Applied responsive design with platform-specific colors (Instagram pink, Facebook blue, green accents)
+  - Moved navigation from main header menu to Resources dropdown as requested by user
+  - Added mobile footer menu navigation with TrendingUp icon
+  - Connected authentication system to restrict access to logged-in users only
+  - Currently uses mock data for demonstration - ready for database integration
 - June 15, 2025: Fixed pricing section layout issue preventing cards from separating unexpectedly
   - Resolved CSS conflicts in grid spacing: unified gap-6 across all breakpoints instead of gap-10 md:gap-6
   - Removed conflicting individual card margins (mx-4 md:mx-0) that caused layout shifts on mobile

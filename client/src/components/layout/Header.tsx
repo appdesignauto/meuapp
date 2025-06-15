@@ -218,7 +218,6 @@ const Header = () => {
     { name: 'Início', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Categorias', path: '/categorias', icon: <Library className="h-5 w-5" /> },
     { name: 'Comunidade', path: '/comunidade', icon: <MessageSquare className="h-5 w-5" /> },
-    { name: 'Crescimento Social', path: '/crescimento-social', icon: <TrendingUp className="h-5 w-5" /> },
   ];
 
   const toggleMobileMenu = () => {
@@ -318,6 +317,12 @@ const Header = () => {
                     <Link href="/ferramentas" className="flex items-center cursor-pointer">
                       <Wrench className="mr-2 h-4 w-4 text-blue-500" />
                       <span>Ferramentas</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/crescimento-social" className="flex items-center cursor-pointer">
+                      <TrendingUp className="mr-2 h-4 w-4 text-green-600" />
+                      <span>Crescimento Social</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
