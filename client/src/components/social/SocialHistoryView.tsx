@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Edit3, Trash2, Plus, Calendar, MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 interface SocialGrowthData {
   id: number;
@@ -385,22 +385,23 @@ export default function SocialHistoryView() {
                               <MoreHorizontal size={16} />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            {Object.values(monthData).map(data => (
+                          <DropdownMenuContent align="end" className="w-32">
+                            {Object.values(monthData).map((data, index) => (
                               <React.Fragment key={data.id}>
+                                {index > 0 && <DropdownMenuSeparator />}
                                 <DropdownMenuItem
                                   onClick={() => handleEditData(data)}
-                                  className="flex items-center gap-2 text-slate-700 hover:text-blue-600 cursor-pointer"
+                                  className="flex items-center gap-2 text-slate-700 hover:text-blue-600 cursor-pointer text-sm"
                                 >
-                                  <Edit3 size={14} />
-                                  Editar {getPlatformDisplayName(data.networkPlatform || '')}
+                                  <Edit3 size={12} />
+                                  Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteData(data.id)}
-                                  className="flex items-center gap-2 text-slate-700 hover:text-red-600 cursor-pointer"
+                                  className="flex items-center gap-2 text-slate-700 hover:text-red-600 cursor-pointer text-sm"
                                 >
-                                  <Trash2 size={14} />
-                                  Excluir {getPlatformDisplayName(data.networkPlatform || '')}
+                                  <Trash2 size={12} />
+                                  Excluir
                                 </DropdownMenuItem>
                               </React.Fragment>
                             ))}
