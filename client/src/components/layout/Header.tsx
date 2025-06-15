@@ -46,7 +46,8 @@ import {
   PackageOpen,
   LifeBuoy,
   Wrench,
-  MoreHorizontal
+  MoreHorizontal,
+  TrendingUp
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -217,6 +218,7 @@ const Header = () => {
     { name: 'Início', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Categorias', path: '/categorias', icon: <Library className="h-5 w-5" /> },
     { name: 'Comunidade', path: '/comunidade', icon: <MessageSquare className="h-5 w-5" /> },
+    { name: 'Crescimento Social', path: '/crescimento-social', icon: <TrendingUp className="h-5 w-5" /> },
   ];
 
   const toggleMobileMenu = () => {

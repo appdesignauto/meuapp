@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { Home, Grid3X3, Play, Users } from 'lucide-react';
+import { Home, Grid3X3, Play, Users, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FooterMenu: React.FC = () => {
@@ -30,6 +30,12 @@ const FooterMenu: React.FC = () => {
       label: 'Comunidade',
       href: '/comunidade',
       active: location === '/comunidade' || location.startsWith('/comunidade/')
+    },
+    {
+      icon: TrendingUp,
+      label: 'Crescimento',
+      href: '/crescimento-social',
+      active: location === '/crescimento-social' || location.startsWith('/crescimento-social/')
     }
   ];
   
