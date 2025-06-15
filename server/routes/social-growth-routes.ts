@@ -240,45 +240,15 @@ router.post('/data', requireAuth, async (req: any, res) => {
       return res.status(404).json({ message: 'Rede social não encontrada' });
     }
 
-    // Verificar se já existe dados para esta data
-    const existing = await db
-      .select()
-      .from(socialGrowthData)
-      .where(
-        and(
-          eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId),
-          eq(socialGrowthData.recordDate, validatedData.recordDate)
-        )
-      );
+    // Sempre criar novos dados (permitir múltiplas entradas por data)
+    console.log('[ADD DATA] Criando novos dados (sem restrição de data):', validatedData);
+    const [created] = await db
+      .insert(socialGrowthData)
+      .values(validatedData)
+      .returning();
 
-    if (existing.length > 0) {
-      // Atualizar dados existentes
-      const [updated] = await db
-        .update(socialGrowthData)
-        .set({
-          ...validatedData,
-          updatedAt: new Date()
-        })
-        .where(
-          and(
-            eq(socialGrowthData.socialNetworkId, validatedData.socialNetworkId),
-            eq(socialGrowthData.recordDate, validatedData.recordDate)
-          )
-        )
-        .returning();
-
-      return res.json(updated);
-    } else {
-      // Criar novos dados
-      console.log('[ADD DATA] Criando novos dados:', validatedData);
-      const [created] = await db
-        .insert(socialGrowthData)
-        .values(validatedData)
-        .returning();
-
-      console.log('[ADD DATA] Dados criados com sucesso:', created);
-      return res.status(201).json(created);
-    }
+    console.log('[ADD DATA] Dados criados com sucesso:', created);
+    return res.status(201).json(created);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
