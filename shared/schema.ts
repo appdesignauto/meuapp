@@ -989,6 +989,7 @@ export const socialGoals = pgTable("socialGoals", {
   profileId: integer("profileId").references(() => socialProfiles.id, { onDelete: "cascade" }),
   platform: text("platform").notNull(), // 'instagram', 'facebook', 'all'
   goalType: text("goalType").notNull(), // 'followers', 'sales'
+  initialValue: integer("initialValue").notNull().default(0),
   currentValue: integer("currentValue").notNull().default(0),
   targetValue: integer("targetValue").notNull(),
   deadline: timestamp("deadline").notNull(),

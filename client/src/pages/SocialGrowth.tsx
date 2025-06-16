@@ -408,8 +408,10 @@ export default function SocialGrowth() {
     }
   };
 
-  const calculateProgress = (current: number, target: number) => {
-    return Math.min((current / target) * 100, 100);
+  const calculateProgress = (initial: number, current: number, target: number) => {
+    if (target === 0 || target <= initial) return 0;
+    const progress = ((current - initial) / (target - initial)) * 100;
+    return Math.min(Math.max(progress, 0), 100);
   };
 
   const formatNumber = (num: number) => {
@@ -888,7 +890,7 @@ export default function SocialGrowth() {
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
                           <span>Progresso</span>
-                          <span>{Math.round(calculateProgress(goal.currentValue || 0, goal.targetValue))}%</span>
+                          <span>{Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%</span>
                         </div>
                         <Progress value={calculateProgress(goal.currentValue || 0, goal.targetValue)} />
                         <div className="flex justify-between text-sm text-muted-foreground">
