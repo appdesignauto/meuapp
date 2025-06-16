@@ -420,8 +420,10 @@ export default function SocialGrowth() {
   };
 
   const calculateProgress = (initial: number, current: number, target: number) => {
+    console.log('Calculando progresso:', { initial, current, target });
     if (target === 0 || target <= initial) return 0;
     const progress = ((current - initial) / (target - initial)) * 100;
+    console.log('Progresso calculado:', progress);
     return Math.min(Math.max(progress, 0), 100);
   };
 
