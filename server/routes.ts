@@ -8923,26 +8923,46 @@ app.use('/api/reports-v2', (req, res, next) => {
       let salesGrowth = 0;
       
       if (recentProgress.length > 0) {
-        // Agrupar por mês/ano e calcular totais
+        // Agrupar por mês/ano e calcular totais para cada plataforma separadamente
         const monthlyTotals = new Map();
         
         recentProgress.forEach(record => {
           const key = `${record.year}-${record.month.toString().padStart(2, '0')}`;
           if (!monthlyTotals.has(key)) {
-            monthlyTotals.set(key, { followers: 0, sales: 0, platforms: new Set() });
+            monthlyTotals.set(key, new Map()); // Map de plataformas para este mês
           }
           
-          const data = monthlyTotals.get(key);
-          // Somar apenas uma vez por plataforma (usar o registro mais recente)
-          if (!data.platforms.has(record.platform)) {
-            data.followers += record.followers;
-            data.sales += record.sales;
-            data.platforms.add(record.platform);
+          const monthData = monthlyTotals.get(key);
+          // Sempre usar o registro mais recente para cada plataforma
+          if (!monthData.has(record.platform) || 
+              new Date(record.createdAt) > new Date(monthData.get(record.platform).createdAt)) {
+            monthData.set(record.platform, {
+              followers: record.followers,
+              sales: record.sales,
+              createdAt: record.createdAt
+            });
           }
         });
         
+        // Calcular totais por mês
+        const monthlyResults = new Map();
+        for (const [monthKey, platformData] of monthlyTotals) {
+          let totalFollowers = 0;
+          let totalSales = 0;
+          
+          for (const [platform, data] of platformData) {
+            totalFollowers += data.followers;
+            totalSales += data.sales;
+          }
+          
+          monthlyResults.set(monthKey, {
+            followers: totalFollowers,
+            sales: totalSales
+          });
+        }
+        
         // Ordenar por data (mais recente primeiro)
-        const sortedMonths = Array.from(monthlyTotals.entries())
+        const sortedMonths = Array.from(monthlyResults.entries())
           .sort((a, b) => b[0].localeCompare(a[0]));
         
         console.log(`📅 Meses ordenados:`, sortedMonths.map(([key, data]) => `${key}: ${data.followers} seguidores`));
@@ -8954,14 +8974,37 @@ app.use('/api/reports-v2', (req, res, next) => {
           console.log(`📊 Mês atual: ${currentMonth.followers} seguidores, ${currentMonth.sales} vendas`);
           console.log(`📊 Mês anterior: ${previousMonth.followers} seguidores, ${previousMonth.sales} vendas`);
           
-          // Calcular crescimento
+          // Calcular crescimento - usar 0 como base se não há dados anteriores
           if (previousMonth.followers > 0) {
             monthlyGrowth = ((currentMonth.followers - previousMonth.followers) / previousMonth.followers) * 100;
+          } else if (currentMonth.followers > 0) {
+            // Se não há dados do mês anterior mas há no atual, considerar crescimento positivo
+            monthlyGrowth = 100;
           }
           
           if (previousMonth.sales > 0) {
             salesGrowth = ((currentMonth.sales - previousMonth.sales) / previousMonth.sales) * 100;
+          } else if (currentMonth.sales > 0) {
+            // Se não há vendas anteriores mas há no atual, considerar crescimento positivo
+            salesGrowth = 100;
           }
+        } else if (sortedMonths.length === 1) {
+          // Se há apenas um mês de dados, considerar crescimento positivo se há seguidores
+          const currentMonth = sortedMonths[0][1];
+          if (currentMonth.followers > 0) {
+            monthlyGrowth = 100;
+          }
+          if (currentMonth.sales > 0) {
+            salesGrowth = 100;
+          }
+        }
+      } else {
+        // Se não há histórico mas há perfis com seguidores, considerar crescimento positivo
+        if (currentFollowers > 0) {
+          monthlyGrowth = 100;
+        }
+        if (currentSales > 0) {
+          salesGrowth = 100;
         }
       }
       
