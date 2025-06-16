@@ -118,6 +118,10 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Optimized SEO meta tags for better Google positioning
+  - Updated site title to "DesignAuto - Artes Automotivas Profissionais para Vendas"
+  - Enhanced meta description with keywords: "Milhares de artes automotivas editáveis no Canva. Templates profissionais para vendas de carros, motos, seguros e serviços automotivos. Atualizações semanais e suporte premium."
+  - Improved search engine visibility with targeted automotive and sales keywords
 - June 16, 2025: Integrated Doppus payment platform links across all pricing sections and plan pages
   - Connected monthly plan button to https://checkout.doppus.app/99960578
   - Connected annual plan button to https://checkout.doppus.app/83779723  
