@@ -1259,7 +1259,7 @@ export default function SocialGrowth() {
                       </div>
                       <div className="flex items-center space-x-3">
                         {/* Badge de Status */}
-                        {calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 100 ? (
+                        {calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 100 ? (
                           <span className="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
                             Concluída
                           </span>
@@ -1267,7 +1267,7 @@ export default function SocialGrowth() {
                           <span className="px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
                             Vencida
                           </span>
-                        ) : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 90 ? (
+                        ) : calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 90 ? (
                           <span className="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
                             Próximo ao objetivo
                           </span>
@@ -1304,23 +1304,23 @@ export default function SocialGrowth() {
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-gray-600">Progresso da Meta</span>
                           <span className={`text-sm font-semibold px-2 py-1 rounded-md ${
-                            calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 100
+                            calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 100
                               ? 'bg-green-100 text-green-700'
-                              : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 75
+                              : calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 75
                               ? 'bg-blue-100 text-blue-700'
-                              : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 50
+                              : calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 50
                               ? 'bg-yellow-100 text-yellow-700'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
-                            {Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%
+                            {Math.round(calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue))}%
                           </span>
                         </div>
                         <Progress 
-                          value={calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue)} 
+                          value={calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue)} 
                           className="h-3"
                         />
                         <div className="flex justify-between text-sm text-gray-500">
-                          <span>{formatNumber(goal.currentValue || 0)} atual</span>
+                          <span>{formatNumber(getCurrentValueFromHistory(goal.platform, goal.goalType))} atual</span>
                           <span>{formatNumber(goal.targetValue)} meta</span>
                         </div>
                       </div>
@@ -1335,14 +1335,14 @@ export default function SocialGrowth() {
                         </div>
                         
                         {/* Informativo "Faltam XXX" */}
-                        {calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) < 100 && (
+                        {calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) < 100 && (
                           <div className="flex items-center justify-center pt-3 mt-3 border-t border-gray-100">
                             <span className="flex items-center text-sm text-green-600 font-medium">
                               <TrendingUp className="h-4 w-4 mr-1" />
                               {goal.goalType === 'followers' ? (
-                                `Faltam ${(goal.targetValue - (goal.currentValue || 0)).toLocaleString()}`
+                                `Faltam ${(goal.targetValue - getCurrentValueFromHistory(goal.platform, goal.goalType)).toLocaleString()}`
                               ) : (
-                                `Faltam ${(goal.targetValue - (goal.currentValue || 0)).toLocaleString()}`
+                                `Faltam ${(goal.targetValue - getCurrentValueFromHistory(goal.platform, goal.goalType)).toLocaleString()}`
                               )}
                             </span>
                           </div>
