@@ -8916,7 +8916,8 @@ app.use('/api/reports-v2', (req, res, next) => {
       const userId = req.user.id;
       const goalData = insertSocialGoalSchema.parse({
         ...req.body,
-        userId
+        userId,
+        deadline: req.body.deadline ? new Date(req.body.deadline) : undefined
       });
       
       const [newGoal] = await db.insert(socialGoals)

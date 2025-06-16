@@ -41,7 +41,7 @@ const goalSchema = z.object({
   platform: z.string().min(1, 'Selecione uma plataforma'),
   goalType: z.string().min(1, 'Selecione o tipo de meta'),
   targetValue: z.coerce.number().min(1, 'Valor da meta deve ser maior que 0'),
-  deadline: z.string().min(1, 'Data limite é obrigatória').transform((str) => new Date(str)),
+  deadline: z.string().min(1, 'Data limite é obrigatória'),
 });
 
 const progressSchema = z.object({
@@ -800,7 +800,11 @@ export default function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Data Limite</FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Input 
+                                type="date" 
+                                {...field}
+                                value={typeof field.value === 'string' ? field.value : field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
