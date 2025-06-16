@@ -875,7 +875,10 @@ export default function SocialGrowth() {
           <TabsContent value="history" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Histórico de Progresso</h2>
-              <Dialog open={isProgressModalOpen} onOpenChange={setIsProgressModalOpen}>
+              <Dialog open={isProgressModalOpen} onOpenChange={(open) => {
+                if (!open) resetProgressModal();
+                setIsProgressModalOpen(open);
+              }}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
@@ -884,7 +887,9 @@ export default function SocialGrowth() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Adicionar Progresso Mensal</DialogTitle>
+                    <DialogTitle>
+                      {editingProgress ? 'Editar Progresso Mensal' : 'Adicionar Progresso Mensal'}
+                    </DialogTitle>
                   </DialogHeader>
                   <Form {...progressForm}>
                     <form onSubmit={progressForm.handleSubmit(handleProgressSubmit)} className="space-y-4">
