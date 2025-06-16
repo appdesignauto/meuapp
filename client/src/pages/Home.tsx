@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import useScrollTop from '@/hooks/useScrollTop';
 import { useAuth } from '@/hooks/use-auth';
 import Hero from '@/components/home/Hero';
-import SocialGrowthQuickAccess from '@/components/home/SocialGrowthQuickAccess';
+import RecentDesigns from '@/components/home/RecentDesigns';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import ArtGallery from '@/components/home/ArtGallery';
 import TrendingPopular from '@/components/home/TrendingPopular';
@@ -83,7 +83,7 @@ const Home = () => {
   return (
     <>
       <Hero />
-      <SocialGrowthQuickAccess />
+      <RecentDesigns />
       <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
       <div id="art-gallery">
         <ArtGallery 
