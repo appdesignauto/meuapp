@@ -475,6 +475,29 @@ export default function SocialGrowth() {
     return translations[platform as keyof typeof translations] || platform;
   };
 
+  // Funções para obter dados reais dos perfis
+  const getInstagramFollowers = () => {
+    if (!profiles || profiles.length === 0) return 0;
+    const instagramProfile = profiles.find((p: any) => p.platform === 'instagram');
+    return instagramProfile?.currentFollowers || 0;
+  };
+
+  const getFacebookFollowers = () => {
+    if (!profiles || profiles.length === 0) return 0;
+    const facebookProfile = profiles.find((p: any) => p.platform === 'facebook');
+    return facebookProfile?.currentFollowers || 0;
+  };
+
+  const getInstagramGrowth = () => {
+    // Por enquanto retorna 0 até implementarmos cálculo de crescimento
+    return 0;
+  };
+
+  const getFacebookGrowth = () => {
+    // Por enquanto retorna 0 até implementarmos cálculo de crescimento
+    return 0;
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
@@ -646,21 +669,23 @@ export default function SocialGrowth() {
                   
                   <div className="space-y-3">
                     <div className="text-3xl font-bold text-gray-900">
-                      {formatNumber(20000)}
+                      {formatNumber(getInstagramFollowers())}
                     </div>
                     
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Mensal</span>
-                        <span className="text-green-600 font-medium">+90%</span>
+                        <span className={`font-medium ${getInstagramGrowth() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {getInstagramGrowth() >= 0 ? '+' : ''}{getInstagramGrowth()}%
+                        </span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Semanal</span>
-                        <span className="text-green-600 font-medium">+22%</span>
+                        <span className="text-gray-400 font-medium">--</span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Média Diária</span>
-                        <span className="text-green-600 font-medium">+316</span>
+                        <span className="text-gray-400 font-medium">--</span>
                       </div>
                     </div>
                   </div>
@@ -689,21 +714,23 @@ export default function SocialGrowth() {
                   
                   <div className="space-y-3">
                     <div className="text-3xl font-bold text-gray-900">
-                      {formatNumber(4200)}
+                      {formatNumber(getFacebookFollowers())}
                     </div>
                     
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Mensal</span>
-                        <span className="text-green-600 font-medium">+15%</span>
+                        <span className={`font-medium ${getFacebookGrowth() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {getFacebookGrowth() >= 0 ? '+' : ''}{getFacebookGrowth()}%
+                        </span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Semanal</span>
-                        <span className="text-green-600 font-medium">+3%</span>
+                        <span className="text-gray-400 font-medium">--</span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Média Diária</span>
-                        <span className="text-green-600 font-medium">+18</span>
+                        <span className="text-gray-400 font-medium">--</span>
                       </div>
                     </div>
                   </div>
