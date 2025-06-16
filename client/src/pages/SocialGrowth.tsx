@@ -68,6 +68,7 @@ export default function SocialGrowth() {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<any>(null);
   const [editingGoal, setEditingGoal] = useState<any>(null);
+  const [editingProgress, setEditingProgress] = useState<any>(null);
 
   // Formulários
   const profileForm = useForm<ProfileFormData>({
@@ -238,6 +239,29 @@ export default function SocialGrowth() {
     }
   });
 
+  const updateProgressMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: ProgressFormData }) => {
+      const response = await fetch(`/api/social-growth/progress/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Erro ao atualizar progresso');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/progress'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      setIsProgressModalOpen(false);
+      setEditingProgress(null);
+      progressForm.reset();
+      toast({ title: 'Progresso atualizado com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao atualizar progresso', variant: 'destructive' });
+    }
+  });
+
   // Mutations para deletar dados
   const deleteProfileMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -275,6 +299,24 @@ export default function SocialGrowth() {
     }
   });
 
+  const deleteProgressMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/social-growth/progress/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Erro ao deletar progresso');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/progress'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
+      toast({ title: 'Progresso deletado com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao deletar progresso', variant: 'destructive' });
+    }
+  });
+
   // Handlers dos formulários
   const handleProfileSubmit = (data: ProfileFormData) => {
     if (editingProfile) {
@@ -293,7 +335,11 @@ export default function SocialGrowth() {
   };
 
   const handleProgressSubmit = (data: ProgressFormData) => {
-    createProgressMutation.mutate(data);
+    if (editingProgress) {
+      updateProgressMutation.mutate({ id: editingProgress.id, data });
+    } else {
+      createProgressMutation.mutate(data);
+    }
   };
 
   // Funções auxiliares
@@ -321,6 +367,18 @@ export default function SocialGrowth() {
     setIsGoalModalOpen(true);
   };
 
+  const openEditProgressModal = (progress: any) => {
+    setEditingProgress(progress);
+    progressForm.reset({
+      platform: progress.platform,
+      month: progress.month,
+      year: progress.year,
+      followers: progress.followers,
+      sales: progress.sales,
+    });
+    setIsProgressModalOpen(true);
+  };
+
   const resetProfileModal = () => {
     setEditingProfile(null);
     profileForm.reset();
@@ -331,6 +389,12 @@ export default function SocialGrowth() {
     setEditingGoal(null);
     goalForm.reset();
     setIsGoalModalOpen(false);
+  };
+
+  const resetProgressModal = () => {
+    setEditingProgress(null);
+    progressForm.reset();
+    setIsProgressModalOpen(false);
   };
 
   const getPlatformIcon = (platform: string) => {
@@ -938,9 +1002,27 @@ export default function SocialGrowth() {
                             <p className="text-sm text-muted-foreground capitalize">{progress.platform}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium">{formatNumber(progress.followers)} seguidores</p>
-                          <p className="text-sm text-muted-foreground">{formatNumber(progress.sales)} vendas</p>
+                        <div className="flex items-center space-x-4">
+                          <div className="text-right">
+                            <p className="font-medium">{formatNumber(progress.followers)} seguidores</p>
+                            <p className="text-sm text-muted-foreground">{formatNumber(progress.sales)} vendas</p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openEditProgressModal(progress)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => deleteProgressMutation.mutate(progress.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
