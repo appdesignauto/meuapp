@@ -174,10 +174,10 @@ function AppRoutes() {
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
-      <Route path="/videoaulas" component={VideoaulasPage} />
-      <Route path="/ferramentas" component={FerramentasPage} />
-      <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
-      <Route path="/crescimento-social" component={SocialGrowth} />
+      <ProtectedRoute path="/videoaulas" component={() => <VideoaulasPage />} />
+      <ProtectedRoute path="/ferramentas" component={() => <FerramentasPage />} />
+      <ProtectedRoute path="/ferramentas/categoria/:slug" component={() => <FerramentasPage />} />
+      <ProtectedRoute path="/crescimento-social" component={() => <SocialGrowth />} />
       
       {/* Páginas do Footer */}
       <Route path="/sobre" component={About} />
@@ -187,16 +187,14 @@ function AppRoutes() {
       <Route path="/colaboradores" component={Collaborator} />
       <Route path="/afiliacao" component={Affiliate} />
       <Route path="/pv" component={PV} />
-      <Route path="/suporte">
-        {() => {
+      <ProtectedRoute path="/suporte" component={() => {
           const SuportePage = lazy(() => import("@/pages/suporte/index"));
           return (
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <SuportePage />
             </Suspense>
           );
-        }}
-      </Route>
+        }} />
       {/* Rota de redirecionamento para manter compatibilidade */}
       <Route path="/support">
         {() => {
@@ -204,16 +202,14 @@ function AppRoutes() {
           return null;
         }}
       </Route>
-      <Route path="/videoaulas/:id">
-        {() => {
+      <ProtectedRoute path="/videoaulas/:id" component={() => {
           const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));
           return (
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <VideoLessonPage />
             </Suspense>
           );
-        }}
-      </Route>
+        }} />
       
       {/* Rotas da Comunidade */}
       <Route path="/comunidade" component={ComunidadePage} />
