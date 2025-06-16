@@ -420,10 +420,9 @@ export default function SocialGrowth() {
   };
 
   const calculateProgress = (initial: number, current: number, target: number) => {
-    console.log('Calculando progresso:', { initial, current, target });
-    if (target === 0 || target <= initial) return 0;
-    const progress = ((current - initial) / (target - initial)) * 100;
-    console.log('Progresso calculado:', progress);
+    if (target === 0) return 0;
+    // Cálculo simples: valor atual / valor da meta * 100
+    const progress = (current / target) * 100;
     return Math.min(Math.max(progress, 0), 100);
   };
 
