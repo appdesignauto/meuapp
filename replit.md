@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Enhanced social growth tracking with comprehensive data validation and loss detection
+  - Implemented chronological ordering: progress history displays most recent entries first (year DESC, month DESC, createdAt DESC)
+  - Added date validation preventing future month data entry in both frontend (Zod schema) and backend (server validation)
+  - Enhanced growth calculation to properly handle follower losses with visual indicators (red for losses, green for gains)
+  - Fixed database field references from `followersCount` to `followers` throughout the system
+  - Goals now automatically update with latest progress values ensuring accurate current status
+  - System correctly calculates percentage differences: May 100k → June 15k shows -85% growth in red
 - June 16, 2025: Fixed social growth goals progress calculation to properly consider existing followers as starting point
   - Corrected goal creation logic to automatically set initialValue and currentValue based on social profile's currentFollowers
   - Updated existing goals in database to reflect accurate starting values from social profiles

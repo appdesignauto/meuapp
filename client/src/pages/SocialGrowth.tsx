@@ -527,7 +527,9 @@ export default function SocialGrowth() {
                     {overviewLoading ? '...' : formatNumber(overviewData?.totalFollowers || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    <span className="text-green-600">+{overviewData?.monthlyGrowth || 0}%</span> este mês
+                    <span className={`${(overviewData?.monthlyGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{overviewData?.monthlyGrowth || 0}%
+                    </span> este mês
                   </p>
                 </CardContent>
               </Card>
@@ -542,7 +544,9 @@ export default function SocialGrowth() {
                     {overviewLoading ? '...' : formatNumber(overviewData?.totalSales || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    <span className="text-green-600">+{overviewData?.salesGrowth || 0}%</span> este mês
+                    <span className={`${(overviewData?.salesGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(overviewData?.salesGrowth || 0) >= 0 ? '+' : ''}{overviewData?.salesGrowth || 0}%
+                    </span> este mês
                   </p>
                 </CardContent>
               </Card>
