@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Enhanced social growth goals section with status badges and completion indicators
+  - Added intelligent status badges: "Concluída" (green), "Vencida" (red), "Próximo ao objetivo" (yellow), "Em andamento" (blue)
+  - Implemented "Faltam XXX" completion indicators showing remaining followers/sales needed to reach goals
+  - Enhanced visual hierarchy with better badge positioning and color-coded progress status
+  - Status badges automatically update based on progress percentage and deadline dates
+  - Completion indicators only display for goals under 100% progress with green accent color
 - June 16, 2025: Modernized social growth dashboard design with professional visual hierarchy and added goals overview to main dashboard
   - Redesigned all cards with gradient backgrounds, rounded corners, and colorful platform icons
   - Created "Evolução do Crescimento" section with individual platform breakdown cards
