@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Fixed social growth overview calculation to use most recent month data and corrected duplicate endpoint issues
+  - Modified overview endpoint to automatically detect and use the most recent month available in progress history
+  - Replaced hardcoded June/May comparison with dynamic latest month vs previous month calculation
+  - Corrected duplicate endpoint implementations between routes.ts and routes/social-growth.ts
+  - System now correctly shows July (20,000) vs June (10,000) = +100% growth instead of static 0%
+  - Dashboard consistently follows historical progress data with proper month-to-month comparisons
 - June 16, 2025: Fixed social growth dashboard total calculation and removed hardcoded growth values
   - Corrected total followers calculation to use socialProfiles data directly instead of empty progress data
   - Replaced hardcoded growth percentages (+73%, +18%, +334) with dynamic API data from monthlyGrowth

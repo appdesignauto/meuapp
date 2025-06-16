@@ -344,32 +344,51 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     const connectedNetworks = profiles.length;
     const activeGoals = goals.filter(goal => new Date(goal.deadline) > currentDate).length;
 
-    // Calcular crescimento mensal baseado nos dados de teste específicos
-    // Cenário: Maio 2025 (100k) → Junho 2025 (15k) = -85%
-    
-    // Buscar dados de junho 2025 (mais recente)
-    const juneData = recentProgress.filter(p => p.year === 2025 && p.month === 6);
-    const mayData = recentProgress.filter(p => p.year === 2025 && p.month === 5);
-    
+    // Calcular crescimento mensal usando SEMPRE o mês mais recente disponível
     console.log(`[Social Growth Debug] Todos os dados de progresso:`, recentProgress);
-    console.log(`[Social Growth Debug] Dados de junho 2025:`, juneData);
-    console.log(`[Social Growth Debug] Dados de maio 2025:`, mayData);
+    
+    // Encontrar o mês mais recente no histórico
+    let latestMonth = 0;
+    let latestYear = 0;
+    recentProgress.forEach(p => {
+      if (p.year > latestYear || (p.year === latestYear && p.month > latestMonth)) {
+        latestYear = p.year;
+        latestMonth = p.month;
+      }
+    });
+
+    // Encontrar o mês anterior
+    let previousMonth = latestMonth - 1;
+    let previousYear = latestYear;
+    if (previousMonth < 1) {
+      previousMonth = 12;
+      previousYear = latestYear - 1;
+    }
+
+    // Buscar dados do mês mais recente (atual) e anterior
+    const currentData = recentProgress.filter(p => p.year === latestYear && p.month === latestMonth);
+    const previousData = recentProgress.filter(p => p.year === previousYear && p.month === previousMonth);
+    
+    console.log(`[Social Growth Debug] Mês mais recente: ${latestMonth}/${latestYear}`);
+    console.log(`[Social Growth Debug] Mês anterior: ${previousMonth}/${previousYear}`);
+    console.log(`[Social Growth Debug] Dados atuais (${latestMonth}/${latestYear}):`, currentData);
+    console.log(`[Social Growth Debug] Dados anteriores (${previousMonth}/${previousYear}):`, previousData);
 
     let currentFollowers = 0;
     let previousFollowers = 0;
     let currentSales = 0;
     let previousSales = 0;
 
-    // Usar dados de junho como período atual
-    if (juneData.length > 0) {
-      currentFollowers = juneData.reduce((sum, p) => sum + p.followers, 0);
-      currentSales = juneData.reduce((sum, p) => sum + p.sales, 0);
+    // Usar dados do mês mais recente como período atual
+    if (currentData.length > 0) {
+      currentFollowers = currentData.reduce((sum, p) => sum + p.followers, 0);
+      currentSales = currentData.reduce((sum, p) => sum + p.sales, 0);
     }
 
-    // Usar dados de maio como período anterior
-    if (mayData.length > 0) {
-      previousFollowers = mayData.reduce((sum, p) => sum + p.followers, 0);
-      previousSales = mayData.reduce((sum, p) => sum + p.sales, 0);
+    // Usar dados do mês anterior
+    if (previousData.length > 0) {
+      previousFollowers = previousData.reduce((sum, p) => sum + p.followers, 0);
+      previousSales = previousData.reduce((sum, p) => sum + p.sales, 0);
     }
 
     const monthlyGrowth = previousFollowers > 0 ? ((currentFollowers - previousFollowers) / previousFollowers) * 100 : 0;
