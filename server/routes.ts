@@ -9251,12 +9251,15 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       // Calcular vendas (dados reais baseados no progresso)
       const totalSales = recentProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
-      const thisMonthSales = thisMonthProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
-      const lastMonthSales = lastMonthProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
+      const thisMonthSales = juneData.reduce((sum, p) => sum + (p.sales || 0), 0);
+      const lastMonthSales = mayData.reduce((sum, p) => sum + (p.sales || 0), 0);
       
       const salesGrowth = lastMonthSales > 0 
         ? Math.round(((thisMonthSales - lastMonthSales) / lastMonthSales) * 100)
         : 0;
+      
+      console.log(`Vendas atual (junho): ${thisMonthSales}, anterior (maio): ${lastMonthSales}`);
+      console.log(`Crescimento vendas: ${salesGrowth}%`);
       
       res.json({
         totalFollowers,
