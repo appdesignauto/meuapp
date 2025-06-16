@@ -36,7 +36,7 @@ import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettings
 import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
 import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
-import AuthPageOptimized from "@/pages/auth-page-optimized";
+import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
@@ -90,7 +90,7 @@ function AppRoutes() {
       {/* Rotas públicas */}
       <Route path="/" component={Home} />
       {/* Rotas de autenticação */}
-      <Route path="/auth" component={AuthPageOptimized} />
+      <Route path="/auth" component={AuthPage} />
       
       {/* Rotas legadas para compatibilidade - redirecionam para /auth */}
       <Route path="/login">
