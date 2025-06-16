@@ -50,22 +50,6 @@ const progressSchema = z.object({
   year: z.coerce.number().min(2020, 'Ano deve ser válido'),
   followers: z.coerce.number().min(0, 'Número de seguidores deve ser positivo'),
   sales: z.coerce.number().min(0, 'Número de vendas deve ser positivo'),
-}).refine((data) => {
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1; // getMonth() retorna 0-11
-  const currentYear = currentDate.getFullYear();
-  
-  // Não permite dados de meses futuros
-  if (data.year > currentYear) {
-    return false;
-  }
-  if (data.year === currentYear && data.month > currentMonth) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Não é possível adicionar dados de meses futuros',
-  path: ['month']
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
