@@ -330,7 +330,18 @@ export default function SocialGrowth() {
     if (editingGoal) {
       updateGoalMutation.mutate({ id: editingGoal.id, data });
     } else {
-      createGoalMutation.mutate(data);
+      // Encontrar o perfil da plataforma selecionada para obter os seguidores atuais
+      const selectedProfile = profiles.find((p: any) => p.platform === data.platform);
+      const currentFollowers = selectedProfile?.currentFollowers || 0;
+      
+      // Criar meta com valor inicial baseado nos seguidores atuais da rede social
+      const goalData = {
+        ...data,
+        initialValue: data.goalType === 'followers' ? currentFollowers : 0,
+        currentValue: data.goalType === 'followers' ? currentFollowers : 0,
+      };
+      
+      createGoalMutation.mutate(goalData);
     }
   };
 
@@ -892,7 +903,7 @@ export default function SocialGrowth() {
                           <span>Progresso</span>
                           <span>{Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%</span>
                         </div>
-                        <Progress value={calculateProgress(goal.currentValue || 0, goal.targetValue)} />
+                        <Progress value={calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue)} />
                         <div className="flex justify-between text-sm text-muted-foreground">
                           <span>{formatNumber(goal.currentValue || 0)}</span>
                           <span>{formatNumber(goal.targetValue)}</span>
