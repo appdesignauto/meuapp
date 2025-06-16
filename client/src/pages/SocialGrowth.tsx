@@ -920,7 +920,16 @@ export default function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Seguidores Atuais</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="0" {...field} />
+                              <Input 
+                                type="text" 
+                                placeholder="0" 
+                                value={field.value ? formatNumberInput(field.value.toString()) : ''}
+                                onChange={(e) => {
+                                  const formatted = formatNumberInput(e.target.value);
+                                  const parsed = parseNumberInput(formatted);
+                                  field.onChange(parsed);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1097,10 +1106,14 @@ export default function SocialGrowth() {
                             <FormLabel>Valor da Meta</FormLabel>
                             <FormControl>
                               <Input 
-                                type="number" 
+                                type="text" 
                                 placeholder="0" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                value={field.value ? formatNumberInput(field.value.toString()) : ''}
+                                onChange={(e) => {
+                                  const formatted = formatNumberInput(e.target.value);
+                                  const parsed = parseNumberInput(formatted);
+                                  field.onChange(parsed);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />

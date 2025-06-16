@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Implemented professional number formatting across all social growth forms
+  - Added formatNumberInput and parseNumberInput functions for consistent number display
+  - Applied automatic formatting to "Seguidores Atuais" field in profile forms (10000 → 10.000)
+  - Enhanced "Valor da Meta" field in goal creation forms with thousand separators
+  - Updated "Seguidores" and "Vendas" fields in progress tracking forms
+  - All numeric inputs now display Brazilian formatting while preserving database integrity
+  - Enhanced user experience with professional, readable number entry across entire dashboard
 - June 16, 2025: Enhanced social growth goals section with status badges and completion indicators
   - Added intelligent status badges: "Concluída" (green), "Vencida" (red), "Próximo ao objetivo" (yellow), "Em andamento" (blue)
   - Implemented "Faltam XXX" completion indicators showing remaining followers/sales needed to reach goals
