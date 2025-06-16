@@ -372,12 +372,14 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     const monthlyGrowth = previousFollowers > 0 ? ((currentFollowers - previousFollowers) / previousFollowers) * 100 : 0;
     const salesGrowth = previousSales > 0 ? ((currentSales - previousSales) / previousSales) * 100 : 0;
 
-    console.log(`=== NOVO CÁLCULO CORRIGIDO ===`);
-    console.log(`- Plataformas: ${platforms.join(', ')}`);
-    console.log(`- Total atual: ${currentFollowers}, Total anterior: ${previousFollowers}`);
-    console.log(`- Crescimento: ${monthlyGrowth.toFixed(1)}%`);
+    console.log(`=== CÁLCULO FINAL CORRIGIDO ===`);
+    console.log(`- Plataformas encontradas: ${platforms.join(', ')}`);
+    console.log(`- Total Seguidores (atual): ${currentFollowers}`);
+    console.log(`- Total Seguidores (anterior): ${previousFollowers}`);
+    console.log(`- Crescimento calculado: ${monthlyGrowth.toFixed(1)}%`);
+    console.log(`- totalFollowers que será enviado: ${totalFollowers}`);
 
-    res.json({
+    const response = {
       totalFollowers,
       totalSales,
       connectedNetworks,
@@ -387,7 +389,10 @@ router.get('/overview', requireAuth, async (req: any, res) => {
       profiles,
       goals,
       progressData: recentProgress
-    });
+    };
+
+    console.log(`- RESPOSTA JSON COMPLETA:`, JSON.stringify(response, null, 2));
+    res.json(response);
   } catch (error) {
     console.error('Error fetching social growth overview:', error);
     res.status(500).json({ error: 'Internal server error' });
