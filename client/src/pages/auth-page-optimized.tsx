@@ -34,7 +34,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPageOptimized() {
   const [, setLocation] = useLocation();
-  const { user, login, register } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,27 +70,39 @@ export default function AuthPageOptimized() {
 
   const onLoginSubmit = async (values: LoginFormValues) => {
     setLoginError(null);
-    try {
-      await login(values.email, values.password);
-      setLocation("/");
-    } catch (error: any) {
-      setLoginError(error.message || "Erro ao fazer login");
-    }
+    
+    loginMutation.mutate({
+      username: values.email,
+      password: values.password,
+      rememberMe: values.rememberMe
+    }, {
+      onSuccess: () => {
+        setLocation("/");
+      },
+      onError: (error: any) => {
+        setLoginError(error.message || "Erro ao fazer login");
+      }
+    });
   };
 
   const onRegisterSubmit = async (values: RegisterFormValues) => {
+    const { confirmPassword, ...registerData } = values;
     setRegisterError(null);
-    try {
-      await register({
-        email: values.email,
-        name: values.name,
-        phone: values.phone,
-        password: values.password,
-      });
-      setLocation("/");
-    } catch (error: any) {
-      setRegisterError(error.message || "Erro ao fazer registro");
-    }
+    
+    registerMutation.mutate({
+      username: values.email.split('@')[0],
+      email: values.email,
+      password: values.password,
+      name: values.name,
+      phone: values.phone || undefined
+    }, {
+      onSuccess: () => {
+        setLocation("/");
+      },
+      onError: (error: any) => {
+        setRegisterError(error.message || "Erro ao fazer registro");
+      }
+    });
   };
 
   if (user) {
