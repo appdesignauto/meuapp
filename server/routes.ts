@@ -8903,6 +8903,8 @@ app.use('/api/reports-v2', (req, res, next) => {
         .where(eq(socialGoals.userId, userId))
         .orderBy(desc(socialGoals.createdAt));
       
+      console.log('Dados das metas retornados:', JSON.stringify(goals, null, 2));
+      
       res.json(goals);
     } catch (error) {
       console.error('Erro ao buscar metas:', error);
