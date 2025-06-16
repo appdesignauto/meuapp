@@ -51,7 +51,12 @@ const PremiumFeatures = () => {
         <div className="text-center mt-12">
           <Button 
             className="bg-white text-primary hover:bg-neutral-100 px-8 py-6 rounded-lg font-medium text-lg shadow-lg"
-            onClick={() => window.location.href = 'https://checkout.doppus.app/99960578'}
+            onClick={() => {
+              const pricingSection = document.querySelector('[data-section="pricing"]');
+              if (pricingSection) {
+                pricingSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
             Conheça o Premium
           </Button>

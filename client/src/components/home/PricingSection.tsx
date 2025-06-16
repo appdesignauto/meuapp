@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 const PricingSection = () => {
   return (
-    <section className="relative py-16 bg-gray-50">
+    <section className="relative py-16 bg-gray-50" data-section="pricing">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
