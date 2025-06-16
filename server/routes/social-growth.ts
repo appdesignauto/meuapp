@@ -316,22 +316,50 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     const connectedNetworks = profiles.length;
     const activeGoals = goals.filter(goal => new Date(goal.deadline) > currentDate).length;
 
-    // Calcular crescimento mensal (comparar último mês com anterior)
-    const lastMonthData = recentProgress.filter(p => 
-      p.year === currentDate.getFullYear() && p.month === currentDate.getMonth()
-    );
-    const previousMonthData = recentProgress.filter(p => {
-      const prevMonth = currentDate.getMonth() === 0 ? 11 : currentDate.getMonth() - 1;
-      const prevYear = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
-      return p.year === prevYear && p.month === prevMonth + 1;
+    // Calcular crescimento mensal baseado nos dados mais recentes disponíveis
+    // Ordenar por ano e mês em ordem decrescente para pegar os dois períodos mais recentes
+    const sortedProgress = recentProgress.sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
     });
 
-    const currentFollowers = lastMonthData.reduce((sum, p) => sum + p.followers, 0);
-    const previousFollowers = previousMonthData.reduce((sum, p) => sum + p.followers, 0);
-    const monthlyGrowth = previousFollowers > 0 ? ((currentFollowers - previousFollowers) / previousFollowers) * 100 : 0;
+    // Agrupar por período (ano/mês) para pegar os dois períodos mais recentes
+    const periodsMap = new Map();
+    sortedProgress.forEach(p => {
+      const key = `${p.year}-${p.month}`;
+      if (!periodsMap.has(key)) {
+        periodsMap.set(key, []);
+      }
+      periodsMap.get(key).push(p);
+    });
 
-    const currentSales = lastMonthData.reduce((sum, p) => sum + p.sales, 0);
-    const previousSales = previousMonthData.reduce((sum, p) => sum + p.sales, 0);
+    const periods = Array.from(periodsMap.entries()).sort((a, b) => {
+      const [yearA, monthA] = a[0].split('-').map(Number);
+      const [yearB, monthB] = b[0].split('-').map(Number);
+      if (yearA !== yearB) return yearB - yearA;
+      return monthB - monthA;
+    });
+
+    let currentFollowers = 0;
+    let previousFollowers = 0;
+    let currentSales = 0;
+    let previousSales = 0;
+
+    if (periods.length >= 1) {
+      // Período mais recente
+      const currentPeriodData = periods[0][1];
+      currentFollowers = currentPeriodData.reduce((sum, p) => sum + p.followers, 0);
+      currentSales = currentPeriodData.reduce((sum, p) => sum + p.sales, 0);
+    }
+
+    if (periods.length >= 2) {
+      // Período anterior
+      const previousPeriodData = periods[1][1];
+      previousFollowers = previousPeriodData.reduce((sum, p) => sum + p.followers, 0);
+      previousSales = previousPeriodData.reduce((sum, p) => sum + p.sales, 0);
+    }
+
+    const monthlyGrowth = previousFollowers > 0 ? ((currentFollowers - previousFollowers) / previousFollowers) * 100 : 0;
     const salesGrowth = previousSales > 0 ? ((currentSales - previousSales) / previousSales) * 100 : 0;
 
     res.json({
