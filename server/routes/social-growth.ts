@@ -345,43 +345,17 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     const activeGoals = goals.filter(goal => new Date(goal.deadline) > currentDate).length;
 
     // Calcular crescimento mensal usando SEMPRE o mês mais recente disponível
-    console.log(`[Social Growth Debug] Todos os dados de progresso:`, recentProgress);
+    console.log(`=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===`);
+    console.log(`Todos os dados de progresso:`, recentProgress);
     
-    // Encontrar o mês mais recente no histórico
-    let latestMonth = 0;
-    let latestYear = 0;
-    recentProgress.forEach(p => {
-      if (p.year > latestYear || (p.year === latestYear && p.month > latestMonth)) {
-        latestYear = p.year;
-        latestMonth = p.month;
-      }
-    });
-
-    // Encontrar o mês anterior
-    let previousMonth = latestMonth - 1;
-    let previousYear = latestYear;
-    if (previousMonth < 1) {
-      previousMonth = 12;
-      previousYear = latestYear - 1;
-    }
-
-    // Buscar dados do mês mais recente (atual) e anterior
-    const currentData = recentProgress.filter(p => p.year === latestYear && p.month === latestMonth);
-    const previousData = recentProgress.filter(p => p.year === previousYear && p.month === previousMonth);
+    // Para cada plataforma, buscar os valores mais recentes disponíveis
+    const platforms = Array.from(new Set(recentProgress.map(p => p.platform)));
     
-    console.log(`[Social Growth Debug] Mês mais recente: ${latestMonth}/${latestYear}`);
-    console.log(`[Social Growth Debug] Mês anterior: ${previousMonth}/${previousYear}`);
-    console.log(`[Social Growth Debug] Dados atuais (${latestMonth}/${latestYear}):`, currentData);
-    console.log(`[Social Growth Debug] Dados anteriores (${previousMonth}/${previousYear}):`, previousData);
-
     let currentFollowers = 0;
     let previousFollowers = 0;
     let currentSales = 0;
     let previousSales = 0;
 
-    // Para cada plataforma, buscar os valores mais recentes disponíveis
-    const platforms = Array.from(new Set(recentProgress.map(p => p.platform)));
-    
     platforms.forEach(platform => {
       // Buscar valor atual (mês mais recente disponível para esta plataforma)
       const currentPlatformData = recentProgress
