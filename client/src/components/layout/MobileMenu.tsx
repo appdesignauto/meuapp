@@ -154,14 +154,16 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
                 <User className="h-4 w-4 mr-2" />
                 Entrar na sua conta
               </Link>
-              <Link
-                href="/auth?tab=register"
-                className="flex justify-center items-center bg-white text-blue-600 font-medium rounded-lg py-3.5 px-4 hover:bg-blue-50 border border-blue-200"
-                onClick={onClose}
+              <button
+                className="flex justify-center items-center bg-white text-blue-600 font-medium rounded-lg py-3.5 px-4 hover:bg-blue-50 border border-blue-200 w-full"
+                onClick={() => {
+                  onClose();
+                  window.location.href = '/auth?tab=register';
+                }}
               >
                 <Users className="h-4 w-4 mr-2" />
                 Criar uma conta
-              </Link>
+              </button>
             </div>
           )}
         </nav>

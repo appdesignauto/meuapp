@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Optimized "Cadastre-se" button performance by replacing wouter navigation with direct window.location.href redirects
+  - Fixed slow redirection issue in Hero component button
+  - Optimized CallToAction component button for faster response
+  - Enhanced mobile menu registration button with immediate redirection
+  - All registration buttons now use direct navigation instead of React Router for improved performance
 - June 16, 2025: Updated quick access section on homepage by replacing "Meus Designs Recentes" with Social Growth shortcut
   - Removed "Meus Designs Recentes" from quick access shortcuts  
   - Added "Social Growth" shortcut with TrendingUp icon and emerald color scheme
