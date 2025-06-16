@@ -699,7 +699,35 @@ ID da notificação: ${requestId}
       return false;
     }
   }
+
+  /**
+   * Método público para envio de e-mail genérico
+   * @param sender Objeto com informações do remetente {name, email}
+   * @param recipients Array de destinatários [{email, name}]
+   * @param subject Assunto do e-mail
+   * @param htmlContent Conteúdo HTML do e-mail
+   * @param textContent Conteúdo em texto plano (opcional)
+   * @returns Promise<{success: boolean, messageId?: string, error?: string}>
+   */
+  public async sendEmail(
+    sender: { name: string; email: string },
+    recipients: { email: string; name: string }[],
+    subject: string,
+    htmlContent: string,
+    textContent?: string
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      return await this.sendBrevoEmail(sender, recipients, subject, htmlContent, textContent);
+    } catch (error) {
+      this.log(`❌ Erro no método sendEmail: ${error instanceof Error ? error.message : String(error)}`);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
+  }
 }
 
 // Instância única para o serviço de e-mail
 export const emailService = new EmailService();
+export { EmailService };
