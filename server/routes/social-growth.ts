@@ -377,6 +377,8 @@ router.get('/overview', requireAuth, async (req: any, res) => {
         previousFollowers += previousPlatformData.followers;
         previousSales += previousPlatformData.sales;
       }
+      
+      console.log(`- ${platform.toUpperCase()}: atual=${currentPlatformData?.followers || 0} (${currentPlatformData?.month}/${currentPlatformData?.year}), anterior=${previousPlatformData?.followers || 0} (${previousPlatformData?.month}/${previousPlatformData?.year})`);
     });
 
     const monthlyGrowth = previousFollowers > 0 ? ((currentFollowers - previousFollowers) / previousFollowers) * 100 : 0;
