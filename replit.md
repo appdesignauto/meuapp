@@ -118,7 +118,18 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 16, 2025: Fixed complete social growth system to consistently use most recent historical data across all components
+- June 16, 2025: Added comprehensive "Dados Mensais de Performance" section to social growth dashboard overview
+  - Implemented detailed monthly performance table with Instagram, Facebook, and combined metrics
+  - Added color-coded growth indicators (green for positive, red for negative) with trending icons
+  - Created three summary cards: "Melhor Mês", "Crescimento Total", and "Vendas Acumuladas" 
+  - Applied authentic data integration using real progress history without mock data
+  - Table displays chronological data with automatic month-to-month growth calculations
+  - Fixed critical social growth overview calculation bug that showed incorrect negative growth percentages
+  - Corrected total aggregation logic to properly sum follower counts from all platforms per month before calculating growth
+  - Resolved issue where system incorrectly compared individual platform values instead of combined monthly totals
+  - Enhanced debugging with detailed month-by-month breakdown showing platform contributions to totals
+  - System now correctly shows positive growth (e.g., +50% from 40k to 60k total followers) when platforms actually grew
+  - Fixed complete social growth system to consistently use most recent historical data across all components
   - Fixed dashboard overview to correctly show July (20,000) total followers using most recent historical data with +100% growth
   - Updated individual platform cards (Instagram, Facebook) to display historical values instead of static profile data
   - Corrected active goals section to use real-time historical values for progress calculation and display

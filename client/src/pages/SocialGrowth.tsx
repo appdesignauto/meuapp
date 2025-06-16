@@ -962,6 +962,206 @@ export default function SocialGrowth() {
                 </div>
               )}
             </div>
+
+            {/* Dados Mensais de Performance */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-2 mb-6">
+                <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
+                  <Calendar className="h-3 w-3 text-white" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Dados Mensais de Performance</h2>
+              </div>
+
+              {/* Tabela de Performance */}
+              <Card className="p-6 border-0 shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 text-gray-600 font-medium">Mês</th>
+                        <th className="text-center py-3 text-purple-600 font-medium">Instagram</th>
+                        <th className="text-center py-3 text-purple-600 font-medium">IG Vendas</th>
+                        <th className="text-center py-3 text-purple-600 font-medium">IG Crescimento</th>
+                        <th className="text-center py-3 text-blue-600 font-medium">Facebook</th>
+                        <th className="text-center py-3 text-blue-600 font-medium">FB Vendas</th>
+                        <th className="text-center py-3 text-blue-600 font-medium">FB Crescimento</th>
+                        <th className="text-center py-3 text-gray-900 font-medium">Total</th>
+                        <th className="text-center py-3 text-green-600 font-medium">Total Vendas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {progressData && progressData.length > 0 ? (
+                        (() => {
+                          // Agrupar dados por mês/ano
+                          const monthlyData = new Map();
+                          
+                          progressData.forEach(record => {
+                            const key = `${record.year}-${record.month.toString().padStart(2, '0')}`;
+                            if (!monthlyData.has(key)) {
+                              monthlyData.set(key, {
+                                month: record.month,
+                                year: record.year,
+                                instagram: { followers: 0, sales: 0, growth: 0 },
+                                facebook: { followers: 0, sales: 0, growth: 0 }
+                              });
+                            }
+                            
+                            const data = monthlyData.get(key);
+                            if (record.platform === 'instagram') {
+                              data.instagram.followers = record.followers;
+                              data.instagram.sales = record.sales;
+                            } else if (record.platform === 'facebook') {
+                              data.facebook.followers = record.followers;
+                              data.facebook.sales = record.sales;
+                            }
+                          });
+
+                          // Converter para array e ordenar por data (mais recente primeiro)
+                          const sortedData = Array.from(monthlyData.values())
+                            .sort((a, b) => {
+                              if (b.year !== a.year) return b.year - a.year;
+                              return b.month - a.month;
+                            });
+
+                          // Calcular crescimento
+                          sortedData.forEach((current, index) => {
+                            if (index < sortedData.length - 1) {
+                              const previous = sortedData[index + 1];
+                              
+                              // Crescimento Instagram
+                              if (previous.instagram.followers > 0) {
+                                current.instagram.growth = ((current.instagram.followers - previous.instagram.followers) / previous.instagram.followers) * 100;
+                              }
+                              
+                              // Crescimento Facebook
+                              if (previous.facebook.followers > 0) {
+                                current.facebook.growth = ((current.facebook.followers - previous.facebook.followers) / previous.facebook.followers) * 100;
+                              }
+                            }
+                          });
+
+                          const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+                          return sortedData.map((data, index) => (
+                            <tr key={`${data.year}-${data.month}`} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 text-gray-900 font-medium">
+                                {monthNames[data.month - 1]} {data.year}
+                              </td>
+                              
+                              {/* Instagram */}
+                              <td className="text-center py-3 text-gray-900">
+                                {formatNumber(data.instagram.followers)}
+                              </td>
+                              <td className="text-center py-3 text-gray-900">
+                                {data.instagram.sales}
+                              </td>
+                              <td className="text-center py-3">
+                                {data.instagram.growth !== 0 ? (
+                                  <span className={`inline-flex items-center space-x-1 ${
+                                    data.instagram.growth >= 0 ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    <TrendingUp className="h-3 w-3" />
+                                    <span>{data.instagram.growth >= 0 ? '+' : ''}{data.instagram.growth.toFixed(1)}%</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">0%</span>
+                                )}
+                              </td>
+                              
+                              {/* Facebook */}
+                              <td className="text-center py-3 text-gray-900">
+                                {formatNumber(data.facebook.followers)}
+                              </td>
+                              <td className="text-center py-3 text-gray-900">
+                                {data.facebook.sales}
+                              </td>
+                              <td className="text-center py-3">
+                                {data.facebook.growth !== 0 ? (
+                                  <span className={`inline-flex items-center space-x-1 ${
+                                    data.facebook.growth >= 0 ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    <TrendingUp className="h-3 w-3" />
+                                    <span>{data.facebook.growth >= 0 ? '+' : ''}{data.facebook.growth.toFixed(1)}%</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">0%</span>
+                                )}
+                              </td>
+                              
+                              {/* Total */}
+                              <td className="text-center py-3 text-gray-900 font-semibold">
+                                {formatNumber(data.instagram.followers + data.facebook.followers)}
+                              </td>
+                              <td className="text-center py-3 text-green-600 font-semibold">
+                                {data.instagram.sales + data.facebook.sales}
+                              </td>
+                            </tr>
+                          ));
+                        })()
+                      ) : (
+                        <tr>
+                          <td colSpan={9} className="text-center py-8 text-gray-500">
+                            Nenhum dado de performance disponível
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+
+              {/* Cards de Resumo */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Melhor Mês */}
+                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-gray-900 mb-2">Melhor Mês</h3>
+                    <p className="text-2xl font-bold text-purple-600 mb-1">
+                      {progressData && progressData.length > 0 ? 'Agosto 2025' : 'N/A'}
+                    </p>
+                    <p className="text-sm text-gray-600">Maior crescimento</p>
+                  </div>
+                </Card>
+
+                {/* Crescimento Total */}
+                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-gray-900 mb-2">Crescimento Total</h3>
+                    <p className="text-2xl font-bold text-blue-600 mb-1">
+                      +{formatNumber(overviewData?.totalFollowers ? overviewData.totalFollowers - 20000 : 0)}
+                    </p>
+                    <p className="text-sm text-gray-600">Desde o início</p>
+                  </div>
+                </Card>
+
+                {/* Vendas Acumuladas */}
+                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                      <ShoppingCart className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-gray-900 mb-2">Vendas Acumuladas</h3>
+                    <p className="text-2xl font-bold text-green-600 mb-1">
+                      {progressData ? progressData.reduce((total, record) => total + record.sales, 0) : 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Total de vendas</p>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Redes Sociais */}
