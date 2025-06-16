@@ -51,7 +51,7 @@ const QuickAccess = () => {
     {
       icon: TrendingUp,
       label: 'Social Growth',
-      href: '/social-growth',
+      href: '/crescimento-social',
       description: 'Acompanhe seu crescimento',
       color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
     },
