@@ -118,12 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
-- June 16, 2025: Implemented automatic logo synchronization system for email templates
+- June 16, 2025: Implemented automatic logo synchronization and WebP optimization system for email templates
   - Updated all email templates to use official DesignAuto logo from header (logo_1745019394541_8q4daq.png)
   - Created automatic logo replacement function in EmailService that updates logos on every email send
   - Added POST /api/email-templates/sync-logo endpoint for manual synchronization of all templates
   - Enhanced email service with getOfficialLogo() and updateLogoInContent() functions for consistent branding
-  - All email templates now maintain visual consistency with website header automatically
+  - Implemented optimizeLogoForEmail() function that converts PNG logos to WebP format for better email performance
+  - WebP conversion includes: 250px max width, 90% quality, lossless compression for optimal email client compatibility
+  - All email templates now maintain visual consistency with website header and use optimized WebP logos automatically
 - June 16, 2025: Optimized SEO meta tags for better Google positioning
   - Updated site title to "DesignAuto - Artes Automotivas Profissionais para Vendas"
   - Enhanced meta description with keywords: "Milhares de artes automotivas editáveis no Canva. Templates profissionais para vendas de carros, motos, seguros e serviços automotivos. Atualizações semanais e suporte premium."
