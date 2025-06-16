@@ -9047,30 +9047,57 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  // POST /api/social-growth/progress - Criar novo registro de progresso
+  // POST /api/social-growth/progress - Criar/atualizar registro de progresso
   app.post('/api/social-growth/progress', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
+      console.log('📝 Recebendo dados de progresso:', req.body);
+      
       const progressData = insertSocialProgressSchema.parse({
         ...req.body,
         userId
       });
 
-      // Validação para impedir dados de meses futuros
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentYear = currentDate.getFullYear();
+      console.log('✅ Dados validados:', progressData);
       
-      if (progressData.year > currentYear || 
-          (progressData.year === currentYear && progressData.month > currentMonth)) {
-        return res.status(400).json({ 
-          error: 'Não é possível adicionar dados de meses futuros' 
-        });
+      // Verificar se já existe entrada para este mês/ano/plataforma
+      const existingProgress = await db.select()
+        .from(socialProgress)
+        .where(
+          and(
+            eq(socialProgress.userId, userId),
+            eq(socialProgress.platform, progressData.platform),
+            eq(socialProgress.month, progressData.month),
+            eq(socialProgress.year, progressData.year)
+          )
+        );
+
+      let result;
+      if (existingProgress.length > 0) {
+        // Atualizar entrada existente
+        [result] = await db.update(socialProgress)
+          .set({ 
+            followers: progressData.followers,
+            sales: progressData.sales,
+            updatedAt: new Date()
+          })
+          .where(
+            and(
+              eq(socialProgress.userId, userId),
+              eq(socialProgress.platform, progressData.platform),
+              eq(socialProgress.month, progressData.month),
+              eq(socialProgress.year, progressData.year)
+            )
+          )
+          .returning();
+        console.log('🔄 Progresso atualizado:', result);
+      } else {
+        // Criar nova entrada
+        [result] = await db.insert(socialProgress)
+          .values(progressData)
+          .returning();
+        console.log('✨ Novo progresso criado:', result);
       }
-      
-      const [newProgress] = await db.insert(socialProgress)
-        .values(progressData)
-        .returning();
 
       // Atualizar automaticamente as metas correspondentes
       await db.update(socialGoals)
@@ -9087,9 +9114,9 @@ app.use('/api/reports-v2', (req, res, next) => {
           )
         );
       
-      res.json(newProgress);
+      res.status(201).json(result);
     } catch (error) {
-      console.error('Erro ao criar progresso:', error);
+      console.error('❌ Erro ao criar/atualizar progresso:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
       }
