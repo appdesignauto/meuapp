@@ -38,14 +38,11 @@ app.get("/api/subscription-data", async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   
   try {
-    const { Client } = require('pg');
-    const client = new Client({
+    const pool = new Pool({
       connectionString: process.env.DATABASE_URL
     });
     
-    await client.connect();
-    
-    const result = await client.query(`
+    const result = await pool.query(`
       SELECT 
         id, username, email, name, nivelacesso, 
         tipoplano, dataassinatura, dataexpiracao, origemassinatura, criadoem, isactive
@@ -54,7 +51,7 @@ app.get("/api/subscription-data", async (req, res) => {
       ORDER BY criadoem DESC
     `);
     
-    await client.end();
+    await pool.end();
     
     console.log(`🚀 ENDPOINT DIRETO - Encontrados: ${result.rows.length} usuários`);
     result.rows.forEach((user: any, index: any) => {
