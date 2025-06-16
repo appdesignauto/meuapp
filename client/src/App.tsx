@@ -212,17 +212,15 @@ function AppRoutes() {
         }} />
       
       {/* Rotas da Comunidade */}
-      <Route path="/comunidade" component={ComunidadePage} />
-      <Route path="/comunidade/post/:id">
-        {() => {
+      <ProtectedRoute path="/comunidade" component={() => <ComunidadePage />} />
+      <ProtectedRoute path="/comunidade/post/:id" component={() => {
           const PostDetailPage = lazy(() => import("@/pages/comunidade/post/[id]"));
           return (
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <PostDetailPage />
             </Suspense>
           );
-        }}
-      </Route>
+        }} />
       <ProtectedRoute path="/comunidade/criar" component={() => {
           const CreatePostPage = lazy(() => import("@/pages/comunidade/criar"));
           return (

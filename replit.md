@@ -130,13 +130,14 @@ The system uses PostgreSQL with the following key entities:
   - Automatically identifies the month with highest percentage growth and displays with growth rate
   - Shows "N/A" when no historical data exists, ensuring authentic data integrity
   - Criteria: compares each month's total followers against previous month to find maximum growth percentage
-- June 16, 2025: Implemented authentication protection for all header "Recursos" menu pages
+- June 16, 2025: Implemented comprehensive authentication protection for all "Recursos" menu and community pages
   - Protected `/videoaulas` route requiring user login to access video lessons
   - Protected `/ferramentas` route requiring authentication for tools access
   - Protected `/suporte` route restricting support page to logged-in users only
   - Protected `/crescimento-social` route maintaining Social Growth dashboard security
   - Protected individual video lesson routes `/videoaulas/:id` for authenticated access
-  - All routes now use ProtectedRoute component ensuring secure access control
+  - Protected `/comunidade` main community page and all sub-routes including `/comunidade/post/:id`
+  - All routes now use ProtectedRoute component ensuring secure access control across the entire platform
 - June 16, 2025: Reorganized social growth dashboard summary cards layout
   - Moved "Vendas Acumuladas" card to be positioned next to "Crescimento Total" card
   - Cards now display in order: Melhor Mês, Crescimento Total, Vendas Acumuladas
