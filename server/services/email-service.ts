@@ -377,7 +377,8 @@ class EmailService {
         <html>
           <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
-              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+              <h2 style="color: #4285f4; margin: 0; font-size: 24px; font-weight: bold;">DESIGN AUTO</h2>
+              <p style="color: #666; margin: 5px 0 0 0; font-size: 12px;">Artes Automotivas Profissionais</p>
             </div>
             
             <div style="padding: 20px;">
@@ -447,7 +448,8 @@ class EmailService {
         <html>
           <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
-              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+              <h2 style="color: #4285f4; margin: 0; font-size: 24px; font-weight: bold;">DESIGN AUTO</h2>
+              <p style="color: #666; margin: 5px 0 0 0; font-size: 12px;">Artes Automotivas Profissionais</p>
             </div>
             
             <div style="padding: 20px;">
@@ -541,7 +543,8 @@ class EmailService {
         <html>
           <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
-              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+              <h2 style="color: #4285f4; margin: 0; font-size: 24px; font-weight: bold;">DESIGN AUTO</h2>
+              <p style="color: #666; margin: 5px 0 0 0; font-size: 12px;">Artes Automotivas Profissionais</p>
             </div>
             
             <div style="padding: 20px;">
@@ -636,7 +639,8 @@ Equipe Design Auto
         <html>
           <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
-              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+              <h2 style="color: #4285f4; margin: 0; font-size: 24px; font-weight: bold;">DESIGN AUTO</h2>
+              <p style="color: #666; margin: 5px 0 0 0; font-size: 12px;">Artes Automotivas Profissionais</p>
             </div>
             
             <div style="padding: 20px;">
