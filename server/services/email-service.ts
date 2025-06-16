@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import { createHash } from 'crypto';
 import { getBrazilDateTime, getBrazilISOString } from '../utils/date-utils';
+import { db } from '../db';
+import { siteSettings } from '@shared/schema';
 
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -121,6 +123,56 @@ class EmailService {
    */
   public clearLogs(): void {
     this.logs = [];
+  }
+
+  /**
+   * Obtém o logo oficial atual do sistema
+   */
+  private async getOfficialLogo(): Promise<string> {
+    try {
+      const settings = await db.select().from(siteSettings).limit(1);
+      if (settings.length > 0 && settings[0].logoUrl) {
+        // Construir URL completa para usar nos e-mails
+        const logoUrl = settings[0].logoUrl;
+        // Remove timestamp parameter if present for consistency
+        const cleanLogoUrl = logoUrl.split('?')[0];
+        return `https://designauto.com.br${cleanLogoUrl}`;
+      }
+      // Fallback para logo padrão
+      return 'https://designauto.com.br/images/logos/logo_1745019394541_8q4daq.png';
+    } catch (error) {
+      this.log(`⚠️ Erro ao obter logo oficial: ${error instanceof Error ? error.message : String(error)}`);
+      return 'https://designauto.com.br/images/logos/logo_1745019394541_8q4daq.png';
+    }
+  }
+
+  /**
+   * Substitui automaticamente logos antigos pelo logo oficial atual
+   */
+  private async updateLogoInContent(htmlContent: string): Promise<string> {
+    try {
+      const officialLogo = await this.getOfficialLogo();
+      
+      // Padrões de logos antigos para substituir
+      const oldLogoPatterns = [
+        /https:\/\/designauto\.com\.br\/images\/logos\/logo_\d+\.png/g,
+        /https:\/\/designauto\.com\.br\/images\/logos\/logo_\d+_[a-z0-9]+\.png/g,
+        /\/images\/logos\/logo_\d+\.png/g,
+        /\/images\/logos\/logo_\d+_[a-z0-9]+\.png/g
+      ];
+
+      let updatedContent = htmlContent;
+      
+      // Substituir todos os padrões de logos antigos
+      oldLogoPatterns.forEach(pattern => {
+        updatedContent = updatedContent.replace(pattern, officialLogo);
+      });
+
+      return updatedContent;
+    } catch (error) {
+      this.log(`⚠️ Erro ao atualizar logo no conteúdo: ${error instanceof Error ? error.message : String(error)}`);
+      return htmlContent; // Retorna conteúdo original em caso de erro
+    }
   }
 
   /**
