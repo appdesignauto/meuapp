@@ -661,8 +661,8 @@ export default function SocialGrowth() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        +90%
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getInstagramGrowth() >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {getInstagramGrowth() >= 0 ? '+' : ''}{getInstagramGrowth()}%
                       </span>
                     </div>
                   </div>
@@ -706,8 +706,8 @@ export default function SocialGrowth() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        +15%
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getFacebookGrowth() >= 0 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>
+                        {getFacebookGrowth() >= 0 ? '+' : ''}{getFacebookGrowth()}%
                       </span>
                     </div>
                   </div>
