@@ -416,6 +416,30 @@ export default function SocialGrowth() {
     return new Intl.NumberFormat('pt-BR').format(num);
   };
 
+  const translateGoalType = (goalType: string) => {
+    const translations = {
+      'followers': 'Seguidores',
+      'sales': 'Vendas'
+    };
+    return translations[goalType as keyof typeof translations] || goalType;
+  };
+
+  const translatePlatform = (platform: string) => {
+    const translations = {
+      'instagram': 'Instagram',
+      'facebook': 'Facebook',
+      'tiktok': 'TikTok',
+      'youtube': 'YouTube',
+      'all': 'Todas as Plataformas'
+    };
+    return translations[platform as keyof typeof translations] || platform;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -840,7 +864,7 @@ export default function SocialGrowth() {
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
                       <div className="flex items-center space-x-2">
                         {getPlatformIcon(goal.platform)}
-                        <CardTitle className="text-base capitalize">{goal.goalType}</CardTitle>
+                        <CardTitle className="text-base">{translateGoalType(goal.goalType)}</CardTitle>
                       </div>
                       <div className="flex space-x-1">
                         <Button
@@ -873,7 +897,7 @@ export default function SocialGrowth() {
                         </div>
                         <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                           <Calendar className="h-3 w-3" />
-                          <span>{new Date(goal.deadline).toLocaleDateString('pt-BR')}</span>
+                          <span>{formatDate(goal.deadline)}</span>
                         </div>
                       </div>
                     </CardContent>

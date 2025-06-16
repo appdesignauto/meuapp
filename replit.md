@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Completed Portuguese localization for social growth dashboard interface
+  - Translated all English text to Portuguese: "Followers" → "Seguidores", "Sales" → "Vendas"
+  - Added translation functions for goal types, platforms, and date formatting
+  - Fixed goal creation date validation bug that prevented form submission
+  - Enhanced user experience with full Portuguese language support throughout dashboard
+  - All forms, labels, and interface elements now display in Portuguese as requested
 - June 15, 2025: Created comprehensive social growth dashboard ("Crescimento Social") with 4 main sections
   - Built complete dashboard with Overview, Social Networks, Goals, and History tabs
   - Added interactive charts for follower growth and sales performance using Recharts library
