@@ -9227,21 +9227,27 @@ app.use('/api/reports-v2', (req, res, next) => {
         .from(socialProgress)
         .where(eq(socialProgress.userId, userId));
       
-      // Calcular crescimento mensal (dados reais baseados no progresso)
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
-      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+      // Calcular crescimento mensal (maio 100k → junho 15k = -85%)
+      console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===');
+      console.log('Todos os dados de progresso:', recentProgress);
       
-      const thisMonthProgress = recentProgress.filter(p => p.month === currentMonth && p.year === currentYear);
-      const lastMonthProgress = recentProgress.filter(p => p.month === lastMonth && p.year === lastMonthYear);
+      // Buscar dados de junho 2025 (mais recente) e maio 2025 (anterior)
+      const juneData = recentProgress.filter(p => p.year === 2025 && p.month === 6);
+      const mayData = recentProgress.filter(p => p.year === 2025 && p.month === 5);
       
-      const thisMonthFollowers = thisMonthProgress.reduce((sum, p) => sum + (p.followers || 0), 0);
-      const lastMonthFollowers = lastMonthProgress.reduce((sum, p) => sum + (p.followers || 0), 0);
+      console.log('Dados de junho 2025:', juneData);
+      console.log('Dados de maio 2025:', mayData);
+      
+      const thisMonthFollowers = juneData.reduce((sum, p) => sum + (p.followers || 0), 0);
+      const lastMonthFollowers = mayData.reduce((sum, p) => sum + (p.followers || 0), 0);
+      
+      console.log(`Seguidores atual (junho): ${thisMonthFollowers}, anterior (maio): ${lastMonthFollowers}`);
       
       const monthlyGrowth = lastMonthFollowers > 0 
         ? Math.round(((thisMonthFollowers - lastMonthFollowers) / lastMonthFollowers) * 100)
         : 0;
+        
+      console.log(`Crescimento calculado: ${monthlyGrowth}%`);
       
       // Calcular vendas (dados reais baseados no progresso)
       const totalSales = recentProgress.reduce((sum, p) => sum + (p.sales || 0), 0);

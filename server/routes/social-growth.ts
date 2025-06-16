@@ -280,7 +280,9 @@ router.post('/progress', requireAuth, async (req: any, res) => {
 // GET /api/social-growth/overview - Dados resumidos para dashboard
 router.get('/overview', requireAuth, async (req: any, res) => {
   try {
+    console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===');
     const userId = req.user.id;
+    console.log('User ID:', userId);
     
     // Buscar perfis ativos
     const profiles = await db
@@ -323,6 +325,7 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     const juneData = recentProgress.filter(p => p.year === 2025 && p.month === 6);
     const mayData = recentProgress.filter(p => p.year === 2025 && p.month === 5);
     
+    console.log(`[Social Growth Debug] Todos os dados de progresso:`, recentProgress);
     console.log(`[Social Growth Debug] Dados de junho 2025:`, juneData);
     console.log(`[Social Growth Debug] Dados de maio 2025:`, mayData);
 
