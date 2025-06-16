@@ -6,9 +6,9 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 
 const router = Router();
 
-// Middleware para verificar autenticação
+// Middleware de autenticação compatível com o sistema de sessão
 const requireAuth = (req: any, res: any, next: any) => {
-  if (!req.user) {
+  if (!req.requireAuth || !req.requireAuth()) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   next();
