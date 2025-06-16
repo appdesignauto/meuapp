@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Modernized social growth dashboard design with professional visual hierarchy and added goals overview to main dashboard
+  - Redesigned all cards with gradient backgrounds, rounded corners, and colorful platform icons
+  - Created "Evolução do Crescimento" section with individual platform breakdown cards
+  - Enhanced profile and goal cards with cleaner layouts and better spacing
+  - Added comprehensive "Metas Ativas" section to main dashboard showing up to 4 goals with progress bars
+  - Implemented color-coded progress indicators (green: 100%+, blue: 75%+, yellow: 50%+, gray: <50%)
+  - Applied modern design patterns throughout: shadow-sm borders, ghost button variants, improved typography
 - June 16, 2025: Fixed social growth total followers calculation to use authentic recent data instead of outdated profile data
   - Corrected totalFollowers calculation to fetch latest progress data from socialProgress table
   - Total followers now displays current month values (June 2025: 20,000) instead of static profile values (10,000)
