@@ -8962,6 +8962,21 @@ app.use('/api/reports-v2', (req, res, next) => {
       const [newProgress] = await db.insert(socialProgress)
         .values(progressData)
         .returning();
+
+      // Atualizar automaticamente as metas correspondentes
+      await db.update(socialGoals)
+        .set({ 
+          currentValue: progressData.followersCount,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(socialGoals.userId, userId),
+            eq(socialGoals.platform, progressData.platform),
+            eq(socialGoals.goalType, 'followers'),
+            eq(socialGoals.isActive, true)
+          )
+        );
       
       res.json(newProgress);
     } catch (error) {
