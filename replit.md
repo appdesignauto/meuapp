@@ -118,6 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Integrated Doppus payment platform links across all pricing sections and plan pages
+  - Connected monthly plan button to https://checkout.doppus.app/99960578
+  - Connected annual plan button to https://checkout.doppus.app/83779723  
+  - Connected semi-annual plan button to https://checkout.doppus.app/49606914
+  - Connected lifetime plan button to https://checkout.doppus.app/06743867
+  - Updated PricingSection.tsx home page pricing cards with direct payment links
+  - Updated PlanosPage.tsx subscription handling to redirect to correct Doppus checkout URLs
+  - All premium plan buttons now redirect instantly to payment processing without delays
 - June 16, 2025: Optimized "Cadastre-se" button performance by replacing wouter navigation with direct window.location.href redirects
   - Fixed slow redirection issue in Hero component button
   - Optimized CallToAction component button for faster response

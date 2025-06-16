@@ -199,16 +199,27 @@ export default function PlanosPage() {
   };
 
   const handleSubscribe = (plano: Plano) => {
-    if (!user) {
-      navigate('/auth?redirect=planos');
+    if (plano.id === "free") {
+      if (!user) {
+        navigate('/auth?redirect=planos');
+        return;
+      }
+      // Se já está logado, redireciona para a dashboard
+      navigate('/painel');
       return;
     }
     
-    // Aqui implementaremos a lógica de assinatura quando for desenvolvida
-    console.log(`Assinar plano: ${plano.nome} (${plano.tipo})`);
+    // Links dos planos premium
+    const planLinks = {
+      mensal: 'https://checkout.doppus.app/99960578',
+      anual: 'https://checkout.doppus.app/83779723',
+      vitalicio: 'https://checkout.doppus.app/06743867'
+    };
     
-    // Navigate to hotmart or payment page
-    window.open(`https://designauto.pay.hotmart.com/`, '_blank');
+    const link = planLinks[plano.tipo as keyof typeof planLinks];
+    if (link) {
+      window.location.href = link;
+    }
   };
 
   return (

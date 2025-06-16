@@ -67,6 +67,7 @@ const PricingSection = () => {
             <Button 
               variant="outline" 
               className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 rounded-full font-medium mt-auto"
+              onClick={() => window.location.href = 'https://checkout.doppus.app/99960578'}
             >
               Começar Agora
             </Button>
@@ -122,7 +123,10 @@ const PricingSection = () => {
               </ul>
             </div>
             
-            <Button className="w-full bg-white text-blue-700 hover:bg-gray-50 py-3 rounded-full font-medium">
+            <Button 
+              className="w-full bg-white text-blue-700 hover:bg-gray-50 py-3 rounded-full font-medium"
+              onClick={() => window.location.href = 'https://checkout.doppus.app/83779723'}
+            >
               Começar Agora
             </Button>
           </div>
@@ -180,6 +184,7 @@ const PricingSection = () => {
             <Button 
               variant="outline" 
               className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 rounded-full font-medium mt-auto"
+              onClick={() => window.location.href = 'https://checkout.doppus.app/49606914'}
             >
               Começar Agora
             </Button>
