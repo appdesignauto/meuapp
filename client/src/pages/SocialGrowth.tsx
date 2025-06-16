@@ -446,6 +446,16 @@ export default function SocialGrowth() {
     return new Intl.NumberFormat('pt-BR').format(num);
   };
 
+  // Funções para formatação de input com pontos
+  const formatNumberInput = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const parseNumberInput = (value: string) => {
+    return parseInt(value.replace(/\./g, '')) || 0;
+  };
+
   const translateGoalType = (goalType: string) => {
     const translations = {
       'followers': 'Seguidores',
@@ -1339,7 +1349,16 @@ export default function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Seguidores</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="0" {...field} />
+                              <Input 
+                                type="text" 
+                                placeholder="0" 
+                                value={field.value ? formatNumberInput(field.value.toString()) : ''}
+                                onChange={(e) => {
+                                  const formatted = formatNumberInput(e.target.value);
+                                  const parsed = parseNumberInput(formatted);
+                                  field.onChange(parsed);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1352,7 +1371,16 @@ export default function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Vendas</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="0" {...field} />
+                              <Input 
+                                type="text" 
+                                placeholder="0" 
+                                value={field.value ? formatNumberInput(field.value.toString()) : ''}
+                                onChange={(e) => {
+                                  const formatted = formatNumberInput(e.target.value);
+                                  const parsed = parseNumberInput(formatted);
+                                  field.onChange(parsed);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
