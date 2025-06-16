@@ -5528,7 +5528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const offset = (page - 1) * limit;
       
-      const { Client } = require('pg');
+      // Fixed require statement
       const client = new Client({
         connectionString: process.env.DATABASE_URL
       });
@@ -5848,7 +5848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const offset = (page - 1) * limit;
       
-      const { Client } = require('pg');
+      // Fixed require statement
       const client = new Client({
         connectionString: process.env.DATABASE_URL
       });
