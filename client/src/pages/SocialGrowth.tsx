@@ -973,23 +973,24 @@ export default function SocialGrowth() {
               </div>
 
               {/* Tabela de Performance */}
-              <Card className="p-6 border-0 shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 text-gray-600 font-medium">Mês</th>
-                        <th className="text-center py-3 text-purple-600 font-medium">Instagram</th>
-                        <th className="text-center py-3 text-purple-600 font-medium">IG Vendas</th>
-                        <th className="text-center py-3 text-purple-600 font-medium">IG Crescimento</th>
-                        <th className="text-center py-3 text-blue-600 font-medium">Facebook</th>
-                        <th className="text-center py-3 text-blue-600 font-medium">FB Vendas</th>
-                        <th className="text-center py-3 text-blue-600 font-medium">FB Crescimento</th>
-                        <th className="text-center py-3 text-gray-900 font-medium">Total</th>
-                        <th className="text-center py-3 text-green-600 font-medium">Total Vendas</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+              <Card className="p-3 md:p-6 border-0 shadow-sm">
+                <div className="overflow-x-auto -mx-3 md:mx-0">
+                  <div className="min-w-[800px] px-3 md:px-0">
+                    <table className="w-full text-xs md:text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-2 text-gray-600 font-medium min-w-[80px]">Mês</th>
+                          <th className="text-center py-3 px-1 text-purple-600 font-medium min-w-[60px]">IG</th>
+                          <th className="text-center py-3 px-1 text-purple-600 font-medium min-w-[50px]">IG V</th>
+                          <th className="text-center py-3 px-1 text-purple-600 font-medium min-w-[70px]">IG Cresc</th>
+                          <th className="text-center py-3 px-1 text-blue-600 font-medium min-w-[60px]">FB</th>
+                          <th className="text-center py-3 px-1 text-blue-600 font-medium min-w-[50px]">FB V</th>
+                          <th className="text-center py-3 px-1 text-blue-600 font-medium min-w-[70px]">FB Cresc</th>
+                          <th className="text-center py-3 px-1 text-gray-900 font-medium min-w-[60px]">Total</th>
+                          <th className="text-center py-3 px-1 text-green-600 font-medium min-w-[60px]">T. Vendas</th>
+                        </tr>
+                      </thead>
+                      <tbody>
                       {progressData && progressData.length > 0 ? (
                         (() => {
                           // Agrupar dados por mês/ano
@@ -1045,55 +1046,57 @@ export default function SocialGrowth() {
 
                           return sortedData.map((data, index) => (
                             <tr key={`${data.year}-${data.month}`} className="border-b border-gray-100 hover:bg-gray-50">
-                              <td className="py-3 text-gray-900 font-medium">
-                                {monthNames[data.month - 1]} {data.year}
+                              <td className="py-3 px-2 text-gray-900 font-medium text-xs md:text-sm">
+                                <div className="min-w-[70px]">
+                                  {monthNames[data.month - 1]} {data.year}
+                                </div>
                               </td>
                               
                               {/* Instagram */}
-                              <td className="text-center py-3 text-gray-900">
+                              <td className="text-center py-3 px-1 text-gray-900 text-xs md:text-sm">
                                 {formatNumber(data.instagram.followers)}
                               </td>
-                              <td className="text-center py-3 text-gray-900">
+                              <td className="text-center py-3 px-1 text-gray-900 text-xs md:text-sm">
                                 {data.instagram.sales}
                               </td>
-                              <td className="text-center py-3">
+                              <td className="text-center py-3 px-1">
                                 {data.instagram.growth !== 0 ? (
-                                  <span className={`inline-flex items-center space-x-1 ${
+                                  <span className={`inline-flex items-center space-x-1 text-xs ${
                                     data.instagram.growth >= 0 ? 'text-green-600' : 'text-red-600'
                                   }`}>
-                                    <TrendingUp className="h-3 w-3" />
+                                    <TrendingUp className="h-2 w-2 md:h-3 md:w-3" />
                                     <span>{data.instagram.growth >= 0 ? '+' : ''}{data.instagram.growth.toFixed(1)}%</span>
                                   </span>
                                 ) : (
-                                  <span className="text-gray-400">0%</span>
+                                  <span className="text-gray-400 text-xs">0%</span>
                                 )}
                               </td>
                               
                               {/* Facebook */}
-                              <td className="text-center py-3 text-gray-900">
+                              <td className="text-center py-3 px-1 text-gray-900 text-xs md:text-sm">
                                 {formatNumber(data.facebook.followers)}
                               </td>
-                              <td className="text-center py-3 text-gray-900">
+                              <td className="text-center py-3 px-1 text-gray-900 text-xs md:text-sm">
                                 {data.facebook.sales}
                               </td>
-                              <td className="text-center py-3">
+                              <td className="text-center py-3 px-1">
                                 {data.facebook.growth !== 0 ? (
-                                  <span className={`inline-flex items-center space-x-1 ${
+                                  <span className={`inline-flex items-center space-x-1 text-xs ${
                                     data.facebook.growth >= 0 ? 'text-green-600' : 'text-red-600'
                                   }`}>
-                                    <TrendingUp className="h-3 w-3" />
+                                    <TrendingUp className="h-2 w-2 md:h-3 md:w-3" />
                                     <span>{data.facebook.growth >= 0 ? '+' : ''}{data.facebook.growth.toFixed(1)}%</span>
                                   </span>
                                 ) : (
-                                  <span className="text-gray-400">0%</span>
+                                  <span className="text-gray-400 text-xs">0%</span>
                                 )}
                               </td>
                               
                               {/* Total */}
-                              <td className="text-center py-3 text-gray-900 font-semibold">
+                              <td className="text-center py-3 px-1 text-gray-900 font-semibold text-xs md:text-sm">
                                 {formatNumber(data.instagram.followers + data.facebook.followers)}
                               </td>
-                              <td className="text-center py-3 text-green-600 font-semibold">
+                              <td className="text-center py-3 px-1 text-green-600 font-semibold text-xs md:text-sm">
                                 {data.instagram.sales + data.facebook.sales}
                               </td>
                             </tr>
@@ -1101,63 +1104,64 @@ export default function SocialGrowth() {
                         })()
                       ) : (
                         <tr>
-                          <td colSpan={9} className="text-center py-8 text-gray-500">
+                          <td colSpan={9} className="text-center py-8 text-gray-500 text-xs md:text-sm">
                             Nenhum dado de performance disponível
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </Card>
 
               {/* Cards de Resumo */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {/* Melhor Mês */}
-                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-white" />
+                <Card className="p-4 md:p-6 border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
+                  <div className="flex items-center justify-center mb-3 md:mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-white" />
                     </div>
                   </div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-2">Melhor Mês</h3>
-                    <p className="text-2xl font-bold text-purple-600 mb-1">
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">Melhor Mês</h3>
+                    <p className="text-xl md:text-2xl font-bold text-purple-600 mb-1">
                       {progressData && progressData.length > 0 ? 'Agosto 2025' : 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-600">Maior crescimento</p>
+                    <p className="text-xs md:text-sm text-gray-600">Maior crescimento</p>
                   </div>
                 </Card>
 
                 {/* Crescimento Total */}
-                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-white" />
+                <Card className="p-4 md:p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+                  <div className="flex items-center justify-center mb-3 md:mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-white" />
                     </div>
                   </div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-2">Crescimento Total</h3>
-                    <p className="text-2xl font-bold text-blue-600 mb-1">
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">Crescimento Total</h3>
+                    <p className="text-xl md:text-2xl font-bold text-blue-600 mb-1">
                       +{formatNumber(overviewData?.totalFollowers ? overviewData.totalFollowers - 20000 : 0)}
                     </p>
-                    <p className="text-sm text-gray-600">Desde o início</p>
+                    <p className="text-xs md:text-sm text-gray-600">Desde o início</p>
                   </div>
                 </Card>
 
                 {/* Vendas Acumuladas */}
-                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                      <ShoppingCart className="h-6 w-6 text-white" />
+                <Card className="p-4 md:p-6 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center justify-center mb-3 md:mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-green-500 rounded-full flex items-center justify-center">
+                      <ShoppingCart className="h-5 w-5 md:h-6 md:w-6 text-white" />
                     </div>
                   </div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-2">Vendas Acumuladas</h3>
-                    <p className="text-2xl font-bold text-green-600 mb-1">
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">Vendas Acumuladas</h3>
+                    <p className="text-xl md:text-2xl font-bold text-green-600 mb-1">
                       {progressData ? progressData.reduce((total, record) => total + record.sales, 0) : 0}
                     </p>
-                    <p className="text-sm text-gray-600">Total de vendas</p>
+                    <p className="text-xs md:text-sm text-gray-600">Total de vendas</p>
                   </div>
                 </Card>
               </div>
