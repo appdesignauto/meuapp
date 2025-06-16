@@ -124,6 +124,12 @@ The system uses PostgreSQL with the following key entities:
   - Links directly to `/crescimento-social` page with description "Acompanhe seu crescimento"
   - Maintains existing 2x4 grid layout for optimal user experience
   - Fixed routing issue: corrected link from `/social-growth` to `/crescimento-social` to match existing route configuration
+- June 16, 2025: Implemented dynamic "Melhor Mês" calculation with authentic growth percentage analysis
+  - Replaced hardcoded "Agosto 2025" with dynamic getBestMonth() function that analyzes historical data
+  - Function calculates month-to-month growth percentage by comparing total followers across all platforms
+  - Automatically identifies the month with highest percentage growth and displays with growth rate
+  - Shows "N/A" when no historical data exists, ensuring authentic data integrity
+  - Criteria: compares each month's total followers against previous month to find maximum growth percentage
 - June 16, 2025: Reorganized social growth dashboard summary cards layout
   - Moved "Vendas Acumuladas" card to be positioned next to "Crescimento Total" card
   - Cards now display in order: Melhor Mês, Crescimento Total, Vendas Acumuladas

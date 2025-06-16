@@ -479,6 +479,77 @@ export default function SocialGrowth() {
     return translations[platform as keyof typeof translations] || platform;
   };
 
+  // Função para calcular o mês com maior crescimento
+  const getBestMonth = () => {
+    if (!progressData || progressData.length === 0) {
+      return { month: 'N/A', growthPercent: 0 };
+    }
+
+    // Agrupar dados por mês/ano e calcular totais
+    const monthlyTotals = new Map();
+    
+    progressData.forEach((record: any) => {
+      const key = `${record.year}-${record.month.toString().padStart(2, '0')}`;
+      if (!monthlyTotals.has(key)) {
+        monthlyTotals.set(key, {
+          year: record.year,
+          month: record.month,
+          totalFollowers: 0,
+          platforms: new Map()
+        });
+      }
+      
+      const monthData = monthlyTotals.get(key);
+      // Usar sempre o registro mais recente para cada plataforma neste mês
+      if (!monthData.platforms.has(record.platform) || 
+          new Date(record.createdAt) > new Date(monthData.platforms.get(record.platform).createdAt)) {
+        monthData.platforms.set(record.platform, {
+          followers: record.followers,
+          createdAt: record.createdAt
+        });
+      }
+    });
+
+    // Calcular totais finais por mês
+    for (const [monthKey, monthData] of monthlyTotals) {
+      let totalFollowers = 0;
+      for (const [platform, data] of monthData.platforms) {
+        totalFollowers += data.followers;
+      }
+      monthData.totalFollowers = totalFollowers;
+    }
+
+    // Ordenar por data e calcular crescimentos
+    const sortedMonths = Array.from(monthlyTotals.entries())
+      .sort((a, b) => a[0].localeCompare(b[0])); // Ordenar cronologicamente
+
+    let bestMonth = { month: 'N/A', growthPercent: 0 };
+    let maxGrowth = -Infinity;
+
+    for (let i = 1; i < sortedMonths.length; i++) {
+      const current = sortedMonths[i][1];
+      const previous = sortedMonths[i - 1][1];
+      
+      if (previous.totalFollowers > 0) {
+        const growth = ((current.totalFollowers - previous.totalFollowers) / previous.totalFollowers) * 100;
+        
+        if (growth > maxGrowth) {
+          maxGrowth = growth;
+          const monthNames = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+          ];
+          bestMonth = {
+            month: `${monthNames[current.month - 1]} ${current.year}`,
+            growthPercent: Math.round(growth)
+          };
+        }
+      }
+    }
+
+    return bestMonth;
+  };
+
   // Funções para obter dados reais dos perfis usando histórico mais recente
   const getInstagramFollowers = () => {
     // Usar dados do histórico mais recente primeiro
@@ -1127,9 +1198,14 @@ export default function SocialGrowth() {
                   <div className="text-center">
                     <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">Melhor Mês</h3>
                     <p className="text-xl md:text-2xl font-bold text-purple-600 mb-1">
-                      {progressData && progressData.length > 0 ? 'Agosto 2025' : 'N/A'}
+                      {getBestMonth().month}
                     </p>
-                    <p className="text-xs md:text-sm text-gray-600">Maior crescimento</p>
+                    <p className="text-xs md:text-sm text-gray-600">
+                      {getBestMonth().growthPercent > 0 
+                        ? `+${getBestMonth().growthPercent}% crescimento` 
+                        : 'Maior crescimento'
+                      }
+                    </p>
                   </div>
                 </Card>
 
