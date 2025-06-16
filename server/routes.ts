@@ -9228,13 +9228,36 @@ app.use('/api/reports-v2', (req, res, next) => {
       console.log('=== OVERVIEW CORRETO - Perfis encontrados:', profiles.length);
       console.log('Dados dos perfis:', profiles);
       
-      // Calcular total de seguidores usando dados dos perfis sociais diretamente
-      const totalFollowers = profiles.reduce((sum, profile) => {
-        console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
-        return sum + (profile.currentFollowers || 0);
-      }, 0);
+      // Calcular total de seguidores usando dados mais recentes do progresso ou perfis como fallback
+      let totalFollowers = 0;
       
-      console.log('Total de seguidores calculado:', totalFollowers);
+      // Buscar progresso recente primeiro
+      const recentProgressForTotal = await db.select()
+        .from(socialProgress)
+        .where(eq(socialProgress.userId, userId));
+      
+      // Primeiro, tentar usar dados mais recentes do progresso
+      const latestProgressByPlatform = new Map();
+      recentProgressForTotal.forEach(p => {
+        const key = p.platform;
+        const current = latestProgressByPlatform.get(key);
+        if (!current || (p.year > current.year) || (p.year === current.year && p.month > current.month)) {
+          latestProgressByPlatform.set(key, p);
+        }
+      });
+      
+      // Se há dados de progresso recentes, usar eles
+      if (latestProgressByPlatform.size > 0) {
+        totalFollowers = Array.from(latestProgressByPlatform.values()).reduce((sum, p) => sum + p.followers, 0);
+        console.log('🔥 NOVO CÁLCULO - Total usando progresso mais recente:', totalFollowers);
+      } else {
+        // Fallback para dados dos perfis se não há progresso
+        totalFollowers = profiles.reduce((sum, profile) => {
+          console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
+          return sum + (profile.currentFollowers || 0);
+        }, 0);
+        console.log('🔥 NOVO CÁLCULO - Total usando dados dos perfis:', totalFollowers);
+      }
       
       // Buscar metas ativas
       const goals = await db.select()

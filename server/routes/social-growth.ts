@@ -311,16 +311,34 @@ router.get('/overview', requireAuth, async (req: any, res) => {
       )
       .orderBy(socialProgress.year, socialProgress.month);
 
-    // Calcular total de seguidores usando dados dos perfis sociais diretamente
+    // Calcular total de seguidores usando dados mais recentes do progresso ou perfis como fallback
     console.log('Perfis encontrados:', profiles.length);
     console.log('Dados dos perfis:', profiles);
     
-    const totalFollowers = profiles.reduce((sum, profile) => {
-      console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
-      return sum + (profile.currentFollowers || 0);
-    }, 0);
+    let totalFollowers = 0;
     
-    console.log('Total de seguidores calculado:', totalFollowers);
+    // Primeiro, tentar usar dados mais recentes do progresso
+    const latestProgressByPlatform = new Map();
+    recentProgress.forEach(p => {
+      const key = p.platform;
+      const current = latestProgressByPlatform.get(key);
+      if (!current || (p.year > current.year) || (p.year === current.year && p.month > current.month)) {
+        latestProgressByPlatform.set(key, p);
+      }
+    });
+    
+    // Se há dados de progresso recentes, usar eles
+    if (latestProgressByPlatform.size > 0) {
+      totalFollowers = Array.from(latestProgressByPlatform.values()).reduce((sum, p) => sum + p.followers, 0);
+      console.log('Total calculado usando progresso mais recente:', totalFollowers);
+    } else {
+      // Fallback para dados dos perfis se não há progresso
+      totalFollowers = profiles.reduce((sum, profile) => {
+        console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
+        return sum + (profile.currentFollowers || 0);
+      }, 0);
+      console.log('Total calculado usando dados dos perfis:', totalFollowers);
+    }
     
     const totalSales = recentProgress.reduce((sum, p) => sum + p.sales, 0);
     const connectedNetworks = profiles.length;
