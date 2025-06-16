@@ -118,6 +118,15 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Updated quick access section on homepage by replacing "Meus Designs Recentes" with Social Growth shortcut
+  - Removed "Meus Designs Recentes" from quick access shortcuts  
+  - Added "Social Growth" shortcut with TrendingUp icon and emerald color scheme
+  - Links directly to `/social-growth` page with description "Acompanhe seu crescimento"
+  - Maintains existing 2x4 grid layout for optimal user experience
+- June 16, 2025: Reorganized social growth dashboard summary cards layout
+  - Moved "Vendas Acumuladas" card to be positioned next to "Crescimento Total" card
+  - Cards now display in order: Melhor Mês, Crescimento Total, Vendas Acumuladas
+  - Removed special grid spanning for better mobile layout consistency
 - June 16, 2025: Added comprehensive "Dados Mensais de Performance" section to social growth dashboard overview
   - Implemented detailed monthly performance table with Instagram, Facebook, and combined metrics
   - Added color-coded growth indicators (green for positive, red for negative) with trending icons

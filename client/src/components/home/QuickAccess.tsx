@@ -5,7 +5,7 @@ import {
   Users, 
   PlayCircle, 
   Scissors,
-  Clock,
+  TrendingUp,
   Heart,
   KeyRound,
   Zap
@@ -49,11 +49,11 @@ const QuickAccess = () => {
       color: 'bg-green-50 text-green-600 hover:bg-green-100'
     },
     {
-      icon: Clock,
-      label: 'Meus Designs Recentes',
-      href: '/painel/downloads',
-      description: 'Seus downloads recentes',
-      color: 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+      icon: TrendingUp,
+      label: 'Social Growth',
+      href: '/social-growth',
+      description: 'Acompanhe seu crescimento',
+      color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
     },
     {
       icon: Heart,
