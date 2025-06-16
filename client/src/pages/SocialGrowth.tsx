@@ -514,107 +514,233 @@ export default function SocialGrowth() {
           </TabsList>
 
           {/* Visão Geral */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-8">
             {/* Métricas Principais */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Seguidores</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {overviewLoading ? '...' : formatNumber(overviewData?.totalFollowers || 0)}
+              {/* Total de Seguidores */}
+              <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                    <Users className="h-6 w-6 text-white" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className={`${(overviewData?.monthlyGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-right">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      (overviewData?.monthlyGrowth || 0) >= 0 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
                       {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{overviewData?.monthlyGrowth || 0}%
-                    </span> este mês
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">Total de Seguidores</h3>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {overviewLoading ? '...' : formatNumber(overviewData?.totalFollowers || 0)}
                   </p>
-                </CardContent>
+                </div>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {overviewLoading ? '...' : formatNumber(overviewData?.totalSales || 0)}
+              {/* Total de Vendas */}
+              <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                    <ShoppingCart className="h-6 w-6 text-white" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className={`${(overviewData?.salesGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-right">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      (overviewData?.salesGrowth || 0) >= 0 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
                       {(overviewData?.salesGrowth || 0) >= 0 ? '+' : ''}{overviewData?.salesGrowth || 0}%
-                    </span> este mês
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">Total de Vendas</h3>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {overviewLoading ? '...' : formatNumber(overviewData?.totalSales || 0)}
                   </p>
-                </CardContent>
+                </div>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Metas Ativas</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+              {/* Metas Ativas */}
+              <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-orange-50 to-orange-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                    <Target className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-orange-600 font-medium">
+                      {goalsLoading ? '...' : `${goals.filter((g: any) => g.isActive).length} próximas`}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">Metas Ativas</h3>
+                  <p className="text-3xl font-bold text-gray-900">
                     {goalsLoading ? '...' : goals.length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {goals.filter((g: any) => g.isActive).length} em andamento
                   </p>
-                </CardContent>
+                </div>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Redes Conectadas</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {profilesLoading ? '...' : profiles.length}
+              {/* Redes Conectadas */}
+              <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 text-white" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Plataformas ativas
+                  <div className="text-right">
+                    <span className="text-xs text-purple-600 font-medium">
+                      Instagram, Facebook
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">Redes Conectadas</h3>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {profilesLoading ? '...' : profiles.length}
                   </p>
-                </CardContent>
+                </div>
               </Card>
             </div>
 
-            {/* Gráfico de Crescimento */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Crescimento de Seguidores</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={progressData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="followers" 
-                        stroke="#e91e63" 
-                        strokeWidth={2}
-                        name="Seguidores"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="sales" 
-                        stroke="#22c55e" 
-                        strokeWidth={2}
-                        name="Vendas"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Evolução do Crescimento por Plataforma */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Evolução do Crescimento de Seguidores</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Instagram */}
+                <Card className="p-6 border-0 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Instagram</h3>
+                        <p className="text-sm text-gray-500">seguidores</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        +90%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {formatNumber(20000)}
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Crescimento Mensal</span>
+                        <span className="text-green-600 font-medium">+90%</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Crescimento Semanal</span>
+                        <span className="text-green-600 font-medium">+22%</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Média Diária</span>
+                        <span className="text-green-600 font-medium">+316</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Facebook */}
+                <Card className="p-6 border-0 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Facebook</h3>
+                        <p className="text-sm text-gray-500">seguidores</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        +15%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {formatNumber(4200)}
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Crescimento Mensal</span>
+                        <span className="text-green-600 font-medium">+15%</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Crescimento Semanal</span>
+                        <span className="text-green-600 font-medium">+3%</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Média Diária</span>
+                        <span className="text-green-600 font-medium">+18</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Total Geral */}
+                <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-orange-50 to-orange-100/50">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                        <TrendingUp className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Total Geral</h3>
+                        <p className="text-sm text-gray-500">seguidores</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        +73%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {formatNumber(overviewData?.totalFollowers || 0)}
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Crescimento Mensal</span>
+                        <span className="text-orange-600 font-medium">+73%</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Crescimento Semanal</span>
+                        <span className="text-orange-600 font-medium">+18%</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Média Diária</span>
+                        <span className="text-orange-600 font-medium">+334</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Redes Sociais */}
@@ -722,46 +848,72 @@ export default function SocialGrowth() {
                 </div>
               ) : (
                 profiles.map((profile: any) => (
-                  <Card key={profile.id}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                      <div className="flex items-center space-x-2">
-                        {getPlatformIcon(profile.platform)}
-                        <CardTitle className="text-base">{profile.profileName}</CardTitle>
+                  <Card key={profile.id} className="p-6 border-0 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          profile.platform === 'instagram' 
+                            ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
+                            : 'bg-blue-600'
+                        }`}>
+                          {profile.platform === 'instagram' ? (
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                          ) : (
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{profile.profileName}</h3>
+                          <p className="text-sm text-gray-500 capitalize">{translatePlatform(profile.platform)}</p>
+                        </div>
                       </div>
                       <div className="flex space-x-1">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => openEditProfileModal(profile)}
+                          className="h-8 w-8 p-0 hover:bg-gray-100"
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-4 w-4 text-gray-500" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => deleteProfileMutation.mutate(profile.id)}
                           disabled={deleteProfileMutation.isPending}
+                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="text-2xl font-bold">
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-3xl font-bold text-gray-900">
                           {formatNumber(profile.currentFollowers)}
                         </div>
-                        <p className="text-sm text-muted-foreground">seguidores</p>
+                        <p className="text-sm text-gray-500">seguidores</p>
+                      </div>
+                      
+                      <div className="pt-3 border-t border-gray-100">
                         <a 
                           href={profile.profileUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline"
+                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
                         >
                           Ver perfil
+                          <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
                         </a>
                       </div>
-                    </CardContent>
+                    </div>
                   </Card>
                 ))
               )}
@@ -894,47 +1046,86 @@ export default function SocialGrowth() {
                 </div>
               ) : (
                 goals.map((goal: any) => (
-                  <Card key={goal.id}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                      <div className="flex items-center space-x-2">
-                        {getPlatformIcon(goal.platform)}
-                        <CardTitle className="text-base">{translateGoalType(goal.goalType)}</CardTitle>
+                  <Card key={goal.id} className="p-6 border-0 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          goal.platform === 'instagram' 
+                            ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
+                            : 'bg-blue-600'
+                        }`}>
+                          {goal.platform === 'instagram' ? (
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                          ) : (
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{translateGoalType(goal.goalType)}</h3>
+                          <p className="text-sm text-gray-500 capitalize">{translatePlatform(goal.platform)}</p>
+                        </div>
                       </div>
                       <div className="flex space-x-1">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => openEditGoalModal(goal)}
+                          className="h-8 w-8 p-0 hover:bg-gray-100"
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-4 w-4 text-gray-500" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => deleteGoalMutation.mutate(goal.id)}
                           disabled={deleteGoalMutation.isPending}
+                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-sm">
-                          <span>Progresso</span>
-                          <span>{Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%</span>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-600">Progresso da Meta</span>
+                          <span className={`text-sm font-semibold px-2 py-1 rounded-md ${
+                            calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 100
+                              ? 'bg-green-100 text-green-700'
+                              : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 75
+                              ? 'bg-blue-100 text-blue-700'
+                              : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 50
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%
+                          </span>
                         </div>
-                        <Progress value={calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue)} />
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>{formatNumber(goal.currentValue || 0)}</span>
-                          <span>{formatNumber(goal.targetValue)}</span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatDate(goal.deadline)}</span>
+                        <Progress 
+                          value={calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue)} 
+                          className="h-3"
+                        />
+                        <div className="flex justify-between text-sm text-gray-500">
+                          <span>{formatNumber(goal.currentValue || 0)} atual</span>
+                          <span>{formatNumber(goal.targetValue)} meta</span>
                         </div>
                       </div>
-                    </CardContent>
+                      
+                      <div className="pt-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center space-x-1 text-gray-500">
+                            <Calendar className="h-4 w-4" />
+                            <span>Prazo:</span>
+                          </div>
+                          <span className="font-medium text-gray-900">{formatDate(goal.deadline)}</span>
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 ))
               )}

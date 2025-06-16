@@ -9230,8 +9230,6 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       const totalFollowers = latestProgressByPlatform.reduce((sum, followers) => sum + followers, 0);
       
-      console.log('Total de seguidores calculado dos dados mais recentes:', totalFollowers);
-      
       // Buscar metas ativas
       const goals = await db.select()
         .from(socialGoals)

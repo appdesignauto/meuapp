@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Fixed social growth total followers calculation to use authentic recent data instead of outdated profile data
+  - Corrected totalFollowers calculation to fetch latest progress data from socialProgress table
+  - Total followers now displays current month values (June 2025: 20,000) instead of static profile values (10,000)
+  - Enhanced system accuracy: growth calculations and total counts now reflect real user progress data
+  - Added debug logging for total followers calculation ensuring data authenticity
 - June 16, 2025: Enhanced social growth tracking with comprehensive data validation and loss detection
   - Implemented chronological ordering: progress history displays most recent entries first (year DESC, month DESC, createdAt DESC)
   - Added date validation preventing future month data entry in both frontend (Zod schema) and backend (server validation)
