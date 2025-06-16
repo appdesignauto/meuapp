@@ -379,24 +379,53 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     let currentSales = 0;
     let previousSales = 0;
 
-    // Usar dados do mês mais recente como período atual
-    if (currentData.length > 0) {
-      currentFollowers = currentData.reduce((sum, p) => sum + p.followers, 0);
-      currentSales = currentData.reduce((sum, p) => sum + p.sales, 0);
-    }
-
-    // Usar dados do mês anterior
-    if (previousData.length > 0) {
-      previousFollowers = previousData.reduce((sum, p) => sum + p.followers, 0);
-      previousSales = previousData.reduce((sum, p) => sum + p.sales, 0);
-    }
+    // Para cada plataforma, buscar os valores mais recentes disponíveis
+    const platforms = Array.from(new Set(recentProgress.map(p => p.platform)));
+    
+    platforms.forEach(platform => {
+      // Buscar valor atual (mês mais recente disponível para esta plataforma)
+      const currentPlatformData = recentProgress
+        .filter(p => p.platform === platform)
+        .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))[0];
+      
+      if (currentPlatformData) {
+        currentFollowers += currentPlatformData.followers;
+        currentSales += currentPlatformData.sales;
+      }
+      
+      // Buscar valor anterior para esta plataforma (excluindo o mês mais recente)
+      const previousPlatformData = recentProgress
+        .filter(p => p.platform === platform && 
+          (p.year * 12 + p.month) < (currentPlatformData?.year * 12 + currentPlatformData?.month))
+        .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))[0];
+      
+      if (previousPlatformData) {
+        previousFollowers += previousPlatformData.followers;
+        previousSales += previousPlatformData.sales;
+      }
+    });
 
     const monthlyGrowth = previousFollowers > 0 ? ((currentFollowers - previousFollowers) / previousFollowers) * 100 : 0;
     const salesGrowth = previousSales > 0 ? ((currentSales - previousSales) / previousSales) * 100 : 0;
 
-    console.log(`[Social Growth Debug] Cálculo final:`);
-    console.log(`- Seguidores atual: ${currentFollowers}, anterior: ${previousFollowers}`);
-    console.log(`- Crescimento: ${monthlyGrowth}%`);
+    console.log(`[Social Growth Debug] Cálculo CORRIGIDO por plataforma:`);
+    console.log(`- Plataformas encontradas: ${platforms.join(', ')}`);
+    
+    // Debug detalhado por plataforma
+    platforms.forEach(platform => {
+      const currentData = recentProgress
+        .filter(p => p.platform === platform)
+        .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))[0];
+      const previousData = recentProgress
+        .filter(p => p.platform === platform && 
+          (p.year * 12 + p.month) < (currentData?.year * 12 + currentData?.month))
+        .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))[0];
+      
+      console.log(`- ${platform.toUpperCase()}: atual=${currentData?.followers || 0} (${currentData?.month}/${currentData?.year}), anterior=${previousData?.followers || 0} (${previousData?.month}/${previousData?.year})`);
+    });
+    
+    console.log(`- TOTAL: Seguidores atual: ${currentFollowers}, anterior: ${previousFollowers}`);
+    console.log(`- CRESCIMENTO: ${monthlyGrowth}%`);
     console.log(`- Vendas atual: ${currentSales}, anterior: ${previousSales}`);
     console.log(`- Crescimento vendas: ${salesGrowth}%`);
 

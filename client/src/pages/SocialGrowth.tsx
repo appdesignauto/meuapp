@@ -803,7 +803,7 @@ export default function SocialGrowth() {
                       <div className="flex justify-between text-gray-600">
                         <span>Média Diária</span>
                         <span className={`font-medium ${getFacebookGrowth() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {getFacebookGrowth() >= 0 ? '+' : ''}0
+                          {getFacebookGrowth() >= 0 ? '+' : ''}{Math.round(10000 / 30)}
                         </span>
                       </div>
                     </div>
@@ -860,7 +860,7 @@ export default function SocialGrowth() {
                         <span className={`font-medium ${
                           (overviewData?.monthlyGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{Math.round((10000) / 30)}
+                          {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{Math.round((overviewData?.totalFollowers || 0) * (overviewData?.monthlyGrowth || 0) / 100 / 30)}
                         </span>
                       </div>
                     </div>
