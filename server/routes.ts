@@ -2884,6 +2884,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar configurações do site" });
     }
   });
+
+  // POST /api/email-templates/sync-logo - Sincronizar logo oficial em todos os templates
+  app.post('/api/email-templates/sync-logo', isAdmin, async (req, res) => {
+    try {
+      console.log('🔄 Iniciando sincronização do logo oficial em todos os templates de e-mail...');
+      
+      // Buscar logo oficial atual das configurações do site
+      const settings = await db.select().from(siteSettings).limit(1);
+      if (settings.length === 0) {
+        return res.status(400).json({ error: 'Configurações do site não encontradas' });
+      }
+
+      const currentLogo = settings[0].logoUrl;
+      if (!currentLogo) {
+        return res.status(400).json({ error: 'Logo oficial não configurado' });
+      }
+
+      // Construir URL completa do logo oficial
+      const cleanLogoUrl = currentLogo.split('?')[0]; // Remove timestamp se presente
+      const officialLogoUrl = `https://designauto.com.br${cleanLogoUrl}`;
+      
+      console.log(`📷 Logo oficial detectado: ${officialLogoUrl}`);
+
+      // Buscar todos os templates ativos
+      const templates = await db.execute(sql`
+        SELECT id, name, "htmlContent" FROM "emailTemplates" 
+        WHERE "isActive" = true
+      `);
+
+      if (templates.rows.length === 0) {
+        return res.json({ 
+          success: true, 
+          message: 'Nenhum template ativo encontrado para sincronizar',
+          updatedCount: 0 
+        });
+      }
+
+      console.log(`📧 Encontrados ${templates.rows.length} templates ativos para sincronização`);
+
+      let updatedCount = 0;
+      const updatePromises = templates.rows.map(async (template: any) => {
+        let htmlContent = template.htmlContent;
+        let hasChanges = false;
+
+        // Padrões de logos antigos para substituir
+        const oldLogoPatterns = [
+          /https:\/\/designauto\.com\.br\/images\/logos\/logo_\d+\.png/g,
+          /https:\/\/designauto\.com\.br\/images\/logos\/logo_\d+_[a-z0-9]+\.png/g,
+          /\/images\/logos\/logo_\d+\.png/g,
+          /\/images\/logos\/logo_\d+_[a-z0-9]+\.png/g
+        ];
+
+        // Verificar se há logos antigos para atualizar
+        oldLogoPatterns.forEach(pattern => {
+          if (pattern.test(htmlContent)) {
+            htmlContent = htmlContent.replace(pattern, officialLogoUrl);
+            hasChanges = true;
+          }
+        });
+
+        // Atualizar no banco se houve mudanças
+        if (hasChanges) {
+          await db.execute(sql`
+            UPDATE "emailTemplates" 
+            SET "htmlContent" = ${htmlContent}, "updatedAt" = NOW()
+            WHERE "id" = ${template.id}
+          `);
+          
+          console.log(`✅ Template "${template.name}" atualizado com logo oficial`);
+          updatedCount++;
+        } else {
+          console.log(`✓ Template "${template.name}" já estava usando o logo oficial`);
+        }
+      });
+
+      await Promise.all(updatePromises);
+
+      console.log(`🎉 Sincronização concluída: ${updatedCount} templates atualizados`);
+
+      res.json({
+        success: true,
+        message: `Logo oficial sincronizado com sucesso em ${updatedCount} templates`,
+        updatedCount,
+        totalTemplates: templates.rows.length,
+        officialLogoUrl
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao sincronizar logo nos templates:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Erro interno ao sincronizar logo nos templates' 
+      });
+    }
+  });
   
   // Endpoint para atualizar campos específicos das configurações do site (requer admin)
   app.patch("/api/site-settings", isAdmin, async (req, res) => {

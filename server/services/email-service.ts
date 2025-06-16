@@ -244,6 +244,10 @@ class EmailService {
         return { success: false, error: 'Serviço de email não inicializado' };
       }
 
+      // Atualizar logo no conteúdo HTML para usar sempre o logo oficial atual
+      htmlContent = await this.updateLogoInContent(htmlContent);
+      this.log('✅ Logo atualizado no conteúdo do email para usar logo oficial');
+
       // Converter HTML para texto simples para clientes sem suporte a HTML
       // Remover qualquer código de HTML e preservar o texto puro
       let finalTextContent = textContent;
