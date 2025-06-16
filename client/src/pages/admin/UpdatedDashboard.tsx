@@ -76,7 +76,8 @@ import {
   TrendingDown,
   Clock,
   Star,
-  PlayCircle
+  PlayCircle,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1358,6 +1359,30 @@ const AdminDashboard = () => {
                   }`} />
                   {sidebarOpen && <span>Gerenciar Popups</span>}
                 </button>
+                <button
+                  onClick={() => setActiveTab('emailTemplates')}
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
+                    activeTab === 'emailTemplates' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title="Gerenciar E-mails"
+                >
+                  <Mail className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
+                    activeTab === 'emailTemplates' ? 'text-blue-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span>Gerenciar E-mails</span>}
+                </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-sm transition-colors ${
+                    activeTab === 'analytics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title="Analytics e Rastreamento"
+                >
+                  <BarChart3 className={`w-3.5 h-3.5 ${!sidebarOpen ? 'mx-auto' : 'mr-2.5'} ${
+                    activeTab === 'analytics' ? 'text-blue-600' : 'text-gray-500'
+                  }`} />
+                  {sidebarOpen && <span>Analytics</span>}
+                </button>
               </CollapsibleContent>
             </Collapsible>
             )}
@@ -1638,6 +1663,7 @@ const AdminDashboard = () => {
                   {activeTab === 'comments' && 'Comentários'}
                   {activeTab === 'popups' && 'Popups'}
                   {activeTab === 'analytics' && 'Analytics e Rastreamento'}
+                  {activeTab === 'emailTemplates' && 'Gerenciar E-mails'}
                 </h1>
               </div>
             </div>

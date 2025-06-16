@@ -233,11 +233,15 @@ export default function EmailTemplatesTab() {
 
     try {
       setLoading(true);
-      await apiRequest(`/api/email-templates/${testTemplate.id}/test`, {
+      const response = await fetch(`/api/email-templates/${testTemplate.id}/test`, {
         method: 'POST',
         body: JSON.stringify({ testEmail, testData }),
         headers: { 'Content-Type': 'application/json' }
       });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao enviar e-mail de teste');
+      }
       
       toast({
         title: "Sucesso",
