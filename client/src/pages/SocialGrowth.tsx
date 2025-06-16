@@ -34,101 +34,42 @@ const profileSchema = z.object({
   platform: z.string().min(1, 'Selecione uma plataforma'),
   profileName: z.string().min(1, 'Nome do perfil é obrigatório'),
   profileUrl: z.string().url('URL deve ser válida'),
-  currentFollowers: z.number().min(0, 'Número de seguidores deve ser positivo'),
+  currentFollowers: z.coerce.number().min(0, 'Número de seguidores deve ser positivo'),
 });
 
 const goalSchema = z.object({
   platform: z.string().min(1, 'Selecione uma plataforma'),
   goalType: z.string().min(1, 'Selecione o tipo de meta'),
-  targetValue: z.number().min(1, 'Valor da meta deve ser maior que 0'),
+  targetValue: z.coerce.number().min(1, 'Valor da meta deve ser maior que 0'),
   deadline: z.string().min(1, 'Data limite é obrigatória'),
 });
 
 const progressSchema = z.object({
   platform: z.string().min(1, 'Selecione uma plataforma'),
-  month: z.number().min(1).max(12, 'Mês deve estar entre 1 e 12'),
-  year: z.number().min(2020, 'Ano deve ser válido'),
-  followers: z.number().min(0, 'Número de seguidores deve ser positivo'),
-  sales: z.number().min(0, 'Número de vendas deve ser positivo'),
+  month: z.coerce.number().min(1).max(12, 'Mês deve estar entre 1 e 12'),
+  year: z.coerce.number().min(2020, 'Ano deve ser válido'),
+  followers: z.coerce.number().min(0, 'Número de seguidores deve ser positivo'),
+  sales: z.coerce.number().min(0, 'Número de vendas deve ser positivo'),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 type GoalFormData = z.infer<typeof goalSchema>;
 type ProgressFormData = z.infer<typeof progressSchema>;
 
-// Dados simulados para demonstração (serão substituídos por dados reais da API)
-const mockData = {
-  totalFollowers: 12700,
-  totalSales: 125,
-  activeGoals: 3,
-  connectedNetworks: 2,
-  monthlyGrowth: 8.3,
-  salesGrowth: 15.2,
-  
-  profiles: [
-    {
-      id: 1,
-      platform: 'instagram',
-      profileName: '@designauto_oficial',
-      profileUrl: 'https://instagram.com/designauto_oficial',
-      currentFollowers: 8500,
-      isActive: true,
-    },
-    {
-      id: 2,
-      platform: 'facebook',
-      profileName: 'Design Auto',
-      profileUrl: 'https://facebook.com/designauto',
-      currentFollowers: 4200,
-      isActive: true,
-    }
-  ],
-  
-  goals: [
-    {
-      id: 1,
-      platform: 'instagram',
-      goalType: 'followers',
-      currentValue: 8500,
-      targetValue: 10000,
-      deadline: '2025-07-31',
-      isActive: true,
-    },
-    {
-      id: 2,
-      platform: 'facebook',
-      goalType: 'followers',
-      currentValue: 4200,
-      targetValue: 5000,
-      deadline: '2025-08-15',
-      isActive: true,
-    },
-    {
-      id: 3,
-      platform: 'all',
-      goalType: 'sales',
-      currentValue: 125,
-      targetValue: 200,
-      deadline: '2025-12-31',
-      isActive: true,
-    }
-  ],
-  
-  progressData: [
-    { month: 'Jan', year: 2025, instagram: 7800, facebook: 3900, total: 11700, sales: 95 },
-    { month: 'Fev', year: 2025, instagram: 8100, facebook: 4000, total: 12100, sales: 108 },
-    { month: 'Mar', year: 2025, instagram: 8300, facebook: 4100, total: 12400, sales: 115 },
-    { month: 'Abr', year: 2025, instagram: 8500, facebook: 4200, total: 12700, sales: 125 },
-  ]
-};
-
-export function SocialGrowth() {
+export default function SocialGrowth() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Estados dos modais
   const [activeTab, setActiveTab] = useState('overview');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<any>(null);
+  const [editingGoal, setEditingGoal] = useState<any>(null);
 
+  // Formulários
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -136,7 +77,7 @@ export function SocialGrowth() {
       profileName: '',
       profileUrl: '',
       currentFollowers: 0,
-    },
+    }
   });
 
   const goalForm = useForm<GoalFormData>({
@@ -146,7 +87,7 @@ export function SocialGrowth() {
       goalType: '',
       targetValue: 0,
       deadline: '',
-    },
+    }
   });
 
   const progressForm = useForm<ProgressFormData>({
@@ -157,10 +98,10 @@ export function SocialGrowth() {
       year: new Date().getFullYear(),
       followers: 0,
       sales: 0,
-    },
+    }
   });
 
-  // React Query hooks para buscar dados da API
+  // Queries para buscar dados do backend
   const { data: overviewData, isLoading: overviewLoading } = useQuery({
     queryKey: ['/api/social-growth/overview'],
     enabled: !!user
@@ -181,17 +122,22 @@ export function SocialGrowth() {
     enabled: !!user
   });
 
-  // Mutations para criar/editar dados
+  // Mutations para criar dados
   const createProfileMutation = useMutation({
-    mutationFn: (data: any) => fetch('/api/social-growth/profiles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(res => res.json()),
+    mutationFn: async (data: ProfileFormData) => {
+      const response = await fetch('/api/social-growth/profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Erro ao criar perfil');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/profiles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
       setIsProfileModalOpen(false);
+      setEditingProfile(null);
       profileForm.reset();
       toast({ title: 'Perfil criado com sucesso!' });
     },
@@ -201,15 +147,20 @@ export function SocialGrowth() {
   });
 
   const createGoalMutation = useMutation({
-    mutationFn: (data: any) => fetch('/api/social-growth/goals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(res => res.json()),
+    mutationFn: async (data: GoalFormData) => {
+      const response = await fetch('/api/social-growth/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Erro ao criar meta');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
       setIsGoalModalOpen(false);
+      setEditingGoal(null);
       goalForm.reset();
       toast({ title: 'Meta criada com sucesso!' });
     },
@@ -219,48 +170,38 @@ export function SocialGrowth() {
   });
 
   const createProgressMutation = useMutation({
-    mutationFn: (data: any) => fetch('/api/social-growth/progress', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(res => res.json()),
+    mutationFn: async (data: ProgressFormData) => {
+      const response = await fetch('/api/social-growth/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Erro ao adicionar progresso');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/progress'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
       setIsProgressModalOpen(false);
       progressForm.reset();
-      toast({ title: 'Progresso atualizado com sucesso!' });
+      toast({ title: 'Progresso adicionado com sucesso!' });
     },
     onError: () => {
-      toast({ title: 'Erro ao atualizar progresso', variant: 'destructive' });
+      toast({ title: 'Erro ao adicionar progresso', variant: 'destructive' });
     }
   });
 
-  const onProfileSubmit = (data: ProfileFormData) => {
-    createProfileMutation.mutate(data);
-  };
-
-  const onGoalSubmit = (data: GoalFormData) => {
-    createGoalMutation.mutate(data);
-  };
-
-  const onProgressSubmit = (data: ProgressFormData) => {
-    createProgressMutation.mutate(data);
-  };
-
-  // Estados para edição
-  const [editingProfile, setEditingProfile] = useState<any>(null);
-  const [editingGoal, setEditingGoal] = useState<any>(null);
-  const [editingProgress, setEditingProgress] = useState<any>(null);
-
-  // Mutations para editar dados
+  // Mutations para atualizar dados
   const updateProfileMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      fetch(`/api/social-growth/profiles/${id}`, {
+    mutationFn: async ({ id, data }: { id: number; data: ProfileFormData }) => {
+      const response = await fetch(`/api/social-growth/profiles/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-      }).then(res => res.json()),
+      });
+      if (!response.ok) throw new Error('Erro ao atualizar perfil');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/profiles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
@@ -275,12 +216,15 @@ export function SocialGrowth() {
   });
 
   const updateGoalMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      fetch(`/api/social-growth/goals/${id}`, {
+    mutationFn: async ({ id, data }: { id: number; data: GoalFormData }) => {
+      const response = await fetch(`/api/social-growth/goals/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-      }).then(res => res.json()),
+      });
+      if (!response.ok) throw new Error('Erro ao atualizar meta');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
@@ -294,72 +238,44 @@ export function SocialGrowth() {
     }
   });
 
-  // Mutations para excluir dados
+  // Mutations para deletar dados
   const deleteProfileMutation = useMutation({
-    mutationFn: (id: number) => 
-      fetch(`/api/social-growth/profiles/${id}`, {
-        method: 'DELETE',
-      }).then(res => res.json()),
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/social-growth/profiles/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Erro ao deletar perfil');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/profiles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
-      toast({ title: 'Perfil excluído com sucesso!' });
+      toast({ title: 'Perfil deletado com sucesso!' });
     },
     onError: () => {
-      toast({ title: 'Erro ao excluir perfil', variant: 'destructive' });
+      toast({ title: 'Erro ao deletar perfil', variant: 'destructive' });
     }
   });
 
   const deleteGoalMutation = useMutation({
-    mutationFn: (id: number) => 
-      fetch(`/api/social-growth/goals/${id}`, {
-        method: 'DELETE',
-      }).then(res => res.json()),
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/social-growth/goals/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Erro ao deletar meta');
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/goals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/social-growth/overview'] });
-      toast({ title: 'Meta excluída com sucesso!' });
+      toast({ title: 'Meta deletada com sucesso!' });
     },
     onError: () => {
-      toast({ title: 'Erro ao excluir meta', variant: 'destructive' });
+      toast({ title: 'Erro ao deletar meta', variant: 'destructive' });
     }
   });
 
-  // Funções auxiliares
-  const handleEditProfile = (profile: any) => {
-    setEditingProfile(profile);
-    profileForm.reset({
-      platform: profile.platform,
-      profileName: profile.profileName,
-      profileUrl: profile.profileUrl,
-      currentFollowers: profile.currentFollowers,
-    });
-    setIsProfileModalOpen(true);
-  };
-
-  const handleEditGoal = (goal: any) => {
-    setEditingGoal(goal);
-    goalForm.reset({
-      platform: goal.platform,
-      goalType: goal.goalType,
-      targetValue: goal.targetValue,
-      deadline: goal.deadline,
-    });
-    setIsGoalModalOpen(true);
-  };
-
-  const handleDeleteProfile = (id: number) => {
-    if (confirm('Tem certeza que deseja excluir este perfil?')) {
-      deleteProfileMutation.mutate(id);
-    }
-  };
-
-  const handleDeleteGoal = (id: number) => {
-    if (confirm('Tem certeza que deseja excluir esta meta?')) {
-      deleteGoalMutation.mutate(id);
-    }
-  };
-
+  // Handlers dos formulários
   const handleProfileSubmit = (data: ProfileFormData) => {
     if (editingProfile) {
       updateProfileMutation.mutate({ id: editingProfile.id, data });
@@ -378,6 +294,31 @@ export function SocialGrowth() {
 
   const handleProgressSubmit = (data: ProgressFormData) => {
     createProgressMutation.mutate(data);
+  };
+
+  // Funções auxiliares
+  const openEditProfileModal = (profile: any) => {
+    setEditingProfile(profile);
+    profileForm.reset({
+      platform: profile.platform,
+      profileName: profile.profileName,
+      profileUrl: profile.profileUrl,
+      currentFollowers: profile.currentFollowers,
+    });
+    setIsProfileModalOpen(true);
+  };
+
+  const openEditGoalModal = (goal: any) => {
+    setEditingGoal(goal);
+    // Converter a data para o formato YYYY-MM-DD para o input date
+    const deadline = new Date(goal.deadline).toISOString().split('T')[0];
+    goalForm.reset({
+      platform: goal.platform,
+      goalType: goal.goalType,
+      targetValue: goal.targetValue,
+      deadline: deadline,
+    });
+    setIsGoalModalOpen(true);
   };
 
   const resetProfileModal = () => {
@@ -495,10 +436,10 @@ export function SocialGrowth() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {overviewLoading ? '...' : overviewData?.activeGoals || 0}
+                    {goalsLoading ? '...' : goals.length}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    2 próximas do objetivo
+                    {goals.filter((g: any) => g.isActive).length} em andamento
                   </p>
                 </CardContent>
               </Card>
@@ -509,162 +450,67 @@ export function SocialGrowth() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{mockData.connectedNetworks}</div>
+                  <div className="text-2xl font-bold">
+                    {profilesLoading ? '...' : profiles.length}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Instagram e Facebook
+                    Plataformas ativas
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Evolução do Crescimento */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="bg-gradient-to-br from-pink-500 to-purple-600 text-white">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Instagram className="h-5 w-5" />
-                    Instagram
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold mb-2">{formatNumber(8500)}</div>
-                  <div className="space-y-1 text-sm">
-                    <p>+700 este mês</p>
-                    <p>+23 por dia</p>
-                    <p>Crescimento: +9.0%</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-700 text-white">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Facebook className="h-5 w-5" />
-                    Facebook
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold mb-2">{formatNumber(4200)}</div>
-                  <div className="space-y-1 text-sm">
-                    <div>+300 este mês</div>
-                    <p>+10 por dia</p>
-                    <p>Crescimento: +7.7%</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Total Geral
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold mb-2">{formatNumber(12700)}</div>
-                  <div className="space-y-1 text-sm">
-                    <p>+1000 este mês</p>
-                    <p>+33 por dia</p>
-                    <p>Crescimento: +8.5%</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Progresso das Metas */}
+            {/* Gráfico de Crescimento */}
             <Card>
               <CardHeader>
-                <CardTitle>Progresso das Metas</CardTitle>
+                <CardTitle>Crescimento de Seguidores</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {mockData.goals.map((goal) => {
-                    const progress = calculateProgress(goal.currentValue, goal.targetValue);
-                    const remaining = goal.targetValue - goal.currentValue;
-                    const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    
-                    return (
-                      <div key={goal.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(goal.platform)}
-                            <span className="font-medium capitalize">
-                              {goal.platform === 'all' ? 'Todas as Plataformas' : goal.platform} - {goal.goalType === 'followers' ? 'Seguidores' : 'Vendas'}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">{formatNumber(goal.currentValue)} / {formatNumber(goal.targetValue)}</div>
-                            <div className="text-xs text-muted-foreground">{daysLeft} dias restantes</div>
-                          </div>
-                        </div>
-                        <Progress value={progress} className="h-2" />
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{progress.toFixed(1)}% concluído</span>
-                          <span>Restam {formatNumber(remaining)}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={progressData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="followers" 
+                        stroke="#e91e63" 
+                        strokeWidth={2}
+                        name="Seguidores"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="sales" 
+                        stroke="#22c55e" 
+                        strokeWidth={2}
+                        name="Vendas"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Gráficos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Crescimento de Seguidores</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={mockData.progressData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="instagram" stroke="#e1306c" strokeWidth={2} name="Instagram" />
-                      <Line type="monotone" dataKey="facebook" stroke="#1877f2" strokeWidth={2} name="Facebook" />
-                      <Line type="monotone" dataKey="total" stroke="#22c55e" strokeWidth={2} name="Total" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance de Vendas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={mockData.progressData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="sales" stroke="#f59e0b" strokeWidth={2} name="Vendas" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           {/* Redes Sociais */}
           <TabsContent value="networks" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Redes Sociais Conectadas</h2>
+              <h2 className="text-xl font-semibold">Perfis de Redes Sociais</h2>
               <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={resetProfileModal}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Rede Social
+                    Adicionar Perfil
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{editingProfile ? 'Editar Rede Social' : 'Adicionar Nova Rede Social'}</DialogTitle>
+                    <DialogTitle>
+                      {editingProfile ? 'Editar Perfil' : 'Adicionar Novo Perfil'}
+                    </DialogTitle>
                   </DialogHeader>
                   <Form {...profileForm}>
                     <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
@@ -683,8 +529,6 @@ export function SocialGrowth() {
                               <SelectContent>
                                 <SelectItem value="instagram">Instagram</SelectItem>
                                 <SelectItem value="facebook">Facebook</SelectItem>
-                                <SelectItem value="tiktok">TikTok</SelectItem>
-                                <SelectItem value="youtube">YouTube</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -698,7 +542,7 @@ export function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Nome do Perfil</FormLabel>
                             <FormControl>
-                              <Input placeholder="@seuperfil" {...field} />
+                              <Input placeholder="@seu_perfil" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -711,7 +555,7 @@ export function SocialGrowth() {
                           <FormItem>
                             <FormLabel>URL do Perfil</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://instagram.com/seuperfil" {...field} />
+                              <Input placeholder="https://..." {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -724,22 +568,22 @@ export function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Seguidores Atuais</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="0" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
+                              <Input type="number" placeholder="0" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setIsProfileModalOpen(false)}>
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={resetProfileModal}>
                           Cancelar
                         </Button>
-                        <Button type="submit">Adicionar</Button>
+                        <Button 
+                          type="submit" 
+                          disabled={createProfileMutation.isPending || updateProfileMutation.isPending}
+                        >
+                          {editingProfile ? 'Atualizar' : 'Criar'}
+                        </Button>
                       </div>
                     </form>
                   </Form>
@@ -748,54 +592,76 @@ export function SocialGrowth() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profiles.map((profile) => (
-                <Card key={profile.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+              {profilesLoading ? (
+                <div>Carregando perfis...</div>
+              ) : profiles.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  Nenhum perfil cadastrado ainda
+                </div>
+              ) : (
+                profiles.map((profile: any) => (
+                  <Card key={profile.id}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                      <div className="flex items-center space-x-2">
                         {getPlatformIcon(profile.platform)}
-                        <span className="capitalize">{profile.platform}</span>
+                        <CardTitle className="text-base">{profile.profileName}</CardTitle>
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEditProfile(profile)}>
-                          <Edit className="h-4 w-4" />
+                      <div className="flex space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditProfileModal(profile)}
+                        >
+                          <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleDeleteProfile(profile.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteProfileMutation.mutate(profile.id)}
+                          disabled={deleteProfileMutation.isPending}
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="font-medium">{profile.profileName}</p>
-                      <p className="text-sm text-muted-foreground break-all">{profile.profileUrl}</p>
-                      <div className="text-2xl font-bold">{formatNumber(profile.currentFollowers)}</div>
-                      <p className="text-sm text-muted-foreground">seguidores</p>
-                      <Badge variant={profile.isActive ? "default" : "secondary"}>
-                        {profile.isActive ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="text-2xl font-bold">
+                          {formatNumber(profile.currentFollowers)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">seguidores</p>
+                        <a 
+                          href={profile.profileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Ver perfil
+                        </a>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </TabsContent>
 
           {/* Metas */}
           <TabsContent value="goals" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Metas de Crescimento</h2>
+              <h2 className="text-xl font-semibold">Metas de Crescimento</h2>
               <Dialog open={isGoalModalOpen} onOpenChange={setIsGoalModalOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={resetGoalModal}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Criar Nova Meta
+                    Adicionar Meta
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>{editingGoal ? 'Editar Meta' : 'Criar Nova Meta'}</DialogTitle>
+                    <DialogTitle>
+                      {editingGoal ? 'Editar Meta' : 'Adicionar Nova Meta'}
+                    </DialogTitle>
                   </DialogHeader>
                   <Form {...goalForm}>
                     <form onSubmit={goalForm.handleSubmit(handleGoalSubmit)} className="space-y-4">
@@ -812,11 +678,8 @@ export function SocialGrowth() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="all">Todas as Plataformas</SelectItem>
                                 <SelectItem value="instagram">Instagram</SelectItem>
                                 <SelectItem value="facebook">Facebook</SelectItem>
-                                <SelectItem value="tiktok">TikTok</SelectItem>
-                                <SelectItem value="youtube">YouTube</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -838,6 +701,7 @@ export function SocialGrowth() {
                               <SelectContent>
                                 <SelectItem value="followers">Seguidores</SelectItem>
                                 <SelectItem value="sales">Vendas</SelectItem>
+                                <SelectItem value="engagement">Engajamento</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -849,14 +713,9 @@ export function SocialGrowth() {
                         name="targetValue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Valor Objetivo</FormLabel>
+                            <FormLabel>Valor da Meta</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="10000" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
+                              <Input type="number" placeholder="0" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -875,11 +734,16 @@ export function SocialGrowth() {
                           </FormItem>
                         )}
                       />
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setIsGoalModalOpen(false)}>
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={resetGoalModal}>
                           Cancelar
                         </Button>
-                        <Button type="submit">Criar Meta</Button>
+                        <Button 
+                          type="submit" 
+                          disabled={createGoalMutation.isPending || updateGoalMutation.isPending}
+                        >
+                          {editingGoal ? 'Atualizar' : 'Criar'}
+                        </Button>
                       </div>
                     </form>
                   </Form>
@@ -888,90 +752,75 @@ export function SocialGrowth() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {goals.map((goal) => {
-                const progress = calculateProgress(goal.currentValue || 0, goal.targetValue);
-                const remaining = goal.targetValue - (goal.currentValue || 0);
-                const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                
-                return (
+              {goalsLoading ? (
+                <div>Carregando metas...</div>
+              ) : goals.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  Nenhuma meta cadastrada ainda
+                </div>
+              ) : (
+                goals.map((goal: any) => (
                   <Card key={goal.id}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getPlatformIcon(goal.platform)}
-                          <span className="capitalize">
-                            {goal.platform === 'all' ? 'Todas' : goal.platform}
-                          </span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEditGoal(goal)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeleteGoal(goal.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                      <div className="flex items-center space-x-2">
+                        {getPlatformIcon(goal.platform)}
+                        <CardTitle className="text-base capitalize">{goal.goalType}</CardTitle>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditGoalModal(goal)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteGoalMutation.mutate(goal.id)}
+                          disabled={deleteGoalMutation.isPending}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            {goal.goalType === 'followers' ? 'Seguidores' : 'Vendas'}
-                          </p>
-                          <div className="text-2xl font-bold">
-                            {formatNumber(goal.currentValue || 0)} / {formatNumber(goal.targetValue)}
-                          </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Progresso</span>
+                          <span>{Math.round(calculateProgress(goal.currentValue || 0, goal.targetValue))}%</span>
                         </div>
-                        
-                        <Progress value={progress} className="h-2" />
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Progresso:</span>
-                            <span className="font-medium">{progress.toFixed(1)}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Restam:</span>
-                            <span className="font-medium">{formatNumber(remaining)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Prazo:</span>
-                            <span className={`font-medium flex items-center gap-1 ${daysLeft < 30 ? 'text-amber-600' : 'text-green-600'}`}>
-                              <Calendar className="h-3 w-3" />
-                              {daysLeft} dias
-                            </span>
-                          </div>
+                        <Progress value={calculateProgress(goal.currentValue || 0, goal.targetValue)} />
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>{formatNumber(goal.currentValue || 0)}</span>
+                          <span>{formatNumber(goal.targetValue)}</span>
                         </div>
-                        
-                        <Badge 
-                          variant={progress >= 80 ? "default" : progress >= 50 ? "secondary" : "outline"}
-                          className="w-full justify-center"
-                        >
-                          {progress >= 100 ? 'Concluída' : progress >= 80 ? 'Quase lá!' : progress >= 50 ? 'No caminho' : 'Iniciando'}
-                        </Badge>
+                        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(goal.deadline).toLocaleDateString('pt-BR')}</span>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                );
-              })}
+                ))
+              )}
             </div>
           </TabsContent>
 
           {/* Histórico */}
           <TabsContent value="history" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Histórico de Performance</h2>
+              <h2 className="text-xl font-semibold">Histórico de Progresso</h2>
               <Dialog open={isProgressModalOpen} onOpenChange={setIsProgressModalOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Atualizar Dados
+                    Adicionar Progresso
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Atualizar Dados Mensais</DialogTitle>
+                    <DialogTitle>Adicionar Progresso Mensal</DialogTitle>
                   </DialogHeader>
                   <Form {...progressForm}>
                     <form onSubmit={progressForm.handleSubmit(handleProgressSubmit)} className="space-y-4">
@@ -990,8 +839,6 @@ export function SocialGrowth() {
                               <SelectContent>
                                 <SelectItem value="instagram">Instagram</SelectItem>
                                 <SelectItem value="facebook">Facebook</SelectItem>
-                                <SelectItem value="tiktok">TikTok</SelectItem>
-                                <SelectItem value="youtube">YouTube</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -1005,20 +852,9 @@ export function SocialGrowth() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Mês</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {Array.from({ length: 12 }, (_, i) => (
-                                    <SelectItem key={i + 1} value={(i + 1).toString()}>
-                                      {new Date(0, i).toLocaleDateString('pt-BR', { month: 'long' })}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Input type="number" min="1" max="12" {...field} />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1030,12 +866,7 @@ export function SocialGrowth() {
                             <FormItem>
                               <FormLabel>Ano</FormLabel>
                               <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder="2025" 
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
+                                <Input type="number" min="2020" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1047,14 +878,9 @@ export function SocialGrowth() {
                         name="followers"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Número de Seguidores</FormLabel>
+                            <FormLabel>Seguidores</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="8500" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
+                              <Input type="number" placeholder="0" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1065,24 +891,24 @@ export function SocialGrowth() {
                         name="sales"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Número de Vendas</FormLabel>
+                            <FormLabel>Vendas</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="125" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
+                              <Input type="number" placeholder="0" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={() => setIsProgressModalOpen(false)}>
                           Cancelar
                         </Button>
-                        <Button type="submit">Atualizar</Button>
+                        <Button 
+                          type="submit" 
+                          disabled={createProgressMutation.isPending}
+                        >
+                          Adicionar
+                        </Button>
                       </div>
                     </form>
                   </Form>
@@ -1092,51 +918,34 @@ export function SocialGrowth() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Dados Mensais</CardTitle>
+                <CardTitle>Progresso Mensal</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Período</th>
-                        <th className="text-left p-2">Instagram</th>
-                        <th className="text-left p-2">Facebook</th>
-                        <th className="text-left p-2">Total Seguidores</th>
-                        <th className="text-left p-2">Vendas</th>
-                        <th className="text-left p-2">Crescimento</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {progress.map((data, index) => {
-                        const previousData = progress[index - 1];
-                        const totalFollowers = (data.followers || 0);
-                        const previousTotal = previousData ? (previousData.followers || 0) : 0;
-                        const growth = previousTotal > 0 
-                          ? ((totalFollowers - previousTotal) / previousTotal * 100).toFixed(1)
-                          : '0.0';
-                        
-                        const date = new Date(data.recordedAt);
-                        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                        
-                        return (
-                          <tr key={data.id} className="border-b">
-                            <td className="p-2 font-medium">{monthNames[date.getMonth()]} {date.getFullYear()}</td>
-                            <td className="p-2">{data.platform === 'instagram' ? formatNumber(data.followers || 0) : '-'}</td>
-                            <td className="p-2">{data.platform === 'facebook' ? formatNumber(data.followers || 0) : '-'}</td>
-                            <td className="p-2 font-medium">{formatNumber(totalFollowers)}</td>
-                            <td className="p-2">{formatNumber(data.sales || 0)}</td>
-                            <td className="p-2">
-                              <span className={`font-medium ${Number(growth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {Number(growth) >= 0 ? '+' : ''}{growth}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                {progressLoading ? (
+                  <div>Carregando histórico...</div>
+                ) : progressData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum progresso registrado ainda
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {progressData.map((progress: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          {getPlatformIcon(progress.platform)}
+                          <div>
+                            <p className="font-medium">{progress.month}/{progress.year}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{progress.platform}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{formatNumber(progress.followers)} seguidores</p>
+                          <p className="text-sm text-muted-foreground">{formatNumber(progress.sales)} vendas</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1145,5 +954,3 @@ export function SocialGrowth() {
     </div>
   );
 }
-
-export default SocialGrowth;
