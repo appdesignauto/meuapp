@@ -282,7 +282,6 @@ router.get('/overview', requireAuth, async (req: any, res) => {
   try {
     console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===');
     const userId = req.user.id;
-    console.log('User ID:', userId);
     
     // Buscar perfis ativos
     const profiles = await db
@@ -312,23 +311,15 @@ router.get('/overview', requireAuth, async (req: any, res) => {
       )
       .orderBy(socialProgress.year, socialProgress.month);
 
-    // Calcular totais e crescimento usando os dados de progresso mais recentes
-    const latestProgressByPlatform = new Map();
+    // Calcular total de seguidores usando dados dos perfis sociais diretamente
+    console.log('Perfis encontrados:', profiles.length);
+    console.log('Dados dos perfis:', profiles);
     
-    // Encontrar o progresso mais recente para cada plataforma
-    recentProgress
-      .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))
-      .forEach(progress => {
-        if (!latestProgressByPlatform.has(progress.platform)) {
-          latestProgressByPlatform.set(progress.platform, progress);
-        }
-      });
+    const totalFollowers = profiles.reduce((sum, profile) => {
+      console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
+      return sum + (profile.currentFollowers || 0);
+    }, 0);
     
-    // Somar seguidores de todas as plataformas usando dados mais recentes
-    const totalFollowers = Array.from(latestProgressByPlatform.values())
-      .reduce((sum, progress) => sum + progress.followers, 0);
-    
-    console.log('Dados mais recentes por plataforma:', Array.from(latestProgressByPlatform.entries()));
     console.log('Total de seguidores calculado:', totalFollowers);
     
     const totalSales = recentProgress.reduce((sum, p) => sum + p.sales, 0);
