@@ -811,11 +811,19 @@ export default function SocialGrowth() {
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Semanal</span>
-                        <span className="text-gray-500 font-medium">--</span>
+                        <span className={`font-medium ${
+                          (overviewData?.monthlyGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{((overviewData?.monthlyGrowth || 0) / 4).toFixed(1)}%
+                        </span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Média Diária</span>
-                        <span className="text-gray-500 font-medium">--</span>
+                        <span className={`font-medium ${
+                          (overviewData?.monthlyGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{((overviewData?.monthlyGrowth || 0) / 30).toFixed(1)}%
+                        </span>
                       </div>
                     </div>
                   </div>
