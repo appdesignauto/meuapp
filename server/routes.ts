@@ -8923,17 +8923,18 @@ app.use('/api/reports-v2', (req, res, next) => {
       let salesGrowth = 0;
       
       if (recentProgress.length > 0) {
-        // Agrupar por mês/ano e calcular totais para cada plataforma separadamente
+        // Agrupar por mês/ano e calcular totais corretamente
         const monthlyTotals = new Map();
         
+        // Primeiro, organizar todos os registros por mês/ano/plataforma
         recentProgress.forEach(record => {
           const key = `${record.year}-${record.month.toString().padStart(2, '0')}`;
           if (!monthlyTotals.has(key)) {
-            monthlyTotals.set(key, new Map()); // Map de plataformas para este mês
+            monthlyTotals.set(key, new Map());
           }
           
           const monthData = monthlyTotals.get(key);
-          // Sempre usar o registro mais recente para cada plataforma
+          // Usar sempre o registro mais recente para cada plataforma neste mês
           if (!monthData.has(record.platform) || 
               new Date(record.createdAt) > new Date(monthData.get(record.platform).createdAt)) {
             monthData.set(record.platform, {
@@ -8944,13 +8945,15 @@ app.use('/api/reports-v2', (req, res, next) => {
           }
         });
         
-        // Calcular totais por mês
+        // Calcular totais por mês (soma de todas as plataformas)
         const monthlyResults = new Map();
         for (const [monthKey, platformData] of monthlyTotals) {
           let totalFollowers = 0;
           let totalSales = 0;
           
+          console.log(`📊 Detalhamento do mês ${monthKey}:`);
           for (const [platform, data] of platformData) {
+            console.log(`  - ${platform}: ${data.followers} seguidores, ${data.sales} vendas`);
             totalFollowers += data.followers;
             totalSales += data.sales;
           }
@@ -8959,40 +8962,42 @@ app.use('/api/reports-v2', (req, res, next) => {
             followers: totalFollowers,
             sales: totalSales
           });
+          console.log(`  📈 Total do mês ${monthKey}: ${totalFollowers} seguidores, ${totalSales} vendas`);
         }
         
         // Ordenar por data (mais recente primeiro)
         const sortedMonths = Array.from(monthlyResults.entries())
           .sort((a, b) => b[0].localeCompare(a[0]));
         
-        console.log(`📅 Meses ordenados:`, sortedMonths.map(([key, data]) => `${key}: ${data.followers} seguidores`));
+        console.log(`📅 Meses ordenados com totais corretos:`, sortedMonths.map(([key, data]) => `${key}: ${data.followers} seguidores`));
         
         if (sortedMonths.length >= 2) {
           const currentMonth = sortedMonths[0][1];
           const previousMonth = sortedMonths[1][1];
           
-          console.log(`📊 Mês atual: ${currentMonth.followers} seguidores, ${currentMonth.sales} vendas`);
-          console.log(`📊 Mês anterior: ${previousMonth.followers} seguidores, ${previousMonth.sales} vendas`);
+          console.log(`📊 COMPARAÇÃO CORRETA:`);
+          console.log(`   Mês atual (${sortedMonths[0][0]}): ${currentMonth.followers} seguidores, ${currentMonth.sales} vendas`);
+          console.log(`   Mês anterior (${sortedMonths[1][0]}): ${previousMonth.followers} seguidores, ${previousMonth.sales} vendas`);
           
-          // Calcular crescimento - usar 0 como base se não há dados anteriores
+          // Calcular crescimento correto
           if (previousMonth.followers > 0) {
             monthlyGrowth = ((currentMonth.followers - previousMonth.followers) / previousMonth.followers) * 100;
+            console.log(`   🧮 Cálculo: (${currentMonth.followers} - ${previousMonth.followers}) / ${previousMonth.followers} * 100 = ${monthlyGrowth.toFixed(1)}%`);
           } else if (currentMonth.followers > 0) {
-            // Se não há dados do mês anterior mas há no atual, considerar crescimento positivo
             monthlyGrowth = 100;
+            console.log(`   🧮 Sem dados anteriores, considerando crescimento de 100%`);
           }
           
           if (previousMonth.sales > 0) {
             salesGrowth = ((currentMonth.sales - previousMonth.sales) / previousMonth.sales) * 100;
           } else if (currentMonth.sales > 0) {
-            // Se não há vendas anteriores mas há no atual, considerar crescimento positivo
             salesGrowth = 100;
           }
         } else if (sortedMonths.length === 1) {
-          // Se há apenas um mês de dados, considerar crescimento positivo se há seguidores
           const currentMonth = sortedMonths[0][1];
           if (currentMonth.followers > 0) {
             monthlyGrowth = 100;
+            console.log(`   🧮 Apenas um mês de dados com ${currentMonth.followers} seguidores, considerando crescimento de 100%`);
           }
           if (currentMonth.sales > 0) {
             salesGrowth = 100;
@@ -9002,6 +9007,7 @@ app.use('/api/reports-v2', (req, res, next) => {
         // Se não há histórico mas há perfis com seguidores, considerar crescimento positivo
         if (currentFollowers > 0) {
           monthlyGrowth = 100;
+          console.log(`   🧮 Sem histórico mas com ${currentFollowers} seguidores, considerando crescimento de 100%`);
         }
         if (currentSales > 0) {
           salesGrowth = 100;
