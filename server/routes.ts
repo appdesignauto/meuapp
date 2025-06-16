@@ -8903,22 +8903,22 @@ app.use('/api/reports-v2', (req, res, next) => {
         .where(eq(socialGoals.userId, userId))
         .orderBy(desc(socialGoals.createdAt));
 
-      // Atualizar cada meta com o valor mais recente do histórico
+      // Atualizar cada meta com o valor atual dos perfis
       const updatedGoals = await Promise.all(goals.map(async (goal) => {
-        // Buscar o progresso mais recente para esta plataforma
-        const latestProgress = await db.select()
-          .from(socialProgress)
+        // Buscar o perfil correspondente para obter o valor atual
+        const profile = await db.select()
+          .from(socialProfiles)
           .where(
             and(
-              eq(socialProgress.userId, userId),
-              eq(socialProgress.platform, goal.platform)
+              eq(socialProfiles.userId, userId),
+              eq(socialProfiles.platform, goal.platform),
+              eq(socialProfiles.isActive, true)
             )
           )
-          .orderBy(desc(socialProgress.createdAt))
           .limit(1);
 
-        if (latestProgress.length > 0) {
-          const currentValue = latestProgress[0].followers;
+        if (profile.length > 0) {
+          const currentValue = profile[0].currentFollowers;
           
           // Atualizar a meta no banco se o valor for diferente
           if (currentValue !== goal.currentValue) {
