@@ -714,7 +714,10 @@ export default function SocialGrowth() {
           <TabsContent value="goals" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Metas de Crescimento</h2>
-              <Dialog open={isGoalModalOpen} onOpenChange={setIsGoalModalOpen}>
+              <Dialog open={isGoalModalOpen} onOpenChange={(open) => {
+                if (!open) resetGoalModal();
+                setIsGoalModalOpen(open);
+              }}>
                 <DialogTrigger asChild>
                   <Button onClick={resetGoalModal}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -735,7 +738,7 @@ export default function SocialGrowth() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Plataforma</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione a plataforma" />
@@ -756,7 +759,7 @@ export default function SocialGrowth() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tipo de Meta</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione o tipo" />
@@ -779,7 +782,12 @@ export default function SocialGrowth() {
                           <FormItem>
                             <FormLabel>Valor da Meta</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="0" {...field} />
+                              <Input 
+                                type="number" 
+                                placeholder="0" 
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
