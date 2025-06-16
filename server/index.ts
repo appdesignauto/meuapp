@@ -9,6 +9,7 @@ import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
 import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
+import socialGrowthRoutes from "./routes/social-growth";
 
 import { Pool } from "pg";
 
@@ -531,6 +532,9 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }
+  
+  // Register social growth routes
+  app.use('/api/social-growth', socialGrowthRoutes);
   
   const server = await registerRoutes(app);
 
