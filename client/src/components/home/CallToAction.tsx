@@ -13,12 +13,12 @@ const CallToAction = () => {
               Acesse milhares de artes exclusivas e tenha o diferencial que seus clientes procuram. Comece hoje mesmo!
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-white px-6 py-3"
-                onClick={() => window.location.href = '/auth?tab=register'}
+              <a 
+                href="/auth?tab=register"
+                className="inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-colors cursor-pointer"
               >
                 Cadastre-se
-              </Button>
+              </a>
               <Button 
                 variant="outline" 
                 className="bg-transparent border border-white hover:bg-white hover:text-neutral-900 text-white px-6 py-3"
