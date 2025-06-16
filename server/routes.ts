@@ -8974,7 +8974,8 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       const progress = await db.select()
         .from(socialProgress)
-        .where(eq(socialProgress.userId, userId));
+        .where(eq(socialProgress.userId, userId))
+        .orderBy(desc(socialProgress.year), desc(socialProgress.month), desc(socialProgress.createdAt));
       
       res.json(progress);
     } catch (error) {
@@ -8991,6 +8992,18 @@ app.use('/api/reports-v2', (req, res, next) => {
         ...req.body,
         userId
       });
+
+      // Validação para impedir dados de meses futuros
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      
+      if (progressData.year > currentYear || 
+          (progressData.year === currentYear && progressData.month > currentMonth)) {
+        return res.status(400).json({ 
+          error: 'Não é possível adicionar dados de meses futuros' 
+        });
+      }
       
       const [newProgress] = await db.insert(socialProgress)
         .values(progressData)
