@@ -9,7 +9,6 @@ import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 import adminRoutes from "./routes/admin";
 import webhookHotmartFixedRoutes from "./routes/webhook-hotmart-fixed";
-import socialGrowthRouter from "./routes/social-growth";
 
 import { Pool } from "pg";
 
@@ -223,10 +222,6 @@ app.use((req, res, next) => {
     
     // Registrar rotas de administração
     app.use('/api', adminRoutes);
-    
-    // Registrar router do social growth ANTES das rotas principais
-    app.use('/api/social-growth', socialGrowthRouter);
-    console.log('✅ Router do social growth registrado com sucesso!');
     
     // 🚀 REGISTRAR WEBHOOK HOTMART AUTOMÁTICO - SISTEMA COMPLETO
     app.use('/webhook', webhookHotmartFixedRoutes);
