@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Fixed social growth goals progress calculation to properly consider existing followers as starting point
+  - Corrected goal creation logic to automatically set initialValue and currentValue based on social profile's currentFollowers
+  - Updated existing goals in database to reflect accurate starting values from social profiles
+  - Progress calculation now properly shows: (current - initial) / (target - initial) instead of starting from zero
+  - System no longer shows 0% progress when user already has existing followers on social networks
 - June 16, 2025: Completed Portuguese localization for social growth dashboard interface
   - Translated all English text to Portuguese: "Followers" → "Seguidores", "Sales" → "Vendas"
   - Added translation functions for goal types, platforms, and date formatting
