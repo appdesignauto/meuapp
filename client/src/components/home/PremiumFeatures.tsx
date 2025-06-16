@@ -49,11 +49,12 @@ const PremiumFeatures = () => {
         </div>
         
         <div className="text-center mt-12">
-          <Link href="/planos">
-            <Button className="bg-white text-primary hover:bg-neutral-100 px-8 py-6 rounded-lg font-medium text-lg shadow-lg">
-              Conheça o Premium
-            </Button>
-          </Link>
+          <Button 
+            className="bg-white text-primary hover:bg-neutral-100 px-8 py-6 rounded-lg font-medium text-lg shadow-lg"
+            onClick={() => window.location.href = 'https://checkout.doppus.app/99960578'}
+          >
+            Conheça o Premium
+          </Button>
         </div>
       </div>
     </section>
