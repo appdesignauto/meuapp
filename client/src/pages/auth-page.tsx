@@ -182,13 +182,21 @@ const AuthPage = () => {
             <TabsList className="grid w-full grid-cols-2 h-12 bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm">
               <TabsTrigger 
                 value="login" 
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium transition-all duration-200"
+                className="font-medium transition-all duration-200"
+                style={{
+                  backgroundColor: activeTab === 'login' ? '#2563eb' : 'transparent',
+                  color: activeTab === 'login' ? 'white' : '#6b7280'
+                }}
               >
                 Entrar
               </TabsTrigger>
               <TabsTrigger 
                 value="register"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium transition-all duration-200"
+                className="font-medium transition-all duration-200"
+                style={{
+                  backgroundColor: activeTab === 'register' ? '#2563eb' : 'transparent',
+                  color: activeTab === 'register' ? 'white' : '#6b7280'
+                }}
               >
                 Cadastrar
               </TabsTrigger>
