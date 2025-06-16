@@ -8902,8 +8902,41 @@ app.use('/api/reports-v2', (req, res, next) => {
         .from(socialGoals)
         .where(eq(socialGoals.userId, userId))
         .orderBy(desc(socialGoals.createdAt));
+
+      // Atualizar cada meta com o valor mais recente do histórico
+      const updatedGoals = await Promise.all(goals.map(async (goal) => {
+        // Buscar o progresso mais recente para esta plataforma
+        const latestProgress = await db.select()
+          .from(socialProgress)
+          .where(
+            and(
+              eq(socialProgress.userId, userId),
+              eq(socialProgress.platform, goal.platform)
+            )
+          )
+          .orderBy(desc(socialProgress.createdAt))
+          .limit(1);
+
+        if (latestProgress.length > 0) {
+          const currentValue = latestProgress[0].followers;
+          
+          // Atualizar a meta no banco se o valor for diferente
+          if (currentValue !== goal.currentValue) {
+            await db.update(socialGoals)
+              .set({ 
+                currentValue: currentValue,
+                updatedAt: new Date()
+              })
+              .where(eq(socialGoals.id, goal.id));
+            
+            return { ...goal, currentValue };
+          }
+        }
+        
+        return goal;
+      }));
       
-      res.json(goals);
+      res.json(updatedGoals);
     } catch (error) {
       console.error('Erro ao buscar metas:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
@@ -8966,7 +8999,7 @@ app.use('/api/reports-v2', (req, res, next) => {
       // Atualizar automaticamente as metas correspondentes
       await db.update(socialGoals)
         .set({ 
-          currentValue: progressData.followersCount,
+          currentValue: progressData.followers,
           updatedAt: new Date()
         })
         .where(
