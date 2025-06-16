@@ -41,7 +41,7 @@ const goalSchema = z.object({
   platform: z.string().min(1, 'Selecione uma plataforma'),
   goalType: z.string().min(1, 'Selecione o tipo de meta'),
   targetValue: z.coerce.number().min(1, 'Valor da meta deve ser maior que 0'),
-  deadline: z.string().min(1, 'Data limite é obrigatória'),
+  deadline: z.string().min(1, 'Data limite é obrigatória').transform((str) => new Date(str)),
 });
 
 const progressSchema = z.object({
