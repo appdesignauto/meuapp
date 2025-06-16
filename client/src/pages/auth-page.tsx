@@ -154,7 +154,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-blue-50">
       {/* Background decorativo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
@@ -182,13 +182,13 @@ const AuthPage = () => {
             <TabsList className="grid w-full grid-cols-2 h-12 bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm">
               <TabsTrigger 
                 value="login" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white font-medium transition-all duration-200"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium transition-all duration-200"
               >
                 Entrar
               </TabsTrigger>
               <TabsTrigger 
                 value="register"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white font-medium transition-all duration-200"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium transition-all duration-200"
               >
                 Cadastrar
               </TabsTrigger>
@@ -282,7 +282,7 @@ const AuthPage = () => {
                       
                       <Button 
                         type="submit" 
-                        className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" 
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" 
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -495,7 +495,7 @@ const AuthPage = () => {
 
                       <Button 
                         type="submit" 
-                        className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
