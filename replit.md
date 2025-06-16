@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Fixed complete social growth system to consistently use most recent historical data across all components
+  - Fixed dashboard overview to correctly show July (20,000) total followers using most recent historical data with +100% growth
+  - Updated individual platform cards (Instagram, Facebook) to display historical values instead of static profile data
+  - Corrected active goals section to use real-time historical values for progress calculation and display
+  - Enhanced getCurrentValueFromHistory function to intelligently find latest month data for each platform
+  - All dashboard components now follow single source of truth: historical progress data takes precedence over profile data
+  - System maintains data consistency: overview, individual platforms, and goals all reflect the same historical baseline (20,000 followers)
 - June 16, 2025: Fixed social growth overview calculation to use most recent month data and corrected duplicate endpoint issues
   - Modified overview endpoint to automatically detect and use the most recent month available in progress history
   - Replaced hardcoded June/May comparison with dynamic latest month vs previous month calculation

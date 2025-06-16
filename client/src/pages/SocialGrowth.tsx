@@ -419,6 +419,26 @@ export default function SocialGrowth() {
     }
   };
 
+  // Função para obter valor atual baseado no histórico mais recente
+  const getCurrentValueFromHistory = (goalPlatform: string, goalType: string) => {
+    if (!progressData || progressData.length === 0) return 0;
+    
+    // Filtrar dados por plataforma
+    const platformProgress = progressData.filter((p: any) => p.platform === goalPlatform);
+    if (platformProgress.length === 0) return 0;
+    
+    // Encontrar o registro mais recente
+    const latest = platformProgress.reduce((latest: any, current: any) => {
+      if (!latest) return current;
+      if (current.year > latest.year) return current;
+      if (current.year === latest.year && current.month > latest.month) return current;
+      return latest;
+    });
+    
+    // Retornar o valor baseado no tipo de meta
+    return goalType === 'followers' ? (latest.followers || 0) : (latest.sales || 0);
+  };
+
   const calculateProgress = (initial: number, current: number, target: number) => {
     if (target === 0) return 0;
     // Cálculo simples: valor atual / valor da meta * 100
@@ -459,14 +479,46 @@ export default function SocialGrowth() {
     return translations[platform as keyof typeof translations] || platform;
   };
 
-  // Funções para obter dados reais dos perfis
+  // Funções para obter dados reais dos perfis usando histórico mais recente
   const getInstagramFollowers = () => {
+    // Usar dados do histórico mais recente primeiro
+    if (progressData && progressData.length > 0) {
+      const instagramProgress = progressData.filter((p: any) => p.platform === 'instagram');
+      if (instagramProgress.length > 0) {
+        // Encontrar o registro mais recente
+        const latest = instagramProgress.reduce((latest: any, current: any) => {
+          if (!latest) return current;
+          if (current.year > latest.year) return current;
+          if (current.year === latest.year && current.month > latest.month) return current;
+          return latest;
+        });
+        return latest.followers || 0;
+      }
+    }
+    
+    // Fallback para dados do perfil se não há histórico
     if (!profiles || profiles.length === 0) return 0;
     const instagramProfile = profiles.find((p: any) => p.platform === 'instagram');
     return instagramProfile?.currentFollowers || 0;
   };
 
   const getFacebookFollowers = () => {
+    // Usar dados do histórico mais recente primeiro
+    if (progressData && progressData.length > 0) {
+      const facebookProgress = progressData.filter((p: any) => p.platform === 'facebook');
+      if (facebookProgress.length > 0) {
+        // Encontrar o registro mais recente
+        const latest = facebookProgress.reduce((latest: any, current: any) => {
+          if (!latest) return current;
+          if (current.year > latest.year) return current;
+          if (current.year === latest.year && current.month > latest.month) return current;
+          return latest;
+        });
+        return latest.followers || 0;
+      }
+    }
+    
+    // Fallback para dados do perfil se não há histórico
     if (!profiles || profiles.length === 0) return 0;
     const facebookProfile = profiles.find((p: any) => p.platform === 'facebook');
     return facebookProfile?.currentFollowers || 0;
@@ -818,25 +870,25 @@ export default function SocialGrowth() {
                           </div>
                         </div>
                         <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
-                          calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 100
+                          calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 100
                             ? 'bg-green-100 text-green-700'
-                            : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 75
+                            : calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 75
                             ? 'bg-blue-100 text-blue-700'
-                            : calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue) >= 50
+                            : calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue) >= 50
                             ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%
+                          {Math.round(calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue))}%
                         </span>
                       </div>
                       
                       <div className="space-y-2">
                         <Progress 
-                          value={calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue)} 
+                          value={calculateProgress(goal.initialValue || 0, getCurrentValueFromHistory(goal.platform, goal.goalType), goal.targetValue)} 
                           className="h-2"
                         />
                         <div className="flex justify-between text-xs text-gray-500">
-                          <span>{formatNumber(goal.currentValue || 0)}</span>
+                          <span>{formatNumber(getCurrentValueFromHistory(goal.platform, goal.goalType))}</span>
                           <span>{formatNumber(goal.targetValue)}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
