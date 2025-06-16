@@ -892,7 +892,7 @@ export default function SocialGrowth() {
                           <span>Progresso</span>
                           <span>{Math.round(calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue))}%</span>
                         </div>
-                        <Progress value={calculateProgress(goal.currentValue || 0, goal.targetValue)} />
+                        <Progress value={calculateProgress(goal.initialValue || 0, goal.currentValue || 0, goal.targetValue)} />
                         <div className="flex justify-between text-sm text-muted-foreground">
                           <span>{formatNumber(goal.currentValue || 0)}</span>
                           <span>{formatNumber(goal.targetValue)}</span>
