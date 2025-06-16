@@ -344,11 +344,7 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     const connectedNetworks = profiles.length;
     const activeGoals = goals.filter(goal => new Date(goal.deadline) > currentDate).length;
 
-    // Calcular crescimento mensal usando SEMPRE o mês mais recente disponível
-    console.log(`=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===`);
-    console.log(`Todos os dados de progresso:`, recentProgress);
-    
-    // Para cada plataforma, buscar os valores mais recentes disponíveis
+    // NOVO CÁLCULO: Para cada plataforma individualmente
     const platforms = Array.from(new Set(recentProgress.map(p => p.platform)));
     
     let currentFollowers = 0;
@@ -356,27 +352,20 @@ router.get('/overview', requireAuth, async (req: any, res) => {
     let currentSales = 0;
     let previousSales = 0;
 
-    // Calcular o total somando os dados mais recentes de cada plataforma
+    // Para cada plataforma, buscar os 2 dados mais recentes
     platforms.forEach(platform => {
-      // Para cada plataforma, buscar os 2 dados mais recentes
       const platformData = recentProgress
         .filter(p => p.platform === platform)
         .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month));
       
       if (platformData.length >= 2) {
-        // Se tem pelo menos 2 registros, usar os 2 mais recentes
         currentFollowers += platformData[0].followers;
         currentSales += platformData[0].sales;
         previousFollowers += platformData[1].followers;
         previousSales += platformData[1].sales;
-        
-        console.log(`- ${platform.toUpperCase()}: atual=${platformData[0].followers} (${platformData[0].month}/${platformData[0].year}), anterior=${platformData[1].followers} (${platformData[1].month}/${platformData[1].year})`);
       } else if (platformData.length === 1) {
-        // Se tem apenas 1 registro, usar ele como atual e 0 como anterior
         currentFollowers += platformData[0].followers;
         currentSales += platformData[0].sales;
-        
-        console.log(`- ${platform.toUpperCase()}: atual=${platformData[0].followers} (${platformData[0].month}/${platformData[0].year}), anterior=0 (sem dados)`);
       }
     });
 
