@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 16, 2025: Fixed social growth dashboard total calculation and removed hardcoded growth values
+  - Corrected total followers calculation to use socialProfiles data directly instead of empty progress data
+  - Replaced hardcoded growth percentages (+73%, +18%, +334) with dynamic API data from monthlyGrowth
+  - Total now correctly displays 10,000 followers from Instagram profile instead of 0
+  - Growth indicators show 0% when no progress history exists (authentic data) instead of fake percentages
+  - Enhanced system to show green for positive growth, red for negative, and proper formatting
 - June 16, 2025: Implemented professional number formatting across all social growth forms
   - Added formatNumberInput and parseNumberInput functions for consistent number display
   - Applied automatic formatting to "Seguidores Atuais" field in profile forms (10000 → 10.000)

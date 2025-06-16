@@ -749,8 +749,12 @@ export default function SocialGrowth() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        +73%
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        (overviewData?.monthlyGrowth || 0) >= 0 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{overviewData?.monthlyGrowth || 0}%
                       </span>
                     </div>
                   </div>
@@ -763,15 +767,19 @@ export default function SocialGrowth() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Mensal</span>
-                        <span className="text-orange-600 font-medium">+73%</span>
+                        <span className={`font-medium ${
+                          (overviewData?.monthlyGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(overviewData?.monthlyGrowth || 0) >= 0 ? '+' : ''}{overviewData?.monthlyGrowth || 0}%
+                        </span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Crescimento Semanal</span>
-                        <span className="text-orange-600 font-medium">+18%</span>
+                        <span className="text-gray-500 font-medium">--</span>
                       </div>
                       <div className="flex justify-between text-gray-600">
                         <span>Média Diária</span>
-                        <span className="text-orange-600 font-medium">+334</span>
+                        <span className="text-gray-500 font-medium">--</span>
                       </div>
                     </div>
                   </div>
