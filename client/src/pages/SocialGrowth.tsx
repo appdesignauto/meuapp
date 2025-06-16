@@ -1150,7 +1150,7 @@ export default function SocialGrowth() {
                 </Card>
 
                 {/* Vendas Acumuladas */}
-                <Card className="p-4 md:p-6 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50 sm:col-span-2 lg:col-span-1">
+                <Card className="p-4 md:p-6 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
                   <div className="flex items-center justify-center mb-3 md:mb-4">
                     <div className="w-10 h-10 md:w-12 md:h-12 bg-green-500 rounded-full flex items-center justify-center">
                       <ShoppingCart className="h-5 w-5 md:h-6 md:w-6 text-white" />
