@@ -9207,28 +9207,21 @@ app.use('/api/reports-v2', (req, res, next) => {
     try {
       const userId = req.user.id;
       
-      // Buscar total de seguidores dos dados mais recentes de progresso
+      // Buscar perfis ativos e usar dados dos perfis diretamente
       const profiles = await db.select()
         .from(socialProfiles)
-        .where(eq(socialProfiles.userId, userId));
+        .where(and(eq(socialProfiles.userId, userId), eq(socialProfiles.isActive, true)));
       
-      // Buscar os dados mais recentes de cada plataforma
-      const latestProgressByPlatform = await Promise.all(
-        profiles.map(async (profile) => {
-          const latestProgress = await db.select()
-            .from(socialProgress)
-            .where(and(
-              eq(socialProgress.userId, userId),
-              eq(socialProgress.platform, profile.platform)
-            ))
-            .orderBy(desc(socialProgress.year), desc(socialProgress.month), desc(socialProgress.createdAt))
-            .limit(1);
-          
-          return latestProgress[0]?.followers || 0;
-        })
-      );
+      console.log('=== OVERVIEW CORRETO - Perfis encontrados:', profiles.length);
+      console.log('Dados dos perfis:', profiles);
       
-      const totalFollowers = latestProgressByPlatform.reduce((sum, followers) => sum + followers, 0);
+      // Calcular total de seguidores usando dados dos perfis sociais diretamente
+      const totalFollowers = profiles.reduce((sum, profile) => {
+        console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
+        return sum + (profile.currentFollowers || 0);
+      }, 0);
+      
+      console.log('Total de seguidores calculado:', totalFollowers);
       
       // Buscar metas ativas
       const goals = await db.select()

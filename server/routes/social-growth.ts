@@ -280,7 +280,7 @@ router.post('/progress', requireAuth, async (req: any, res) => {
 // GET /api/social-growth/overview - Dados resumidos para dashboard
 router.get('/overview', requireAuth, async (req: any, res) => {
   try {
-    console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===');
+    console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO - VERSÃO CORRIGIDA ===');
     const userId = req.user.id;
     
     // Buscar perfis ativos
