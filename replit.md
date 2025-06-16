@@ -135,6 +135,12 @@ The system uses PostgreSQL with the following key entities:
   - Optimized CallToAction component button for faster response
   - Enhanced mobile menu registration button with immediate redirection
   - All registration buttons now use direct navigation instead of React Router for improved performance
+- June 16, 2025: Completed email template management system integration in admin panel
+  - Added "Gerenciar E-mails" button in Marketing section of admin dashboard
+  - Connected EmailTemplatesTab component to main dashboard with proper routing
+  - Removed Analytics from Marketing section (kept only in Configurações as requested)
+  - System now allows admins to create, edit, and manage email templates through Marketing > Gerenciar E-mails
+  - Full CRUD operations available for email templates with Brevo service integration
 - June 16, 2025: Updated quick access section on homepage by replacing "Meus Designs Recentes" with Social Growth shortcut
   - Removed "Meus Designs Recentes" from quick access shortcuts  
   - Added "Social Growth" shortcut with TrendingUp icon and emerald color scheme
