@@ -9481,6 +9481,243 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // ============================================================================
+  // ROTAS DE GERENCIAMENTO DE TEMPLATES DE E-MAIL
+  // ============================================================================
+
+  // GET /api/email-templates - Listar todos os templates
+  app.get('/api/email-templates', isAdmin, async (req, res) => {
+    try {
+      const templates = await db.execute(sql`
+        SELECT * FROM "emailTemplates" 
+        ORDER BY "createdAt" DESC
+      `);
+      
+      res.json(templates.rows);
+    } catch (error) {
+      console.error('Erro ao buscar templates de e-mail:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // GET /api/email-templates/:id - Buscar template específico
+  app.get('/api/email-templates/:id', isAdmin, async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      
+      const template = await db.execute(sql`
+        SELECT * FROM "emailTemplates" 
+        WHERE "id" = ${templateId}
+      `);
+      
+      if (template.rows.length === 0) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json(template.rows[0]);
+    } catch (error) {
+      console.error('Erro ao buscar template:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/email-templates - Criar novo template
+  app.post('/api/email-templates', isAdmin, async (req, res) => {
+    try {
+      const { name, subject, htmlContent, textContent, templateKey, variables, isActive } = req.body;
+      
+      // Validar campos obrigatórios
+      if (!name || !subject || !htmlContent || !templateKey) {
+        return res.status(400).json({ 
+          error: 'Campos obrigatórios: name, subject, htmlContent, templateKey' 
+        });
+      }
+      
+      // Verificar se templateKey já existe
+      const existingTemplate = await db.execute(sql`
+        SELECT "id" FROM "emailTemplates" 
+        WHERE "templateKey" = ${templateKey}
+      `);
+      
+      if (existingTemplate.rows.length > 0) {
+        return res.status(400).json({ 
+          error: 'Chave do template já existe' 
+        });
+      }
+      
+      const result = await db.execute(sql`
+        INSERT INTO "emailTemplates" 
+        ("name", "subject", "htmlContent", "textContent", "templateKey", "variables", "isActive")
+        VALUES (${name}, ${subject}, ${htmlContent}, ${textContent || ''}, ${templateKey}, ${JSON.stringify(variables || [])}, ${isActive !== false})
+        RETURNING *
+      `);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao criar template:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // PUT /api/email-templates/:id - Atualizar template
+  app.put('/api/email-templates/:id', isAdmin, async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const { name, subject, htmlContent, textContent, templateKey, variables, isActive } = req.body;
+      
+      // Validar campos obrigatórios
+      if (!name || !subject || !htmlContent || !templateKey) {
+        return res.status(400).json({ 
+          error: 'Campos obrigatórios: name, subject, htmlContent, templateKey' 
+        });
+      }
+      
+      // Verificar se templateKey já existe em outro template
+      const existingTemplate = await db.execute(sql`
+        SELECT "id" FROM "emailTemplates" 
+        WHERE "templateKey" = ${templateKey} AND "id" != ${templateId}
+      `);
+      
+      if (existingTemplate.rows.length > 0) {
+        return res.status(400).json({ 
+          error: 'Chave do template já existe em outro template' 
+        });
+      }
+      
+      const result = await db.execute(sql`
+        UPDATE "emailTemplates" 
+        SET "name" = ${name}, 
+            "subject" = ${subject}, 
+            "htmlContent" = ${htmlContent}, 
+            "textContent" = ${textContent || ''}, 
+            "templateKey" = ${templateKey}, 
+            "variables" = ${JSON.stringify(variables || [])}, 
+            "isActive" = ${isActive !== false},
+            "updatedAt" = CURRENT_TIMESTAMP
+        WHERE "id" = ${templateId}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao atualizar template:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // DELETE /api/email-templates/:id - Excluir template
+  app.delete('/api/email-templates/:id', isAdmin, async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      
+      const result = await db.execute(sql`
+        DELETE FROM "emailTemplates" 
+        WHERE "id" = ${templateId}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json({ message: 'Template excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir template:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/email-templates/:id/test - Testar envio de template
+  app.post('/api/email-templates/:id/test', isAdmin, async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const { testEmail, testData } = req.body;
+      
+      if (!testEmail) {
+        return res.status(400).json({ error: 'E-mail de teste obrigatório' });
+      }
+      
+      // Buscar template
+      const template = await db.execute(sql`
+        SELECT * FROM "emailTemplates" 
+        WHERE "id" = ${templateId}
+      `);
+      
+      if (template.rows.length === 0) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      const templateData = template.rows[0];
+      
+      // Substituir variáveis no conteúdo
+      let htmlContent = templateData.htmlContent;
+      let textContent = templateData.textContent || '';
+      let subject = templateData.subject;
+      
+      if (testData) {
+        Object.keys(testData).forEach(key => {
+          const value = testData[key];
+          htmlContent = htmlContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
+          textContent = textContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
+          subject = subject.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        });
+      }
+      
+      // Importar EmailService dinamicamente para evitar erro de importação circular
+      const { EmailService } = await import('./services/email-service');
+      const emailService = new EmailService();
+      
+      // Enviar e-mail de teste
+      const result = await emailService.sendEmail(
+        { name: 'Suporte Design Auto', email: 'suporte@designauto.com.br' },
+        [{ email: testEmail, name: 'Teste' }],
+        `[TESTE] ${subject}`,
+        htmlContent,
+        textContent
+      );
+      
+      if (result.success) {
+        res.json({ 
+          message: 'E-mail de teste enviado com sucesso',
+          messageId: result.messageId 
+        });
+      } else {
+        res.status(500).json({ 
+          error: 'Erro ao enviar e-mail de teste',
+          details: result.error 
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao testar template:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // GET /api/email-templates/by-key/:key - Buscar template por chave
+  app.get('/api/email-templates/by-key/:key', async (req, res) => {
+    try {
+      const templateKey = req.params.key;
+      
+      const template = await db.execute(sql`
+        SELECT * FROM "emailTemplates" 
+        WHERE "templateKey" = ${templateKey} AND "isActive" = true
+      `);
+      
+      if (template.rows.length === 0) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json(template.rows[0]);
+    } catch (error) {
+      console.error('Erro ao buscar template por chave:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
 
 
   return httpServer;

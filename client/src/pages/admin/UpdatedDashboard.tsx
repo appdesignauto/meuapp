@@ -7,6 +7,7 @@ import CollaborationRequestsManagement from '@/components/admin/CollaborationReq
 import AffiliateRequestsManagement from '@/components/admin/AffiliateRequestsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
+import EmailTemplatesTab from '@/components/admin/EmailTemplatesTab';
 
 import SimpleSubscriptionDashboard from '@/components/admin/SimpleSubscriptionDashboard';
 import PlatformMetrics from '@/components/admin/PlatformMetrics';
