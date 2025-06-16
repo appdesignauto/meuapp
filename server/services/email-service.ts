@@ -126,23 +126,82 @@ class EmailService {
   }
 
   /**
-   * Obtém o logo oficial atual do sistema
+   * Converte logo PNG para WebP otimizado para e-mail
+   */
+  private async optimizeLogoForEmail(pngPath: string): Promise<string> {
+    try {
+      const sharp = require('sharp');
+      const fs = require('fs').promises;
+      const path = require('path');
+      
+      // Construir caminhos
+      const fullPngPath = path.join(process.cwd(), 'public', pngPath.replace(/^\//, ''));
+      const webpPath = pngPath.replace('.png', '_email.webp');
+      const fullWebpPath = path.join(process.cwd(), 'public', webpPath.replace(/^\//, ''));
+      
+      // Verificar se WebP otimizado já existe
+      try {
+        await fs.access(fullWebpPath);
+        this.log(`✅ Logo WebP para e-mail já existe: ${webpPath}`);
+        return `https://designauto.com.br${webpPath}`;
+      } catch {
+        // WebP não existe, continuar com conversão
+      }
+      
+      // Verificar se PNG original existe
+      try {
+        await fs.access(fullPngPath);
+      } catch {
+        this.log(`⚠️ Arquivo PNG não encontrado: ${fullPngPath}`);
+        return `https://designauto.com.br${pngPath}`;
+      }
+      
+      // Converter para WebP - formato ideal para e-mails modernos
+      await sharp(fullPngPath)
+        .resize(250, null, { // Largura máxima 250px para e-mails
+          withoutEnlargement: true,
+          fit: 'inside'
+        })
+        .webp({ 
+          quality: 90, // Alta qualidade com boa compressão
+          lossless: false, // Permite melhor compressão
+          force: true // Garantir formato WebP
+        })
+        .toFile(fullWebpPath);
+      
+      this.log(`✅ Logo convertido para WebP: ${webpPath}`);
+      return `https://designauto.com.br${webpPath}`;
+      
+    } catch (error) {
+      this.log(`❌ Erro na conversão para WebP: ${error instanceof Error ? error.message : String(error)}`);
+      // Retornar PNG original se conversão falhar
+      return `https://designauto.com.br${pngPath}`;
+    }
+  }
+
+  /**
+   * Obtém o logo oficial atual do sistema otimizado para e-mail
    */
   private async getOfficialLogo(): Promise<string> {
     try {
       const settings = await db.select().from(siteSettings).limit(1);
       if (settings.length > 0 && settings[0].logoUrl) {
-        // Construir URL completa para usar nos e-mails
         const logoUrl = settings[0].logoUrl;
-        // Remove timestamp parameter if present for consistency
         const cleanLogoUrl = logoUrl.split('?')[0];
+        
+        // Se for PNG, converter para WebP otimizado para e-mail
+        if (cleanLogoUrl.endsWith('.png')) {
+          return await this.optimizeLogoForEmail(cleanLogoUrl);
+        }
+        
         return `https://designauto.com.br${cleanLogoUrl}`;
       }
-      // Fallback para logo padrão
-      return 'https://designauto.com.br/images/logos/logo_1745019394541_8q4daq.png';
+      
+      // Fallback: converter logo padrão para WebP
+      return await this.optimizeLogoForEmail('/images/logos/logo_1745019394541_8q4daq.png');
     } catch (error) {
       this.log(`⚠️ Erro ao obter logo oficial: ${error instanceof Error ? error.message : String(error)}`);
-      return 'https://designauto.com.br/images/logos/logo_1745019394541_8q4daq.png';
+      return await this.optimizeLogoForEmail('/images/logos/logo_1745019394541_8q4daq.png');
     }
   }
 
