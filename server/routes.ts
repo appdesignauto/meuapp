@@ -9215,7 +9215,109 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
-  // Overview endpoint moved to /server/routes/social-growth.ts
+  // GET /api/social-growth/overview - Buscar dados de visão geral
+  app.get('/api/social-growth/overview', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Buscar perfis ativos e usar dados dos perfis diretamente
+      const profiles = await db.select()
+        .from(socialProfiles)
+        .where(and(eq(socialProfiles.userId, userId), eq(socialProfiles.isActive, true)));
+      
+      console.log('=== OVERVIEW CORRETO - Perfis encontrados:', profiles.length);
+      console.log('Dados dos perfis:', profiles);
+      
+      // Calcular total de seguidores usando dados mais recentes do progresso ou perfis como fallback
+      let totalFollowers = 0;
+      
+      // Buscar progresso recente primeiro
+      const recentProgressForTotal = await db.select()
+        .from(socialProgress)
+        .where(eq(socialProgress.userId, userId));
+      
+      // Primeiro, tentar usar dados mais recentes do progresso
+      const latestProgressByPlatform = new Map();
+      recentProgressForTotal.forEach(p => {
+        const key = p.platform;
+        const current = latestProgressByPlatform.get(key);
+        if (!current || (p.year > current.year) || (p.year === current.year && p.month > current.month)) {
+          latestProgressByPlatform.set(key, p);
+        }
+      });
+      
+      // Se há dados de progresso recentes, usar eles
+      if (latestProgressByPlatform.size > 0) {
+        totalFollowers = Array.from(latestProgressByPlatform.values()).reduce((sum, p) => sum + p.followers, 0);
+        console.log('🔥 NOVO CÁLCULO - Total usando progresso mais recente:', totalFollowers);
+      } else {
+        // Fallback para dados dos perfis se não há progresso
+        totalFollowers = profiles.reduce((sum, profile) => {
+          console.log(`Perfil ${profile.platform}: ${profile.currentFollowers} seguidores`);
+          return sum + (profile.currentFollowers || 0);
+        }, 0);
+        console.log('🔥 NOVO CÁLCULO - Total usando dados dos perfis:', totalFollowers);
+      }
+      
+      // Buscar metas ativas
+      const goals = await db.select()
+        .from(socialGoals)
+        .where(and(
+          eq(socialGoals.userId, userId),
+          eq(socialGoals.isActive, true)
+        ));
+      
+      // Buscar progresso recente
+      const recentProgress = await db.select()
+        .from(socialProgress)
+        .where(eq(socialProgress.userId, userId));
+      
+      // Calcular crescimento mensal (maio 100k → junho 15k = -85%)
+      console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===');
+      console.log('Todos os dados de progresso:', recentProgress);
+      
+      // Buscar dados de junho 2025 (mais recente) e maio 2025 (anterior)
+      const juneData = recentProgress.filter(p => p.year === 2025 && p.month === 6);
+      const mayData = recentProgress.filter(p => p.year === 2025 && p.month === 5);
+      
+      console.log('Dados de junho 2025:', juneData);
+      console.log('Dados de maio 2025:', mayData);
+      
+      const thisMonthFollowers = juneData.reduce((sum, p) => sum + (p.followers || 0), 0);
+      const lastMonthFollowers = mayData.reduce((sum, p) => sum + (p.followers || 0), 0);
+      
+      console.log(`Seguidores atual (junho): ${thisMonthFollowers}, anterior (maio): ${lastMonthFollowers}`);
+      
+      const monthlyGrowth = lastMonthFollowers > 0 
+        ? Math.round(((thisMonthFollowers - lastMonthFollowers) / lastMonthFollowers) * 100)
+        : 0;
+        
+      console.log(`Crescimento calculado: ${monthlyGrowth}%`);
+      
+      // Calcular vendas (dados reais baseados no progresso)
+      const totalSales = recentProgress.reduce((sum, p) => sum + (p.sales || 0), 0);
+      const thisMonthSales = juneData.reduce((sum, p) => sum + (p.sales || 0), 0);
+      const lastMonthSales = mayData.reduce((sum, p) => sum + (p.sales || 0), 0);
+      
+      const salesGrowth = lastMonthSales > 0 
+        ? Math.round(((thisMonthSales - lastMonthSales) / lastMonthSales) * 100)
+        : 0;
+      
+      console.log(`Vendas atual (junho): ${thisMonthSales}, anterior (maio): ${lastMonthSales}`);
+      console.log(`Crescimento vendas: ${salesGrowth}%`);
+      
+      res.json({
+        totalFollowers,
+        monthlyGrowth,
+        totalSales,
+        salesGrowth,
+        activeGoals: goals.length
+      });
+    } catch (error) {
+      console.error('Erro ao buscar visão geral:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
 
   return httpServer;
 }
