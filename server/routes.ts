@@ -8931,6 +8931,19 @@ app.use('/api/reports-v2', (req, res, next) => {
             
             return { ...goal, currentValue };
           }
+        } else {
+          // Se não há perfil, resetar meta para 0
+          if (goal.currentValue !== 0) {
+            await db.update(socialGoals)
+              .set({ 
+                currentValue: 0,
+                initialValue: 0,
+                updatedAt: new Date()
+              })
+              .where(eq(socialGoals.id, goal.id));
+            
+            return { ...goal, currentValue: 0, initialValue: 0 };
+          }
         }
         
         return goal;
