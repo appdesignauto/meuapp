@@ -144,11 +144,12 @@ The system uses PostgreSQL with the following key entities:
   - Added comprehensive "Metas Ativas" section to main dashboard showing up to 4 goals with progress bars
   - Implemented color-coded progress indicators (green: 100%+, blue: 75%+, yellow: 50%+, gray: <50%)
   - Applied modern design patterns throughout: shadow-sm borders, ghost button variants, improved typography
-- June 16, 2025: Fixed social growth total followers calculation to use authentic recent data instead of outdated profile data
-  - Corrected totalFollowers calculation to fetch latest progress data from socialProgress table
-  - Total followers now displays current month values (June 2025: 20,000) instead of static profile values (10,000)
-  - Enhanced system accuracy: growth calculations and total counts now reflect real user progress data
-  - Added debug logging for total followers calculation ensuring data authenticity
+- June 16, 2025: Implemented automatic progress history creation when adding social profiles
+  - When user creates a social profile with follower count, system automatically creates corresponding progress entry
+  - Progress history now serves as single source of truth for dashboard calculations
+  - Total followers calculation prioritizes latest progress data over static profile values
+  - Fixed calculation to display current month values (June 2025: 20,000) instead of outdated profile data (10,000)
+  - Enhanced system with proper fallback logic: progress data first, profile data as backup
 - June 16, 2025: Enhanced social growth tracking with comprehensive data validation and loss detection
   - Implemented chronological ordering: progress history displays most recent entries first (year DESC, month DESC, createdAt DESC)
   - Added date validation preventing future month data entry in both frontend (Zod schema) and backend (server validation)

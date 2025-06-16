@@ -8879,9 +8879,59 @@ app.use('/api/reports-v2', (req, res, next) => {
         userId
       });
       
+      // Criar perfil social
       const [newProfile] = await db.insert(socialProfiles)
         .values(profileData)
         .returning();
+      
+      // Automaticamente criar entrada no histórico de progresso com dados iniciais
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1; // Janeiro = 1
+      const currentYear = currentDate.getFullYear();
+      
+      const progressData = {
+        userId: userId,
+        platform: profileData.platform,
+        month: currentMonth,
+        year: currentYear,
+        followers: profileData.currentFollowers || 0,
+        sales: 0, // Vendas começam em 0
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      // Verificar se já existe entrada para este mês/ano/plataforma
+      const existingProgress = await db.select()
+        .from(socialProgress)
+        .where(
+          and(
+            eq(socialProgress.userId, userId),
+            eq(socialProgress.platform, profileData.platform),
+            eq(socialProgress.month, currentMonth),
+            eq(socialProgress.year, currentYear)
+          )
+        );
+      
+      if (existingProgress.length === 0) {
+        await db.insert(socialProgress).values(progressData);
+        console.log(`✅ Histórico criado automaticamente para ${profileData.platform}: ${profileData.currentFollowers} seguidores`);
+      } else {
+        // Atualizar entrada existente se necessário
+        await db.update(socialProgress)
+          .set({ 
+            followers: profileData.currentFollowers || 0,
+            updatedAt: new Date()
+          })
+          .where(
+            and(
+              eq(socialProgress.userId, userId),
+              eq(socialProgress.platform, profileData.platform),
+              eq(socialProgress.month, currentMonth),
+              eq(socialProgress.year, currentYear)
+            )
+          );
+        console.log(`✅ Histórico atualizado para ${profileData.platform}: ${profileData.currentFollowers} seguidores`);
+      }
       
       res.json(newProfile);
     } catch (error) {
