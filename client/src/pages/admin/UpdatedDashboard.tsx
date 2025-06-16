@@ -4055,9 +4055,14 @@ const AdminDashboard = () => {
               </TabsContent>
             )}
             
-            {/* Gerenciamento de Ferramentas */}
+            {/* Analytics e Rastreamento */}
             <TabsContent value="analytics" className="mt-0">
               <AnalyticsSettings />
+            </TabsContent>
+            
+            {/* Gerenciamento de E-mails */}
+            <TabsContent value="emailTemplates" className="mt-0">
+              <EmailTemplatesTab />
             </TabsContent>
             
             <TabsContent value="ferramentas" className="mt-0">
