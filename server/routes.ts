@@ -8853,6 +8853,146 @@ app.use('/api/reports-v2', (req, res, next) => {
   // ROTAS DE CRESCIMENTO SOCIAL
   // =============================================
 
+  // GET /api/social-growth/overview - Dados resumidos para dashboard
+  app.get('/api/social-growth/overview', isAuthenticated, async (req, res) => {
+    try {
+      console.log('=== SOCIAL GROWTH OVERVIEW DEBUG INICIADO ===');
+      const userId = req.user.id;
+      
+      // Buscar perfis ativos
+      const profiles = await db.select()
+        .from(socialProfiles)
+        .where(and(
+          eq(socialProfiles.userId, userId),
+          eq(socialProfiles.isActive, true)
+        ))
+        .orderBy(socialProfiles.createdAt);
+      
+      console.log(`📊 Perfis encontrados: ${profiles.length}`);
+      profiles.forEach(p => console.log(`- ${p.platform}: ${p.currentFollowers} seguidores`));
+      
+      // Buscar histórico de progresso mais recente
+      const recentProgress = await db.select()
+        .from(socialProgress)
+        .where(eq(socialProgress.userId, userId))
+        .orderBy(desc(socialProgress.year), desc(socialProgress.month), desc(socialProgress.createdAt));
+      
+      console.log(`📈 Registros de progresso encontrados: ${recentProgress.length}`);
+      
+      // Buscar metas ativas
+      const goals = await db.select()
+        .from(socialGoals)
+        .where(eq(socialGoals.userId, userId))
+        .orderBy(desc(socialGoals.createdAt));
+      
+      console.log(`🎯 Metas encontradas: ${goals.length}`);
+      
+      // Função para obter valor atual do histórico mais recente
+      function getCurrentValueFromHistory(platform: string) {
+        const platformProgress = recentProgress.filter(p => p.platform === platform);
+        if (platformProgress.length > 0) {
+          // Pegar o mais recente (primeiro na lista ordenada)
+          const latestProgress = platformProgress[0];
+          console.log(`📊 ${platform} - Último registro: ${latestProgress.month}/${latestProgress.year} = ${latestProgress.followers} seguidores`);
+          return latestProgress.followers;
+        }
+        
+        // Fallback para dados do perfil
+        const profile = profiles.find(p => p.platform === platform);
+        const fallbackValue = profile?.currentFollowers || 0;
+        console.log(`📊 ${platform} - Usando fallback do perfil: ${fallbackValue} seguidores`);
+        return fallbackValue;
+      }
+      
+      // Calcular totais combinados usando dados mais recentes do histórico
+      const platforms = [...new Set(profiles.map(p => p.platform))];
+      const currentFollowers = platforms.reduce((total, platform) => {
+        return total + getCurrentValueFromHistory(platform);
+      }, 0);
+      
+      const currentSales = platforms.reduce((total, platform) => {
+        const platformProgress = recentProgress.filter(p => p.platform === platform);
+        return total + (platformProgress[0]?.sales || 0);
+      }, 0);
+      
+      console.log(`💰 Total Seguidores (calculado): ${currentFollowers}`);
+      console.log(`💵 Total Vendas (calculado): ${currentSales}`);
+      
+      // Calcular crescimento mensal comparando com mês anterior
+      let monthlyGrowth = 0;
+      let salesGrowth = 0;
+      
+      if (recentProgress.length > 0) {
+        // Agrupar por mês/ano e calcular totais
+        const monthlyTotals = new Map();
+        
+        recentProgress.forEach(record => {
+          const key = `${record.year}-${record.month.toString().padStart(2, '0')}`;
+          if (!monthlyTotals.has(key)) {
+            monthlyTotals.set(key, { followers: 0, sales: 0, platforms: new Set() });
+          }
+          
+          const data = monthlyTotals.get(key);
+          // Somar apenas uma vez por plataforma (usar o registro mais recente)
+          if (!data.platforms.has(record.platform)) {
+            data.followers += record.followers;
+            data.sales += record.sales;
+            data.platforms.add(record.platform);
+          }
+        });
+        
+        // Ordenar por data (mais recente primeiro)
+        const sortedMonths = Array.from(monthlyTotals.entries())
+          .sort((a, b) => b[0].localeCompare(a[0]));
+        
+        console.log(`📅 Meses ordenados:`, sortedMonths.map(([key, data]) => `${key}: ${data.followers} seguidores`));
+        
+        if (sortedMonths.length >= 2) {
+          const currentMonth = sortedMonths[0][1];
+          const previousMonth = sortedMonths[1][1];
+          
+          console.log(`📊 Mês atual: ${currentMonth.followers} seguidores, ${currentMonth.sales} vendas`);
+          console.log(`📊 Mês anterior: ${previousMonth.followers} seguidores, ${previousMonth.sales} vendas`);
+          
+          // Calcular crescimento
+          if (previousMonth.followers > 0) {
+            monthlyGrowth = ((currentMonth.followers - previousMonth.followers) / previousMonth.followers) * 100;
+          }
+          
+          if (previousMonth.sales > 0) {
+            salesGrowth = ((currentMonth.sales - previousMonth.sales) / previousMonth.sales) * 100;
+          }
+        }
+      }
+      
+      console.log(`📈 Crescimento mensal calculado: ${monthlyGrowth.toFixed(1)}%`);
+      console.log(`📈 Crescimento vendas calculado: ${salesGrowth.toFixed(1)}%`);
+      
+      const response = {
+        totalFollowers: currentFollowers,
+        totalSales: currentSales,
+        connectedNetworks: profiles.length,
+        activeGoals: goals.length,
+        monthlyGrowth: Math.round(monthlyGrowth * 10) / 10,
+        salesGrowth: Math.round(salesGrowth * 10) / 10,
+        profiles,
+        goals,
+        progressData: recentProgress
+      };
+      
+      console.log(`=== RESPOSTA FINAL ===`);
+      console.log(`- Total Seguidores: ${response.totalFollowers}`);
+      console.log(`- Crescimento: ${response.monthlyGrowth}%`);
+      console.log(`- Redes Conectadas: ${response.connectedNetworks}`);
+      console.log(`- Metas Ativas: ${response.activeGoals}`);
+      
+      res.json(response);
+    } catch (error) {
+      console.error('Erro ao buscar overview do crescimento social:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   // GET /api/social-growth/profiles - Buscar perfis sociais do usuário
   app.get('/api/social-growth/profiles', isAuthenticated, async (req, res) => {
     try {
