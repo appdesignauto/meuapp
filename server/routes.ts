@@ -112,7 +112,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ENDPOINT: Top 3 artes mais baixadas - ANTES dos middlewares de autenticação
   app.get("/api/platform/top-downloads", async (req, res) => {
     try {
-      const { Client } = require('pg');
       const client = new Client({
         connectionString: process.env.DATABASE_URL
       });
@@ -173,7 +172,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache');
     
-    const { Client } = require('pg');
     const client = new Client({
       connectionString: process.env.DATABASE_URL
     });
@@ -5428,7 +5426,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = (page - 1) * limit;
       
       // Conexão PostgreSQL robusta
-      const { Client } = require('pg');
       const client = new Client({
         connectionString: process.env.DATABASE_URL
       });
