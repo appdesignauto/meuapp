@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 17, 2025: Fixed PWA icon cache issue with timestamp-based icon updates and forced cache invalidation
+  - Resolved PWA installation showing old icons instead of new BMW automotive logos  
+  - Created unique timestamped icon files (icon-192-1750193398.png, icon-512-1750193402.png)
+  - Updated database configuration to use new icon paths with cache busting
+  - Enhanced manifest.json generation with automatic timestamp parameters for icon URLs
+  - PWA cache now properly refreshes when icons are updated through admin panel
+  - Complete PWA functionality working: editable configurations, new automotive icons, proper cache management
 - June 17, 2025: Completed dynamic PWA configuration system with editable name and description fields
   - Added description field to PWA configuration database schema with proper validation
   - Enhanced admin panel PWA section with visual previews of current 192x192 and 512x512 icons
