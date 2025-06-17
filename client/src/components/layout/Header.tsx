@@ -49,6 +49,7 @@ import {
   MoreHorizontal,
   TrendingUp
 } from 'lucide-react';
+import { PWAInstallButton } from '@/components/PWAInstallButton';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
 
