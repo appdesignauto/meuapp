@@ -12,6 +12,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
+import AnalyticsScripts from "@/components/global/AnalyticsScripts";
 import { measureWebVitals } from "./lib/measureWebVitals";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { useGA4 } from "@/hooks/useAnalytics";
@@ -373,6 +374,7 @@ function App() {
               <Router>
                 <ScrollToTop />
                 <DynamicFavicon />
+                <AnalyticsScripts />
                 <PageViewTracker />
                 <AppLayout>
                   <AppRoutes />
