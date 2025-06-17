@@ -405,7 +405,8 @@ export class DoppusService {
 
     } catch (error) {
       console.error('❌ Erro no DoppusService.processRenewal:', error);
-      await DoppusService.logWebhook(webhookData, 'error', null, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      await DoppusService.logWebhook(webhookData, 'error', null, errorMessage);
       throw error;
     }
   }

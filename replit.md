@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 17, 2025: Completed automated welcome email system for webhook-created users
+  - Integrated welcome email automation in both Hotmart and Doppus webhook processors
+  - New users created via payment webhooks automatically receive welcome emails with login credentials
+  - Email includes: access link, login email, default password 'auto@123', and payment source identification
+  - Welcome email uses official DesignAuto branding with WebP logo optimization
+  - System handles errors gracefully without failing webhook processing if email sending fails
+  - Both webhook processors now provide complete onboarding experience for premium subscribers
 - June 16, 2025: Implemented automatic logo synchronization and WebP optimization system for email templates
   - Updated all email templates to use official DesignAuto logo from header (logo_1745019394541_8q4daq.png)
   - Created automatic logo replacement function in EmailService that updates logos on every email send
