@@ -72,9 +72,9 @@ router.get('/app-config', async (req, res) => {
 // Rota para atualizar a configuração do PWA (exceto ícones)
 router.post('/app-config', checkAdmin, async (req, res) => {
   try {
-    const { name, short_name, theme_color, background_color } = req.body;
+    const { name, short_name, description, theme_color, background_color } = req.body;
     
-    if (!name || !short_name || !theme_color || !background_color) {
+    if (!name || !short_name || !description || !theme_color || !background_color) {
       return res.status(400).json({ 
         success: false, 
         error: 'Todos os campos são obrigatórios' 
@@ -90,6 +90,7 @@ router.post('/app-config', checkAdmin, async (req, res) => {
       await db.insert(appConfig).values({
         name,
         short_name,
+        description,
         theme_color,
         background_color,
         updated_by: userId
@@ -100,6 +101,7 @@ router.post('/app-config', checkAdmin, async (req, res) => {
         .set({
           name,
           short_name,
+          description,
           theme_color,
           background_color,
           updated_by: userId,

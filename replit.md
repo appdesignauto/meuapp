@@ -118,6 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 17, 2025: Completed dynamic PWA configuration system with editable name and description fields
+  - Added description field to PWA configuration database schema with proper validation
+  - Enhanced admin panel PWA section with visual previews of current 192x192 and 512x512 icons
+  - Implemented comprehensive PWA status indicators showing active features and compatibility
+  - Updated manifest.json generation to use dynamic description from database instead of hardcoded text
+  - Applied current brand colors (#1e3b61 theme, #ffffff background) and new automotive icons as defaults
+  - PWA name, short name, description, colors, and icons now fully editable through admin interface
+  - All PWA configurations persist to database and immediately reflect in manifest.json for real-time updates
 - June 17, 2025: Updated PWA logos with professional "design auto APP" branding featuring BMW car design
   - Replaced PWA icons with new 192x192px and 512x512px logos showcasing automotive theme
   - Updated manifest.json to serve new icons: icon-192-new.png and icon-512-new.png

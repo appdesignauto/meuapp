@@ -20,7 +20,7 @@ router.get('/manifest.json', async (req, res) => {
       name: 'DesignAuto',
       short_name: 'DesignAuto',
       description: 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
-      theme_color: '#4F46E5',
+      theme_color: '#1e3b61',
       background_color: '#ffffff',
       icon_192: '/icons/icon-192-new.png',
       icon_512: '/icons/icon-512-new.png'
