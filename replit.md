@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 17, 2025: Updated PWA logos with professional "design auto APP" branding featuring BMW car design
+  - Replaced PWA icons with new 192x192px and 512x512px logos showcasing automotive theme
+  - Updated manifest.json to serve new icons: icon-192-new.png and icon-512-new.png
+  - Enhanced PWA visual identity with professional automotive design reflecting platform purpose
+  - Icons optimized for mobile installation with clear branding and automotive industry appeal
 - June 17, 2025: Implemented professional PWA (Progressive Web App) functionality with hybrid caching strategy
   - Activated intelligent Service Worker optimized for dynamic content (like Freepik/Pinterest architecture)
   - Strategy: Network-Only for dynamic content (arts, APIs), Cache-First for static assets (CSS, JS, fonts)
