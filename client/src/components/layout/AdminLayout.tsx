@@ -254,10 +254,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       </div>
 
       <div className="flex">
-        {/* Desktop sidebar */}
+        {/* Tablet/Desktop sidebar */}
         <aside 
           className={cn(
-            "hidden lg:flex flex-col border-r border-gray-100 bg-white h-screen sticky top-0 transition-all duration-300",
+            "hidden md:flex flex-col border-r border-gray-100 bg-white h-screen sticky top-0 transition-all duration-300",
             collapsed ? "w-16" : "w-64"
           )}
         >
@@ -306,8 +306,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         {/* Main content */}
         <main className="flex-1">
-          {/* Desktop top header */}
-          <div className="hidden lg:flex items-center justify-between py-3 px-6 border-b border-gray-100 bg-white">
+          {/* Tablet/Desktop top header */}
+          <div className="hidden md:flex items-center justify-between py-3 px-6 border-b border-gray-100 bg-white">
             <div className="flex items-center">
               {backLink && (
                 <Button variant="ghost" size="icon" asChild className="mr-2 hover:bg-gray-100">
