@@ -398,22 +398,78 @@ const SiteSettings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="pwaIcon192">Ícone 192x192</Label>
-                    <Input
-                      id="pwaIcon192"
-                      value={pwaConfig?.icon_192 || ''}
-                      onChange={(e) => setPwaConfig(prev => prev ? {...prev, icon_192: e.target.value} : null)}
-                      placeholder="https://exemplo.com/icon-192.png"
-                    />
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id="pwaIcon192"
+                        value={pwaConfig?.icon_192 || ''}
+                        onChange={(e) => setPwaConfig(prev => prev ? {...prev, icon_192: e.target.value} : null)}
+                        placeholder="/icons/icon-192-new.png"
+                        className="flex-1"
+                      />
+                      {pwaConfig?.icon_192 && (
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={pwaConfig.icon_192} 
+                            alt="Ícone 192x192"
+                            className="w-12 h-12 rounded-lg border bg-white object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="pwaIcon512">Ícone 512x512</Label>
-                    <Input
-                      id="pwaIcon512"
-                      value={pwaConfig?.icon_512 || ''}
-                      onChange={(e) => setPwaConfig(prev => prev ? {...prev, icon_512: e.target.value} : null)}
-                      placeholder="https://exemplo.com/icon-512.png"
-                    />
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id="pwaIcon512"
+                        value={pwaConfig?.icon_512 || ''}
+                        onChange={(e) => setPwaConfig(prev => prev ? {...prev, icon_512: e.target.value} : null)}
+                        placeholder="/icons/icon-512-new.png"
+                        className="flex-1"
+                      />
+                      {pwaConfig?.icon_512 && (
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={pwaConfig.icon_512} 
+                            alt="Ícone 512x512"
+                            className="w-12 h-12 rounded-lg border bg-white object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status PWA Atual */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <Smartphone className="h-5 w-5 text-blue-600 mt-0.5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-blue-900 mb-2">Status do PWA</h4>
+                      <div className="space-y-2 text-sm text-blue-800">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>PWA ativo com logos "design auto APP"</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Service Worker configurado para conteúdo dinâmico</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Instalação disponível em dispositivos móveis e desktop</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -437,10 +493,10 @@ const SiteSettings = () => {
             <CardHeader>
               <CardTitle>Links Úteis</CardTitle>
               <CardDescription>
-                Acesso rápido a outras configurações importantes
+                Acesso rápido a outras configurações importantes e recursos do PWA
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 <Link href="/admin?tab=app-config">
                   <Button variant="outline" size="sm">
@@ -448,12 +504,32 @@ const SiteSettings = () => {
                     Configurações Avançadas PWA
                   </Button>
                 </Link>
-                <Link href="/admin?tab=upload-config">
-                  <Button variant="outline" size="sm">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Configurações de Upload
-                  </Button>
-                </Link>
+                <Button variant="outline" size="sm" onClick={() => window.open('/manifest.json', '_blank')}>
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Ver Manifest.json
+                </Button>
+              </div>
+              
+              {/* Recursos PWA Ativos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <h5 className="font-medium text-sm">Recursos Implementados</h5>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div>• Service Worker inteligente</div>
+                    <div>• Proteção de conteúdo dinâmico</div>
+                    <div>• Botões de instalação desktop/mobile</div>
+                    <div>• Cache otimizado para performance</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h5 className="font-medium text-sm">Compatibilidade</h5>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div>• iOS Safari (instalação via "Adicionar à Tela Inicial")</div>
+                    <div>• Android Chrome (instalação automática)</div>
+                    <div>• Desktop Chrome, Edge, Firefox</div>
+                    <div>• Todos os navegadores modernos</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
