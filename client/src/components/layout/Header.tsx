@@ -385,6 +385,9 @@ const Header = () => {
               </Link>
             )}
             
+            {/* PWA Install Button */}
+            <PWAInstallButton />
+            
             {/* Link para painel administrativo - mostrado para admin, designer_adm e suporte */}
             {user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'suporte') && (
               <Link href="/admin">

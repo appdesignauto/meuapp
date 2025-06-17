@@ -15,6 +15,7 @@ import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { useGA4 } from "@/hooks/useAnalytics";
+import { PWAInstallButtonMobile } from "@/components/PWAInstallButton";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -379,6 +380,7 @@ function App() {
               </Router>
               <Toaster />
               <PopupContainer />
+              <PWAInstallButtonMobile />
             </SupabaseAuthProvider>
           </AuthProvider>
         </ThemeProvider>
