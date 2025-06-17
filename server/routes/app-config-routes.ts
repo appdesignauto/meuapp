@@ -69,8 +69,75 @@ router.get('/app-config', async (req, res) => {
   }
 });
 
+// Rota alternativa para compatibilidade com frontend
+router.get('/pwa-config', async (req, res) => {
+  try {
+    const configs = await db.select().from(appConfig);
+    const config = configs.length > 0 ? configs[0] : null;
+    
+    return res.json(config);
+  } catch (error) {
+    console.error('Erro ao buscar configuração do PWA:', error);
+    return res.status(500).json({ success: false, error: 'Erro ao buscar configuração do PWA' });
+  }
+});
+
 // Rota para atualizar a configuração do PWA (exceto ícones)
 router.post('/app-config', checkAdmin, async (req, res) => {
+  try {
+    const { name, short_name, description, theme_color, background_color } = req.body;
+    
+    if (!name || !short_name || !description || !theme_color || !background_color) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Todos os campos são obrigatórios' 
+      });
+    }
+    
+    const configs = await db.select().from(appConfig);
+    
+    const userId = req.user?.id;
+    
+    if (configs.length === 0) {
+      // Criar nova configuração
+      await db.insert(appConfig).values({
+        name,
+        short_name,
+        description,
+        theme_color,
+        background_color,
+        updated_by: userId
+      });
+    } else {
+      // Atualizar configuração existente
+      await db.update(appConfig)
+        .set({
+          name,
+          short_name,
+          description,
+          theme_color,
+          background_color,
+          updated_by: userId,
+          updated_at: new Date()
+        })
+        .where(eq(appConfig.id, configs[0].id));
+    }
+    
+    return res.json({ 
+      success: true, 
+      message: 'Configuração do PWA atualizada com sucesso' 
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar configuração do PWA:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Erro ao atualizar configuração do PWA' 
+    });
+  }
+});
+
+// Rota POST alternativa para compatibilidade com frontend
+router.post('/pwa-config', checkAdmin, async (req, res) => {
   try {
     const { name, short_name, description, theme_color, background_color } = req.body;
     
