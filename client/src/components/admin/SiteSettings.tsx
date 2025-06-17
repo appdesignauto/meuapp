@@ -26,6 +26,7 @@ interface PwaConfig {
   id?: number;
   name: string;
   short_name: string;
+  description: string;
   theme_color: string;
   background_color: string;
   icon_192?: string;
@@ -348,6 +349,21 @@ const SiteSettings = () => {
                     maxLength={12}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pwaDescription">Descrição do App</Label>
+                <textarea
+                  id="pwaDescription"
+                  value={pwaConfig?.description || ''}
+                  onChange={(e) => setPwaConfig(prev => prev ? {...prev, description: e.target.value} : null)}
+                  placeholder="Descrição que aparecerá na instalação do PWA"
+                  className="w-full p-2 border border-gray-300 rounded-md resize-none h-20"
+                  maxLength={160}
+                />
+                <p className="text-xs text-gray-500">
+                  {pwaConfig?.description?.length || 0}/160 caracteres
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

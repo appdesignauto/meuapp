@@ -19,6 +19,7 @@ router.get('/manifest.json', async (req, res) => {
     const defaultConfig = {
       name: 'DesignAuto',
       short_name: 'DesignAuto',
+      description: 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
       theme_color: '#4F46E5',
       background_color: '#ffffff',
       icon_192: '/icons/icon-192-new.png',
@@ -29,6 +30,7 @@ router.get('/manifest.json', async (req, res) => {
     const config = configs.length > 0 ? {
       name: configs[0].name,
       short_name: configs[0].short_name,
+      description: configs[0].description,
       theme_color: configs[0].theme_color,
       background_color: configs[0].background_color,
       icon_192: configs[0].icon_192,
@@ -95,7 +97,7 @@ router.get('/manifest.json', async (req, res) => {
           form_factor: 'narrow'
         }
       ],
-      description: "Plataforma de artes automobilísticas editáveis para profissionais de vendas."
+      description: config.description
     };
     
     // Definir cabeçalhos corretos para o manifest

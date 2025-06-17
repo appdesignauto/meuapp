@@ -1464,6 +1464,7 @@ export const appConfig = pgTable("app_config", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().default("DesignAuto"),
   short_name: text("short_name").notNull().default("DesignAuto"),
+  description: text("description").notNull().default("Plataforma de artes automobilísticas editáveis para profissionais de vendas."),
   theme_color: text("theme_color").notNull().default("#1e40af"),
   background_color: text("background_color").notNull().default("#ffffff"),
   icon_192: text("icon_192").notNull().default("/icons/icon-192.png"),
