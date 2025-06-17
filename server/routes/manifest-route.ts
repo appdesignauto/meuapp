@@ -19,10 +19,10 @@ router.get('/manifest.json', async (req, res) => {
     const defaultConfig = {
       name: 'DesignAuto',
       short_name: 'DesignAuto',
-      theme_color: '#1e40af',
+      theme_color: '#4F46E5',
       background_color: '#ffffff',
-      icon_192: '/icons/icon-192.png',
-      icon_512: '/icons/icon-512.png'
+      icon_192: '/icons/icon-192-new.png',
+      icon_512: '/icons/icon-512-new.png'
     };
     
     // Mapeando os nomes de campo do banco para o manifest
