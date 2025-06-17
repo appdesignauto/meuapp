@@ -68,9 +68,30 @@ const SiteSettings = () => {
       if (response.ok) {
         const data = await response.json();
         setPwaConfig(data);
+      } else {
+        // Se não há configuração, inicializar com valores padrão
+        setPwaConfig({
+          name: 'DesignAuto',
+          short_name: 'DesignAuto',
+          description: 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
+          theme_color: '#1e3b61',
+          background_color: '#ffffff',
+          icon_192: '/icons/icon-192-new.png',
+          icon_512: '/icons/icon-512-new.png'
+        });
       }
     } catch (error) {
       console.error('Erro ao carregar configurações do PWA:', error);
+      // Inicializar com valores padrão em caso de erro
+      setPwaConfig({
+        name: 'DesignAuto',
+        short_name: 'DesignAuto',
+        description: 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
+        theme_color: '#1e3b61',
+        background_color: '#ffffff',
+        icon_192: '/icons/icon-192-new.png',
+        icon_512: '/icons/icon-512-new.png'
+      });
     }
   };
 
@@ -334,7 +355,16 @@ const SiteSettings = () => {
                   <Input
                     id="pwaName"
                     value={pwaConfig?.name || ''}
-                    onChange={(e) => setPwaConfig(prev => prev ? {...prev, name: e.target.value} : null)}
+                    onChange={(e) => setPwaConfig(prev => ({
+                      ...prev,
+                      name: e.target.value,
+                      short_name: prev?.short_name || 'DesignAuto',
+                      description: prev?.description || 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
+                      theme_color: prev?.theme_color || '#1e3b61',
+                      background_color: prev?.background_color || '#ffffff',
+                      icon_192: prev?.icon_192 || '/icons/icon-192-new.png',
+                      icon_512: prev?.icon_512 || '/icons/icon-512-new.png'
+                    }))}
                     placeholder="Nome do aplicativo"
                   />
                 </div>
@@ -344,7 +374,16 @@ const SiteSettings = () => {
                   <Input
                     id="pwaShortName"
                     value={pwaConfig?.short_name || ''}
-                    onChange={(e) => setPwaConfig(prev => prev ? {...prev, short_name: e.target.value} : null)}
+                    onChange={(e) => setPwaConfig(prev => ({
+                      ...prev,
+                      short_name: e.target.value,
+                      name: prev?.name || 'DesignAuto',
+                      description: prev?.description || 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
+                      theme_color: prev?.theme_color || '#1e3b61',
+                      background_color: prev?.background_color || '#ffffff',
+                      icon_192: prev?.icon_192 || '/icons/icon-192-new.png',
+                      icon_512: prev?.icon_512 || '/icons/icon-512-new.png'
+                    }))}
                     placeholder="Nome abreviado"
                     maxLength={12}
                   />
@@ -356,7 +395,16 @@ const SiteSettings = () => {
                 <textarea
                   id="pwaDescription"
                   value={pwaConfig?.description || ''}
-                  onChange={(e) => setPwaConfig(prev => prev ? {...prev, description: e.target.value} : null)}
+                  onChange={(e) => setPwaConfig(prev => ({
+                    ...prev,
+                    description: e.target.value,
+                    name: prev?.name || 'DesignAuto',
+                    short_name: prev?.short_name || 'DesignAuto',
+                    theme_color: prev?.theme_color || '#1e3b61',
+                    background_color: prev?.background_color || '#ffffff',
+                    icon_192: prev?.icon_192 || '/icons/icon-192-new.png',
+                    icon_512: prev?.icon_512 || '/icons/icon-512-new.png'
+                  }))}
                   placeholder="Descrição que aparecerá na instalação do PWA"
                   className="w-full p-2 border border-gray-300 rounded-md resize-none h-20"
                   maxLength={160}
@@ -372,8 +420,17 @@ const SiteSettings = () => {
                   <Input
                     id="pwaThemeColor"
                     type="color"
-                    value={pwaConfig?.theme_color || '#000000'}
-                    onChange={(e) => setPwaConfig(prev => prev ? {...prev, theme_color: e.target.value} : null)}
+                    value={pwaConfig?.theme_color || '#1e3b61'}
+                    onChange={(e) => setPwaConfig(prev => ({
+                      ...prev,
+                      theme_color: e.target.value,
+                      name: prev?.name || 'DesignAuto',
+                      short_name: prev?.short_name || 'DesignAuto',
+                      description: prev?.description || 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
+                      background_color: prev?.background_color || '#ffffff',
+                      icon_192: prev?.icon_192 || '/icons/icon-192-new.png',
+                      icon_512: prev?.icon_512 || '/icons/icon-512-new.png'
+                    }))}
                   />
                 </div>
                 
@@ -383,7 +440,16 @@ const SiteSettings = () => {
                     id="pwaBackgroundColor"
                     type="color"
                     value={pwaConfig?.background_color || '#ffffff'}
-                    onChange={(e) => setPwaConfig(prev => prev ? {...prev, background_color: e.target.value} : null)}
+                    onChange={(e) => setPwaConfig(prev => ({
+                      ...prev,
+                      background_color: e.target.value,
+                      name: prev?.name || 'DesignAuto',
+                      short_name: prev?.short_name || 'DesignAuto',
+                      description: prev?.description || 'Plataforma de artes automobilísticas editáveis para profissionais de vendas.',
+                      theme_color: prev?.theme_color || '#1e3b61',
+                      icon_192: prev?.icon_192 || '/icons/icon-192-new.png',
+                      icon_512: prev?.icon_512 || '/icons/icon-512-new.png'
+                    }))}
                   />
                 </div>
               </div>
