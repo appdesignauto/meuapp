@@ -313,6 +313,69 @@ const SiteSettings = () => {
                 </div>
               </div>
 
+              {/* Preview do Favicon Ativo */}
+              <div className="space-y-3">
+                <Label>Preview do Favicon Ativo</Label>
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <img 
+                        src="/favicon.ico" 
+                        alt="Favicon 16x16" 
+                        className="w-4 h-4"
+                        onError={(e) => {
+                          e.currentTarget.src = '/favicons/favicon-16x16.png';
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">16x16 (aba do navegador)</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <img 
+                        src="/favicons/favicon-32x32.png" 
+                        alt="Favicon 32x32" 
+                        className="w-8 h-8"
+                        onError={(e) => {
+                          e.currentTarget.src = '/favicon.ico';
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">32x32 (favoritos)</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white border border-gray-200 rounded flex items-center justify-center">
+                      <img 
+                        src="/favicons/favicon-48x48.png" 
+                        alt="Favicon 48x48" 
+                        className="w-10 h-10"
+                        onError={(e) => {
+                          e.currentTarget.src = '/favicons/favicon-32x32.png';
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">48x48 (desktop)</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded border border-blue-200 flex-1">
+                    <strong>Dica:</strong> Se você atualizou o favicon e não vê as mudanças, pressione Ctrl+F5 (Windows) ou Cmd+Shift+R (Mac) para forçar a atualização do cache do navegador.
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.location.reload()}
+                    className="ml-3"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Atualizar Página
+                  </Button>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="primaryColor">Cor Primária</Label>
                 <Input
