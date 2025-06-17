@@ -20,7 +20,7 @@ async function createFavicons() {
     
     // Gerar cada tamanho
     for (const size of faviconSizes) {
-      await sharp('./attached_assets/favicon_1750196836416.png')
+      await sharp('./attached_assets/favicon design auto_1750197235532.png')
         .resize(size, size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
         .png()
         .toFile(path.join(faviconDir, `favicon-${size}x${size}.png`));
@@ -29,13 +29,13 @@ async function createFavicons() {
     }
     
     // Criar favicon.ico e favicon.png principais (16x16)
-    await sharp('./attached_assets/favicon_1750196836416.png')
+    await sharp('./attached_assets/favicon design auto_1750197235532.png')
       .resize(16, 16, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
       .png()
       .toFile('./public/favicon.png');
       
     // Copiar o 16x16 como .ico também
-    await sharp('./attached_assets/favicon_1750196836416.png')
+    await sharp('./attached_assets/favicon design auto_1750197235532.png')
       .resize(32, 32, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
       .png()
       .toFile('./public/favicon.ico');
