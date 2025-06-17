@@ -1,6 +1,7 @@
 import React from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
+import AnalyticsDebugger from '@/components/admin/AnalyticsDebugger';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -27,7 +28,14 @@ const AnalyticsPage: React.FC = () => {
           </AlertDescription>
         </Alert>
 
-        <AnalyticsSettings />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <AnalyticsSettings />
+          </div>
+          <div>
+            <AnalyticsDebugger />
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );

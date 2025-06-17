@@ -22,6 +22,7 @@ const AnalyticsScripts = () => {
 
   useEffect(() => {
     if (config && !scriptsLoaded) {
+      console.log('🔄 Carregando scripts de analytics com configurações:', config);
       loadAnalyticsScripts(config);
       setScriptsLoaded(true);
     }

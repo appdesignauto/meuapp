@@ -118,6 +118,13 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 17, 2025: Fixed Google Analytics zero data issue with dynamic script injection system
+  - Created AnalyticsScripts component that dynamically injects GA4, Meta Pixel, and GTM codes into HTML
+  - Implemented automatic page view tracking across all routes using PageViewTracker component
+  - Added AnalyticsDebugger component for real-time verification of loaded analytics scripts
+  - System now loads tracking codes based on database configurations automatically
+  - Fixed GA4 measurement ID G-9CB2MZX0YY integration with proper event tracking capabilities
+  - Enhanced admin analytics page with live status monitoring and testing functionality
 - June 17, 2025: Implemented comprehensive favicon system with professional automotive branding and admin preview
   - Updated favicon with new BMW design image (favicon design auto_1750197235532.png)
   - Converted to all essential sizes: 16x16, 32x32, 48x48, 64x64, 128x128, 152x152, 180x180 pixels using Sharp library
