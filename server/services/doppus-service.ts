@@ -104,7 +104,8 @@ export class DoppusService {
 
     } catch (error) {
       console.error('❌ Erro no DoppusService.processPurchase:', error);
-      await DoppusService.logWebhook(webhookData, 'error', null, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      await DoppusService.logWebhook(webhookData, 'error', null, errorMessage);
       throw error;
     }
   }
@@ -152,7 +153,8 @@ export class DoppusService {
 
     } catch (error) {
       console.error('❌ Erro no DoppusService.processCancellation:', error);
-      await DoppusService.logWebhook(webhookData, 'error', null, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      await DoppusService.logWebhook(webhookData, 'error', null, errorMessage);
       throw error;
     }
   }
@@ -222,7 +224,8 @@ export class DoppusService {
 
     } catch (error) {
       console.error('❌ Erro no DoppusService.processCancel:', error);
-      await DoppusService.logWebhook(webhookData, 'error', null, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      await DoppusService.logWebhook(webhookData, 'error', null, errorMessage);
       throw error;
     }
   }
@@ -293,8 +296,7 @@ export class DoppusService {
       
       // Enviar e-mail de boas-vindas com credenciais para novos usuários
       try {
-        const { EmailService } = await import('./email-service');
-        const emailService = EmailService.getInstance();
+        const { emailService } = await import('./email-service');
         
         const accessUrl = process.env.REPLIT_DOMAIN 
           ? `https://${process.env.REPLIT_DOMAIN}/login`

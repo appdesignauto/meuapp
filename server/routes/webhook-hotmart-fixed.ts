@@ -53,6 +53,28 @@ router.post('/hotmart-fixed', async (req, res) => {
           VALUES ($1, $2, $3, $4, 'premium', 'hotmart', $5, $6, $7, false, true, true, $8);
         `, [email, name, username, tempPassword, planType, now, endDate, phone]);
         console.log(`✅ Novo usuário criado: ${name}${phone ? ` com telefone: ${phone}` : ''}`);
+        
+        // Enviar e-mail de boas-vindas com credenciais para novos usuários
+        try {
+          const { emailService } = await import('../services/email-service');
+          
+          const accessUrl = process.env.REPLIT_DOMAIN 
+            ? `https://${process.env.REPLIT_DOMAIN}/login`
+            : 'https://designauto.com.br/login';
+          
+          await emailService.sendWebhookWelcomeEmail(email, {
+            userName: name,
+            loginEmail: email,
+            defaultPassword: tempPassword,
+            accessUrl: accessUrl,
+            paymentSource: 'Hotmart'
+          });
+          
+          console.log('📧 E-mail de boas-vindas enviado para:', email);
+        } catch (emailError) {
+          console.error('❌ Erro ao enviar e-mail de boas-vindas:', emailError);
+          // Não falhar o processo por conta do e-mail
+        }
       } else {
         // Atualiza usuário existente PRESERVANDO completamente a data de assinatura original
         const userData = existingUser.rows[0];
