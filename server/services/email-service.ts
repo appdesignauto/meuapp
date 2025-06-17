@@ -619,6 +619,129 @@ class EmailService {
   }
 
   /**
+   * Envia e-mail de boas-vindas com credenciais para usuários criados via webhook (Hotmart/Doppus)
+   * @param email Email do destinatário
+   * @param data Dados do usuário e credenciais
+   * @returns Promise<boolean> Indica se o envio foi bem-sucedido
+   */
+  public async sendWebhookWelcomeEmail(email: string, data: {
+    userName: string,
+    loginEmail: string,
+    defaultPassword: string,
+    accessUrl: string,
+    paymentSource: string
+  }): Promise<boolean> {
+    try {
+      // Validar email antes de continuar
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        this.log(`❌ Endereço de email inválido para boas-vindas webhook: ${email}`);
+        return false;
+      }
+      
+      this.log(`📧 Preparando e-mail de boas-vindas webhook para ${email} (${data.paymentSource})`);
+      
+      const subject = "🎉 Bem-vindo ao DesignAuto! Seus dados de acesso estão aqui";
+      
+      const htmlContent = `
+        <html>
+          <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🎉 Bem-vindo ao DesignAuto!</h1>
+              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Sua assinatura foi ativada com sucesso</p>
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              <h2 style="color: #4285f4; margin-bottom: 20px;">Olá ${data.userName}! 👋</h2>
+              
+              <p style="font-size: 16px; margin-bottom: 25px;">
+                Parabéns! Sua assinatura via <strong>${data.paymentSource}</strong> foi processada com sucesso. 
+                Agora você tem acesso completo a todas as artes automotivas profissionais da plataforma!
+              </p>
+              
+              <div style="background: #f8f9fa; border-left: 4px solid #4285f4; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+                <h3 style="color: #4285f4; margin: 0 0 15px 0; font-size: 18px;">🔑 Seus Dados de Acesso:</h3>
+                
+                <div style="margin-bottom: 15px;">
+                  <strong style="color: #333;">📧 Login (E-mail):</strong><br>
+                  <code style="background: #e9ecef; padding: 8px 12px; border-radius: 4px; font-family: monospace; color: #495057; display: inline-block; margin-top: 5px;">${data.loginEmail}</code>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                  <strong style="color: #333;">🔒 Senha Temporária:</strong><br>
+                  <code style="background: #e9ecef; padding: 8px 12px; border-radius: 4px; font-family: monospace; color: #495057; display: inline-block; margin-top: 5px;">${data.defaultPassword}</code>
+                </div>
+                
+                <p style="font-size: 14px; color: #6c757d; margin: 0;">
+                  💡 <strong>Dica:</strong> Recomendamos alterar sua senha após o primeiro login para maior segurança.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${data.accessUrl}" 
+                   style="background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); 
+                          color: white; 
+                          padding: 15px 30px; 
+                          text-decoration: none; 
+                          border-radius: 8px; 
+                          font-weight: bold; 
+                          font-size: 16px; 
+                          display: inline-block; 
+                          box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);">
+                  🚀 Acessar Plataforma Agora
+                </a>
+              </div>
+              
+              <div style="background: #e8f5e8; border: 1px solid #c3e6c3; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                <h3 style="color: #2d5a2d; margin: 0 0 15px 0; font-size: 16px;">✨ O que você tem acesso agora:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #2d5a2d;">
+                  <li>🎨 <strong>Milhares de artes automotivas editáveis</strong></li>
+                  <li>📱 <strong>Templates para Stories, Posts e Flyers</strong></li>
+                  <li>🔄 <strong>Atualizações semanais com novos designs</strong></li>
+                  <li>📚 <strong>Videoaulas exclusivas</strong></li>
+                  <li>🛠️ <strong>Ferramentas profissionais</strong></li>
+                  <li>💬 <strong>Suporte prioritário</strong></li>
+                </ul>
+              </div>
+              
+              <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 25px 0;">
+                <p style="margin: 0; color: #856404; font-size: 14px;">
+                  <strong>📱 Dica Mobile:</strong> Adicione o DesignAuto à tela inicial do seu celular para acesso rápido como um app!
+                </p>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #e9ecef; margin: 30px 0;">
+              
+              <p style="font-size: 14px; color: #6c757d; text-align: center; margin: 20px 0 0 0;">
+                Precisa de ajuda? Entre em contato conosco:<br>
+                📧 <a href="mailto:suporte@designauto.com.br" style="color: #4285f4;">suporte@designauto.com.br</a>
+              </p>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      const result = await this.sendBrevoEmail(
+        SENDERS.suporte,
+        [{ email, name: data.userName }],
+        subject,
+        htmlContent
+      );
+      
+      if (result.success) {
+        this.log(`✅ E-mail de boas-vindas webhook enviado com sucesso para ${email} (${data.paymentSource}): ${result.messageId}`);
+      } else {
+        this.log(`❌ Falha ao enviar e-mail de boas-vindas webhook para ${email}`);
+      }
+      
+      return result.success;
+    } catch (error) {
+      this.log(`❌ Erro ao enviar e-mail de boas-vindas webhook para ${email}: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+
+  /**
    * Envia um e-mail de redefinição de senha usando o remetente de suporte
    * @param email Email do destinatário
    * @param data Dados para o template do email

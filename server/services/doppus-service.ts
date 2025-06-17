@@ -290,6 +290,30 @@ export class DoppusService {
         .returning();
 
       console.log('✅ Novo usuário criado:', newUser.email);
+      
+      // Enviar e-mail de boas-vindas com credenciais para novos usuários
+      try {
+        const { EmailService } = await import('./email-service');
+        const emailService = EmailService.getInstance();
+        
+        const accessUrl = process.env.REPLIT_DOMAIN 
+          ? `https://${process.env.REPLIT_DOMAIN}/login`
+          : 'https://designauto.com.br/login';
+        
+        await emailService.sendWebhookWelcomeEmail(newUser.email, {
+          userName: newUser.name || newUser.username,
+          loginEmail: newUser.email,
+          defaultPassword: defaultPassword,
+          accessUrl: accessUrl,
+          paymentSource: 'Doppus'
+        });
+        
+        console.log('📧 E-mail de boas-vindas enviado para:', newUser.email);
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar e-mail de boas-vindas:', emailError);
+        // Não falhar o processo por conta do e-mail
+      }
+      
       return { user: newUser, action: 'created' };
     }
   }
