@@ -8271,12 +8271,11 @@ app.use('/api/reports-v2', (req, res, next) => {
         }
       }
 
-      // Buscar APENAS assinantes pagantes reais (via webhooks Hotmart/Doppus)
+      // Buscar APENAS assinantes premium ativos com origem de pagamento válida
       const subscriberCounts = await db.execute(sql`
         SELECT 
-          COUNT(CASE WHEN origemassinatura IN ('hotmart', 'doppus') THEN 1 END) as total_subscribers,
-          COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) as hotmart_count,
-          COUNT(CASE WHEN origemassinatura = 'doppus' THEN 1 END) as doppus_count,
+          COUNT(CASE WHEN nivelacesso = 'premium' AND origemassinatura = 'hotmart' THEN 1 END) as hotmart_count,
+          COUNT(CASE WHEN nivelacesso = 'premium' AND origemassinatura = 'doppus' THEN 1 END) as doppus_count,
           0 as annual_count,
           0 as monthly_count,
           0 as manual_count
