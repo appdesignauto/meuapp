@@ -69,31 +69,88 @@ export class UpgradeEmailService {
   }
 
   /**
+   * Busca o template de upgrade no banco de dados
+   */
+  private async getUpgradeTemplate(): Promise<{ subject: string; htmlContent: string; textContent: string } | null> {
+    try {
+      const template = await db.execute(sql`
+        SELECT subject, "htmlContent", "textContent"
+        FROM "emailTemplates"
+        WHERE "templateKey" = 'upgrade_organico' AND "isActive" = true
+        LIMIT 1
+      `);
+
+      if (template.rows.length === 0) {
+        this.log('Template de upgrade não encontrado no banco de dados');
+        return null;
+      }
+
+      const row = template.rows[0] as any;
+      return {
+        subject: row.subject,
+        htmlContent: row.htmlContent,
+        textContent: row.textContent
+      };
+    } catch (error) {
+      this.log(`Erro ao buscar template: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }
+
+  /**
+   * Substitui variáveis no conteúdo do template
+   */
+  private replaceVariables(content: string, variables: Record<string, string>): string {
+    let result = content;
+    for (const [key, value] of Object.entries(variables)) {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      result = result.replace(regex, value);
+    }
+    return result;
+  }
+
+  /**
    * Envia e-mail de upgrade para um usuário específico
    */
   async sendUpgradeEmail(userId: number, userEmail: string, userName: string): Promise<boolean> {
     try {
-      const templateKey = 'upgrade_organico';
+      const template = await this.getUpgradeTemplate();
+      if (!template) {
+        this.log('Template de upgrade não disponível');
+        return false;
+      }
+
       const variables = {
         nome: userName || 'Cliente',
         email: userEmail
       };
 
-      const success = await this.emailService.sendTemplateEmail(
-        userEmail,
-        templateKey,
-        variables
+      // Substituir variáveis no template
+      const subject = this.replaceVariables(template.subject, variables);
+      const htmlContent = this.replaceVariables(template.htmlContent, variables);
+      const textContent = this.replaceVariables(template.textContent, variables);
+
+      // Enviar e-mail usando EmailService
+      const sender = { name: 'Design Auto', email: 'suporte@designauto.com.br' };
+      const recipients = [{ email: userEmail, name: userName || 'Cliente' }];
+
+      const result = await this.emailService.sendEmail(
+        sender,
+        recipients,
+        subject,
+        htmlContent,
+        textContent
       );
 
-      if (success) {
+      if (result.success) {
         // Registrar o envio para evitar duplicatas
-        await this.logEmailSent(userId, userEmail, templateKey);
+        await this.logEmailSent(userId, userEmail, 'upgrade_organico');
         this.log(`E-mail de upgrade enviado com sucesso para ${userEmail} (${userName})`);
+        return true;
       } else {
-        this.log(`Falha ao enviar e-mail de upgrade para ${userEmail} (${userName})`);
+        this.log(`Falha ao enviar e-mail de upgrade para ${userEmail}: ${result.error}`);
+        return false;
       }
-
-      return success;
     } catch (error) {
       this.log(`Erro ao enviar e-mail de upgrade para ${userEmail}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
