@@ -1440,6 +1440,7 @@ export class DatabaseStorage implements IStorage {
         password, 
         email, 
         name, 
+        phone,
         profileimageurl, 
         bio, 
         nivelacesso = "free", // Alterado para "free" como padrão
@@ -1506,6 +1507,7 @@ export class DatabaseStorage implements IStorage {
           password, 
           email, 
           name,
+          phone,
           profileimageurl, 
           bio,
           nivelacesso,
@@ -1525,6 +1527,7 @@ export class DatabaseStorage implements IStorage {
           ${password}, 
           ${email}, 
           ${name || null},
+          ${phone || null},
           ${profileimageurl || null}, 
           ${bio || null},
           ${nivelAcessoFinal},
