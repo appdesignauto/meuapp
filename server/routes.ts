@@ -19,6 +19,22 @@ import path from "path";
 import fs from "fs";
 import { Client } from "pg";
 
+// Configurar fuso horário do Brasil/São Paulo
+process.env.TZ = 'America/Sao_Paulo';
+
+// Função para obter data/hora atual no fuso horário de São Paulo
+function getBrasiliaDateTime() {
+  return new Date().toLocaleString('pt-BR', { 
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit', 
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens

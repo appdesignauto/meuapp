@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Fixed timezone issue - system now correctly uses São Paulo/Brasília timezone for all timestamps
+  - Configured process.env.TZ = 'America/Sao_Paulo' in server routes
+  - Updated existing user timestamps to reflect correct local time
+  - Added getBrasiliaDateTime() utility function for consistent timezone handling
+  - Fixed favicon display issue with new BMW automotive design and cache busting (v=1750209430)
+  - Successfully completed Microsoft Clarity integration with project ID 'rz84poylxv'
 - June 17, 2025: Fixed Google Analytics zero data issue with dynamic script injection system
   - Created AnalyticsScripts component that dynamically injects GA4, Meta Pixel, and GTM codes into HTML
   - Implemented automatic page view tracking across all routes using PageViewTracker component
