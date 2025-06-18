@@ -15,7 +15,12 @@ const CallToAction = () => {
             <div className="flex flex-wrap gap-3">
               <button 
                 className="inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-colors cursor-pointer"
-                onClick={() => { window.location.replace('/auth?tab=register'); }}
+                onClick={() => {
+                  const pricingSection = document.querySelector('[data-section="pricing"]');
+                  if (pricingSection) {
+                    pricingSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
               >
                 Cadastre-se
               </button>
