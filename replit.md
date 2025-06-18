@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Made WhatsApp field mandatory in registration form to improve user communication
+  - Removed .optional() from phone field validation schema requiring all new users to provide WhatsApp number
+  - Changed field label from "Telefone (opcional)" to "WhatsApp" for clarity
+  - Updated validation message to "WhatsApp deve ter pelo menos 10 dígitos"
+  - This ensures all new registrations include contact information for support purposes
 - June 18, 2025: Fixed timezone issue - system now correctly uses São Paulo/Brasília timezone for all timestamps
   - Configured process.env.TZ = 'America/Sao_Paulo' in server routes
   - Updated existing user timestamps to reflect correct local time

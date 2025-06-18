@@ -39,7 +39,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
-  phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos").optional(),
+  phone: z.string().min(10, "WhatsApp deve ter pelo menos 10 dígitos"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -380,7 +380,7 @@ const AuthPage = () => {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 font-medium">Telefone (opcional)</FormLabel>
+                            <FormLabel className="text-gray-700 font-medium">WhatsApp</FormLabel>
                             <FormControl>
                               <div className="flex">
                                 <Select 
