@@ -40,7 +40,7 @@ import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
-import { AutoUpgradeScheduler } from "./services/auto-upgrade-scheduler";
+import { SimpleScheduler } from "./services/simple-scheduler";
 
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
@@ -9864,8 +9864,8 @@ app.use('/api/reports-v2', (req, res, next) => {
 
   // Inicializar agendamento automático de e-mails de upgrade
   console.log('🚀 Iniciando sistema de agendamento automático de e-mails de upgrade...');
-  const autoUpgradeScheduler = AutoUpgradeScheduler.getInstance();
-  autoUpgradeScheduler.start();
+  const simpleScheduler = SimpleScheduler.getInstance();
+  simpleScheduler.start();
 
   return httpServer;
 }

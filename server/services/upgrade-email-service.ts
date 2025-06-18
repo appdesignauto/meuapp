@@ -308,7 +308,54 @@ export class UpgradeEmailService {
       };
     }
   }
+
+  /**
+   * Envia e-mails em lote para usuários elegíveis
+   */
+  async sendBatchUpgradeEmails(maxEmails: number = 10): Promise<{
+    sent: number;
+    failed: number;
+    total: number;
+  }> {
+    try {
+      const eligibleUsers = await this.getEligibleUsers();
+      const usersToProcess = eligibleUsers.slice(0, maxEmails);
+      
+      let sent = 0;
+      let failed = 0;
+
+      for (const user of usersToProcess) {
+        try {
+          const success = await this.sendUpgradeEmail(user.id, user.email, user.name || user.username);
+          if (success) {
+            sent++;
+          } else {
+            failed++;
+          }
+        } catch (error) {
+          failed++;
+          this.log(`Erro ao enviar e-mail para usuário ${user.id}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+
+      this.log(`Lote processado: ${sent} enviados, ${failed} falharam de ${usersToProcess.length} total`);
+
+      return {
+        sent,
+        failed,
+        total: usersToProcess.length
+      };
+    } catch (error) {
+      this.log(`Erro no processamento em lote: ${error instanceof Error ? error.message : String(error)}`);
+      return {
+        sent: 0,
+        failed: 0,
+        total: 0
+      };
+    }
+  }
 }
 
 // Instância única do serviço
+
 export const upgradeEmailService = new UpgradeEmailService();
