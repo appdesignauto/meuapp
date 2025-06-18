@@ -54,7 +54,7 @@ export class UpgradeEmailService {
           u."nivelacesso" = 'usuario'
           AND u."isactive" = true
           AND (u."origemassinatura" IS NULL OR u."origemassinatura" = 'nenhuma')
-          AND u."criadoem" >= ${thirtyDaysAgo.toISOString()}
+          AND u."criadoem" <= ${cutoffTime.toISOString()}
           AND el.id IS NULL
         ORDER BY u."criadoem" DESC
         LIMIT 50
