@@ -118,6 +118,10 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Replaced video lessons page with "Em Desenvolvimento" message until content is ready
+  - Created simple, clean page showing development status instead of complex interface
+  - Users can access /videoaulas but see clear message that content is being prepared
+  - No redirects - maintains navigation flow while indicating work in progress
 - June 18, 2025: Made WhatsApp field mandatory in registration form to improve user communication
   - Removed .optional() from phone field validation schema requiring all new users to provide WhatsApp number
   - Changed field label from "Telefone (opcional)" to "WhatsApp" for clarity
