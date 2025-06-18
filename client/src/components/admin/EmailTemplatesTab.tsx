@@ -548,19 +548,28 @@ export default function EmailTemplatesTab() {
               <div>
                 <Label>Dados de Teste para Variáveis</Label>
                 <div className="space-y-2">
-                  {testTemplate.variables.map((variable, index) => (
-                    <div key={index}>
-                      <Label className="text-sm">{variable.name} - {variable.description}</Label>
-                      <Input
-                        value={testData[variable.name.replace(/[{}]/g, '')] || ''}
-                        onChange={(e) => setTestData(prev => ({
-                          ...prev,
-                          [variable.name.replace(/[{}]/g, '')]: e.target.value
-                        }))}
-                        placeholder={`Valor para ${variable.name}`}
-                      />
-                    </div>
-                  ))}
+                  {testTemplate.variables.map((variable, index) => {
+                    // Validação para evitar erro quando variable.name é undefined
+                    if (!variable || !variable.name) {
+                      return null;
+                    }
+                    
+                    const cleanVariableName = variable.name.replace(/[{}]/g, '');
+                    
+                    return (
+                      <div key={index}>
+                        <Label className="text-sm">{variable.name} - {variable.description}</Label>
+                        <Input
+                          value={testData[cleanVariableName] || ''}
+                          onChange={(e) => setTestData(prev => ({
+                            ...prev,
+                            [cleanVariableName]: e.target.value
+                          }))}
+                          placeholder={`Valor para ${variable.name}`}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
