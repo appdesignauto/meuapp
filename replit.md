@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Fixed cache invalidation in email template admin panel for real-time updates
+  - Implemented force refresh functionality ensuring backend changes reflect immediately in admin interface
+  - Template de upgrade orgânico: mantém novo logo "design auto APP" otimizado para fundo azul (76KB base64)
+  - Template de boas-vindas: cabeçalho azul limpo sem logo, apenas texto para design focado
+  - Cache busting com timestamp sempre ativo garantindo dados atualizados do banco de dados
+  - Botão "Atualizar" força refresh imediato exibindo mudanças do backend instantaneamente
 - June 18, 2025: Completed automated email upgrade system with SimpleScheduler for organic users
   - Implemented simplified scheduler without external dependencies for maximum stability
   - System automatically checks every 2 minutes for users registered 10+ minutes ago

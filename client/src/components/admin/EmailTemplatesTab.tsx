@@ -88,12 +88,12 @@ export default function EmailTemplatesTab() {
     isActive: true
   });
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      // Cache busting para forçar atualização
+      // Cache busting sempre ativo para garantir dados atualizados
       const timestamp = Date.now();
-      const response = await fetch(`/api/email-templates?t=${timestamp}`);
+      const response = await fetch(`/api/email-templates?t=${timestamp}&refresh=${forceRefresh ? '1' : '0'}`);
       const data = await response.json();
       setTemplates(data);
     } catch (error) {
@@ -187,7 +187,7 @@ export default function EmailTemplatesTab() {
 
       setIsDialogOpen(false);
       resetForm();
-      await fetchTemplates();
+      await fetchTemplates(true); // Force refresh after save
     } catch (error: any) {
       console.error('Erro ao salvar template:', error);
       toast({
@@ -304,7 +304,7 @@ export default function EmailTemplatesTab() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={fetchTemplates}
+            onClick={() => fetchTemplates(true)}
             variant="outline"
             disabled={loading}
           >
