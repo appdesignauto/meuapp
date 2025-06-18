@@ -9801,6 +9801,66 @@ app.use('/api/reports-v2', (req, res, next) => {
     }
   });
 
+  // Sistema de E-mails de Upgrade para Usuários Orgânicos
+  // GET /api/upgrade-emails/stats - Estatísticas dos e-mails de upgrade
+  app.get('/api/upgrade-emails/stats', isAdmin, async (req, res) => {
+    try {
+      const { upgradeEmailService } = await import('./services/upgrade-email-service');
+      const stats = await upgradeEmailService.getUpgradeEmailStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Erro ao obter estatísticas de e-mails de upgrade:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // GET /api/upgrade-emails/eligible - Lista usuários elegíveis para e-mail de upgrade
+  app.get('/api/upgrade-emails/eligible', isAdmin, async (req, res) => {
+    try {
+      const { upgradeEmailService } = await import('./services/upgrade-email-service');
+      const eligibleUsers = await upgradeEmailService.getEligibleUsers();
+      res.json({ users: eligibleUsers });
+    } catch (error) {
+      console.error('Erro ao buscar usuários elegíveis:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/upgrade-emails/send-batch - Enviar e-mails em lote para usuários elegíveis
+  app.post('/api/upgrade-emails/send-batch', isAdmin, async (req, res) => {
+    try {
+      const { upgradeEmailService } = await import('./services/upgrade-email-service');
+      const results = await upgradeEmailService.processBatchUpgradeEmails();
+      res.json(results);
+    } catch (error) {
+      console.error('Erro ao enviar e-mails em lote:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
+  // POST /api/upgrade-emails/send-to-user - Enviar e-mail para um usuário específico
+  app.post('/api/upgrade-emails/send-to-user', isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: 'ID do usuário é obrigatório' });
+      }
+
+      const { upgradeEmailService } = await import('./services/upgrade-email-service');
+      const success = await upgradeEmailService.sendUpgradeEmailToUser(parseInt(userId));
+      
+      if (success) {
+        res.json({ success: true, message: 'E-mail de upgrade enviado com sucesso' });
+      } else {
+        res.status(400).json({ error: 'Falha ao enviar e-mail de upgrade' });
+      }
+    } catch (error) {
+      console.error('Erro ao enviar e-mail para usuário específico:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
 
 
   return httpServer;
