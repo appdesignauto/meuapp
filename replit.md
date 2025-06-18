@@ -118,6 +118,14 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Completed automated email upgrade system with SimpleScheduler for organic users
+  - Implemented simplified scheduler without external dependencies for maximum stability
+  - System automatically checks every 2 minutes for users registered 10+ minutes ago
+  - Identifies organic users (no webhook origin) and sends upgrade emails using template "upgrade_organico"
+  - Fixed database column naming issues (nivelacesso, origemassinatura, isactive)
+  - Added automatic email logging to prevent duplicates and track delivery
+  - System successfully integrated with main server startup and running autonomously
+  - Replaces previous complex AutoUpgradeScheduler with stable, production-ready solution
 - June 18, 2025: Fixed critical dashboard metrics displaying incorrect values across financial and user growth indicators
   - Corrected revenue calculation bug: R$ 540,90 → R$ 53,80 (accurate total from 3 premium users)
   - Fixed "Novos Cadastros" metric showing +0 instead of actual +18 new users in 30-day period
