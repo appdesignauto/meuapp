@@ -197,7 +197,7 @@ const DashboardOverview = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Novos Cadastros</span>
-              <span className="font-semibold">+{stats.newUsersThisPeriod || 0}</span>
+              <span className="font-semibold">+{stats.newUsersMonth || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Artes Criadas</span>
