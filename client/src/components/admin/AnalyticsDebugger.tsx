@@ -21,6 +21,11 @@ interface AnalyticsStatus {
     id: string;
     active: boolean;
   };
+  clarity: {
+    loaded: boolean;
+    id: string;
+    active: boolean;
+  };
   scripts: {
     count: number;
     details: string[];

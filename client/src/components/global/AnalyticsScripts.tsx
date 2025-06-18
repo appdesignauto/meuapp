@@ -6,9 +6,11 @@ interface AnalyticsConfig {
   metaPixelId: string;
   ga4MeasurementId: string;
   gtmContainerId: string;
+  clarityProjectId: string;
   metaPixelEnabled: boolean;
   ga4Enabled: boolean;
   gtmEnabled: boolean;
+  clarityEnabled: boolean;
 }
 
 const AnalyticsScripts = () => {
@@ -191,10 +193,49 @@ const AnalyticsScripts = () => {
       document.body.appendChild(gtmBodyScript);
     }
 
+    // Microsoft Clarity
+    if (config.clarityEnabled && config.clarityProjectId) {
+      const clarityScript = document.createElement('script');
+      clarityScript.setAttribute('data-analytics-script', 'clarity');
+      clarityScript.innerHTML = `
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "${config.clarityProjectId}");
+
+        // Criar objeto global para tracking
+        window.DesignAutoClarity = {
+          trackEvent: function(eventName, parameters) {
+            if (typeof clarity !== 'undefined') {
+              clarity('event', eventName, parameters);
+            }
+          },
+          setCustomTag: function(key, value) {
+            if (typeof clarity !== 'undefined') {
+              clarity('set', key, value);
+            }
+          },
+          identify: function(userId, userInfo) {
+            if (typeof clarity !== 'undefined') {
+              clarity('identify', userId, userInfo);
+            }
+          },
+          isActive: function() {
+            return typeof clarity !== 'undefined';
+          }
+        };
+
+        console.log('✅ Microsoft Clarity carregado:', '${config.clarityProjectId}');
+      `;
+      document.head.appendChild(clarityScript);
+    }
+
     console.log('🚀 Scripts de analytics carregados:', {
       GA4: config.ga4Enabled ? config.ga4MeasurementId : 'Desabilitado',
       MetaPixel: config.metaPixelEnabled ? config.metaPixelId : 'Desabilitado',
-      GTM: config.gtmEnabled ? config.gtmContainerId : 'Desabilitado'
+      GTM: config.gtmEnabled ? config.gtmContainerId : 'Desabilitado',
+      Clarity: config.clarityEnabled ? config.clarityProjectId : 'Desabilitado'
     });
   };
 
