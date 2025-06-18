@@ -163,14 +163,14 @@ const userRoles: { value: NivelAcesso; label: string; color: string; description
   { 
     value: "premium", 
     label: "Usuário Premium", 
-    color: "bg-violet-500 hover:bg-violet-600",
+    color: "bg-amber-500 hover:bg-amber-600",
     description: "Assinante com acesso completo às artes e downloads",
     group: "clientes"
   },
   { 
     value: "designer", 
     label: "Designer", 
-    color: "bg-amber-500 hover:bg-amber-600",
+    color: "bg-violet-500 hover:bg-violet-600",
     description: "Criador de conteúdo que pode enviar e gerenciar artes",
     group: "equipe" 
   },

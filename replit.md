@@ -118,6 +118,11 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Enhanced user management with strategic badge color optimization for better Premium visibility
+  - Swapped Designer and Premium badge colors for improved visual hierarchy
+  - Premium users now display with prestigious amber/gold color (bg-amber-500)
+  - Designer users now use elegant violet color (bg-violet-500)
+  - Change provides better visual emphasis on paying customers in admin interface
 - June 18, 2025: Replaced video lessons page with "Em Desenvolvimento" message until content is ready
   - Created simple, clean page showing development status instead of complex interface
   - Users can access /videoaulas but see clear message that content is being prepared
