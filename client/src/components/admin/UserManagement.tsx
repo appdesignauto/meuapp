@@ -151,7 +151,7 @@ interface UserFormData {
   periodType?: string;
 }
 
-// Definição dos papéis de usuário com cores e descrições específicas
+// Definição dos papéis de usuário com cores e descrições específicas - V2
 const userRoles: { value: NivelAcesso; label: string; color: string; description: string; group: string }[] = [
   { 
     value: "usuario", 
@@ -163,7 +163,7 @@ const userRoles: { value: NivelAcesso; label: string; color: string; description
   { 
     value: "premium", 
     label: "Usuário Premium", 
-    color: "bg-amber-500 hover:bg-amber-600",
+    color: "bg-amber-500 hover:bg-amber-600", // Badge Premium agora dourado para destaque
     description: "Assinante com acesso completo às artes e downloads",
     group: "clientes"
   },
