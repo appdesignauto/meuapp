@@ -122,7 +122,12 @@ export class UpgradeEmailService {
 
       const variables = {
         nome: userName || 'Cliente',
-        email: userEmail
+        email: userEmail,
+        loginEmail: userEmail,
+        defaultPassword: 'auto@123',
+        accessUrl: 'https://designauto.com.br/login',
+        userName: userName || 'Cliente',
+        userEmail: userEmail
       };
 
       // Substituir variáveis no template

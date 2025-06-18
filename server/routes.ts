@@ -9737,19 +9737,40 @@ app.use('/api/reports-v2', (req, res, next) => {
       
       const templateData = template.rows[0];
       
+      // Dados de teste padrão se não fornecidos
+      const defaultTestData = {
+        nome: 'João Silva',
+        email: testEmail,
+        loginEmail: testEmail,
+        defaultPassword: 'auto@123',
+        accessUrl: 'https://designauto.com.br/login',
+        userName: 'João Silva',
+        userEmail: testEmail
+      };
+      
+      // Usar dados de teste fornecidos ou padrão
+      const finalTestData = { ...defaultTestData, ...(testData || {}) };
+      
       // Substituir variáveis no conteúdo
       let htmlContent = templateData.htmlContent;
       let textContent = templateData.textContent || '';
       let subject = templateData.subject;
       
-      if (testData) {
-        Object.keys(testData).forEach(key => {
-          const value = testData[key];
+      // Substituir todas as variáveis
+      Object.keys(finalTestData).forEach(key => {
+        const value = finalTestData[key];
+        if (value) {
+          // Substituir com chaves duplas {{variavel}}
           htmlContent = htmlContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
           textContent = textContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
           subject = subject.replace(new RegExp(`{{${key}}}`, 'g'), value);
-        });
-      }
+          
+          // Substituir sem chaves para compatibilidade
+          htmlContent = htmlContent.replace(new RegExp(`{${key}}`, 'g'), value);
+          textContent = textContent.replace(new RegExp(`{${key}}`, 'g'), value);
+          subject = subject.replace(new RegExp(`{${key}}`, 'g'), value);
+        }
+      });
       
       // Importar EmailService dinamicamente para evitar erro de importação circular
       const { EmailService } = await import('./services/email-service');
