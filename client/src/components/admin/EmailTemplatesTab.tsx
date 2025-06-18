@@ -91,7 +91,9 @@ export default function EmailTemplatesTab() {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/email-templates');
+      // Cache busting para forçar atualização
+      const timestamp = Date.now();
+      const response = await fetch(`/api/email-templates?t=${timestamp}`);
       const data = await response.json();
       setTemplates(data);
     } catch (error) {
