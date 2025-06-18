@@ -7964,27 +7964,15 @@ app.use('/api/reports-v2', (req, res, next) => {
               COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
               SUM(
                 CASE 
-                  WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
-                    CASE 
-                      WHEN origemassinatura = 'hotmart' THEN 7.00
-                      WHEN tipoplano = 'mensal' THEN 29.90
-                      WHEN tipoplano = 'anual' THEN 197.00
-                      WHEN tipoplano = 'vitalicio' THEN 497.00
-                      ELSE 29.90
-                    END
+                  WHEN nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'hotmart' THEN 7.00
+                  WHEN nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'doppus' THEN 39.80
                   ELSE 0
                 END
               ) as monthly_revenue,
               SUM(
                 CASE 
-                  WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
-                    CASE 
-                      WHEN origemassinatura = 'hotmart' THEN 7.00
-                      WHEN tipoplano = 'mensal' THEN 29.90
-                      WHEN tipoplano = 'anual' THEN 197.00
-                      WHEN tipoplano = 'vitalicio' THEN 497.00
-                      ELSE 29.90
-                    END
+                  WHEN nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'hotmart' THEN 7.00
+                  WHEN nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'doppus' THEN 39.80
                   ELSE 0
                 END
               ) as period_revenue,
@@ -8001,27 +7989,15 @@ app.use('/api/reports-v2', (req, res, next) => {
               COUNT(CASE WHEN ultimologin >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as active_week,
               SUM(
                 CASE 
-                  WHEN (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
-                    CASE 
-                      WHEN origemassinatura = 'hotmart' THEN 7.00
-                      WHEN tipoplano = 'mensal' THEN 29.90
-                      WHEN tipoplano = 'anual' THEN 197.00
-                      WHEN tipoplano = 'vitalicio' THEN 497.00
-                      ELSE 29.90
-                    END
+                  WHEN nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'hotmart' THEN 7.00
+                  WHEN nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'doppus' THEN 39.80
                   ELSE 0
                 END
               ) as monthly_revenue,
               SUM(
                 CASE 
-                  WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND (nivelacesso = 'premium' OR acessovitalicio = true) AND isactive = true THEN
-                    CASE 
-                      WHEN origemassinatura = 'hotmart' THEN 7.00
-                      WHEN tipoplano = 'mensal' THEN 29.90
-                      WHEN tipoplano = 'anual' THEN 197.00
-                      WHEN tipoplano = 'vitalicio' THEN 497.00
-                      ELSE 29.90
-                    END
+                  WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'hotmart' THEN 7.00
+                  WHEN dataassinatura >= CURRENT_DATE - INTERVAL ${sql.raw(`'${dateInterval}'`)} AND nivelacesso = 'premium' AND isactive = true AND origemassinatura = 'doppus' THEN 39.80
                   ELSE 0
                 END
               ) as period_revenue,

@@ -118,6 +118,12 @@ The system uses PostgreSQL with the following key entities:
 
 ## Changelog
 
+- June 18, 2025: Fixed critical financial dashboard calculation bug showing incorrect revenue values
+  - Corrected both `/api/dashboard/stats` and `/api/financial/stats` endpoints to calculate accurate revenue
+  - Fixed issue where system showed R$ 540,90 instead of correct R$ 53,80 total revenue
+  - Updated calculations to properly count only premium users with valid payment sources (Hotmart/Doppus)
+  - System now accurately reflects: 2 Hotmart users (R$ 14,00) + 1 Doppus user (R$ 39,80) = R$ 53,80 total
+  - Eliminated incorrect counting of users without premium status or valid payment origins
 - June 18, 2025: Enhanced user management with strategic badge color optimization based on user feedback
   - Implemented final color scheme: Premium users display with amber/gold color (bg-amber-500)
   - Designer users now use violet color (bg-violet-500) for visual distinction
