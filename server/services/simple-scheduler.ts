@@ -5,16 +5,14 @@
 
 import { db } from '../db.js';
 import { sql } from 'drizzle-orm';
-import { EmailService } from './email-service.js';
 
 export class SimpleScheduler {
   private static instance: SimpleScheduler;
   private intervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
-  private emailService: EmailService;
 
   private constructor() {
-    this.emailService = new EmailService();
+    // Constructor vazio - serviços serão importados dinamicamente
   }
 
   public static getInstance(): SimpleScheduler {
@@ -29,12 +27,12 @@ export class SimpleScheduler {
    */
   public start(): void {
     if (this.isRunning) {
-      console.log('📧 Agendamento de e-mails já está em execução');
+      console.log('📧 [SimpleScheduler] Agendamento já está em execução');
       return;
     }
 
-    console.log('🚀 Iniciando agendamento automático de e-mails de upgrade');
-    console.log('⏰ Verificações a cada 2 minutos para usuários cadastrados há mais de 10 minutos');
+    console.log('🚀 [SimpleScheduler] Iniciando agendamento automático de e-mails de upgrade');
+    console.log('⏰ [SimpleScheduler] Verificações a cada 2 minutos para usuários cadastrados há mais de 10 minutos');
 
     this.intervalId = setInterval(async () => {
       await this.checkAndSendUpgradeEmails();
@@ -42,10 +40,10 @@ export class SimpleScheduler {
 
     this.isRunning = true;
 
-    // Executa uma vez imediatamente após 30 segundos
+    // Executa uma vez imediatamente ao iniciar (após 10 segundos)
     setTimeout(() => {
       this.checkAndSendUpgradeEmails();
-    }, 30000);
+    }, 10000);
   }
 
   /**
@@ -55,9 +53,9 @@ export class SimpleScheduler {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      this.isRunning = false;
-      console.log('🛑 Agendamento automático parado');
     }
+    this.isRunning = false;
+    console.log('⏹️ [SimpleScheduler] Agendamento automático parado');
   }
 
   /**
@@ -65,35 +63,32 @@ export class SimpleScheduler {
    */
   private async checkAndSendUpgradeEmails(): Promise<void> {
     try {
-      // Usuários cadastrados há mais de 10 minutos que não receberam e-mail ainda
-      const cutoffTime = new Date();
-      cutoffTime.setMinutes(cutoffTime.getMinutes() - 10);
+      console.log('🔍 [SimpleScheduler] Verificando usuários elegíveis para e-mail de upgrade...');
 
+      // Busca usuários orgânicos cadastrados há mais de 10 minutos que ainda não receberam e-mail
       const eligibleUsers = await db.execute(sql`
-        SELECT 
-          u.id,
-          u.name,
-          u.email,
-          u.username,
-          u.criadoem
+        SELECT u.id, u.email, u.name, u.username, u."createdAt"
         FROM users u
-        LEFT JOIN "emailLogs" el ON u.id = el."userId" AND el."templateKey" = 'upgrade_organico'
-        WHERE 
-          u."nivelacesso" = 'usuario'
-          AND u."isactive" = true
+        WHERE u."nivelacesso" = 'usuario'
           AND (u."origemassinatura" IS NULL OR u."origemassinatura" = 'nenhuma')
-          AND u."criadoem" <= ${cutoffTime.toISOString()}
-          AND el.id IS NULL
-        ORDER BY u."criadoem" DESC
+          AND u."isactive" = true
+          AND u."createdAt" <= NOW() - INTERVAL '10 minutes'
+          AND u."createdAt" >= NOW() - INTERVAL '30 days'
+          AND NOT EXISTS (
+            SELECT 1 FROM "emailLogs" el 
+            WHERE el."userId" = u.id 
+            AND el."templateKey" = 'upgrade_organico'
+          )
+        ORDER BY u."createdAt" ASC
         LIMIT 5
       `);
 
       if (eligibleUsers.rows.length === 0) {
-        console.log('ℹ️ Nenhum usuário elegível para e-mail de upgrade nesta verificação');
+        console.log('✅ [SimpleScheduler] Nenhum usuário elegível encontrado');
         return;
       }
 
-      console.log(`📊 ${eligibleUsers.rows.length} usuários elegíveis encontrados`);
+      console.log(`📧 [SimpleScheduler] Encontrados ${eligibleUsers.rows.length} usuários elegíveis`);
 
       let sent = 0;
       let failed = 0;
@@ -123,7 +118,7 @@ export class SimpleScheduler {
       }
 
     } catch (error) {
-      console.error('❌ Erro na verificação automática de e-mails:', error);
+      console.error('❌ [SimpleScheduler] Erro na verificação de usuários elegíveis:', error);
     }
   }
 
@@ -133,19 +128,18 @@ export class SimpleScheduler {
   private async sendUpgradeEmailToUser(userId: number, email: string, name: string): Promise<boolean> {
     try {
       // Busca o template de upgrade
-      const template = await db.execute(sql`
-        SELECT subject, "htmlContent", "textContent"
-        FROM "emailTemplates"
+      const templateResult = await db.execute(sql`
+        SELECT * FROM "emailTemplates" 
         WHERE "templateKey" = 'upgrade_organico' AND "isActive" = true
         LIMIT 1
       `);
 
-      if (template.rows.length === 0) {
-        console.log('⚠️ Template de upgrade não encontrado');
+      if (templateResult.rows.length === 0) {
+        console.error('❌ Template upgrade_organico não encontrado');
         return false;
       }
 
-      const templateData = template.rows[0];
+      const templateData = templateResult.rows[0];
       
       // Substitui variáveis no template
       const variables = {
@@ -156,15 +150,18 @@ export class SimpleScheduler {
       let htmlContent = String(templateData.htmlContent);
       let subject = String(templateData.subject);
 
-      // Substitui variáveis
       Object.entries(variables).forEach(([key, value]) => {
         const regex = new RegExp(`{{${key}}}`, 'g');
         htmlContent = htmlContent.replace(regex, value);
         subject = subject.replace(regex, value);
       });
 
+      // Importa EmailService dinamicamente
+      const { EmailService } = await import('./email-service.js');
+      const emailService = new EmailService();
+
       // Envia o e-mail
-      const emailSent = await this.emailService.sendEmail(
+      const emailSent = await emailService.sendEmail(
         { name: 'DesignAuto', email: 'suporte@designauto.com.br' },
         [{ email: email, name: name }],
         subject,
@@ -175,16 +172,17 @@ export class SimpleScheduler {
       if (emailSent.success) {
         // Registra o envio
         await db.execute(sql`
-          INSERT INTO "emailLogs" ("userId", email, "templateKey", "sentAt", status)
-          VALUES (${userId}, ${email}, 'upgrade_organico', NOW(), 'sent')
+          INSERT INTO "emailLogs" ("userId", email, "templateKey", "sentAt", status, "messageId")
+          VALUES (${userId}, ${email}, 'upgrade_organico', NOW(), 'sent', ${emailSent.messageId || 'unknown'})
         `);
         return true;
+      } else {
+        console.error(`❌ Erro ao enviar e-mail: ${emailSent.error}`);
+        return false;
       }
 
-      return false;
-
     } catch (error) {
-      console.error(`Erro ao enviar e-mail de upgrade para usuário ${userId}:`, error);
+      console.error(`❌ Erro no envio de e-mail para usuário ${userId}:`, error);
       return false;
     }
   }
@@ -195,7 +193,9 @@ export class SimpleScheduler {
   public getStatus(): { isRunning: boolean; info: string } {
     return {
       isRunning: this.isRunning,
-      info: this.isRunning ? 'Verificações a cada 2 minutos' : 'Parado'
+      info: this.isRunning 
+        ? 'Agendamento ativo - verificações a cada 2 minutos'
+        : 'Agendamento parado'
     };
   }
 }
