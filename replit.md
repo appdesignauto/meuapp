@@ -127,6 +127,8 @@ The system uses PostgreSQL with the following key entities:
   - System successfully integrated with main server startup and running autonomously
   - Replaces previous complex AutoUpgradeScheduler with stable, production-ready solution
   - Fixed critical runtime error in EmailTemplatesTab.tsx preventing undefined variable.name access
+  - Fixed email variable substitution system: login credentials and buttons now display correctly in all emails
+  - Replaced gradient backgrounds with solid colors in email templates for better client compatibility
 - June 18, 2025: Fixed critical dashboard metrics displaying incorrect values across financial and user growth indicators
   - Corrected revenue calculation bug: R$ 540,90 → R$ 53,80 (accurate total from 3 premium users)
   - Fixed "Novos Cadastros" metric showing +0 instead of actual +18 new users in 30-day period
