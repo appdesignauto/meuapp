@@ -196,6 +196,7 @@ const AnalyticsScripts = () => {
     // Microsoft Clarity
     if (config.clarityEnabled && config.clarityProjectId) {
       const clarityScript = document.createElement('script');
+      clarityScript.type = 'text/javascript';
       clarityScript.setAttribute('data-analytics-script', 'clarity');
       clarityScript.innerHTML = `
         (function(c,l,a,r,i,t,y){

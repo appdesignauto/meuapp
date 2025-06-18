@@ -59,7 +59,8 @@ router.get('/settings', async (req, res) => {
     console.log('✅ [Analytics Router] Configurações completas encontradas:', {
       metaPixelId: settings.metaPixelId,
       ga4MeasurementId: settings.ga4MeasurementId,
-      gtmContainerId: settings.gtmContainerId
+      gtmContainerId: settings.gtmContainerId,
+      clarityProjectId: settings.clarityProjectId
     });
     
     // Retorna TODAS as configurações para o admin

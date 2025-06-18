@@ -44,6 +44,7 @@ const AnalyticsDebugger = () => {
     const ga4Loaded = !!(window as any).gtag && !!(window as any).DesignAutoGA4;
     const metaPixelLoaded = !!(window as any).fbq && !!(window as any).DesignAutoMetaPixel;
     const gtmLoaded = !!(window as any).dataLayer;
+    const clarityLoaded = !!(window as any).clarity && !!(window as any).DesignAutoClarity;
     
     const scripts = document.querySelectorAll('[data-analytics-script]');
     const scriptDetails = Array.from(scripts).map(script => 
@@ -65,6 +66,11 @@ const AnalyticsDebugger = () => {
         loaded: gtmLoaded,
         id: (config as any)?.gtmContainerId || 'N/A',
         active: gtmLoaded && (config as any)?.gtmEnabled
+      },
+      clarity: {
+        loaded: clarityLoaded,
+        id: (config as any)?.clarityProjectId || 'N/A',
+        active: clarityLoaded && (config as any)?.clarityEnabled
       },
       scripts: {
         count: scripts.length,
@@ -107,6 +113,18 @@ const AnalyticsDebugger = () => {
       console.log('✅ Evento de teste Meta Pixel enviado');
     } else {
       console.log('❌ Meta Pixel não está disponível');
+    }
+  };
+
+  const testClarityTracking = () => {
+    if ((window as any).DesignAutoClarity?.trackEvent) {
+      (window as any).DesignAutoClarity.trackEvent('test_clarity_event', {
+        test_parameter: 'admin_debug',
+        timestamp: new Date().toISOString()
+      });
+      console.log('✅ Evento de teste Microsoft Clarity enviado');
+    } else {
+      console.log('❌ Microsoft Clarity não está disponível');
     }
   };
 
@@ -187,6 +205,27 @@ const AnalyticsDebugger = () => {
             <Badge variant={status.gtm.loaded ? "default" : "destructive"}>
               {status.gtm.loaded ? "Carregado" : "Não Carregado"}
             </Badge>
+          </div>
+
+          {/* Microsoft Clarity */}
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <StatusIcon active={status.clarity.active} />
+              <div>
+                <p className="font-medium">Microsoft Clarity</p>
+                <p className="text-sm text-muted-foreground">ID: {status.clarity.id}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant={status.clarity.loaded ? "default" : "destructive"}>
+                {status.clarity.loaded ? "Carregado" : "Não Carregado"}
+              </Badge>
+              {status.clarity.active && (
+                <Button size="sm" variant="outline" onClick={testClarityTracking}>
+                  Testar
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Scripts Debug */}
